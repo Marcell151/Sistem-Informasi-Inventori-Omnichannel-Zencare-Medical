@@ -1,0 +1,1 @@
+{"meta":{"message":"Success Calculate Domestic Shipping cost","code":200,"status":"success"},"data":[{"name":"Jalur Nugraha Ekakurir (JNE)","code":"jne","service":"JTR","description":"JNE Trucking","cost":105000,"etd":"6 day"},{"name":"Jalur Nugraha Ekakurir (JNE)","code":"jne","service":"REG","description":"Layanan Reguler","cost":14000,"etd":"8 day"}]}

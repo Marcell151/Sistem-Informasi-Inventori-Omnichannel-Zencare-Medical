@@ -1,0 +1,7 @@
+# Environment variables (contains private credentials/keys)
+.env
+
+# XAMPP/Apache specific logs
+*.log
+.DS_Store
+Thumbs.db
