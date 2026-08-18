@@ -47,7 +47,7 @@ try {
 
         if ($qty <= 0) continue;
 
-        $stmt = $pdo->prepare("SELECT pv.id, pv.nama_variasi, pv.harga, pv.harga_grosir, pv.min_order_online, pi.nama_produk, sc.stok 
+        $stmt = $pdo->prepare("SELECT pv.id, pv.nama_variasi, pv.harga_jual_besar, pv.rasio_konversi, pv.satuan_besar, pv.satuan_kecil, pi.nama_produk, sc.stok 
                                FROM produk_variasi pv 
                                JOIN produk_induk pi ON pv.id_produk_induk = pi.id 
                                LEFT JOIN stok_cabang sc ON sc.id_variasi = pv.id AND sc.id_cabang = ?
@@ -60,23 +60,23 @@ try {
         }
         
         $stokAktif = intval($produk['stok'] ?? 0);
-        $minOrder = intval($produk['min_order_online'] ?? 1);
-        $hargaGrosir = floatval($produk['harga_grosir'] ?: $produk['harga']);
+        $rasio = intval($produk['rasio_konversi'] ?: 1);
+        $hargaJualBesar = floatval($produk['harga_jual_besar']);
+        $satBesar = htmlspecialchars($produk['satuan_besar'] ?: 'Box');
+        $satKecil = htmlspecialchars($produk['satuan_kecil'] ?: 'Pcs');
 
-        if ($qty < $minOrder) {
-            throw new Exception("Jumlah pembelian '{$produk['nama_produk']}' di bawah batas grosir (Min: $minOrder Pcs)!");
+        $kebutuhanPcs = $qty * $rasio;
+
+        if ($stokAktif < $kebutuhanPcs) {
+            throw new Exception("Stok '{$produk['nama_produk']} - {$produk['nama_variasi']}' tidak cukup! Anda memesan $qty $satBesar ($kebutuhanPcs $satKecil), stok fisik hanya: $stokAktif $satKecil");
         }
 
-        if ($stokAktif < $qty) {
-            throw new Exception("Stok '{$produk['nama_produk']} - {$produk['nama_variasi']}' tidak cukup! Sisa: $stokAktif");
-        }
-
-        $subtotal = $hargaGrosir * $qty;
+        $subtotal = $hargaJualBesar * $qty;
         $totalHargaBarang += $subtotal;
 
         $itemDetails[] = [
             'id' => (string)$produk['id'],
-            'price' => (int)$hargaGrosir,
+            'price' => (int)$hargaJualBesar,
             'quantity' => $qty,
             'name' => substr($produk['nama_produk'], 0, 50)
         ];
@@ -125,7 +125,7 @@ try {
         $idVariasi = intval($cartItem['id']);
         $qty = intval($cartItem['qty']);
         
-        $stmtP = $pdo->prepare("SELECT harga FROM produk_variasi WHERE id = ?");
+        $stmtP = $pdo->prepare("SELECT harga_jual_besar FROM produk_variasi WHERE id = ?");
         $stmtP->execute([$idVariasi]);
         $harga = $stmtP->fetchColumn();
 

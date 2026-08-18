@@ -23,9 +23,9 @@ $daftarCabang = $pdo->query("SELECT * FROM cabang WHERE is_active = 1 ORDER BY i
 
 $stmtProduk = $pdo->prepare("
     SELECT v.id, CONCAT(i.nama_produk, ' - ', v.nama_variasi) AS nama_produk, 
-           i.kategori, v.harga AS harga_jual, v.berat AS berat_gram, v.gambar, 
+           i.kategori, v.harga_jual_besar AS harga_jual, v.berat AS berat_gram, v.gambar, 
            i.deskripsi, COALESCE(sc.stok, 0) AS stok_sistem,
-           v.tampil_di_online, v.min_order_online, v.harga_grosir
+           v.tampil_di_online, v.satuan_besar, v.satuan_kecil, v.rasio_konversi
     FROM produk_variasi v
     JOIN produk_induk i ON v.id_produk_induk = i.id
     LEFT JOIN stok_cabang sc ON sc.id_variasi = v.id AND sc.id_cabang = ?
@@ -158,19 +158,21 @@ if (!$settings) {
         <h2 class="text-lg font-bold border-b-2 border-sky-500 pb-2 mb-6 text-slate-900">Katalog Produk Alat Kesehatan (Grosir E-Commerce)</h2>
 
         <!-- Product Cards Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             <?php foreach ($products as $p): ?>
                 <?php 
-                    $stok = intval($p['stok_sistem']); 
-                    $hargaDisplay = $p['harga_grosir'] ?: $p['harga_jual'];
-                    $minOrder = intval($p['min_order_online'] ?: 1);
+                    $stokFisik = intval($p['stok_sistem']); 
+                    $rasio = intval($p['rasio_konversi']) ?: 1;
+                    $stokBox = floor($stokFisik / $rasio);
+                    $hargaDisplay = $p['harga_jual'];
+                    $satKecil = htmlspecialchars($p['satuan_kecil'] ?: 'Pcs');
+                    $satBesar = htmlspecialchars($p['satuan_besar'] ?: 'Box');
                 ?>
                 <div class="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col justify-between hover:shadow-md transition duration-200">
                     <div>
                         <div class="h-48 bg-slate-100 overflow-hidden relative border-b border-slate-200">
                             <img src="<?= htmlspecialchars($p['gambar']) ?>" alt="<?= htmlspecialchars($p['nama_produk']) ?>" class="w-full h-full object-cover">
-                            <span class="absolute top-2 right-2 text-xs font-bold px-2.5 py-0.5 rounded-full <?= $stok >= $minOrder ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white' ?>">
-                                Stok: <?= $stok ?> Pcs
+                            <span class="absolute top-2 right-2 text-xs font-bold px-2.5 py-0.5 rounded-full <?= $stokBox > 0 ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white' ?>">
+                                <?= $stokBox > 0 ? "Stok: $stokBox $satBesar" : 'Stok Tidak Tersedia' ?>
                             </span>
                         </div>
                         <div class="p-4">
@@ -179,8 +181,8 @@ if (!$settings) {
                             <p class="text-xs text-slate-500 mt-1.5 line-clamp-2"><?= htmlspecialchars($p['deskripsi'] ?? 'Peralatan medis standar berkualitas.') ?></p>
                             
                             <div class="mt-3 flex items-center justify-between text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 font-medium">
-                                <span>📦 Min. Beli (Grosir):</span>
-                                <strong class="bg-amber-100 px-2 py-0.5 rounded"><?= $minOrder ?> Pcs</strong>
+                                <span>📦 1 <?= $satBesar ?> =</span>
+                                <strong class="bg-amber-100 px-2 py-0.5 rounded"><?= $rasio ?> <?= $satKecil ?></strong>
                             </div>
                         </div>
                     </div>
@@ -188,26 +190,23 @@ if (!$settings) {
                     <div class="p-4 pt-0 border-t border-slate-100 mt-2">
                         <div class="flex items-baseline justify-between mb-3 mt-3">
                             <div class="flex flex-col">
-                                <span class="text-base font-bold text-emerald-600">Rp <?= number_format($hargaDisplay, 0, ',', '.') ?></span>
-                                <?php if ($p['harga_grosir']): ?>
-                                    <span class="text-[10px] text-slate-400 line-through">Rp <?= number_format($p['harga_jual'], 0, ',', '.') ?> (Retail)</span>
-                                <?php endif; ?>
+                                <span class="text-base font-bold text-emerald-600">Rp <?= number_format($hargaDisplay, 0, ',', '.') ?> <span class="text-xs font-normal text-slate-400">/ <?= $satBesar ?></span></span>
                             </div>
                             <span class="text-xs text-slate-500"><?= intval($p['berat_gram']) ?> gr</span>
                         </div>
 
-                        <?php if ($stok >= $minOrder): ?>
+                        <?php if ($stokBox > 0): ?>
                             <div class="flex items-center gap-2 mb-3">
-                                <span class="text-xs text-slate-600">Jumlah:</span>
-                                <input type="number" id="qty_input_<?= $p['id'] ?>" value="<?= $minOrder ?>" min="<?= $minOrder ?>" max="<?= $stok ?>" class="w-20 text-center text-xs border border-slate-300 rounded-lg py-1 px-2 focus:ring-1 focus:ring-zc focus:outline-none" onchange="validateMinQty(this, <?= $minOrder ?>, <?= $stok ?>)">
+                                <span class="text-xs text-slate-600">Jumlah (<?= $satBesar ?>):</span>
+                                <input type="number" id="qty_input_<?= $p['id'] ?>" value="1" min="1" max="<?= $stokBox ?>" class="w-20 text-center text-xs border border-slate-300 rounded-lg py-1 px-2 focus:ring-1 focus:ring-zc focus:outline-none" onchange="validateQty(this, <?= $stokBox ?>)">
                             </div>
-                            <button onclick="addToCart(<?= $p['id'] ?>, '<?= addslashes($p['nama_produk']) ?>', <?= $hargaDisplay ?>, <?= $p['berat_gram'] ?>, '<?= addslashes($p['gambar']) ?>', <?= $minOrder ?>)" 
+                            <button onclick="addToCart(<?= $p['id'] ?>, '<?= addslashes($p['nama_produk']) ?>', <?= $hargaDisplay ?>, <?= $p['berat_gram'] ?>, '<?= addslashes($p['gambar']) ?>', <?= $stokBox ?>, <?= $rasio ?>, '<?= $satBesar ?>', '<?= $satKecil ?>')" 
                                     class="w-full text-xs font-bold py-2.5 px-3 rounded-lg border transition shadow-xs bg-sky-500 hover:bg-cyan-600 text-white border-sky-500">
                                 + Tambah ke Keranjang
                             </button>
                         <?php else: ?>
                             <div class="text-xs text-center text-rose-600 font-bold bg-rose-50 border border-rose-200 py-2.5 rounded-lg">
-                                Stok Cabang Tidak Cukup (Min: <?= $minOrder ?> Pcs)
+                                Stok Tidak Cukup (Perlu minimal <?= $rasio ?> <?= $satKecil ?>)
                             </div>
                         <?php endif; ?>
                     </div>
@@ -217,13 +216,13 @@ if (!$settings) {
     </main>
 
     <script>
-        function validateMinQty(input, minVal, maxVal) {
-            let val = parseInt(input.value) || minVal;
-            if (val < minVal) {
-                alert('Batas minimum pemesanan grosir untuk produk ini adalah ' + minVal + ' Pcs');
-                input.value = minVal;
+        function validateQty(input, maxVal) {
+            let val = parseInt(input.value) || 1;
+            if (val < 1) {
+                alert('Minimal pembelian adalah 1');
+                input.value = 1;
             } else if (val > maxVal) {
-                alert('Jumlah melebihi stok yang tersedia di cabang ini (' + maxVal + ' Pcs)');
+                alert('Jumlah melebihi stok yang tersedia (' + maxVal + ')');
                 input.value = maxVal;
             }
         }
@@ -243,17 +242,24 @@ if (!$settings) {
             document.getElementById('cart-badge').innerText = totalQty;
         }
 
-        function addToCart(id, name, price, weight, image, minOrder) {
+        function addToCart(id, name, price, weight, image, maxStokBox, rasio, satBesar, satKecil) {
             let qtyInput = document.getElementById('qty_input_' + id);
-            let qty = parseInt(qtyInput.value) || minOrder;
+            let qty = parseInt(qtyInput.value) || 1;
 
-            if (qty < minOrder) {
-                alert('Gagal: Minimum pemesanan grosir adalah ' + minOrder + ' Pcs');
+            if (qty < 1) {
+                alert('Gagal: Minimum pemesanan adalah 1 ' + satBesar);
                 return;
             }
 
             let cart = getCart();
             let existing = cart.find(item => item.id === id);
+            
+            let currentCartQty = existing ? existing.qty : 0;
+            if (currentCartQty + qty > maxStokBox) {
+                alert('Gagal: Stok hanya tersedia ' + maxStokBox + ' ' + satBesar + '. Anda sudah menambahkan ' + currentCartQty + ' ke keranjang.');
+                return;
+            }
+
             if (existing) {
                 existing.qty += qty;
             } else {
@@ -264,11 +270,15 @@ if (!$settings) {
                     weight: weight, 
                     image: image, 
                     qty: qty,
-                    min_order_online: minOrder 
+                    satuan_besar: satBesar,
+                    satuan_label: satBesar,
+                    rasio_konversi: rasio,
+                    maxStokBox: maxStokBox,
+                    stokBox: maxStokBox
                 });
             }
             saveCart(cart);
-            alert('Produk ' + name + ' sebanyak ' + qty + ' Pcs berhasil dimasukkan ke keranjang!');
+            alert('Produk ' + name + ' sebanyak ' + qty + ' ' + satBesar + ' berhasil dimasukkan ke keranjang!');
         }
 
         document.addEventListener('DOMContentLoaded', updateCartBadge);

@@ -33,6 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if ($redirect === 'checkout') {
                     header('Location: zencare_checkout.php');
+                } else if ($redirect === 'checkout_konsep') {
+                    header('Location: konsep/zencare_checkout.php');
                 } else {
                     header('Location: zencare_store.php');
                 }
