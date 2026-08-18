@@ -59,7 +59,7 @@ layoutHeader('Master Supplier', 'Kelola data distributor & supplier alat kesehat
         <p class="text-xs text-zcMuted mt-0.5"><?= count($suppliers) ?> supplier terdaftar</p>
     </div>
     <button onclick="document.getElementById('modal_tambah').classList.remove('hidden')"
-        class="flex items-center gap-2 px-4 py-2.5 bg-zcNavy hover:bg-zcNavyHv text-white text-xs font-bold rounded-xl transition shadow-sm">
+        class="flex items-center gap-2 px-4 py-2.5 bg-zc hover:bg-zcHv text-white text-xs font-bold rounded-xl transition shadow-sm">
         + Tambah Supplier
     </button>
 </div>
@@ -81,9 +81,7 @@ layoutHeader('Master Supplier', 'Kelola data distributor & supplier alat kesehat
                 <?php foreach ($suppliers as $s): ?>
                     <tr class="hover:bg-slate-50/60 transition <?= !$s['is_active'] ? 'opacity-50' : '' ?>">
                         <td class="px-5 py-3.5 text-zcMuted font-mono"><?= $s['id'] ?></td>
-                        <td class="px-5 py-3.5 font-bold text-zcText flex items-center gap-2">
-                            <span class="text-base">🏭</span><?= htmlspecialchars($s['nama']) ?>
-                        </td>
+                        <td class="px-5 py-3.5 font-bold text-zcTxt"><?= htmlspecialchars($s['nama']) ?></td>
                         <td class="px-5 py-3.5 text-zcMuted"><?= htmlspecialchars($s['kontak'] ?? '–') ?></td>
                         <td class="px-5 py-3.5 text-zcMuted max-w-xs"><?= htmlspecialchars($s['alamat'] ?? '–') ?></td>
                         <td class="px-5 py-3.5 text-center">
@@ -128,7 +126,7 @@ layoutHeader('Master Supplier', 'Kelola data distributor & supplier alat kesehat
                 <textarea name="alamat" rows="2" class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50" placeholder="Jl. Industri Medis..."></textarea></div>
             <div class="flex justify-end gap-3 pt-2">
                 <button type="button" onclick="document.getElementById('modal_tambah').classList.add('hidden')" class="px-4 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition">Batal</button>
-                <button type="submit" class="px-5 py-2 text-xs font-bold bg-zcNavy hover:bg-zcNavyHv text-white rounded-xl transition shadow-sm">Simpan</button>
+                <button type="submit" class="px-5 py-2 text-xs font-bold bg-zc hover:bg-zcHv text-white rounded-xl transition shadow-sm">Simpan</button>
             </div>
         </form>
     </div>
@@ -152,7 +150,7 @@ layoutHeader('Master Supplier', 'Kelola data distributor & supplier alat kesehat
                 <textarea name="alamat" id="edit_sup_alamat" rows="2" class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50"></textarea></div>
             <div class="flex justify-end gap-3 pt-2">
                 <button type="button" onclick="document.getElementById('modal_edit').classList.add('hidden')" class="px-4 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition">Batal</button>
-                <button type="submit" class="px-5 py-2 text-xs font-bold bg-zcSky hover:bg-zcCyan text-white rounded-xl transition shadow-sm">Simpan</button>
+                <button type="submit" class="px-5 py-2 text-xs font-bold bg-zc hover:bg-zcHv text-white rounded-xl transition shadow-sm">Simpan</button>
             </div>
         </form>
     </div>

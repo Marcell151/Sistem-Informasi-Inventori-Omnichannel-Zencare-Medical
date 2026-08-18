@@ -44,7 +44,7 @@ foreach ($platforms as $p) {
     $chk = $pdo->prepare("SELECT id FROM pengaturan_api WHERE platform = ?");
     $chk->execute([$p]);
     if (!$chk->fetch()) {
-        $pdo->prepare("INSERT INTO pengaturan_api (id_cabang, platform, api_key, api_secret, webhook_url, is_active) VALUES (1, ?, NULL, NULL, NULL, 1)")
+        $pdo->prepare("INSERT INTO pengaturan_api (platform, api_key, api_secret, webhook_url, is_active) VALUES (?, NULL, NULL, NULL, 1)")
             ->execute([$p]);
     }
 }

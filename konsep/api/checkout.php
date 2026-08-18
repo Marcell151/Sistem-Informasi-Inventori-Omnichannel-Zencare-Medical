@@ -47,7 +47,7 @@ try {
 
         if ($qty <= 0) continue;
 
-        $stmt = $pdo->prepare("SELECT pv.id, pv.nama_variasi, pv.harga, pi.nama_produk, sc.stok 
+        $stmt = $pdo->prepare("SELECT pv.id, pv.nama_variasi, pv.harga, pv.harga_grosir, pv.min_order_online, pi.nama_produk, sc.stok 
                                FROM produk_variasi pv 
                                JOIN produk_induk pi ON pv.id_produk_induk = pi.id 
                                LEFT JOIN stok_cabang sc ON sc.id_variasi = pv.id AND sc.id_cabang = ?
@@ -60,17 +60,23 @@ try {
         }
         
         $stokAktif = intval($produk['stok'] ?? 0);
+        $minOrder = intval($produk['min_order_online'] ?? 1);
+        $hargaGrosir = floatval($produk['harga_grosir'] ?: $produk['harga']);
+
+        if ($qty < $minOrder) {
+            throw new Exception("Jumlah pembelian '{$produk['nama_produk']}' di bawah batas grosir (Min: $minOrder Pcs)!");
+        }
 
         if ($stokAktif < $qty) {
             throw new Exception("Stok '{$produk['nama_produk']} - {$produk['nama_variasi']}' tidak cukup! Sisa: $stokAktif");
         }
 
-        $subtotal = $produk['harga'] * $qty;
+        $subtotal = $hargaGrosir * $qty;
         $totalHargaBarang += $subtotal;
 
         $itemDetails[] = [
             'id' => (string)$produk['id'],
-            'price' => (int)$produk['harga'],
+            'price' => (int)$hargaGrosir,
             'quantity' => $qty,
             'name' => substr($produk['nama_produk'], 0, 50)
         ];
@@ -94,14 +100,22 @@ try {
     }
 
     // 3. Simpan ke penjualan
+    session_start();
+    $idUser = $_SESSION['user_id'] ?? null;
     $orderId = "ZNC-" . time() . "-" . rand(10, 99);
 
+    if ($idUser && !empty($input['save_profile'])) {
+        $kotaId = intval($input['kota_id'] ?? 0);
+        $pdo->prepare("UPDATE users SET telepon=?, alamat=?, kota_id=?, lat=?, lng=? WHERE id=?")
+            ->execute([$phone, $alamatLengkap, $kotaId ?: null, $lat, $lng, $idUser]);
+    }
+
     $stmtOrder = $pdo->prepare("INSERT INTO penjualan 
-        (no_invoice, id_cabang, tipe_transaksi, status_pesanan, total_harga, ongkir, nama_penerima, telepon, alamat_lengkap, kurir, layanan) 
-        VALUES (?, ?, 'ecommerce', 'Menunggu', ?, ?, ?, ?, ?, ?, ?)");
+        (no_invoice, id_cabang, id_user, tipe_transaksi, status_pesanan, total_harga, ongkir, nama_penerima, telepon, alamat_lengkap, kurir, layanan) 
+        VALUES (?, ?, ?, 'ecommerce', 'Menunggu', ?, ?, ?, ?, ?, ?, ?)");
     
     $stmtOrder->execute([
-        $orderId, $idCabang, $grandTotal, $ongkir, $namaPembeli, $phone, $alamatLengkap, $kurir, $layanan
+        $orderId, $idCabang, $idUser, $grandTotal, $ongkir, $namaPembeli, $phone, $alamatLengkap, $kurir, $layanan
     ]);
     $idPenjualan = $pdo->lastInsertId();
 

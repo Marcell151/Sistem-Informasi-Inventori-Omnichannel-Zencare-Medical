@@ -47,7 +47,7 @@ try {
 
         if ($qty <= 0) continue;
 
-        $stmt = $pdo->prepare("SELECT pv.id, pv.nama_variasi, pv.harga, pi.nama_produk, sc.stok 
+        $stmt = $pdo->prepare("SELECT pv.id, pv.nama_variasi, pv.harga_jual_kecil AS harga, pv.harga_jual_besar AS harga_grosir, pi.nama_produk, sc.stok, pv.rasio_konversi
                                FROM produk_variasi pv 
                                JOIN produk_induk pi ON pv.id_produk_induk = pi.id 
                                LEFT JOIN stok_cabang sc ON sc.id_variasi = pv.id AND sc.id_cabang = ?
@@ -60,17 +60,20 @@ try {
         }
         
         $stokAktif = intval($produk['stok'] ?? 0);
+        $rasio = intval($produk['rasio_konversi']) ?: 1;
+        $hargaGrosir = floatval($produk['harga_grosir'] ?: $produk['harga']);
 
-        if ($stokAktif < $qty) {
-            throw new Exception("Stok '{$produk['nama_produk']} - {$produk['nama_variasi']}' tidak cukup! Sisa: $stokAktif");
+        // Check stock considering conversion ratio since e-commerce buys 'Box'
+        if ($stokAktif < ($qty * $rasio)) {
+            throw new Exception("Stok '{$produk['nama_produk']} - {$produk['nama_variasi']}' tidak cukup!");
         }
 
-        $subtotal = $produk['harga'] * $qty;
+        $subtotal = $hargaGrosir * $qty;
         $totalHargaBarang += $subtotal;
 
         $itemDetails[] = [
             'id' => (string)$produk['id'],
-            'price' => (int)$produk['harga'],
+            'price' => (int)$hargaGrosir,
             'quantity' => $qty,
             'name' => substr($produk['nama_produk'], 0, 50)
         ];
@@ -119,7 +122,7 @@ try {
         $idVariasi = intval($cartItem['id']);
         $qty = intval($cartItem['qty']);
         
-        $stmtP = $pdo->prepare("SELECT harga FROM produk_variasi WHERE id = ?");
+        $stmtP = $pdo->prepare("SELECT harga_jual_besar FROM produk_variasi WHERE id = ?");
         $stmtP->execute([$idVariasi]);
         $harga = $stmtP->fetchColumn();
 

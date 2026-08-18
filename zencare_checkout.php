@@ -20,26 +20,32 @@ if ($activeCabangId == 2 || (isset($cabangAktif['nama']) && strpos(strtolower($c
     $branchLng = 112.6258;
 }
 
-// Fetch saved user profile data if logged in
-$savedUser = null;
-if (isset($_SESSION['user_id'])) {
-    $uStmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
-    $uStmt->execute([$_SESSION['user_id']]);
-    $savedUser = $uStmt->fetch();
+// Force user to login before checkout
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login_customer.php?redirect=checkout");
+    exit;
 }
 
+$uStmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+$uStmt->execute([$_SESSION['user_id']]);
+$savedUser = $uStmt->fetch();
+
 // Check API RajaOngkir toggle
-$chkRajaOngkir = $pdo->prepare("SELECT is_active FROM pengaturan_api WHERE id_cabang=? AND platform='rajaongkir'");
-$chkRajaOngkir->execute([$activeCabangId]);
+$chkRajaOngkir = $pdo->prepare("SELECT is_active FROM pengaturan_api WHERE platform='rajaongkir'");
+$chkRajaOngkir->execute();
 $apiRow = $chkRajaOngkir->fetchColumn();
 $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
+
+$stmtWeb = $pdo->query("SELECT * FROM pengaturan_web WHERE id=1");
+$webCfg = $stmtWeb->fetch() ?: [];
+$namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout – ZenCare Medical Store</title>
+    <title>Checkout – <?= htmlspecialchars($namaToko) ?></title>
 
     <!-- Tailwind CSS (ZenCare Brand Theme) -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -79,7 +85,7 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
                 <div class="w-7 h-7 rounded-lg bg-zc flex items-center justify-center">
                     <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                 </div>
-                <a href="zencare_store.php" class="font-semibold text-zcTxt text-sm">ZenCare <span class="text-zc">Checkout</span></a>
+                <a href="zencare_store.php" class="font-semibold text-zcTxt text-sm"><?= htmlspecialchars($namaToko) ?> <span class="text-zc">Checkout</span></a>
             </div>
             <a href="zencare_store.php" class="text-xs font-medium text-zcMut hover:text-zcTxt border border-zcBrd px-3 py-1.5 rounded-lg bg-white transition flex items-center gap-1">
                 &laquo; Kembali ke Catalog Store
@@ -275,7 +281,7 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
             '393': [-7.8702, 112.5271], // Batu
             '577': [-7.2575, 112.7521], // Surabaya
             '583': [-7.4478, 112.7183], // Sidoarjo
-            '256': [-8.1721, 113.7001], // Jember
+            '160': [-8.1721, 113.7001], // Jember
             '531': [-7.6453, 112.9075], // Pasuruan
             '289': [-7.8480, 112.0178], // Kediri
             '10':  [-6.2088, 106.8456], // Jakarta
@@ -563,21 +569,34 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
         // Cart Management Functions (Edit Qty / Delete Item)
         function updateItemQty(id, delta) {
             let cart = JSON.parse(localStorage.getItem('zencare_cart') || '[]');
-            let item = cart.find(i => i.id === id);
+            let item = cart.find(i => (i.cartId || i.id) == id);
             if (item) {
-                item.qty = (parseInt(item.qty) || 1) + delta;
-                if (item.qty <= 0) {
-                    cart = cart.filter(i => i.id !== id);
+                let newQty = (parseInt(item.qty) || 1) + delta;
+                
+                // Validate minimum
+                if (newQty < 1 && delta < 0) {
+                    alert('Minimal 1. Jika ingin membatalkan, silakan klik tombol hapus (✕).');
+                    return;
                 }
+                
+                // Validate maximum against stok - use maxStokBox if stored, else no limit from here
+                let maxStok = item.maxStokBox || item.stokBox || 9999;
+                if (delta > 0 && newQty > maxStok) {
+                    alert('Stok ' + (item.satuan_besar || item.satuan_label || 'unit') + ' hanya tersisa ' + maxStok + ' ' + (item.satuan_besar || '') + '. Tidak bisa menambah lagi!');
+                    return;
+                }
+                
+                item.qty = newQty;
                 localStorage.setItem('zencare_cart', JSON.stringify(cart));
                 renderCartItems();
                 calculateShippingCost();
             }
         }
 
+
         function removeCartItem(id) {
             let cart = JSON.parse(localStorage.getItem('zencare_cart') || '[]');
-            cart = cart.filter(i => i.id !== id);
+            cart = cart.filter(i => (i.cartId || i.id) != id);
             localStorage.setItem('zencare_cart', JSON.stringify(cart));
             renderCartItems();
             calculateShippingCost();
@@ -605,20 +624,21 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
                 let qty = parseInt(item.qty) || 1;
                 let weight = parseInt(item.weight) || 100;
                 let sub = price * qty;
+                let satLabel = item.satuan_label || item.satuan_besar || 'Pcs';
 
                 html += `
                     <div class="flex items-center justify-between text-xs border-b border-zcBrd/60 pb-2.5">
                         <div class="pr-2 min-w-0 flex-1">
                             <span class="font-bold text-zcTxt block truncate leading-snug">${item.name}</span>
-                            <span class="text-zcMut text-[11px]">Rp ${price.toLocaleString('id-ID')} (${weight}g)</span>
+                            <span class="text-zcMut text-[11px]">Rp ${price.toLocaleString('id-ID')} / ${satLabel} (${weight}g)</span>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
                             <div class="flex items-center gap-1 bg-slate-100 border border-zcBrd rounded-lg px-1.5 py-0.5">
-                                <button onclick="updateItemQty(${item.id}, -1)" class="w-4 h-4 text-zc font-bold text-xs hover:bg-slate-200 rounded flex items-center justify-center">-</button>
+                                <button onclick="updateItemQty('${item.cartId || item.id}', -1)" class="w-4 h-4 text-zc font-bold text-xs hover:bg-slate-200 rounded flex items-center justify-center">-</button>
                                 <span class="font-bold text-xs px-1">${qty}</span>
-                                <button onclick="updateItemQty(${item.id}, 1)" class="w-4 h-4 text-zc font-bold text-xs hover:bg-slate-200 rounded flex items-center justify-center">+</button>
+                                <button onclick="updateItemQty('${item.cartId || item.id}', 1)" class="w-4 h-4 text-zc font-bold text-xs hover:bg-slate-200 rounded flex items-center justify-center">+</button>
                             </div>
-                            <button onclick="removeCartItem(${item.id})" class="text-rose-500 hover:text-rose-700 font-bold p-1 text-xs" title="Hapus Barang">✕</button>
+                            <button onclick="removeCartItem('${item.cartId || item.id}')" class="text-rose-500 hover:text-rose-700 font-bold p-1 text-xs" title="Hapus Barang">✕</button>
                         </div>
                     </div>
                 `;

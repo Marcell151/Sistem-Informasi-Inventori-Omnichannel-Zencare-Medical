@@ -57,7 +57,7 @@ try {
     $auditLogs = $auditLogs->fetchAll();
 
     $stokProduk = $pdo->prepare("
-        SELECT v.id, v.sku_variasi, i.nama_produk, v.nama_variasi, i.kategori, v.harga,
+        SELECT v.id, v.sku_variasi, i.nama_produk, v.nama_variasi, i.kategori, v.harga_jual_kecil AS harga,
                COALESCE(sc.stok,0) AS stok
         FROM produk_variasi v
         JOIN produk_induk i ON v.id_produk_induk=i.id
@@ -72,8 +72,8 @@ try {
 }
 
 // API Statuses
-$apiShopee = $pdo->prepare("SELECT is_active FROM pengaturan_api WHERE id_cabang=? AND platform='shopee'");
-$apiShopee->execute([$activeCabang]);
+$apiShopee = $pdo->prepare("SELECT is_active FROM pengaturan_api WHERE platform='shopee'");
+$apiShopee->execute();
 $shopeeOn = $apiShopee->fetchColumn();
 
 layoutHead('Dashboard Inventaris');
@@ -89,7 +89,7 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
 
     <!-- Card 1: Total Stok -->
     <div class="bg-white border border-zcBorder rounded-2xl p-5 flex items-start justify-between shadow-sm">
-        <div class="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-xl shrink-0">🗂️</div>
+        <div class="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0"><?= icon('dashboard', 'w-5 h-5') ?></div>
         <div class="text-right">
             <span class="text-[10px] font-bold uppercase tracking-wider text-zcMuted block">Total Stok Fisik</span>
             <span class="text-3xl font-bold text-zcText mt-1 block"><?= number_format($totalStok) ?></span>
@@ -99,7 +99,7 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
 
     <!-- Card 2: Stok Menipis -->
     <div class="bg-white border border-zcBorder rounded-2xl p-5 flex items-start justify-between shadow-sm">
-        <div class="w-11 h-11 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-xl shrink-0">📉</div>
+        <div class="w-11 h-11 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shrink-0"><?= icon('chart', 'w-5 h-5') ?></div>
         <div class="text-right">
             <span class="text-[10px] font-bold uppercase tracking-wider text-zcMuted block">Stok Menipis</span>
             <span class="text-3xl font-bold text-rose-600 mt-1 block"><?= $stokTipis ?></span>
@@ -113,7 +113,7 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
 
     <!-- Card 3: Omset Hari Ini -->
     <div class="bg-white border border-zcBorder rounded-2xl p-5 flex items-start justify-between shadow-sm">
-        <div class="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-xl shrink-0">💰</div>
+        <div class="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0"><?= icon('report', 'w-5 h-5') ?></div>
         <div class="text-right">
             <span class="text-[10px] font-bold uppercase tracking-wider text-zcMuted block">Omset Hari Ini</span>
             <span class="text-xl font-bold text-zcEm mt-1 block">Rp <?= number_format($omset, 0, ',', '.') ?></span>
@@ -123,7 +123,7 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
 
     <!-- Card 4: Karantina -->
     <div class="bg-white border border-zcBorder rounded-2xl p-5 flex items-start justify-between shadow-sm">
-        <div class="w-11 h-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-xl shrink-0">⚠️</div>
+        <div class="w-11 h-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0"><?= icon('shield', 'w-5 h-5') ?></div>
         <div class="text-right">
             <span class="text-[10px] font-bold uppercase tracking-wider text-zcMuted block">Gudang Karantina</span>
             <span class="text-3xl font-bold text-amber-600 mt-1 block"><?= number_format($karantina) ?></span>
@@ -147,8 +147,8 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
         <span class="font-bold text-emerald-600">ACTIVE</span>
     </div>
     <div class="ml-auto flex gap-2">
-        <a href="pos/pos.php" class="flex items-center gap-2 px-4 py-2.5 bg-zc hover:bg-zcHv text-white text-xs font-semibold rounded-xl transition">🖥️ Buka POS Kasir</a>
-        <a href="zencare_store.php" class="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-zcLt text-zc text-xs font-semibold rounded-xl transition border border-zc/30">🛒 Buka Store</a>
+        <a href="pos/pos.php" class="flex items-center gap-2 px-4 py-2.5 bg-zc hover:bg-zcHv text-white text-xs font-semibold rounded-xl transition"><?= icon('pos', 'w-4 h-4') ?> Buka POS Kasir</a>
+        <a href="zencare_store.php" class="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-zcLt text-zc text-xs font-semibold rounded-xl transition border border-zc/30"><?= icon('store', 'w-4 h-4') ?> Buka Store</a>
     </div>
 </div>
 
@@ -160,7 +160,7 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
     <!-- Low Stock -->
     <div class="bg-white border border-zcBorder rounded-2xl shadow-sm overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-zcBorder">
-            <h3 class="text-sm font-bold text-zcText flex items-center gap-2">📉 Stok Menipis (&lt;5 Unit)</h3>
+            <h3 class="text-sm font-bold text-zcText flex items-center gap-2"><?= icon('chart', 'w-4 h-4 text-rose-500') ?> Stok Menipis (&lt;5 Unit)</h3>
             <span class="text-[11px] text-zcMuted"><?= htmlspecialchars($cabangInfo['nama'] ?? '') ?></span>
         </div>
         <div class="p-4 space-y-2.5">
@@ -180,7 +180,7 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
     <!-- Audit Log Feed -->
     <div class="bg-white border border-zcBorder rounded-2xl shadow-sm overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-zcBorder">
-            <h3 class="text-sm font-bold text-zcText flex items-center gap-2">⚡ Audit Kartu Stok Terbaru</h3>
+            <h3 class="text-sm font-bold text-zcText flex items-center gap-2"><?= icon('kartu_stok', 'w-4 h-4 text-amber-500') ?> Audit Kartu Stok Terbaru</h3>
             <a href="inventori/proses_mutasi.php" class="text-[11px] font-medium text-zc hover:underline">Lihat Semua →</a>
         </div>
         <div class="p-4 space-y-2.5">
@@ -207,7 +207,7 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
 <div class="bg-white border border-zcBorder rounded-2xl shadow-sm overflow-hidden">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-zcBorder">
         <div>
-            <h3 class="text-sm font-bold text-zcText">📋 Rincian Inventaris Operasional (Single Source of Truth)</h3>
+            <h3 class="text-sm font-bold text-zcText flex items-center gap-2"><?= icon('dashboard', 'w-4 h-4 text-zc') ?> Rincian Inventaris Operasional (Single Source of Truth)</h3>
             <p class="text-[11px] text-zcMuted mt-0.5">Stok real-time tersinkronisasi POS & E-Commerce &bull; Cabang: <strong><?= htmlspecialchars($cabangInfo['nama'] ?? '') ?></strong></p>
         </div>
         <div class="flex items-center gap-2 shrink-0">

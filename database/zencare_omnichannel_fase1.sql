@@ -77,9 +77,14 @@ CREATE TABLE produk_variasi (
     id_produk_induk INT NULL,
     sku_variasi VARCHAR(50) NOT NULL UNIQUE COMMENT 'Format: OBT-2026-0001-SYR / ALK-2026-0001-SET',
     nama_variasi VARCHAR(100) NOT NULL,
-    harga DECIMAL(12,2) NOT NULL,
+    satuan_kecil VARCHAR(50) NOT NULL DEFAULT 'Pcs',
+    satuan_besar VARCHAR(50) NOT NULL DEFAULT 'Box',
+    rasio_konversi INT NOT NULL DEFAULT 1,
+    harga_jual_kecil DECIMAL(12,2) NOT NULL DEFAULT 0,
+    harga_jual_besar DECIMAL(12,2) NOT NULL DEFAULT 0,
     berat INT NOT NULL DEFAULT 100 COMMENT 'Dalam satuan Gram',
     gambar VARCHAR(255) NULL,
+    tampil_di_online BOOLEAN DEFAULT 1,
     is_active BOOLEAN DEFAULT 1,
     FOREIGN KEY (id_produk_induk) REFERENCES produk_induk(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -100,13 +105,21 @@ CREATE TABLE stok_cabang (
 -- ------------------------------------------------------------------------------
 CREATE TABLE pengaturan_api (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    id_cabang INT NOT NULL,
     platform ENUM('shopee', 'midtrans', 'rajaongkir') NOT NULL,
     api_key VARCHAR(255) NULL,
     api_secret VARCHAR(255) NULL,
     webhook_url VARCHAR(255) NULL,
-    is_active BOOLEAN DEFAULT 0 COMMENT '0 = OFF, 1 = ON',
-    FOREIGN KEY (id_cabang) REFERENCES cabang(id) ON DELETE CASCADE
+    is_active BOOLEAN DEFAULT 0 COMMENT '0 = OFF, 1 = ON'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Pengaturan Web (CMS E-Commerce)
+CREATE TABLE pengaturan_web (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama_toko VARCHAR(100) NOT NULL,
+    deskripsi TEXT NULL,
+    telepon VARCHAR(20) NULL,
+    alamat TEXT NULL,
+    logo VARCHAR(255) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------------------------
@@ -212,11 +225,11 @@ INSERT INTO produk_induk (id, sku_induk, nama_produk, deskripsi, kategori, id_su
 (2, 'ALK-2026-0001-IND', 'Tensimeter Digital Omron', 'Alat ukur tekanan darah digital otomatis akurat bergaransi resmi.', 'Alat Monitor', 1, 1),
 (3, 'ALK-2026-0002-IND', 'Kursi Roda Medis Sella', 'Kursi roda lipat standar rumah sakit bahan chrome kuat.', 'Alat Bantu Jalan', 1, 1);
 
--- Seed Data Produk Variasi (SKU Format Khusus)
-INSERT INTO produk_variasi (id, id_produk_induk, sku_variasi, nama_variasi, harga, berat, gambar, is_active) VALUES
-(1, 1, 'OBT-2026-0001-SYR', 'Rasa Jeruk 60ml', 18500.00, 150, 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600', 1),
-(2, 2, 'ALK-2026-0001-SET', 'HEM-7120 Standard Set', 550000.00, 800, 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600', 1),
-(3, 3, 'ALK-2026-0002-UNT', 'Chrome Steel Standard', 950000.00, 15000, 'https://images.unsplash.com/photo-1581093450021-4a7360e9a6b5?w=600', 1);
+-- Seed Data Produk Variasi (Dengan Multi-UOM Konversi)
+INSERT INTO produk_variasi (id, id_produk_induk, sku_variasi, nama_variasi, satuan_kecil, satuan_besar, rasio_konversi, harga_jual_kecil, harga_jual_besar, berat) VALUES
+(1, 1, 'OBT-2026-0001-SYR', 'Syrup 60ml (Botol)', 'Botol', 'Karton', 50, 15000, 700000, 100),
+(2, 2, 'OBT-2026-0002-TAB', 'Tablet 500mg (Strip)', 'Strip', 'Box', 100, 5000, 450000, 10),
+(3, 3, 'ALK-2026-0001-SET', 'Standard Set', 'Pcs', 'Box', 10, 1500000, 14000000, 15000);
 
 -- Seed Data Stok Cabang (Stok masing-masing cabang)
 INSERT INTO stok_cabang (id_variasi, id_cabang, stok) VALUES
@@ -228,11 +241,14 @@ INSERT INTO stok_cabang (id_variasi, id_cabang, stok) VALUES
 (3, 2, 3);  -- Kursi Roda Sella di Borobudur: 3
 
 -- Seed Data Pengaturan API (Toggle Sandbox)
-INSERT INTO pengaturan_api (id_cabang, platform, api_key, api_secret, webhook_url, is_active) VALUES
-(1, 'shopee', 'SHP_SANDBOX_KEY_MUHARTO', 'SHP_SANDBOX_SECRET_MUHARTO', 'http://localhost/inventory_zencare/api/webhook_shopee.php', 1),
-(1, 'midtrans', 'SB-Mid-server-TESTKEY123', 'SB-Mid-client-TESTKEY123', 'http://localhost/inventory_zencare/api/webhook.php', 1),
-(1, 'rajaongkir', 'komerce_api_key_sandbox_123', NULL, 'http://localhost/inventory_zencare/api/rajaongkir.php', 1),
-(2, 'shopee', 'SHP_SANDBOX_KEY_BOROBUDUR', 'SHP_SANDBOX_SECRET_BOROBUDUR', 'http://localhost/inventory_zencare/api/webhook_shopee.php', 0);
+INSERT INTO pengaturan_api (platform, api_key, api_secret, webhook_url, is_active) VALUES
+('shopee', 'SHP_SANDBOX_KEY_ZENCARE', 'SHP_SANDBOX_SECRET_ZENCARE', 'http://localhost/inventory_zencare/api/webhook_shopee.php', 1),
+('midtrans', 'SB-Mid-server-TESTKEY123', 'SB-Mid-client-TESTKEY123', 'http://localhost/inventory_zencare/api/webhook.php', 1),
+('rajaongkir', 'komerce_api_key_sandbox_123', NULL, 'http://localhost/inventory_zencare/api/rajaongkir.php', 1);
+
+-- Seed Data Pengaturan Web
+INSERT INTO pengaturan_web (id, nama_toko, deskripsi, telepon, alamat) VALUES 
+(1, 'ZenCare Medical Store', 'Penyedia Alat Kesehatan Terpercaya', '081234567890', 'Jl. Muharto, Kota Malang');
 
 -- Seed Initial Kartu Stok (Audit Log Awal)
 INSERT INTO kartu_stok (id_cabang, id_variasi, jenis_mutasi, qty, sisa_stok, keterangan) VALUES

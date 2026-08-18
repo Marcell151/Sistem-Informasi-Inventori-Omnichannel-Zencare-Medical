@@ -7,6 +7,10 @@ $action = $_GET['action'] ?? '';
 
 // Helper function to send requests to Komerce API
 function callKomerce($path, $method = 'GET', $params = []) {
+    if (empty(KOMERCE_API_KEY)) {
+        return getMockData($path, $params);
+    }
+
     $url = KOMERCE_BASE_URL . $path;
     $curl = curl_init();
     
@@ -183,5 +187,35 @@ switch ($action) {
     default:
         echo json_encode(['status' => 'error', 'message' => 'Invalid action']);
         break;
+}
+
+// MOCK DATA GENERATOR FOR MISSING API KEY
+function getMockData($path, $params) {
+    if (strpos($path, '/destination/province') !== false) {
+        return json_encode(['data' => [
+            ['id' => '10', 'name' => 'DKI JAKARTA'],
+            ['id' => '12', 'name' => 'JAWA BARAT'],
+            ['id' => '18', 'name' => 'JAWA TENGAH'],
+            ['id' => '24', 'name' => 'JAWA TIMUR']
+        ]]);
+    }
+    if (strpos($path, '/destination/city/') !== false) {
+        return json_encode(['data' => [
+            ['id' => '256', 'name' => 'KOTA MALANG'],
+            ['id' => '391', 'name' => 'KABUPATEN MALANG'],
+            ['id' => '577', 'name' => 'KOTA SURABAYA'],
+            ['id' => '160', 'name' => 'KABUPATEN JEMBER'],
+            ['id' => '583', 'name' => 'KABUPATEN SIDOARJO'],
+            ['id' => '152', 'name' => 'KOTA JAKARTA PUSAT']
+        ]]);
+    }
+    if (strpos($path, '/calculate/domestic-cost') !== false) {
+        $weightKg = max(1, ceil(($params['weight'] ?? 1000) / 1000));
+        return json_encode(['data' => [
+            ['service' => 'REG', 'description' => 'Layanan Reguler', 'cost' => 15000 * $weightKg, 'etd' => '2-3 Hari'],
+            ['service' => 'YES', 'description' => 'Yakin Esok Sampai', 'cost' => 24000 * $weightKg, 'etd' => '1 Hari']
+        ]]);
+    }
+    return json_encode(['data' => []]);
 }
 ?>

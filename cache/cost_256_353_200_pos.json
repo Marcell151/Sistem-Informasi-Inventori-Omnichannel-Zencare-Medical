@@ -1,0 +1,1 @@
+{"meta":{"message":"Success Calculate Domestic Shipping cost","code":200,"status":"success"},"data":[{"name":"POS Indonesia (POS)","code":"pos","service":"Pos Reguler","description":"240","cost":14000,"etd":"6 day"},{"name":"POS Indonesia (POS)","code":"pos","service":"Pos Nextday","description":"447","cost":18500,"etd":"1 day"}]}

@@ -80,6 +80,9 @@ CREATE TABLE produk_variasi (
     harga DECIMAL(12,2) NOT NULL,
     berat INT NOT NULL DEFAULT 100 COMMENT 'Dalam satuan Gram',
     gambar VARCHAR(255) NULL,
+    tampil_di_online BOOLEAN DEFAULT 1,
+    min_order_online INT DEFAULT 1,
+    harga_grosir DECIMAL(12,2) DEFAULT NULL,
     is_active BOOLEAN DEFAULT 1,
     FOREIGN KEY (id_produk_induk) REFERENCES produk_induk(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -179,6 +182,9 @@ CREATE TABLE gudang_karantina (
     id_variasi INT NOT NULL,
     qty INT NOT NULL,
     alasan TEXT NOT NULL,
+    no_tiket VARCHAR(50) NOT NULL,
+    status_tiket ENUM('Menunggu Retur Supplier','Retur Dikirim','Selesai Diganti','Ditolak Supplier') DEFAULT 'Menunggu Retur Supplier',
+    catatan_retur TEXT NULL,
     tanggal TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_cabang) REFERENCES cabang(id),
     FOREIGN KEY (id_variasi) REFERENCES produk_variasi(id)
@@ -213,10 +219,10 @@ INSERT INTO produk_induk (id, sku_induk, nama_produk, deskripsi, kategori, id_su
 (3, 'ALK-2026-0002-IND', 'Kursi Roda Medis Sella', 'Kursi roda lipat standar rumah sakit bahan chrome kuat.', 'Alat Bantu Jalan', 1, 1);
 
 -- Seed Data Produk Variasi (SKU Format Khusus)
-INSERT INTO produk_variasi (id, id_produk_induk, sku_variasi, nama_variasi, harga, berat, gambar, is_active) VALUES
-(1, 1, 'OBT-2026-0001-SYR', 'Rasa Jeruk 60ml', 18500.00, 150, 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600', 1),
-(2, 2, 'ALK-2026-0001-SET', 'HEM-7120 Standard Set', 550000.00, 800, 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600', 1),
-(3, 3, 'ALK-2026-0002-UNT', 'Chrome Steel Standard', 950000.00, 15000, 'https://images.unsplash.com/photo-1581093450021-4a7360e9a6b5?w=600', 1);
+INSERT INTO produk_variasi (id, id_produk_induk, sku_variasi, nama_variasi, harga, berat, gambar, tampil_di_online, min_order_online, harga_grosir, is_active) VALUES
+(1, 1, 'OBT-2026-0001-SYR', 'Rasa Jeruk 60ml', 18500.00, 150, 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600', 1, 5, 15000.00, 1),
+(2, 2, 'ALK-2026-0001-SET', 'HEM-7120 Standard Set', 550000.00, 800, 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600', 1, 2, 520000.00, 1),
+(3, 3, 'ALK-2026-0002-UNT', 'Chrome Steel Standard', 950000.00, 15000, 'https://images.unsplash.com/photo-1581093450021-4a7360e9a6b5?w=600', 1, 1, 900000.00, 1);
 
 -- Seed Data Stok Cabang (Stok masing-masing cabang)
 INSERT INTO stok_cabang (id_variasi, id_cabang, stok) VALUES
@@ -242,6 +248,19 @@ INSERT INTO kartu_stok (id_cabang, id_variasi, jenis_mutasi, qty, sisa_stok, ket
 (2, 2, 'Masuk', 8, 8, 'Stok Awal Pengadaan Cabang Borobudur'),
 (1, 3, 'Masuk', 5, 5, 'Stok Awal Pengadaan Cabang Muharto'),
 (2, 3, 'Masuk', 3, 3, 'Stok Awal Pengadaan Cabang Borobudur');
+
+-- 6. CMS & WEB CONFIGURATION
+CREATE TABLE pengaturan_web (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    logo VARCHAR(255) NULL,
+    nama_toko VARCHAR(150) NOT NULL DEFAULT 'ZenCare Medical',
+    kontak_wa VARCHAR(20) NULL,
+    hero_banner VARCHAR(255) NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO pengaturan_web (id, logo, nama_toko, kontak_wa, hero_banner) VALUES
+(1, 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=100', 'ZenCare Medical Store', '081234567890', 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=1200');
+
 
 -- Re-enable Foreign Key Checks
 SET FOREIGN_KEY_CHECKS = 1;

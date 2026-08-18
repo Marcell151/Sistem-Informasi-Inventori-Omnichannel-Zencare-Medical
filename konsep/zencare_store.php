@@ -1,91 +1,101 @@
 <?php
 // File: zencare_store.php
-// Modul E-Commerce Mandiri ZenCare Medical (FASE 3)
+// Modul E-Commerce Mandiri ZenCare Medical (Medical-Tech Production Theme)
 session_start();
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/koneksi.php';
 
-// Handle Branch Selection via URL/Form
 if (isset($_GET['set_cabang'])) {
     $_SESSION['id_cabang'] = intval($_GET['set_cabang']);
 }
 
-// Default Branch ke Cabang 1 (Muharto) jika belum dipilih
 if (!isset($_SESSION['id_cabang']) || $_SESSION['id_cabang'] <= 0) {
     $_SESSION['id_cabang'] = 1;
 }
 
 $activeCabangId = $_SESSION['id_cabang'];
 
-// Ambil Informasi Cabang Aktif
 $stmtCabangAktif = $pdo->prepare("SELECT * FROM cabang WHERE id = ? AND is_active = 1");
 $stmtCabangAktif->execute([$activeCabangId]);
 $cabangAktif = $stmtCabangAktif->fetch();
 
-// Ambil Semua Daftar Cabang
 $daftarCabang = $pdo->query("SELECT * FROM cabang WHERE is_active = 1 ORDER BY id ASC")->fetchAll();
 
-// Ambil Katalog Produk Berdasarkan Stok Cabang Aktif
 $stmtProduk = $pdo->prepare("
     SELECT v.id, CONCAT(i.nama_produk, ' - ', v.nama_variasi) AS nama_produk, 
            i.kategori, v.harga AS harga_jual, v.berat AS berat_gram, v.gambar, 
-           i.deskripsi, COALESCE(sc.stok, 0) AS stok_sistem
+           i.deskripsi, COALESCE(sc.stok, 0) AS stok_sistem,
+           v.tampil_di_online, v.min_order_online, v.harga_grosir
     FROM produk_variasi v
     JOIN produk_induk i ON v.id_produk_induk = i.id
     LEFT JOIN stok_cabang sc ON sc.id_variasi = v.id AND sc.id_cabang = ?
-    WHERE v.is_active = 1 AND i.is_active = 1
+    WHERE v.is_active = 1 AND i.is_active = 1 AND v.tampil_di_online = 1
     ORDER BY v.id ASC
 ");
 $stmtProduk->execute([$activeCabangId]);
+$stmtProduk->execute([$activeCabangId]);
 $products = $stmtProduk->fetchAll();
+
+// Fetch Web settings
+$settings = $pdo->query("SELECT * FROM pengaturan_web WHERE id = 1")->fetch();
+if (!$settings) {
+    $settings = [
+        'nama_toko' => 'ZenCare Medical Store',
+        'logo' => '',
+        'kontak_wa' => '081234567890',
+        'hero_banner' => 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=1200'
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZenCare Medical Store - High Precision Medical Equipment</title>
-    <!-- Tailwind CSS CDN for Wireframe Layout -->
+    <title><?= htmlspecialchars($settings['nama_toko']) ?> - High Precision Medical Equipment</title>
+
+    <!-- Tailwind CSS (Medical-Tech Theme) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
-      // Strict Grayscale Palette Configuration
       tailwind.config = {
         theme: {
           extend: {
+            fontFamily: { sans: ['Inter', 'sans-serif'] },
             colors: {
-              gray: {
-                50: '#fafafa',
-                100: '#f4f4f5',
-                200: '#e4e4e7',
-                300: '#d4d4d8',
-                400: '#a1a1aa',
-                500: '#71717a',
-                600: '#52525b',
-                700: '#3f3f46',
-                800: '#27272a',
-                900: '#18181b',
-              }
+              zc:    '#1a75d2',
+              zcHv:  '#1562b3',
+              zcLt:  '#e8f2ff',
+              zcEm:  '#059669',
+              zcBrd: '#e4e9f0',
+              zcTxt: '#1e293b',
+              zcMut: '#64748b',
             }
           }
         }
       }
     </script>
 </head>
-<body class="bg-gray-100 text-gray-900 font-sans antialiased">
+<body class="bg-[#f5f7fa] text-zcTxt font-sans antialiased">
 
-    <!-- Header Navigation (Strict Grayscale) -->
-    <header class="bg-black text-white border-b border-gray-800 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <a href="zencare_store.php" class="text-xl font-bold tracking-wider text-white">ZENCARE <span class="font-normal text-gray-400">MEDICAL</span></a>
-                <span class="text-xs px-2 py-1 bg-gray-800 text-gray-300 rounded border border-gray-700">STORE</span>
+    <!-- Header Navbar -->
+    <header class="bg-white border-b border-zcBrd sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <?php if (!empty($settings['logo'])): ?>
+                    <img src="<?= htmlspecialchars($settings['logo']) ?>" class="h-8 w-auto object-contain" alt="Logo">
+                <?php else: ?>
+                    <div class="w-7 h-7 rounded-lg bg-zc flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    </div>
+                <?php endif; ?>
+                <a href="zencare_store.php" class="font-semibold text-zcTxt text-sm"><?= htmlspecialchars($settings['nama_toko']) ?></a>
             </div>
 
-            <!-- Branch Selector Widget in Header -->
-            <div class="flex items-center space-x-4">
-                <form method="GET" class="flex items-center space-x-2">
-                    <label for="set_cabang" class="text-xs text-gray-400 font-medium">Cabang Aktif:</label>
-                    <select name="set_cabang" id="set_cabang" onchange="this.form.submit()" class="bg-gray-900 text-white text-xs border border-gray-700 rounded px-2 py-1 focus:outline-none">
+            <div class="flex items-center gap-3">
+                <form method="GET" class="flex items-center gap-1.5">
+                    <label class="text-xs text-zcMut font-medium">Cabang</label>
+                    <select name="set_cabang" id="set_cabang" onchange="this.form.submit()" class="bg-white text-zcTxt text-xs border border-zcBrd rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-zc">
                         <?php foreach ($daftarCabang as $c): ?>
                             <option value="<?= $c['id'] ?>" <?= $activeCabangId == $c['id'] ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($c['nama']) ?>
@@ -94,72 +104,130 @@ $products = $stmtProduk->fetchAll();
                     </select>
                 </form>
 
-                <a href="zencare_checkout.php" class="relative inline-flex items-center p-2 bg-gray-800 hover:bg-gray-700 rounded border border-gray-700 transition">
-                    <span class="text-sm">🛒 Keranjang & Checkout</span>
-                    <span id="cart-badge" class="ml-2 px-1.5 py-0.5 text-xs font-bold bg-white text-black rounded-full">0</span>
+                <?php if (isset($_SESSION['user_id']) && ($_SESSION['role'] === 'super_admin' || $_SESSION['role'] === 'kasir')): ?>
+                    <a href="index.php" class="text-xs font-medium text-zcMut hover:text-zcTxt border border-zcBrd px-3 py-1.5 rounded-lg bg-white transition">Dashboard</a>
+                <?php endif; ?>
+
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <div class="flex items-center gap-2 border border-zcBrd px-2.5 py-1 rounded-lg bg-slate-50">
+                        <span class="text-xs font-semibold text-zcTxt">👤 <?= htmlspecialchars($_SESSION['nama_lengkap'] ?? $_SESSION['username']) ?></span>
+                        <a href="logout.php" class="text-[11px] text-rose-600 hover:underline ml-1">Keluar</a>
+                    </div>
+                <?php else: ?>
+                    <a href="login_customer.php" class="text-xs font-medium text-zcMut hover:text-zcTxt border border-zcBrd px-3 py-1.5 rounded-lg bg-white transition">Masuk</a>
+                    <a href="register.php" class="text-xs font-semibold bg-zcLt text-zc hover:bg-zc/10 border border-zc/20 px-3 py-1.5 rounded-lg transition">Daftar Akun</a>
+                <?php endif; ?>
+
+                <a href="zencare_checkout.php" class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-zc hover:bg-zcHv text-white text-xs font-semibold rounded-lg transition">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.95-1.55L23 6H6"/></svg>
+                    Checkout
+                    <span id="cart-badge" class="px-1.5 py-0.5 text-[10px] font-bold bg-white text-zc rounded-full">0</span>
                 </a>
             </div>
         </div>
     </header>
 
-    <!-- Branch Status Notice -->
-    <div class="bg-gray-200 border-b border-gray-300 py-2 text-center text-xs text-gray-700">
-        Menampilkan inventaris &amp; stok real-time untuk: <strong class="text-black"><?= htmlspecialchars($cabangAktif['nama'] ?? 'Cabang Utama') ?></strong> (<?= htmlspecialchars($cabangAktif['alamat'] ?? '') ?>)
+    <!-- Branch Status Notice Bar -->
+    <div class="bg-slate-200 border-b border-slate-300 py-2.5 text-center text-xs text-slate-700">
+        Menampilkan katalog persediaan barang untuk: <strong class="text-slate-900 font-bold"><?= htmlspecialchars($cabangAktif['nama'] ?? 'Cabang Utama') ?></strong> (<?= htmlspecialchars($cabangAktif['alamat'] ?? '') ?>)
     </div>
 
-    <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- Hero Wireframe Banner -->
-        <div class="bg-gray-900 text-white border border-gray-800 rounded-lg p-8 mb-8">
-            <h1 class="text-3xl font-bold tracking-tight mb-2">Solusi Peralatan Medis &amp; Kesehatan Terpercaya</h1>
-            <p class="text-gray-400 max-w-2xl text-sm leading-relaxed mb-6">Pusat perlengkapan kesehatan bergaransi. Pilih cabang fisik terdekat Anda untuk pengiriman instan Kurir Internal ZenCare atau kurir ekspedisi nasional.</p>
-            <div class="flex items-center space-x-3 text-xs text-gray-400">
-                <span class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded">✓ 100% Produk Original</span>
-                <span class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded">✓ Garansi Resmi</span>
-                <span class="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded">✓ Pengiriman Malang Raya &amp; Nasional</span>
+        <!-- Hero Banner Slate-900 & Sky Accents -->
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-800 rounded-xl p-8 mb-8 shadow-sm relative overflow-hidden">
+            <?php if (!empty($settings['hero_banner'])): ?>
+                <div class="absolute inset-0 opacity-20 mix-blend-overlay">
+                    <img src="<?= htmlspecialchars($settings['hero_banner']) ?>" class="w-full h-full object-cover">
+                </div>
+            <?php endif; ?>
+            <div class="relative z-10">
+                <span class="px-3 py-1 bg-sky-500/20 text-sky-300 border border-sky-500/30 rounded-full text-xs font-bold uppercase tracking-wider inline-block mb-3">🩺 Distributor Resmi Alkes &amp; Medis</span>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight mb-2">Peralatan Kesehatan Bergaransi Resmi</h1>
+                <p class="text-slate-300 max-w-2xl text-xs sm:text-sm leading-relaxed mb-6">Pilih cabang terdekat Anda untuk mendapatkan pengiriman instan Kurir Internal ZenCare Malang Raya atau ekspedisi pengiriman nasional.</p>
+                <div class="flex flex-wrap gap-2 text-xs text-slate-300">
+                    <span class="px-3 py-1 bg-slate-800/80 border border-slate-700 rounded-lg">✓ 100% Produk Original</span>
+                    <span class="px-3 py-1 bg-slate-800/80 border border-slate-700 rounded-lg">✓ Garansi Alkes Resmi</span>
+                    <?php if (!empty($settings['kontak_wa'])): ?>
+                        <span class="px-3 py-1 bg-emerald-600/80 border border-emerald-500 text-white rounded-lg">✓ Hubungi Kami (WA): <?= htmlspecialchars($settings['kontak_wa']) ?></span>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
 
-        <!-- Product Catalog Section -->
-        <h2 class="text-xl font-bold border-b-2 border-black pb-2 mb-6">Katalog Produk Medis</h2>
+        <h2 class="text-lg font-bold border-b-2 border-sky-500 pb-2 mb-6 text-slate-900">Katalog Produk Alat Kesehatan (Grosir E-Commerce)</h2>
 
+        <!-- Product Cards Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             <?php foreach ($products as $p): ?>
-                <?php $stok = intval($p['stok_sistem']); ?>
-                <div class="bg-white border border-gray-300 rounded-lg overflow-hidden flex flex-col justify-between hover:shadow-md transition">
+                <?php 
+                    $stok = intval($p['stok_sistem']); 
+                    $hargaDisplay = $p['harga_grosir'] ?: $p['harga_jual'];
+                    $minOrder = intval($p['min_order_online'] ?: 1);
+                ?>
+                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col justify-between hover:shadow-md transition duration-200">
                     <div>
-                        <div class="h-48 bg-gray-200 overflow-hidden relative border-b border-gray-200">
-                            <img src="<?= htmlspecialchars($p['gambar']) ?>" alt="<?= htmlspecialchars($p['nama_produk']) ?>" class="w-full h-full object-cover grayscale contrast-125 hover:grayscale-0 transition duration-300">
-                            <span class="absolute top-2 right-2 text-xs font-bold px-2 py-0.5 rounded <?= $stok > 0 ? 'bg-black text-white' : 'bg-gray-400 text-gray-800' ?>">
-                                Stok: <?= $stok ?>
+                        <div class="h-48 bg-slate-100 overflow-hidden relative border-b border-slate-200">
+                            <img src="<?= htmlspecialchars($p['gambar']) ?>" alt="<?= htmlspecialchars($p['nama_produk']) ?>" class="w-full h-full object-cover">
+                            <span class="absolute top-2 right-2 text-xs font-bold px-2.5 py-0.5 rounded-full <?= $stok >= $minOrder ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white' ?>">
+                                Stok: <?= $stok ?> Pcs
                             </span>
                         </div>
                         <div class="p-4">
-                            <span class="text-xs uppercase font-semibold text-gray-500 tracking-wider"><?= htmlspecialchars($p['kategori']) ?></span>
-                            <h3 class="text-sm font-bold text-gray-900 mt-1 line-clamp-2"><?= htmlspecialchars($p['nama_produk']) ?></h3>
-                            <p class="text-xs text-gray-500 mt-2 line-clamp-2"><?= htmlspecialchars($p['deskripsi'] ?? 'Peralatan medis standar kesehatan.') ?></p>
+                            <span class="text-[10px] uppercase font-bold text-sky-600 tracking-wider bg-sky-50 px-2 py-0.5 rounded border border-sky-100 inline-block mb-1"><?= htmlspecialchars($p['kategori']) ?></span>
+                            <h3 class="text-sm font-bold text-slate-900 mt-1 line-clamp-2"><?= htmlspecialchars($p['nama_produk']) ?></h3>
+                            <p class="text-xs text-slate-500 mt-1.5 line-clamp-2"><?= htmlspecialchars($p['deskripsi'] ?? 'Peralatan medis standar berkualitas.') ?></p>
+                            
+                            <div class="mt-3 flex items-center justify-between text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 font-medium">
+                                <span>📦 Min. Beli (Grosir):</span>
+                                <strong class="bg-amber-100 px-2 py-0.5 rounded"><?= $minOrder ?> Pcs</strong>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="p-4 pt-0 border-t border-gray-100 mt-2">
-                        <div class="flex items-baseline justify-between mb-3">
-                            <span class="text-base font-bold text-black">Rp <?= number_format($p['harga_jual'], 0, ',', '.') ?></span>
-                            <span class="text-xs text-gray-500"><?= intval($p['berat_gram']) ?> gr</span>
+                    <div class="p-4 pt-0 border-t border-slate-100 mt-2">
+                        <div class="flex items-baseline justify-between mb-3 mt-3">
+                            <div class="flex flex-col">
+                                <span class="text-base font-bold text-emerald-600">Rp <?= number_format($hargaDisplay, 0, ',', '.') ?></span>
+                                <?php if ($p['harga_grosir']): ?>
+                                    <span class="text-[10px] text-slate-400 line-through">Rp <?= number_format($p['harga_jual'], 0, ',', '.') ?> (Retail)</span>
+                                <?php endif; ?>
+                            </div>
+                            <span class="text-xs text-slate-500"><?= intval($p['berat_gram']) ?> gr</span>
                         </div>
-                        <button onclick="addToCart(<?= $p['id'] ?>, '<?= addslashes($p['nama_produk']) ?>', <?= $p['harga_jual'] ?>, <?= $p['berat_gram'] ?>, '<?= addslashes($p['gambar']) ?>')" 
-                                <?= $stok <= 0 ? 'disabled' : '' ?>
-                                class="w-full text-xs font-semibold py-2 px-3 rounded border border-black transition <?= $stok > 0 ? 'bg-black text-white hover:bg-gray-800' : 'bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed' ?>">
-                            <?= $stok > 0 ? '+ Tambah ke Keranjang' : 'Stok Habis' ?>
-                        </button>
+
+                        <?php if ($stok >= $minOrder): ?>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-xs text-slate-600">Jumlah:</span>
+                                <input type="number" id="qty_input_<?= $p['id'] ?>" value="<?= $minOrder ?>" min="<?= $minOrder ?>" max="<?= $stok ?>" class="w-20 text-center text-xs border border-slate-300 rounded-lg py-1 px-2 focus:ring-1 focus:ring-zc focus:outline-none" onchange="validateMinQty(this, <?= $minOrder ?>, <?= $stok ?>)">
+                            </div>
+                            <button onclick="addToCart(<?= $p['id'] ?>, '<?= addslashes($p['nama_produk']) ?>', <?= $hargaDisplay ?>, <?= $p['berat_gram'] ?>, '<?= addslashes($p['gambar']) ?>', <?= $minOrder ?>)" 
+                                    class="w-full text-xs font-bold py-2.5 px-3 rounded-lg border transition shadow-xs bg-sky-500 hover:bg-cyan-600 text-white border-sky-500">
+                                + Tambah ke Keranjang
+                            </button>
+                        <?php else: ?>
+                            <div class="text-xs text-center text-rose-600 font-bold bg-rose-50 border border-rose-200 py-2.5 rounded-lg">
+                                Stok Cabang Tidak Cukup (Min: <?= $minOrder ?> Pcs)
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
         </div>
     </main>
 
-    <!-- Cart LocalStorage Helper Script -->
     <script>
+        function validateMinQty(input, minVal, maxVal) {
+            let val = parseInt(input.value) || minVal;
+            if (val < minVal) {
+                alert('Batas minimum pemesanan grosir untuk produk ini adalah ' + minVal + ' Pcs');
+                input.value = minVal;
+            } else if (val > maxVal) {
+                alert('Jumlah melebihi stok yang tersedia di cabang ini (' + maxVal + ' Pcs)');
+                input.value = maxVal;
+            }
+        }
+
         function getCart() {
             return JSON.parse(localStorage.getItem('zencare_cart') || '[]');
         }
@@ -175,16 +243,32 @@ $products = $stmtProduk->fetchAll();
             document.getElementById('cart-badge').innerText = totalQty;
         }
 
-        function addToCart(id, name, price, weight, image) {
+        function addToCart(id, name, price, weight, image, minOrder) {
+            let qtyInput = document.getElementById('qty_input_' + id);
+            let qty = parseInt(qtyInput.value) || minOrder;
+
+            if (qty < minOrder) {
+                alert('Gagal: Minimum pemesanan grosir adalah ' + minOrder + ' Pcs');
+                return;
+            }
+
             let cart = getCart();
             let existing = cart.find(item => item.id === id);
             if (existing) {
-                existing.qty += 1;
+                existing.qty += qty;
             } else {
-                cart.push({ id: id, name: name, price: price, weight: weight, image: image, qty: 1 });
+                cart.push({ 
+                    id: id, 
+                    name: name, 
+                    price: price, 
+                    weight: weight, 
+                    image: image, 
+                    qty: qty,
+                    min_order_online: minOrder 
+                });
             }
             saveCart(cart);
-            alert('Produk ' + name + ' berhasil ditambahkan ke keranjang!');
+            alert('Produk ' + name + ' sebanyak ' + qty + ' Pcs berhasil dimasukkan ke keranjang!');
         }
 
         document.addEventListener('DOMContentLoaded', updateCartBadge);

@@ -66,7 +66,7 @@ layoutHeader('Master Cabang', 'Kelola data cabang fisik ZenCare Medical (2 Caban
         ?>
         <div class="bg-white border border-zcBorder rounded-2xl p-5 shadow-sm <?= !$c['is_active'] ? 'opacity-60' : '' ?>">
             <div class="flex items-start justify-between mb-3">
-                <div class="w-10 h-10 rounded-xl bg-zcNavy/10 flex items-center justify-center text-xl">🏥</div>
+                <div class="w-10 h-10 rounded-xl bg-zc/10 flex items-center justify-center text-zcMut"><?php echo icon('building','w-5 h-5'); ?></div>
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border <?= $c['is_active'] ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-rose-100 text-rose-700 border-rose-200' ?>">
                     <?= $c['is_active'] ? 'Aktif' : 'Nonaktif' ?>
                 </span>
@@ -88,7 +88,7 @@ layoutHeader('Master Cabang', 'Kelola data cabang fisik ZenCare Medical (2 Caban
         <p class="text-xs text-zcMuted mt-0.5"><?= count($cabangList) ?> cabang terdaftar di sistem</p>
     </div>
     <button onclick="document.getElementById('modal_tambah').classList.remove('hidden')"
-        class="flex items-center gap-2 px-4 py-2.5 bg-zcNavy hover:bg-zcNavyHv text-white text-xs font-bold rounded-xl transition shadow-sm">
+        class="flex items-center gap-2 px-4 py-2.5 bg-zc hover:bg-zcHv text-white text-xs font-bold rounded-xl transition shadow-sm">
         + Tambah Cabang Baru
     </button>
 </div>
@@ -110,7 +110,7 @@ layoutHeader('Master Cabang', 'Kelola data cabang fisik ZenCare Medical (2 Caban
                 <?php foreach ($cabangList as $c): ?>
                     <tr class="hover:bg-slate-50/60 transition <?= !$c['is_active'] ? 'opacity-50' : '' ?>">
                         <td class="px-5 py-3.5 font-mono text-zcMuted"><?= $c['id'] ?></td>
-                        <td class="px-5 py-3.5 font-bold text-zcText">🏥 <?= htmlspecialchars($c['nama']) ?></td>
+                        <td class="px-5 py-3.5 font-bold text-zcTxt"><?= htmlspecialchars($c['nama']) ?></td>
                         <td class="px-5 py-3.5 text-zcMuted"><?= htmlspecialchars($c['alamat']) ?></td>
                         <td class="px-5 py-3.5 text-center"><code class="font-mono bg-slate-100 px-2 py-0.5 rounded text-zcText"><?= $c['kota_id'] ?></code></td>
                         <td class="px-5 py-3.5 text-center">
@@ -155,7 +155,7 @@ layoutHeader('Master Cabang', 'Kelola data cabang fisik ZenCare Medical (2 Caban
                 <input type="number" name="kota_id" value="256" class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50"></div>
             <div class="flex justify-end gap-3 pt-2">
                 <button type="button" onclick="document.getElementById('modal_tambah').classList.add('hidden')" class="px-4 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition">Batal</button>
-                <button type="submit" class="px-5 py-2 text-xs font-bold bg-zcNavy hover:bg-zcNavyHv text-white rounded-xl transition shadow-sm">Simpan Cabang</button>
+                <button type="submit" class="px-5 py-2 text-xs font-bold bg-zc hover:bg-zcHv text-white rounded-xl transition shadow-sm">Simpan Cabang</button>
             </div>
         </form>
     </div>
@@ -179,7 +179,7 @@ layoutHeader('Master Cabang', 'Kelola data cabang fisik ZenCare Medical (2 Caban
                 <input type="number" name="kota_id" id="ec_kota" class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50"></div>
             <div class="flex justify-end gap-3 pt-2">
                 <button type="button" onclick="document.getElementById('modal_edit').classList.add('hidden')" class="px-4 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition">Batal</button>
-                <button type="submit" class="px-5 py-2 text-xs font-bold bg-zcSky hover:bg-zcCyan text-white rounded-xl transition shadow-sm">Simpan Perubahan</button>
+                <button type="submit" class="px-5 py-2 text-xs font-bold bg-zc hover:bg-zcHv text-white rounded-xl transition shadow-sm">Simpan Perubahan</button>
             </div>
         </form>
     </div>

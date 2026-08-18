@@ -565,10 +565,13 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
             let cart = JSON.parse(localStorage.getItem('zencare_cart') || '[]');
             let item = cart.find(i => i.id === id);
             if (item) {
-                item.qty = (parseInt(item.qty) || 1) + delta;
-                if (item.qty <= 0) {
-                    cart = cart.filter(i => i.id !== id);
+                let minOrder = parseInt(item.min_order_online) || 1;
+                let newQty = (parseInt(item.qty) || 1) + delta;
+                if (newQty < minOrder && delta < 0) {
+                    alert('Batas minimum pembelian grosir untuk produk ini adalah ' + minOrder + ' Pcs. Jika ingin membatalkan, silakan klik tombol hapus (✕).');
+                    return;
                 }
+                item.qty = newQty;
                 localStorage.setItem('zencare_cart', JSON.stringify(cart));
                 renderCartItems();
                 calculateShippingCost();
@@ -605,12 +608,14 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
                 let qty = parseInt(item.qty) || 1;
                 let weight = parseInt(item.weight) || 100;
                 let sub = price * qty;
+                let minOrder = parseInt(item.min_order_online) || 1;
 
                 html += `
                     <div class="flex items-center justify-between text-xs border-b border-zcBrd/60 pb-2.5">
                         <div class="pr-2 min-w-0 flex-1">
                             <span class="font-bold text-zcTxt block truncate leading-snug">${item.name}</span>
                             <span class="text-zcMut text-[11px]">Rp ${price.toLocaleString('id-ID')} (${weight}g)</span>
+                            <span class="text-amber-700 bg-amber-50 px-1 py-0.5 rounded text-[9px] inline-block font-medium mt-1">Min: ${minOrder} pcs</span>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
                             <div class="flex items-center gap-1 bg-slate-100 border border-zcBrd rounded-lg px-1.5 py-0.5">

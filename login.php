@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </form>
 
                 <div class="mt-4 pt-3 border-t border-zcBrd text-center text-xs text-zcMut">
-                    Anda pembeli / pelanggan? <a href="login_customer.php" class="font-semibold text-zc hover:underline">Masuk Login Pelanggan</a>
+                    Anda pembeli / pelanggan? <a href="zencare_store.php" class="font-semibold text-zc hover:underline">Masuk ke E-Commerce</a>
                 </div>
             </div>
         </div>

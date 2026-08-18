@@ -58,8 +58,8 @@ try {
     $stmtUpdate = $pdo->prepare("UPDATE penjualan SET status_pesanan = ? WHERE no_invoice = ?");
     $stmtUpdate->execute([$newStatus, $orderId]);
 
-    // Ambil detail item
-    $stmtItems = $pdo->prepare("SELECT id_variasi, qty FROM detail_penjualan WHERE id_penjualan = (SELECT id FROM penjualan WHERE no_invoice = ?)");
+    // Ambil detail item dan rasio konversi
+    $stmtItems = $pdo->prepare("SELECT d.id_variasi, d.qty, v.rasio_konversi, v.satuan_besar FROM detail_penjualan d JOIN produk_variasi v ON d.id_variasi = v.id WHERE d.id_penjualan = (SELECT id FROM penjualan WHERE no_invoice = ?)");
     $stmtItems->execute([$orderId]);
     $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
 
@@ -67,34 +67,40 @@ try {
     if ($oldStatus === 'Menunggu' && $newStatus === 'Diproses') {
         foreach ($items as $item) {
             $idVar = $item['id_variasi'];
-            $qty = $item['qty'];
+            $qtyBox = intval($item['qty']);
+            $rasio = intval($item['rasio_konversi']) ?: 1;
+            $qtyPotong = $qtyBox * $rasio;
+            $satBesar = $item['satuan_besar'];
 
             $stmtStok = $pdo->prepare("UPDATE stok_cabang SET stok = stok - ? WHERE id_variasi = ? AND id_cabang = ?");
-            $stmtStok->execute([$qty, $idVar, $idCabang]);
+            $stmtStok->execute([$qtyPotong, $idVar, $idCabang]);
 
             $stmtSisa = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi = ? AND id_cabang = ?");
             $stmtSisa->execute([$idVar, $idCabang]);
             $sisaStok = $stmtSisa->fetchColumn();
 
             $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_cabang, id_variasi, jenis_mutasi, qty, sisa_stok, keterangan) VALUES (?, ?, 'Keluar', ?, ?, ?)");
-            $stmtKartu->execute([$idCabang, $idVar, $qty, $sisaStok, "Midtrans Payment: $orderId"]);
+            $stmtKartu->execute([$idCabang, $idVar, $qtyPotong, $sisaStok, "Midtrans Payment: $orderId (Online $qtyBox $satBesar)"]);
         }
     }
     // Pengembalian Stok (Jika dibatalkan tapi sebelumnya sudah Diproses/stok terpotong)
     elseif (in_array($oldStatus, ['Diproses', 'Dikirim']) && $newStatus === 'Dibatalkan') {
         foreach ($items as $item) {
             $idVar = $item['id_variasi'];
-            $qty = $item['qty'];
+            $qtyBox = intval($item['qty']);
+            $rasio = intval($item['rasio_konversi']) ?: 1;
+            $qtyPotong = $qtyBox * $rasio;
+            $satBesar = $item['satuan_besar'];
 
             $stmtStok = $pdo->prepare("UPDATE stok_cabang SET stok = stok + ? WHERE id_variasi = ? AND id_cabang = ?");
-            $stmtStok->execute([$qty, $idVar, $idCabang]);
+            $stmtStok->execute([$qtyPotong, $idVar, $idCabang]);
 
             $stmtSisa = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi = ? AND id_cabang = ?");
             $stmtSisa->execute([$idVar, $idCabang]);
             $sisaStok = $stmtSisa->fetchColumn();
 
             $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_cabang, id_variasi, jenis_mutasi, qty, sisa_stok, keterangan) VALUES (?, ?, 'Pengembalian/Batal', ?, ?, ?)");
-            $stmtKartu->execute([$idCabang, $idVar, $qty, $sisaStok, "Midtrans Refund/Cancel: $orderId"]);
+            $stmtKartu->execute([$idCabang, $idVar, $qtyPotong, $sisaStok, "Midtrans Refund/Cancel: $orderId (Batal $qtyBox $satBesar)"]);
         }
     }
 

@@ -1,6 +1,6 @@
 <?php
 // File: admin/master_user.php
-// Manajemen User – Super Admin Only
+// Manajemen User - Super Admin Only
 session_start();
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
@@ -69,30 +69,30 @@ $cabangList = $pdo->query("SELECT id, nama FROM cabang WHERE is_active=1")->fetc
 layoutHead('Manajemen User');
 layoutBodyOpen();
 layoutSidebar('master_user');
-layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelanggan – dengan soft delete (Super Admin Only)');
+layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelanggan - dengan soft delete (Super Admin Only)');
 ?>
 
 <?php if ($msg): ?>
     <div class="mb-5 p-4 rounded-xl border text-xs font-semibold flex items-center gap-2 <?= $msgType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : ($msgType === 'error' ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-sky-50 border-sky-200 text-sky-800') ?>">
-        <?= $msgType === 'success' ? '✅' : ($msgType === 'error' ? '⛔' : 'ℹ️') ?> <?= htmlspecialchars($msg) ?>
+        <?= $msgType === 'success' ? '&#10004;' : ($msgType === 'error' ? '&#9940;' : '&#8505;') ?> <?= htmlspecialchars($msg) ?>
     </div>
 <?php endif; ?>
 
 <div class="flex items-center justify-between mb-5">
     <div>
-        <h2 class="text-base font-bold text-zcText">Daftar Akun User</h2>
-        <p class="text-xs text-zcMuted mt-0.5">Total: <?= count($users) ?> akun terdaftar</p>
+        <h2 class="text-base font-bold text-zcTxt">Daftar Akun User</h2>
+        <p class="text-xs text-zcMut mt-0.5">Total: <?= count($users) ?> akun terdaftar</p>
     </div>
     <button onclick="document.getElementById('modal_tambah_user').classList.remove('hidden')"
-        class="flex items-center gap-2 px-4 py-2.5 bg-zcNavy hover:bg-zcNavyHv text-white text-xs font-bold rounded-xl transition shadow-sm">
+        class="flex items-center gap-2 px-4 py-2.5 bg-zc hover:bg-zcHv text-white text-xs font-bold rounded-xl transition shadow-sm">
         + Tambah User Baru
     </button>
 </div>
 
-<div class="bg-white border border-zcBorder rounded-2xl shadow-sm overflow-hidden">
+<div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full text-xs">
-            <thead class="bg-slate-50 border-b border-zcBorder text-zcMuted font-bold uppercase tracking-wider">
+            <thead class="bg-slate-50 border-b border-zcBrd text-zcMut font-bold uppercase tracking-wider">
                 <tr>
                     <th class="px-5 py-3 text-left">#</th>
                     <th class="px-5 py-3 text-left">Username</th>
@@ -107,28 +107,28 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
                 <?php foreach ($users as $u): ?>
                     <?php
                     $roleCls = match($u['role']) {
-                        'super_admin' => 'bg-zcNavy/10 text-zcNavy border-zcNavy/20',
+                        'super_admin' => 'bg-zc/10 text-zcNavy border-zcNavy/20',
                         'kasir'       => 'bg-sky-100 text-sky-700 border-sky-200',
                         'pelanggan'   => 'bg-emerald-100 text-emerald-700 border-emerald-200',
                         default       => 'bg-slate-100 text-slate-500 border-slate-200',
                     };
                     $roleIcon = match($u['role']) {
-                        'super_admin' => '👑', 'kasir' => '🏪', 'pelanggan' => '🛒', default => '👤',
+                        'super_admin' => 'ðŸ‘‘', 'kasir' => 'ðŸª', 'pelanggan' => 'ðŸ›’', default => 'ðŸ‘¤',
                     };
                     ?>
                     <tr class="hover:bg-slate-50/60 transition <?= !$u['is_active'] ? 'opacity-50' : '' ?>">
-                        <td class="px-5 py-3.5 text-zcMuted font-mono"><?= $u['id'] ?></td>
-                        <td class="px-5 py-3.5 font-bold text-zcText"><?= htmlspecialchars($u['username']) ?></td>
-                        <td class="px-5 py-3.5 text-zcText"><?= htmlspecialchars($u['nama_lengkap']) ?></td>
+                        <td class="px-5 py-3.5 text-zcMut font-mono"><?= $u['id'] ?></td>
+                        <td class="px-5 py-3.5 font-bold text-zcTxt"><?= htmlspecialchars($u['username']) ?></td>
+                        <td class="px-5 py-3.5 text-zcTxt"><?= htmlspecialchars($u['nama_lengkap']) ?></td>
                         <td class="px-5 py-3.5 text-center">
                             <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border <?= $roleCls ?>">
                                 <?= $roleIcon ?> <?= ucfirst(str_replace('_', ' ', $u['role'])) ?>
                             </span>
                         </td>
-                        <td class="px-5 py-3.5 text-zcMuted"><?= htmlspecialchars($u['nama_cabang'] ?? '–') ?></td>
+                        <td class="px-5 py-3.5 text-zcMut"><?= htmlspecialchars($u['nama_cabang'] ?? '-') ?></td>
                         <td class="px-5 py-3.5 text-center">
                             <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border <?= $u['is_active'] ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-rose-100 text-rose-700 border-rose-200' ?>">
-                                <?= $u['is_active'] ? '✓ Aktif' : '✕ Nonaktif' ?>
+                                <?= $u['is_active'] ? '&check; Aktif' : '&times; Nonaktif' ?>
                             </span>
                         </td>
                         <td class="px-5 py-3.5">
@@ -149,7 +149,7 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
                                         <button type="submit" class="px-2.5 py-1 text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-xl transition">Reset Pass</button>
                                     </form>
                                 <?php else: ?>
-                                    <span class="text-[10px] text-zcMuted italic px-2">Protected</span>
+                                    <span class="text-[10px] text-zcMut italic px-2">Protected</span>
                                 <?php endif; ?>
                             </div>
                         </td>
@@ -163,36 +163,36 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
 <!-- MODAL: Tambah User -->
 <div id="modal_tambah_user" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-zcBorder">
-            <h3 class="text-sm font-bold text-zcText">Tambah User Baru</h3>
-            <button onclick="document.getElementById('modal_tambah_user').classList.add('hidden')" class="text-zcMuted hover:text-zcText text-lg">✕</button>
+        <div class="flex items-center justify-between px-6 py-4 border-b border-zcBrd">
+            <h3 class="text-sm font-bold text-zcTxt">Tambah User Baru</h3>
+            <button onclick="document.getElementById('modal_tambah_user').classList.add('hidden')" class="text-zcMut hover:text-zcTxt text-lg">&times;</button>
         </div>
         <form method="POST" class="p-6 space-y-4">
             <input type="hidden" name="aksi" value="tambah_user">
             <div>
-                <label class="block text-xs font-bold text-zcText mb-1.5">Username * <span class="text-zcMuted font-normal">(unik, tanpa spasi)</span></label>
-                <input type="text" name="username" required placeholder="kasir_baru" class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Username * <span class="text-zcMut font-normal">(unik, tanpa spasi)</span></label>
+                <input type="text" name="username" required placeholder="kasir_baru" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
-                <label class="block text-xs font-bold text-zcText mb-1.5">Nama Lengkap *</label>
-                <input type="text" name="nama_lengkap" required placeholder="Budi Santoso" class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Nama Lengkap *</label>
+                <input type="text" name="nama_lengkap" required placeholder="Budi Santoso" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
-                <label class="block text-xs font-bold text-zcText mb-1.5">Password (default: 123456)</label>
-                <input type="password" name="password" placeholder="Kosongkan = 123456" class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Password (default: 123456)</label>
+                <input type="password" name="password" placeholder="Kosongkan = 123456" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
-                <label class="block text-xs font-bold text-zcText mb-1.5">Role *</label>
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Role *</label>
                 <select name="role" id="add_role" onchange="toggleCabangField('add_cabang_row', this.value)"
-                    class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                    class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                     <option value="kasir">Kasir</option>
                     <option value="super_admin">Super Admin</option>
                     <option value="pelanggan">Pelanggan</option>
                 </select>
             </div>
             <div id="add_cabang_row">
-                <label class="block text-xs font-bold text-zcText mb-1.5">Cabang (wajib untuk Kasir)</label>
-                <select name="id_cabang" class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Cabang (wajib untuk Kasir)</label>
+                <select name="id_cabang" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                     <?php foreach ($cabangList as $c): ?>
                         <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nama']) ?></option>
                     <?php endforeach; ?>
@@ -200,7 +200,7 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
             </div>
             <div class="flex justify-end gap-3 pt-2">
                 <button type="button" onclick="document.getElementById('modal_tambah_user').classList.add('hidden')" class="px-4 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition">Batal</button>
-                <button type="submit" class="px-5 py-2 text-xs font-bold bg-zcNavy hover:bg-zcNavyHv text-white rounded-xl transition shadow-sm">Buat Akun</button>
+                <button type="submit" class="px-5 py-2 text-xs font-bold bg-zc hover:bg-zcHv text-white rounded-xl transition shadow-sm">Buat Akun</button>
             </div>
         </form>
     </div>
@@ -209,29 +209,29 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
 <!-- MODAL: Edit User -->
 <div id="modal_edit_user" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-zcBorder">
-            <h3 class="text-sm font-bold text-zcText">Edit User</h3>
-            <button onclick="document.getElementById('modal_edit_user').classList.add('hidden')" class="text-zcMuted hover:text-zcText text-lg">✕</button>
+        <div class="flex items-center justify-between px-6 py-4 border-b border-zcBrd">
+            <h3 class="text-sm font-bold text-zcTxt">Edit User</h3>
+            <button onclick="document.getElementById('modal_edit_user').classList.add('hidden')" class="text-zcMut hover:text-zcTxt text-lg">&times;</button>
         </div>
         <form method="POST" class="p-6 space-y-4">
             <input type="hidden" name="aksi" value="edit_user">
             <input type="hidden" name="id_user" id="eu_id">
             <div>
-                <label class="block text-xs font-bold text-zcText mb-1.5">Nama Lengkap *</label>
-                <input type="text" name="nama_lengkap" id="eu_nama" required class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Nama Lengkap *</label>
+                <input type="text" name="nama_lengkap" id="eu_nama" required class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
-                <label class="block text-xs font-bold text-zcText mb-1.5">Role *</label>
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Role *</label>
                 <select name="role" id="eu_role" onchange="toggleCabangField('eu_cabang_row', this.value)"
-                    class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                    class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                     <option value="kasir">Kasir</option>
                     <option value="super_admin">Super Admin</option>
                     <option value="pelanggan">Pelanggan</option>
                 </select>
             </div>
             <div id="eu_cabang_row">
-                <label class="block text-xs font-bold text-zcText mb-1.5">Cabang</label>
-                <select name="id_cabang" id="eu_cabang" class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Cabang</label>
+                <select name="id_cabang" id="eu_cabang" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                     <?php foreach ($cabangList as $c): ?>
                         <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nama']) ?></option>
                     <?php endforeach; ?>
@@ -239,7 +239,7 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
             </div>
             <div class="flex justify-end gap-3 pt-2">
                 <button type="button" onclick="document.getElementById('modal_edit_user').classList.add('hidden')" class="px-4 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition">Batal</button>
-                <button type="submit" class="px-5 py-2 text-xs font-bold bg-zcSky hover:bg-zcCyan text-white rounded-xl transition shadow-sm">Simpan</button>
+                <button type="submit" class="px-5 py-2 text-xs font-bold bg-zc hover:bg-zcHv text-white rounded-xl transition shadow-sm">Simpan</button>
             </div>
         </form>
     </div>
@@ -262,3 +262,4 @@ toggleCabangField('add_cabang_row', document.getElementById('add_role')?.value ?
 </script>
 
 <?php layoutEnd(); ?>
+
