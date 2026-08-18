@@ -1,204 +1,188 @@
 <?php
 // File: inventori/proses_mutasi.php
-// Modul Mutasi Stok Antar-Cabang ZenCare Medical
-
+// Modul Mutasi Stok Antar Cabang – Admin & Kasir
+session_start();
+require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/layout.php';
 
-$message = '';
-$messageType = 'info';
+requireRole(['super_admin', 'kasir']);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['aksi'] === 'transfer_stok') {
+$msg = ''; $msgType = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $idVariasi    = intval($_POST['id_variasi'] ?? 0);
     $cabangAsal   = intval($_POST['cabang_asal'] ?? 0);
     $cabangTujuan = intval($_POST['cabang_tujuan'] ?? 0);
     $qty          = intval($_POST['qty'] ?? 0);
 
-    if ($idVariasi <= 0 || $cabangAsal <= 0 || $cabangTujuan <= 0 || $qty <= 0) {
-        $message = "Semua bidang formulir wajib diisi dengan benar!";
-        $messageType = 'error';
+    if (!$idVariasi || !$cabangAsal || !$cabangTujuan || $qty <= 0) {
+        $msg = "Semua field wajib diisi dan qty harus > 0!"; $msgType = 'error';
     } elseif ($cabangAsal === $cabangTujuan) {
-        $message = "Cabang asal dan cabang tujuan tidak boleh sama!";
-        $messageType = 'error';
+        $msg = "Cabang asal dan tujuan tidak boleh sama!"; $msgType = 'error';
     } else {
         $pdo->beginTransaction();
         try {
-            $stmtAsal = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi = ? AND id_cabang = ? FOR UPDATE");
-            $stmtAsal->execute([$idVariasi, $cabangAsal]);
-            $stokAsalCurrent = $stmtAsal->fetchColumn();
+            $stokAsalQ = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi=? AND id_cabang=? FOR UPDATE");
+            $stokAsalQ->execute([$idVariasi, $cabangAsal]);
+            $stokAsal = $stokAsalQ->fetchColumn();
 
-            if ($stokAsalCurrent === false || intval($stokAsalCurrent) < $qty) {
-                throw new Exception("Stok cabang asal tidak mencukupi! Tersisa: " . ($stokAsalCurrent === false ? 0 : $stokAsalCurrent));
+            if ($stokAsal === false || intval($stokAsal) < $qty) {
+                throw new Exception("Stok di cabang asal tidak mencukupi! Tersisa: " . ($stokAsal ?? 0) . " unit.");
             }
 
-            // 1. Potong Stok Cabang Asal
-            $stmtSub = $pdo->prepare("UPDATE stok_cabang SET stok = stok - ? WHERE id_variasi = ? AND id_cabang = ?");
-            $stmtSub->execute([$qty, $idVariasi, $cabangAsal]);
+            // Kurangi stok cabang asal
+            $pdo->prepare("UPDATE stok_cabang SET stok=stok-? WHERE id_variasi=? AND id_cabang=?")->execute([$qty, $idVariasi, $cabangAsal]);
+            $sisaAsal = intval($stokAsal) - $qty;
+            $pdo->prepare("INSERT INTO kartu_stok (id_cabang,id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,?,'Keluar',?,?,?)")
+                ->execute([$cabangAsal, $idVariasi, $qty, $sisaAsal, "Mutasi Stok Keluar → Cabang ID $cabangTujuan"]);
 
-            // 2. Tambah Stok Cabang Tujuan
-            $stmtAdd = $pdo->prepare("INSERT INTO stok_cabang (id_variasi, id_cabang, stok) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE stok = stok + VALUES(stok)");
-            $stmtAdd->execute([$idVariasi, $cabangTujuan, $qty]);
+            // Tambah stok cabang tujuan
+            $chkTujuan = $pdo->prepare("SELECT id FROM stok_cabang WHERE id_variasi=? AND id_cabang=?");
+            $chkTujuan->execute([$idVariasi, $cabangTujuan]);
+            if ($chkTujuan->fetchColumn()) {
+                $pdo->prepare("UPDATE stok_cabang SET stok=stok+? WHERE id_variasi=? AND id_cabang=?")->execute([$qty, $idVariasi, $cabangTujuan]);
+            } else {
+                $pdo->prepare("INSERT INTO stok_cabang (id_variasi,id_cabang,stok) VALUES (?,?,?)")->execute([$idVariasi, $cabangTujuan, $qty]);
+            }
+            $sisaTujuanQ = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi=? AND id_cabang=?");
+            $sisaTujuanQ->execute([$idVariasi, $cabangTujuan]);
+            $sisaTujuan = $sisaTujuanQ->fetchColumn();
+            $pdo->prepare("INSERT INTO kartu_stok (id_cabang,id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,?,'Masuk',?,?,?)")
+                ->execute([$cabangTujuan, $idVariasi, $qty, $sisaTujuan, "Mutasi Stok Masuk ← Cabang ID $cabangAsal"]);
 
-            // 3. Catat Tabel Mutasi
-            $stmtMutasi = $pdo->prepare("INSERT INTO mutasi_stok (id_variasi, cabang_asal, cabang_tujuan, qty) VALUES (?, ?, ?, ?)");
-            $stmtMutasi->execute([$idVariasi, $cabangAsal, $cabangTujuan, $qty]);
-
-            // 4. Catat Kartu Stok (Keluar & Masuk)
-            $sisaAsal = intval($stokAsalCurrent) - $qty;
-            $stmtLogAsal = $pdo->prepare("INSERT INTO kartu_stok (id_cabang, id_variasi, jenis_mutasi, qty, sisa_stok, keterangan) VALUES (?, ?, 'Keluar', ?, ?, ?)");
-            $stmtLogAsal->execute([$cabangAsal, $idVariasi, $qty, $sisaAsal, "Mutasi keluar ke Cabang #$cabangTujuan"]);
-
-            $stmtSisaTujuan = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi = ? AND id_cabang = ?");
-            $stmtSisaTujuan->execute([$idVariasi, $cabangTujuan]);
-            $sisaTujuan = $stmtSisaTujuan->fetchColumn();
-
-            $stmtLogTujuan = $pdo->prepare("INSERT INTO kartu_stok (id_cabang, id_variasi, jenis_mutasi, qty, sisa_stok, keterangan) VALUES (?, ?, 'Masuk', ?, ?, ?)");
-            $stmtLogTujuan->execute([$cabangTujuan, $idVariasi, $qty, $sisaTujuan, "Mutasi masuk dari Cabang #$cabangAsal"]);
+            // Catat di mutasi_stok
+            $pdo->prepare("INSERT INTO mutasi_stok (id_variasi,cabang_asal,cabang_tujuan,qty) VALUES (?,?,?,?)")->execute([$idVariasi, $cabangAsal, $cabangTujuan, $qty]);
 
             $pdo->commit();
-            $message = "Mutasi stok sebanyak $qty unit berhasil dipindahkan!";
-            $messageType = 'success';
+            $msg = "Mutasi berhasil: $qty unit dipindahkan dari Cabang #$cabangAsal ke Cabang #$cabangTujuan.";
+            $msgType = 'success';
         } catch (Exception $e) {
             $pdo->rollBack();
-            $message = "Gagal memproses mutasi stok: " . $e->getMessage();
-            $messageType = 'error';
+            $msg = "Gagal mutasi: " . $e->getMessage(); $msgType = 'error';
         }
     }
 }
 
-$cabangList = $pdo->query("SELECT * FROM cabang WHERE is_active = 1 ORDER BY id ASC")->fetchAll();
-$variasiList = $pdo->query("
-    SELECT v.id, CONCAT(i.nama_produk, ' (', v.nama_variasi, ')') AS nama_item, v.sku_variasi
-    FROM produk_variasi v
-    JOIN produk_induk i ON v.id_produk_induk = i.id
-    WHERE v.is_active = 1 AND i.is_active = 1
-    ORDER BY i.nama_produk ASC
-")->fetchAll();
+$cabangList = $pdo->query("SELECT * FROM cabang WHERE is_active=1 ORDER BY id ASC")->fetchAll();
+$produkList = $pdo->query("
+    SELECT v.id, CONCAT(i.nama_produk,' - ',v.nama_variasi) AS label, v.sku_variasi
+    FROM produk_variasi v JOIN produk_induk i ON v.id_produk_induk=i.id
+    WHERE v.is_active=1 AND i.is_active=1 ORDER BY i.nama_produk ASC")->fetchAll();
 
-$historiMutasi = $pdo->query("
-    SELECT m.*, CONCAT(i.nama_produk, ' - ', v.nama_variasi) AS nama_item,
+$mutasiLog = $pdo->query("
+    SELECT m.*, CONCAT(i.nama_produk,' - ',v.nama_variasi) AS nama_item,
            ca.nama AS nama_asal, ct.nama AS nama_tujuan
     FROM mutasi_stok m
-    JOIN produk_variasi v ON m.id_variasi = v.id
-    JOIN produk_induk i ON v.id_produk_induk = i.id
-    JOIN cabang ca ON m.cabang_asal = ca.id
-    JOIN cabang ct ON m.cabang_tujuan = ct.id
-    ORDER BY m.tanggal DESC LIMIT 20
-")->fetchAll();
+    JOIN produk_variasi v ON m.id_variasi=v.id
+    JOIN produk_induk i ON v.id_produk_induk=i.id
+    JOIN cabang ca ON m.cabang_asal=ca.id
+    JOIN cabang ct ON m.cabang_tujuan=ct.id
+    ORDER BY m.tanggal DESC LIMIT 10")->fetchAll();
+
+layoutHead('Mutasi Stok Cabang');
+layoutBodyOpen();
+layoutSidebar('mutasi');
+layoutHeader('Mutasi Stok Antar Cabang', 'Transfer stok barang dari cabang asal ke cabang tujuan dengan atomik & audit trail');
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>ZenCare - Mutasi Stok Antar Cabang</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        .card { background: white; border: 1px solid #ccc; padding: 25px; border-radius: 6px; margin-bottom: 25px; }
-        h1, h2 { margin-top: 0; border-bottom: 2px solid #000; padding-bottom: 8px; }
-        .alert { padding: 12px; margin-bottom: 20px; border-radius: 4px; }
-        .alert-success { background: #e2f0d9; border-left: 4px solid #385723; color: #385723; }
-        .alert-error { background: #fce4d6; border-left: 4px solid #c65911; color: #c65911; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        select, input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn { background: #000; color: #fff; border: none; padding: 12px 24px; cursor: pointer; border-radius: 4px; font-weight: bold; }
-        .btn:hover { background: #333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: #eee; }
-    </style>
-</head>
-<body>
 
-<div class="container">
-    <div class="card">
-        <h1>Modul Inventaris: Mutasi Stok Antar Cabang</h1>
-        <p>Gunakan formulir ini untuk memindahkan persediaan barang dari satu cabang ke cabang lainnya.</p>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-        <?php if (!empty($message)): ?>
-            <div class="alert alert-<?= $messageType == 'success' ? 'success' : 'error' ?>">
-                <?= htmlspecialchars($message) ?>
-            </div>
-        <?php endif; ?>
+    <!-- Form Mutasi -->
+    <div class="lg:col-span-5">
+        <div class="bg-white border border-zcBorder rounded-2xl shadow-sm p-6">
+            <h2 class="text-sm font-bold text-zcText mb-4 pb-3 border-b border-zcBorder">📦 Form Transfer Stok</h2>
 
-        <form method="POST" action="">
-            <input type="hidden" name="aksi" value="transfer_stok">
-            
-            <div class="form-group">
-                <label for="id_variasi">Pilih Produk & Variasi:</label>
-                <select name="id_variasi" id="id_variasi" required>
-                    <option value="">-- Pilih Barang --</option>
-                    <?php foreach ($variasiList as $v): ?>
-                        <option value="<?= $v['id'] ?>"><?= htmlspecialchars($v['nama_item']) ?> [<?= htmlspecialchars($v['sku_variasi']) ?>]</option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+            <?php if ($msg): ?>
+                <div class="mb-4 p-3.5 rounded-xl border text-xs font-semibold flex items-center gap-2 <?= $msgType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800' ?>">
+                    <?= $msgType === 'success' ? '✅' : '⛔' ?> <?= htmlspecialchars($msg) ?>
+                </div>
+            <?php endif; ?>
 
-            <div style="display: flex; gap: 20px;">
-                <div class="form-group" style="flex: 1;">
-                    <label for="cabang_asal">Cabang Asal (Pengirim):</label>
-                    <select name="cabang_asal" id="cabang_asal" required>
-                        <option value="">-- Pilih Asal --</option>
-                        <?php foreach ($cabangList as $c): ?>
-                            <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nama']) ?></option>
+            <form method="POST" class="space-y-4" onsubmit="return confirm('Konfirmasi mutasi stok?')">
+                <div>
+                    <label class="block text-xs font-bold text-zcText mb-1.5">Produk / Variasi *</label>
+                    <select name="id_variasi" required class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                        <option value="">-- Pilih Barang --</option>
+                        <?php foreach ($produkList as $p): ?>
+                            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['label']) ?> (<?= $p['sku_variasi'] ?>)</option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-
-                <div class="form-group" style="flex: 1;">
-                    <label for="cabang_tujuan">Cabang Tujuan (Penerima):</label>
-                    <select name="cabang_tujuan" id="cabang_tujuan" required>
-                        <option value="">-- Pilih Tujuan --</option>
-                        <?php foreach ($cabangList as $c): ?>
-                            <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nama']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-zcText mb-1.5">Cabang Asal *</label>
+                        <select name="cabang_asal" required class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                            <option value="">-- Asal --</option>
+                            <?php foreach ($cabangList as $c): ?>
+                                <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nama']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-zcText mb-1.5">Cabang Tujuan *</label>
+                        <select name="cabang_tujuan" required class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                            <option value="">-- Tujuan --</option>
+                            <?php foreach ($cabangList as $c): ?>
+                                <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nama']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label for="qty">Jumlah (Qty Mutasi):</label>
-                <input type="number" name="qty" id="qty" min="1" required placeholder="Masukkan jumlah unit">
-            </div>
-
-            <button type="submit" class="btn">Proses Transfer Stok</button>
-        </form>
+                <div>
+                    <label class="block text-xs font-bold text-zcText mb-1.5">Jumlah Unit yang Dimutasi *</label>
+                    <input type="number" name="qty" required min="1" placeholder="Contoh: 10"
+                        class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                </div>
+                <button type="submit" class="w-full bg-zcNavy hover:bg-zcNavyHv text-white font-bold text-xs py-3 rounded-xl transition shadow-sm">
+                    ↔️ Proses Mutasi Stok Antar Cabang
+                </button>
+            </form>
+        </div>
     </div>
 
-    <div class="card">
-        <h2>Histori Mutasi Stok Terakhir</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Waktu</th>
-                    <th>Nama Barang</th>
-                    <th>Dari Cabang</th>
-                    <th>Ke Cabang</th>
-                    <th>Jumlah</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($historiMutasi)): ?>
-                    <tr><td colspan="5" style="text-align: center;">Belum ada riwayat mutasi stok.</td></tr>
-                <?php else: ?>
-                    <?php foreach ($historiMutasi as $hm): ?>
-                        <tr>
-                            <td><?= date('d-m-Y H:i', strtotime($hm['tanggal'])) ?></td>
-                            <td><?= htmlspecialchars($hm['nama_item']) ?></td>
-                            <td><?= htmlspecialchars($hm['nama_asal']) ?></td>
-                            <td><?= htmlspecialchars($hm['nama_tujuan']) ?></td>
-                            <td><strong><?= intval($hm['qty']) ?> Unit</strong></td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
-        
-        <div style="margin-top: 15px;">
-            <a href="../index.php" style="color: #000; text-decoration: underline;">&laquo; Kembali ke Dashboard Utama</a>
+    <!-- Log Mutasi -->
+    <div class="lg:col-span-7">
+        <div class="bg-white border border-zcBorder rounded-2xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-zcBorder">
+                <h3 class="text-sm font-bold text-zcText">⚡ Riwayat Mutasi Stok (10 Terbaru)</h3>
+            </div>
+            <?php if (empty($mutasiLog)): ?>
+                <div class="p-10 text-center text-xs text-gray-500ed italic">Belum ada riwayat mutasi stok antar cabang.</div>
+            <?php else: ?>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBorder text-gray-500ed font-bold uppercase tracking-wider">
+                            <tr>
+                                <th class="px-4 py-3 text-left">Produk</th>
+                                <th class="px-4 py-3 text-left">Asal → Tujuan</th>
+                                <th class="px-4 py-3 text-center">Qty</th>
+                                <th class="px-4 py-3 text-right">Waktu</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBorder/60">
+                            <?php foreach ($mutasiLog as $m): ?>
+                                <tr class="hover:bg-slate-50/60">
+                                    <td class="px-4 py-3 font-semibold text-zcText"><?= htmlspecialchars($m['nama_item']) ?></td>
+                                    <td class="px-4 py-3 text-gray-500ed">
+                                        <span class="font-semibold text-rose-600"><?= htmlspecialchars($m['nama_asal']) ?></span>
+                                        <span class="mx-1">→</span>
+                                        <span class="font-semibold text-emerald-600"><?= htmlspecialchars($m['nama_tujuan']) ?></span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span class="px-2.5 py-1 bg-sky-100 text-sky-700 border border-sky-200 rounded-full font-bold text-[11px]"><?= $m['qty'] ?> unit</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-right text-gray-500ed"><?= date('d/m/Y H:i', strtotime($m['tanggal'])) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
 
-</body>
-</html>
+<?php layoutEnd(); ?>
+

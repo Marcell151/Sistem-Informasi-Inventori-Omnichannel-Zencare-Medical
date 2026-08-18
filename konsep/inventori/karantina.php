@@ -1,196 +1,170 @@
 <?php
 // File: inventori/karantina.php
-// Modul Gudang Karantina (Virtual Defect Storage / Klaim Garansi)
+// Gudang Karantina Barang Cacat / Garansi – Admin & Kasir
 session_start();
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/layout.php';
 
-$message = '';
-$messageType = 'info';
+requireRole(['super_admin', 'kasir']);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['aksi'] === 'masuk_karantina') {
+$activeCabang = $_SESSION['id_cabang'] ?? 1;
+if (isset($_GET['cabang'])) $_SESSION['id_cabang'] = $activeCabang = intval($_GET['cabang']);
+
+$msg = ''; $msgType = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $idVariasi = intval($_POST['id_variasi'] ?? 0);
-    $idCabang  = intval($_POST['id_cabang'] ?? 0);
     $qty       = intval($_POST['qty'] ?? 0);
     $alasan    = trim($_POST['alasan'] ?? '');
 
-    if ($idVariasi <= 0 || $idCabang <= 0 || $qty <= 0 || empty($alasan)) {
-        $message = "Semua kolom form wajib diisi!";
-        $messageType = 'error';
+    if (!$idVariasi || $qty <= 0 || !$alasan) {
+        $msg = "Semua field wajib diisi!"; $msgType = 'error';
     } else {
         $pdo->beginTransaction();
         try {
-            $stmtStok = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi = ? AND id_cabang = ? FOR UPDATE");
-            $stmtStok->execute([$idVariasi, $idCabang]);
-            $stokCurrent = $stmtStok->fetchColumn();
+            $stokQ = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi=? AND id_cabang=? FOR UPDATE");
+            $stokQ->execute([$idVariasi, $activeCabang]);
+            $stok = $stokQ->fetchColumn();
 
-            if ($stokCurrent === false || intval($stokCurrent) < $qty) {
-                throw new Exception("Stok fisik di cabang ini tidak mencukupi untuk dikarantina! Tersisa: " . ($stokCurrent ?? 0));
+            if ($stok === false || intval($stok) < $qty) {
+                throw new Exception("Stok tidak mencukupi untuk dikarantina! Tersisa: " . ($stok ?? 0));
             }
 
-            // 1. Potong Stok
-            $stmtSub = $pdo->prepare("UPDATE stok_cabang SET stok = stok - ? WHERE id_variasi = ? AND id_cabang = ?");
-            $stmtSub->execute([$qty, $idVariasi, $idCabang]);
+            $pdo->prepare("UPDATE stok_cabang SET stok=stok-? WHERE id_variasi=? AND id_cabang=?")->execute([$qty, $idVariasi, $activeCabang]);
+            $sisa = intval($stok) - $qty;
 
-            // 2. Insert gudang_karantina
-            $stmtKarantina = $pdo->prepare("INSERT INTO gudang_karantina (id_cabang, id_variasi, qty, alasan) VALUES (?, ?, ?, ?)");
-            $stmtKarantina->execute([$idCabang, $idVariasi, $qty, $alasan]);
-
-            // 3. Log Kartu Stok
-            $sisaStok = intval($stokCurrent) - $qty;
-            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_cabang, id_variasi, jenis_mutasi, qty, sisa_stok, keterangan) VALUES (?, ?, 'Karantina', ?, ?, ?)");
-            $stmtKartu->execute([$idCabang, $idVariasi, $qty, $sisaStok, "Dipindahkan ke Gudang Karantina. Alasan: $alasan"]);
+            $pdo->prepare("INSERT INTO gudang_karantina (id_cabang,id_variasi,qty,alasan) VALUES (?,?,?,?)")->execute([$activeCabang, $idVariasi, $qty, $alasan]);
+            $pdo->prepare("INSERT INTO kartu_stok (id_cabang,id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,?,'Karantina',?,?,?)")
+                ->execute([$activeCabang, $idVariasi, $qty, $sisa, "Karantina: $alasan"]);
 
             $pdo->commit();
-            $message = "Berhasil memindahkan $qty unit barang ke Gudang Karantina!";
-            $messageType = 'success';
+            $msg = "$qty unit berhasil dipindahkan ke Gudang Karantina."; $msgType = 'success';
         } catch (Exception $e) {
             $pdo->rollBack();
-            $message = "Gagal memproses karantina: " . $e->getMessage();
-            $messageType = 'error';
+            $msg = "Gagal: " . $e->getMessage(); $msgType = 'error';
         }
     }
 }
 
-$cabangList = $pdo->query("SELECT * FROM cabang WHERE is_active = 1 ORDER BY id ASC")->fetchAll();
-$variasiList = $pdo->query("
-    SELECT v.id, CONCAT(i.nama_produk, ' - ', v.nama_variasi) AS nama_item, v.sku_variasi
-    FROM produk_variasi v
-    JOIN produk_induk i ON v.id_produk_induk = i.id
-    WHERE v.is_active = 1 AND i.is_active = 1
-    ORDER BY i.nama_produk ASC
-")->fetchAll();
+$produkList = $pdo->prepare("
+    SELECT v.id, CONCAT(i.nama_produk,' - ',v.nama_variasi) AS label, COALESCE(sc.stok,0) AS stok
+    FROM produk_variasi v JOIN produk_induk i ON v.id_produk_induk=i.id
+    LEFT JOIN stok_cabang sc ON sc.id_variasi=v.id AND sc.id_cabang=?
+    WHERE v.is_active=1 AND i.is_active=1 ORDER BY i.nama_produk ASC");
+$produkList->execute([$activeCabang]);
+$produkList = $produkList->fetchAll();
 
-$karantinaList = $pdo->query("
-    SELECT gk.*, c.nama AS nama_cabang, CONCAT(i.nama_produk, ' - ', v.nama_variasi) AS nama_item, v.sku_variasi
-    FROM gudang_karantina gk
-    JOIN cabang c ON gk.id_cabang = c.id
-    JOIN produk_variasi v ON gk.id_variasi = v.id
-    JOIN produk_induk i ON v.id_produk_induk = i.id
-    ORDER BY gk.tanggal DESC
-")->fetchAll();
+$karantinaLog = $pdo->prepare("
+    SELECT gk.*, CONCAT(i.nama_produk,' - ',v.nama_variasi) AS nama
+    FROM gudang_karantina gk JOIN produk_variasi v ON gk.id_variasi=v.id
+    JOIN produk_induk i ON v.id_produk_induk=i.id
+    WHERE gk.id_cabang=? ORDER BY gk.tanggal DESC LIMIT 20");
+$karantinaLog->execute([$activeCabang]);
+$karantinaLog = $karantinaLog->fetchAll();
+
+$totalKarantina = array_sum(array_column($karantinaLog, 'qty'));
+
+layoutHead('Gudang Karantina');
+layoutBodyOpen();
+layoutSidebar('karantina');
+layoutHeader('Gudang Karantina Barang Cacat', 'Isolasi barang defect/retur garansi dari stok aktif – sisa stok terpotong otomatis');
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>ZenCare - Gudang Karantina & Klaim Garansi</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              gray: {
-                50: '#fafafa', 100: '#f4f4f5', 200: '#e4e4e7', 300: '#d4d4d8',
-                400: '#a1a1aa', 500: '#71717a', 600: '#52525b', 700: '#3f3f46',
-                800: '#27272a', 900: '#18181b',
-              }
-            }
-          }
-        }
-      }
-    </script>
-</head>
-<body class="bg-gray-100 text-gray-900 font-sans antialiased">
 
-    <header class="bg-black text-white border-b border-gray-800 px-6 py-4 flex justify-between items-center">
-        <div>
-            <h1 class="text-lg font-bold tracking-wider">ZENCARE <span class="font-normal text-gray-400">KARANTINA &amp; GARANSI</span></h1>
-            <p class="text-xs text-gray-400">Virtual Defect Storage &amp; Isolation Module</p>
-        </div>
-        <a href="../index.php" class="text-xs bg-white text-black font-bold px-3 py-1.5 rounded hover:bg-gray-200 transition">&laquo; Dashboard Utama</a>
-    </header>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-    <div class="max-w-6xl mx-auto px-4 py-8">
-        
-        <?php if (!empty($message)): ?>
-            <div class="mb-6 p-4 text-xs font-semibold rounded border <?= $messageType === 'success' ? 'bg-black text-white border-black' : 'bg-gray-300 text-black border-gray-400' ?>">
-                <?= htmlspecialchars($message) ?>
-            </div>
-        <?php endif; ?>
+    <!-- Form Karantina -->
+    <div class="lg:col-span-4">
+        <div class="bg-white border border-zcBorder rounded-2xl shadow-sm p-6">
+            <h2 class="text-sm font-bold text-zcText mb-4 pb-3 border-b border-zcBorder flex items-center gap-2">
+                <span class="text-base">⚠️</span> Form Isolasi Barang
+            </h2>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
-            <div class="lg:col-span-5 bg-white border border-gray-300 rounded-lg p-6">
-                <h2 class="text-base font-bold text-black border-b border-gray-200 pb-2 mb-4">Lapor Barang Cacat / Garansi</h2>
-                
-                <form method="POST">
-                    <input type="hidden" name="aksi" value="masuk_karantina">
-                    
-                    <div class="space-y-4 text-xs">
-                        <div>
-                            <label class="block font-bold text-gray-700 mb-1">Lokasi Cabang Barang *</label>
-                            <select name="id_cabang" class="w-full border border-gray-300 rounded p-2.5 bg-white focus:outline-none focus:border-black" required>
-                                <option value="">-- Pilih Cabang --</option>
-                                <?php foreach ($cabangList as $c): ?>
-                                    <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nama']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block font-bold text-gray-700 mb-1">Pilih Item Barang *</label>
-                            <select name="id_variasi" class="w-full border border-gray-300 rounded p-2.5 bg-white focus:outline-none focus:border-black" required>
-                                <option value="">-- Pilih Barang --</option>
-                                <?php foreach ($variasiList as $v): ?>
-                                    <option value="<?= $v['id'] ?>"><?= htmlspecialchars($v['nama_item']) ?> [<?= htmlspecialchars($v['sku_variasi']) ?>]</option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block font-bold text-gray-700 mb-1">Jumlah Unit Cacat / Rusak *</label>
-                            <input type="number" name="qty" min="1" class="w-full border border-gray-300 rounded p-2.5 focus:outline-none focus:border-black" placeholder="Contoh: 1" required>
-                        </div>
-
-                        <div>
-                            <label class="block font-bold text-gray-700 mb-1">Alasan Cacat / Deskripsi Rusak *</label>
-                            <textarea name="alasan" rows="3" class="w-full border border-gray-300 rounded p-2.5 focus:outline-none focus:border-black" placeholder="Contoh: Layar digital tensimeter tidak menyala / Cacat pabrik" required></textarea>
-                        </div>
-
-                        <button type="submit" class="w-full bg-black text-white font-bold py-3 px-4 rounded border border-black hover:bg-gray-800 transition">
-                            Isolasi ke Gudang Karantina
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="lg:col-span-7 bg-white border border-gray-300 rounded-lg p-6">
-                <h2 class="text-base font-bold text-black border-b border-gray-200 pb-2 mb-4">Daftar Barang Karantina (Virtual Defect Storage)</h2>
-                
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border-collapse">
-                        <thead>
-                            <tr class="bg-gray-100 border-b border-gray-300 font-bold text-gray-800">
-                                <th class="p-3">Tanggal</th>
-                                <th class="p-3">Cabang</th>
-                                <th class="p-3">Nama Barang</th>
-                                <th class="p-3 text-center">Qty</th>
-                                <th class="p-3">Alasan Cacat</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (empty($karantinaList)): ?>
-                                <tr><td colspan="5" class="p-4 text-center text-gray-400 italic">Belum ada barang di Gudang Karantina.</td></tr>
-                            <?php else: ?>
-                                <?php foreach ($karantinaList as $k): ?>
-                                    <tr class="border-b border-gray-200 hover:bg-gray-50">
-                                        <td class="p-3 text-gray-600"><?= date('d/m/Y H:i', strtotime($k['tanggal'])) ?></td>
-                                        <td class="p-3 font-semibold"><?= htmlspecialchars($k['nama_cabang']) ?></td>
-                                        <td class="p-3"><strong><?= htmlspecialchars($k['nama_item']) ?></strong><br><span class="text-[10px] text-gray-500"><?= htmlspecialchars($k['sku_variasi']) ?></span></td>
-                                        <td class="p-3 text-center font-bold"><?= intval($k['qty']) ?></td>
-                                        <td class="p-3 text-gray-700"><?= htmlspecialchars($k['alasan']) ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+            <?php if ($msg): ?>
+                <div class="mb-4 p-3.5 rounded-xl border text-xs font-semibold flex items-center gap-2 <?= $msgType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800' ?>">
+                    <?= $msgType === 'success' ? '✅' : '⛔' ?> <?= htmlspecialchars($msg) ?>
                 </div>
+            <?php endif; ?>
+
+            <!-- Summary Badge -->
+            <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs">
+                <span class="text-amber-800 font-semibold">Total unit dikarantina:</span>
+                <span class="font-bold text-amber-900 text-base"><?= number_format($totalKarantina) ?> unit</span>
             </div>
 
+            <form method="POST" class="space-y-4" onsubmit="return confirm('Pindahkan barang ke karantina? Stok akan dikurangi.')">
+                <div>
+                    <label class="block text-xs font-bold text-zcText mb-1.5">Pilih Produk *</label>
+                    <select name="id_variasi" required class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                        <option value="">-- Pilih Barang --</option>
+                        <?php foreach ($produkList as $p): ?>
+                            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['label']) ?> (Stok: <?= $p['stok'] ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-zcText mb-1.5">Jumlah Unit yang Diisolasi *</label>
+                    <input type="number" name="qty" required min="1" placeholder="Contoh: 2"
+                        class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-zcText mb-1.5">Alasan Karantina *</label>
+                    <select name="alasan" required class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                        <option value="">-- Pilih Alasan --</option>
+                        <option value="Cacat Produksi / Kemasan Rusak">Cacat Produksi / Kemasan Rusak</option>
+                        <option value="Klaim Garansi Pelanggan">Klaim Garansi Pelanggan</option>
+                        <option value="Expired / Kadaluarsa">Expired / Kadaluarsa</option>
+                        <option value="Retur dari Toko Online">Retur dari Toko Online</option>
+                        <option value="Pemeriksaan QC Internal">Pemeriksaan QC Internal</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-3 rounded-xl transition shadow-sm">
+                    ⚠️ Karantinakan Barang
+                </button>
+            </form>
         </div>
     </div>
 
-</body>
-</html>
+    <!-- Daftar Karantina -->
+    <div class="lg:col-span-8">
+        <div class="bg-white border border-zcBorder rounded-2xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-zcBorder">
+                <h3 class="text-sm font-bold text-zcText">📋 Riwayat Gudang Karantina (20 Terbaru)</h3>
+                <p class="text-[11px] text-gray-500ed mt-0.5">Barang terisolasi yang belum dikembalikan/dihapuskan</p>
+            </div>
+            <?php if (empty($karantinaLog)): ?>
+                <div class="p-10 text-center text-xs text-gray-500ed italic">Gudang karantina kosong – semua barang dalam kondisi normal.</div>
+            <?php else: ?>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBorder text-gray-500ed font-bold uppercase tracking-wider">
+                            <tr>
+                                <th class="px-4 py-3 text-left">Produk</th>
+                                <th class="px-4 py-3 text-center">Qty</th>
+                                <th class="px-4 py-3 text-left">Alasan</th>
+                                <th class="px-4 py-3 text-right">Tanggal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBorder/60">
+                            <?php foreach ($karantinaLog as $k): ?>
+                                <tr class="hover:bg-slate-50/60">
+                                    <td class="px-4 py-3 font-semibold text-zcText"><?= htmlspecialchars($k['nama']) ?></td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span class="px-2.5 py-1 bg-amber-100 text-amber-700 border border-amber-200 rounded-full font-bold text-[11px]"><?= $k['qty'] ?> unit</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-500ed"><?= htmlspecialchars($k['alasan']) ?></td>
+                                    <td class="px-4 py-3 text-right text-gray-500ed"><?= date('d/m/Y H:i', strtotime($k['tanggal'])) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<?php layoutEnd(); ?>
+
