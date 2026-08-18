@@ -46,6 +46,11 @@ CREATE TABLE users (
     nama_lengkap VARCHAR(100) NOT NULL,
     role ENUM('super_admin', 'kasir', 'pelanggan') NOT NULL,
     id_cabang INT NULL COMMENT 'Terikat ke cabang jika role kasir, NULL untuk admin/pelanggan',
+    telepon VARCHAR(20) NULL,
+    alamat TEXT NULL,
+    kota_id INT NULL,
+    lat DECIMAL(10,8) NULL,
+    lng DECIMAL(11,8) NULL,
     is_active BOOLEAN DEFAULT 1,
     FOREIGN KEY (id_cabang) REFERENCES cabang(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
