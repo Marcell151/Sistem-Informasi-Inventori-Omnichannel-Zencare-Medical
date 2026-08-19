@@ -7,7 +7,7 @@ session_unset();
 session_destroy();
 
 if ($isPelanggan) {
-    header('Location: konsep/zencare_store.php');
+    header('Location: zencare_store.php');
 } else {
     header('Location: login.php');
 }
