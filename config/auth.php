@@ -16,9 +16,9 @@ function requireRole(array $roles) {
     $currentRole = $_SESSION['role'] ?? '';
     
     if (!in_array($currentRole, $roles)) {
-        // If customer tries to access admin/kasir pages, redirect to store catalog
+        // If customer tries to access admin/kasir pages, redirect to ecommerce store
         if ($currentRole === 'pelanggan') {
-            header('Location: ' . BASE_URL . '/zencare_store.php');
+            header('Location: ' . BASE_URL . '/ecommerce/index.php');
             exit;
         }
 

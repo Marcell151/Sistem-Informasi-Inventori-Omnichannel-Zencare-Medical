@@ -52,17 +52,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                 $sisa = $sisaQ->fetchColumn();
                 $satLable = ($satuanTipe === 'besar') ? $varData['satuan_besar'] : $varData['satuan_kecil'];
                 $pdo->prepare("INSERT INTO kartu_stok (id_cabang,id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,?,'Keluar',?,?,?)")
-                    ->execute([$idCabangKasir,$idVar,$qtyPotong,$sisa,"POS Offline #$invoiceNo (Beli $qtyInput $satLable)"]);
+                    ->execute([$idCabangKasir,$idVar,$qtyPotong,$sisa,$invoiceNo]);
                 $totalHarga += $effPrice * $qtyInput;
             }
 
             $pdo->prepare("UPDATE penjualan SET total_harga=? WHERE id=?")->execute([$totalHarga, $idPenjualan]);
 
-            // Shopee cURL Sync
+            // Shopee cURL Sync (Backend retained)
             $apiCfg = $pdo->prepare("SELECT * FROM pengaturan_api WHERE platform='shopee' AND is_active=1");
             $apiCfg->execute();
             $shopeeApi = $apiCfg->fetch();
-            $syncNote  = '';
             if ($shopeeApi) {
                 foreach ($cartItems as $item) {
                     $skuQ = $pdo->prepare("SELECT v.sku_variasi, sc.stok FROM produk_variasi v JOIN stok_cabang sc ON sc.id_variasi=v.id WHERE v.id=? AND sc.id_cabang=?");
@@ -74,15 +73,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                         curl_exec($ch); curl_close($ch);
                     }
                 }
-                $syncNote = ' | ✅ Shopee Sync API Dikirim';
             }
 
             $pdo->commit();
-            $msg = "✅ Transaksi berhasil! Invoice: <strong>$invoiceNo</strong> | Total: Rp " . number_format($totalHarga, 0, ',', '.') . $syncNote . " | <a href='cetak_invoice.php?no_invoice=$invoiceNo' target='_blank' class='underline font-bold ml-2'>🖨️ Cetak Struk A4</a>";
+            $msg = "Transaksi berhasil! Invoice: <strong>$invoiceNo</strong> | Total: Rp " . number_format($totalHarga, 0, ',', '.') . " | <a href='cetak_invoice.php?no_invoice=$invoiceNo' target='_blank' class='underline font-bold ml-2 text-zc hover:text-zcHv'>Cetak Struk Nota</a>";
             $msgType = 'success';
         } catch (Exception $e) {
             $pdo->rollBack();
-            $msg = "❌ Gagal: " . $e->getMessage(); $msgType = 'error';
+            $msg = "Gagal memproses transaksi: " . $e->getMessage(); $msgType = 'error';
         }
     }
 }
@@ -142,7 +140,7 @@ $shopeeOn = $shopeeOn->fetchColumn();
         </div>
         <div class="flex items-center gap-2">
             <a href="../index.php" class="text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 border border-zcBrd px-3.5 py-2 rounded-lg transition">← Dashboard</a>
-            <a href="../zencare_store.php" class="text-xs font-medium bg-zc hover:bg-zcHv text-white px-3.5 py-2 rounded-lg transition">Toko Online</a>
+            <a href="../ecommerce/index.php" class="text-xs font-medium bg-zc hover:bg-zcHv text-white px-3.5 py-2 rounded-lg transition">Toko Online</a>
             <a href="../logout.php" class="text-xs font-medium text-rose-600 hover:text-rose-800 bg-rose-50 border border-rose-200 px-3.5 py-2 rounded-lg transition">Keluar</a>
         </div>
     </header>
@@ -198,8 +196,8 @@ $shopeeOn = $shopeeOn->fetchColumn();
 
             <!-- Billing POS -->
             <div class="lg:col-span-5 bg-white border border-zcBrd rounded-2xl shadow-sm flex flex-col">
-                <div class="px-5 py-4 border-b border-zcBrd">
-                    <h2 class="text-sm font-bold text-zcTxt">📦 Billing Transaksi</h2>
+                <div class="px-5 py-4 border-b border-zcBrd flex items-center gap-2">
+                    <h2 class="text-sm font-bold text-zcTxt">Billing Transaksi Kasir</h2>
                 </div>
 
                 <div class="flex-1 overflow-y-auto">

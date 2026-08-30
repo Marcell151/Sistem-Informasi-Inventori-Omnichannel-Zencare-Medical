@@ -1,56 +1,82 @@
 <?php
-// File: laporan/kartu_stok.php – Kartu Stok (Stock Ledger) Report
+// File: laporan/kartu_stok.php – Laporan Kartu Stok (Audit Trail Omnichannel)
 session_start();
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['super_admin']);
+requireRole(['super_admin', 'admin_cabang', 'kasir']);
 
 $id_variasi = intval($_GET['id_variasi'] ?? 0);
 $id_cabang  = intval($_GET['id_cabang']  ?? ($_SESSION['id_cabang'] ?? 0));
 $dari       = $_GET['dari'] ?? date('Y-m-01');
 $sampai     = $_GET['sampai'] ?? date('Y-m-d');
+$jenis_filter = trim($_GET['jenis'] ?? '');
 
 $cabangList  = $pdo->query("SELECT id, nama FROM cabang WHERE is_active=1 ORDER BY id")->fetchAll();
-$variasiList = $pdo->query("SELECT pv.id, CONCAT(pi.nama_produk,' - ',pv.nama_variasi) AS label FROM produk_variasi pv JOIN produk_induk pi ON pi.id=pv.id_produk_induk WHERE pi.is_active=1 ORDER BY pi.nama_produk, pv.nama_variasi")->fetchAll();
+$variasiList = $pdo->query("
+    SELECT pv.id, pv.sku_variasi, CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS label 
+    FROM produk_variasi pv 
+    JOIN produk_induk pi ON pi.id = pv.id_produk_induk 
+    WHERE pi.is_active = 1 AND pv.is_active = 1
+    ORDER BY pi.nama_produk ASC, pv.nama_variasi ASC
+")->fetchAll();
 
-$movements = [];
-$stok_awal = 0;
-$namaVariasi = '';
+// Build query
+$whereClauses = ["DATE(ks.tanggal) BETWEEN ? AND ?"];
+$params = [$dari, $sampai];
 
-if ($id_variasi && $id_cabang) {
-    // Stok awal = stok fisik saat ini di stok_cabang
-    $stmtAwal = $pdo->prepare("SELECT COALESCE(stok,0) FROM stok_cabang WHERE id_variasi=? AND id_cabang=?");
-    $stmtAwal->execute([$id_variasi, $id_cabang]);
-    $stok_awal_fisik = intval($stmtAwal->fetchColumn());
+if ($id_cabang > 0) {
+    $whereClauses[] = "ks.id_cabang = ?";
+    $params[] = $id_cabang;
+}
 
-    // Kartu stok dari tabel kartu_stok (no id_user column)
-    $stmt = $pdo->prepare("
-        SELECT ks.*
-        FROM kartu_stok ks
-        WHERE ks.id_variasi=? AND ks.id_cabang=? AND DATE(ks.tanggal) BETWEEN ? AND ?
-        ORDER BY ks.tanggal ASC
-    ");
-    $stmt->execute([$id_variasi, $id_cabang, $dari, $sampai]);
-    $movements = $stmt->fetchAll();
+if ($id_variasi > 0) {
+    $whereClauses[] = "ks.id_variasi = ?";
+    $params[] = $id_variasi;
+}
 
-    // Hitung stok awal periode mundur dari stok fisik sekarang
-    $totMasukPeriode  = array_sum(array_map(fn($m) => $m['jenis_mutasi']==='Masuk' ? intval($m['qty']) : 0, $movements));
-    $totKeluarPeriode = array_sum(array_map(fn($m) => in_array($m['jenis_mutasi'], ['Keluar','Pengembalian/Batal','Karantina']) ? intval($m['qty']) : 0, $movements));
-    $stok_awal = $stok_awal_fisik - ($totMasukPeriode - $totKeluarPeriode);
+if (!empty($jenis_filter)) {
+    $whereClauses[] = "ks.jenis_mutasi = ?";
+    $params[] = $jenis_filter;
+}
 
-    foreach ($variasiList as $v) {
-        if ($v['id'] == $id_variasi) { $namaVariasi = $v['label']; break; }
+$whereSQL = implode(" AND ", $whereClauses);
+
+$stmt = $pdo->prepare("
+    SELECT ks.*, 
+           pv.sku_variasi, 
+           pv.nama_variasi, 
+           pi.nama_produk, 
+           c.nama AS nama_cabang
+    FROM kartu_stok ks
+    JOIN produk_variasi pv ON ks.id_variasi = pv.id
+    JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+    LEFT JOIN cabang c ON ks.id_cabang = c.id
+    WHERE $whereSQL
+    ORDER BY ks.tanggal DESC, ks.id DESC
+");
+$stmt->execute($params);
+$movements = $stmt->fetchAll();
+
+// Summary stats
+$totalMasuk = 0;
+$totalKeluar = 0;
+$totalTransaksi = count($movements);
+
+foreach ($movements as $m) {
+    if ($m['jenis_mutasi'] === 'Masuk') {
+        $totalMasuk += intval($m['qty']);
+    } elseif (in_array($m['jenis_mutasi'], ['Keluar', 'Pengembalian/Batal', 'Karantina'])) {
+        $totalKeluar += intval($m['qty']);
     }
 }
 
-
-layoutHead('Kartu Stok');
+layoutHead('Laporan Kartu Stok');
 layoutBodyOpen();
 layoutSidebar('laporan_kartu_stok');
-layoutHeader('Kartu Stok', 'Buku besar pergerakan stok per produk & cabang');
+layoutHeader('Kartu Stok Omnichannel', 'Audit trail pergerakan stok fisik kasir POS, e-commerce, mutasi, dan penerimaan supplier');
 ?>
 
 <style>
@@ -63,108 +89,184 @@ layoutHeader('Kartu Stok', 'Buku besar pergerakan stok per produk & cabang');
 
 <!-- Filter Panel -->
 <div class="bg-white border border-zcBrd rounded-2xl shadow-sm p-5 mb-6 no-print">
-  <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+  <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
     <div>
-      <label class="block text-[11px] font-semibold text-zcMut mb-1.5">Produk Variasi</label>
-      <select name="id_variasi" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-zc">
-        <option value="">-- Pilih Produk --</option>
-        <?php foreach ($variasiList as $v): ?>
-          <option value="<?= $v['id'] ?>" <?= $v['id']==$id_variasi?'selected':'' ?>><?= htmlspecialchars($v['label']) ?></option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-    <div>
-      <label class="block text-[11px] font-semibold text-zcMut mb-1.5">Cabang</label>
-      <select name="id_cabang" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-zc">
-        <option value="">-- Pilih Cabang --</option>
+      <label class="block text-xs font-bold text-zcTxt mb-1.5">Cabang</label>
+      <select name="id_cabang" class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:border-zc">
+        <option value="0">Semua Cabang</option>
         <?php foreach ($cabangList as $c): ?>
           <option value="<?= $c['id'] ?>" <?= $c['id']==$id_cabang?'selected':'' ?>><?= htmlspecialchars($c['nama']) ?></option>
         <?php endforeach; ?>
       </select>
     </div>
-    <div>
-      <label class="block text-[11px] font-semibold text-zcMut mb-1.5">Dari Tanggal</label>
-      <input type="date" name="dari" value="<?= $dari ?>" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 focus:outline-none focus:border-zc">
+    <div class="sm:col-span-2">
+      <label class="block text-xs font-bold text-zcTxt mb-1.5">Produk / Variasi</label>
+      <select name="id_variasi" class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:border-zc">
+        <option value="0">Semua Produk (Audit Omnichannel)</option>
+        <?php foreach ($variasiList as $v): ?>
+          <option value="<?= $v['id'] ?>" <?= $v['id']==$id_variasi?'selected':'' ?>>
+            <?= htmlspecialchars($v['label']) ?> (<?= htmlspecialchars($v['sku_variasi']) ?>)
+          </option>
+        <?php endforeach; ?>
+      </select>
     </div>
     <div>
-      <label class="block text-[11px] font-semibold text-zcMut mb-1.5">Sampai Tanggal</label>
-      <input type="date" name="sampai" value="<?= $sampai ?>" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 focus:outline-none focus:border-zc">
+      <label class="block text-xs font-bold text-zcTxt mb-1.5">Dari Tanggal</label>
+      <input type="date" name="dari" value="<?= $dari ?>" class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc">
+    </div>
+    <div>
+      <label class="block text-xs font-bold text-zcTxt mb-1.5">Sampai Tanggal</label>
+      <input type="date" name="sampai" value="<?= $sampai ?>" class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc">
     </div>
     <div class="flex gap-2">
-      <button type="submit" class="flex-1 px-4 py-2 bg-zc hover:bg-zcHv text-white text-xs font-bold rounded-xl transition">Tampilkan</button>
-      <?php if ($id_variasi && $id_cabang): ?>
-        <button type="button" onclick="window.print()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">Cetak</button>
-      <?php endif; ?>
+      <button type="submit" class="flex-1 px-4 py-2.5 bg-zc hover:bg-zcHv text-white text-sm font-bold rounded-xl transition shadow-sm cursor-pointer">
+        Tampilkan
+      </button>
+      <button type="button" onclick="window.print()" class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition cursor-pointer">
+        Cetak
+      </button>
     </div>
   </form>
 </div>
 
-<?php if ($id_variasi && $id_cabang): ?>
-<div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden">
-  <div class="px-6 py-5 border-b border-zcBrd bg-slate-50 flex items-center justify-between flex-wrap gap-3">
-    <div>
-      <h2 class="text-sm font-bold text-zcTxt">KARTU STOK</h2>
-      <p class="text-xs text-zcMut mt-0.5"><?= htmlspecialchars($namaVariasi) ?></p>
-      <p class="text-[11px] text-zcMut">Cabang: <strong><?php foreach($cabangList as $c){if($c['id']==$id_cabang) echo htmlspecialchars($c['nama']);} ?></strong> &bull; Periode: <strong><?= date('d M Y',strtotime($dari)) ?> - <?= date('d M Y',strtotime($sampai)) ?></strong></p>
-    </div>
-    <div class="text-right">
-      <p class="text-[10px] text-zcMut">Stok Awal Periode</p>
-      <p class="text-2xl font-bold text-zcTxt"><?= number_format($stok_awal) ?> <span class="text-sm font-normal text-zcMut">unit</span></p>
-    </div>
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+  <div class="bg-white border border-zcBrd rounded-2xl p-5 shadow-sm">
+    <span class="text-xs font-bold text-zcMut block mb-1">Total Mutasi Tercatat</span>
+    <span class="text-2xl font-black text-zcTxt"><?= number_format($totalTransaksi) ?></span>
+    <span class="text-xs text-zcMut block mt-1">Peristiwa perpindahan fisik</span>
   </div>
+  <div class="bg-white border border-zcBrd rounded-2xl p-5 shadow-sm">
+    <span class="text-xs font-bold text-emerald-700 block mb-1">Total Unit Masuk</span>
+    <span class="text-2xl font-black text-emerald-600">+<?= number_format($totalMasuk) ?></span>
+    <span class="text-xs text-emerald-700 block mt-1">Penerimaan fisik (Pcs)</span>
+  </div>
+  <div class="bg-white border border-zcBrd rounded-2xl p-5 shadow-sm">
+    <span class="text-xs font-bold text-rose-700 block mb-1">Total Unit Keluar</span>
+    <span class="text-2xl font-black text-rose-600">-<?= number_format($totalKeluar) ?></span>
+    <span class="text-xs text-rose-700 block mt-1">Penjualan POS &amp; Web (Pcs)</span>
+  </div>
+</div>
+
+<!-- Table Container -->
+<div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden">
+  <div class="px-6 py-4 border-b border-zcBrd bg-slate-50 flex items-center justify-between flex-wrap gap-2">
+    <div>
+      <h2 class="text-base font-bold text-zcTxt">Tabel Audit Kartu Stok (Omnichannel)</h2>
+      <p class="text-xs text-zcMut mt-0.5">Bukti sinkronisasi mutasi fisik kasir offline dan pesanan online e-commerce</p>
+    </div>
+    <span class="px-3 py-1 bg-zcLt text-zc font-bold text-xs rounded-full border border-zc/20">
+      Periode: <?= date('d M Y', strtotime($dari)) ?> &ndash; <?= date('d M Y', strtotime($sampai)) ?>
+    </span>
+  </div>
+
   <div class="overflow-x-auto">
-    <table class="w-full text-xs">
-      <thead class="bg-slate-50 border-b border-zcBrd text-zcMut font-bold uppercase tracking-wider">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-slate-50 border-b border-zcBrd text-zcMut font-bold uppercase tracking-wider text-xs">
         <tr>
-          <th class="px-5 py-3 text-left">Tgl/Waktu</th>
-          <th class="px-5 py-3 text-left">Keterangan / Referensi</th>
-          <th class="px-5 py-3 text-left">Operator</th>
-          <th class="px-5 py-3 text-right text-emerald-700">Masuk</th>
-          <th class="px-5 py-3 text-right text-rose-700">Keluar</th>
-          <th class="px-5 py-3 text-right">Saldo</th>
+          <th class="py-3.5 px-5">Waktu &amp; Tanggal</th>
+          <th class="py-3.5 px-5">SKU &amp; Nama Produk</th>
+          <th class="py-3.5 px-5 text-center">Jenis Mutasi</th>
+          <th class="py-3.5 px-5 text-right">Jumlah (Pcs)</th>
+          <th class="py-3.5 px-5 text-right">Sisa Stok (Pcs)</th>
+          <th class="py-3.5 px-5 text-left">Referensi / Keterangan</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-zcBrd/60">
-        <tr class="bg-blue-50/50">
-          <td class="px-5 py-3 text-zcMut font-mono"><?= date('d/m/Y',strtotime($dari)) ?></td>
-          <td class="px-5 py-3 font-semibold text-zcTxt" colspan="2">Saldo Awal Periode</td>
-          <td class="px-5 py-3"></td>
-          <td class="px-5 py-3"></td>
-          <td class="px-5 py-3 text-right font-bold text-zcTxt"><?= number_format($stok_awal) ?></td>
-        </tr>
-        <?php $saldo = $stok_awal; $tot_masuk = 0; $tot_keluar = 0;
-        if (empty($movements)): ?>
-          <tr><td colspan="6" class="px-5 py-8 text-center text-zcMut italic">Tidak ada pergerakan stok pada periode ini.</td></tr>
-        <?php else: foreach ($movements as $m):
-          $jenis = $m['jenis_mutasi'];
-          $masuk  = in_array($jenis, ['Masuk']) ? intval($m['qty']) : 0;
-          $keluar = in_array($jenis, ['Keluar', 'Pengembalian/Batal', 'Karantina']) ? intval($m['qty']) : 0;
-          $saldo += $masuk - $keluar;
-          $tot_masuk += $masuk; $tot_keluar += $keluar; ?>
-          <tr class="hover:bg-slate-50/60 transition">
-            <td class="px-5 py-3 text-zcMut font-mono"><?= date('d/m/Y H:i',strtotime($m['tanggal'])) ?></td>
-            <td class="px-5 py-3 font-semibold text-zcTxt"><?= htmlspecialchars($m['keterangan'] ?? $jenis) ?></td>
-            <td class="px-5 py-3 text-zcMut"><?= htmlspecialchars($m['operator'] ?? '-') ?></td>
-            <td class="px-5 py-3 text-right font-semibold text-emerald-700"><?= $masuk > 0 ? '+'.number_format($masuk) : '' ?></td>
-            <td class="px-5 py-3 text-right font-semibold text-rose-600"><?= $keluar > 0 ? '-'.number_format($keluar) : '' ?></td>
-            <td class="px-5 py-3 text-right font-bold <?= $saldo<0?'text-rose-600':'text-zcTxt' ?>"><?= number_format($saldo) ?></td>
+      <tbody class="divide-y divide-zcBrd/70">
+        <?php if (empty($movements)): ?>
+          <tr>
+            <td colspan="6" class="py-12 text-center text-sm text-zcMut italic">
+              Tidak ada catatan mutasi stok pada parameter filter ini.
+            </td>
           </tr>
-        <?php endforeach; endif; ?>
-        <tr class="bg-zc/5 font-bold">
-          <td colspan="3" class="px-5 py-3 text-zcTxt font-bold">Total Periode</td>
-          <td class="px-5 py-3 text-right text-emerald-700">+<?= number_format($tot_masuk ?? 0) ?></td>
-          <td class="px-5 py-3 text-right text-rose-600">-<?= number_format($tot_keluar ?? 0) ?></td>
-          <td class="px-5 py-3 text-right text-zcTxt"><?= number_format($saldo) ?></td>
-        </tr>
+        <?php else: ?>
+          <?php foreach ($movements as $m): 
+            $jenis = trim($m['jenis_mutasi']);
+            $qtyVal = intval($m['qty']);
+            $sisaVal = intval($m['sisa_stok']);
+            $ket = trim($m['keterangan'] ?? '');
+
+            // Badge Color Rules:
+            // Hijau: Masuk / Opname tambah
+            // Merah: Keluar / Karantina
+            // Kuning: Penyesuaian / Transfer
+            if ($jenis === 'Masuk') {
+                $badgeCls = 'bg-emerald-50 border-emerald-200 text-emerald-700';
+                $qtyCls   = 'text-emerald-700 font-bold';
+                $qtySign  = '+';
+            } elseif (in_array($jenis, ['Keluar', 'Karantina', 'Pengembalian/Batal'])) {
+                $badgeCls = 'bg-rose-50 border-rose-200 text-rose-700';
+                $qtyCls   = 'text-rose-600 font-bold';
+                $qtySign  = '-';
+            } else { // Transfer / Penyesuaian / Opname
+                $badgeCls = 'bg-amber-50 border-amber-200 text-amber-700';
+                $qtyCls   = 'text-amber-700 font-bold';
+                $qtySign  = '';
+            }
+
+            // Channel Identifier Pill based on Reference Format:
+            $isPos = (stripos($ket, 'POS-') !== false || stripos($ket, 'POS') !== false);
+            $isWeb = (stripos($ket, 'WEB-') !== false || stripos($ket, 'ZNC-') !== false || stripos($ket, 'Online') !== false);
+          ?>
+          <tr class="hover:bg-slate-50/70 transition">
+            <!-- 1. Waktu & Tanggal -->
+            <td class="py-3.5 px-5 whitespace-nowrap text-zcTxt font-mono text-xs">
+              <span class="font-bold text-slate-800"><?= date('d/m/Y', strtotime($m['tanggal'])) ?></span>
+              <span class="text-zcMut block text-[11px]"><?= date('H:i:s', strtotime($m['tanggal'])) ?> WIB</span>
+            </td>
+
+            <!-- 2. SKU & Nama Produk -->
+            <td class="py-3.5 px-5">
+              <span class="font-mono text-xs text-slate-500 block font-semibold"><?= htmlspecialchars($m['sku_variasi']) ?></span>
+              <span class="font-bold text-zcTxt block leading-snug">
+                <?= htmlspecialchars($m['nama_produk']) ?> &ndash; <span class="font-medium text-slate-600"><?= htmlspecialchars($m['nama_variasi']) ?></span>
+              </span>
+              <?php if (!empty($m['nama_cabang'])): ?>
+                <span class="inline-block mt-0.5 text-[10px] text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded">
+                  <?= htmlspecialchars($m['nama_cabang']) ?>
+                </span>
+              <?php endif; ?>
+            </td>
+
+            <!-- 3. Jenis Mutasi (Badge Warna) -->
+            <td class="py-3.5 px-5 text-center whitespace-nowrap">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border <?= $badgeCls ?>">
+                <?= htmlspecialchars($jenis) ?>
+              </span>
+            </td>
+
+            <!-- 4. Jumlah (Kuantitas fisik dalam Pcs) -->
+            <td class="py-3.5 px-5 text-right font-mono <?= $qtyCls ?> whitespace-nowrap">
+              <?= $qtySign ?><?= number_format($qtyVal) ?> <span class="text-xs font-normal text-zcMut">Pcs</span>
+            </td>
+
+            <!-- 5. Sisa Stok (Saldo akhir fisik dalam Pcs) -->
+            <td class="py-3.5 px-5 text-right font-mono font-bold text-zcTxt whitespace-nowrap">
+              <?= number_format($sisaVal) ?> <span class="text-xs font-normal text-zcMut">Pcs</span>
+            </td>
+
+            <!-- 6. Referensi / Keterangan (Bukti Omnichannel) -->
+            <td class="py-3.5 px-5 text-left">
+              <?php if ($isPos): ?>
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 font-mono text-xs font-bold">
+                  <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+                  <?= htmlspecialchars($ket) ?>
+                </div>
+              <?php elseif ($isWeb): ?>
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-mono text-xs font-bold">
+                  <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.95-1.55L23 6H6"/></svg>
+                  <?= htmlspecialchars($ket) ?>
+                </div>
+              <?php else: ?>
+                <span class="text-zcTxt text-xs font-medium"><?= htmlspecialchars($ket ?: '-') ?></span>
+              <?php endif; ?>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </tbody>
     </table>
   </div>
 </div>
-<?php else: ?>
-<div class="bg-white border border-zcBrd rounded-2xl shadow-sm p-12 text-center">
-  <p class="text-sm font-semibold text-zcMut">Pilih Produk Variasi dan Cabang di atas untuk menampilkan Kartu Stok.</p>
-  <p class="text-xs text-slate-400 mt-1">Data pergerakan stok ditampilkan secara kronologis lengkap dengan saldo berjalan.</p>
-</div>
-<?php endif; ?>
 
 <?php layoutEnd(); ?>

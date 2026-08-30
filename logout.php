@@ -7,7 +7,7 @@ session_unset();
 session_destroy();
 
 if ($isPelanggan) {
-    header('Location: zencare_store.php');
+    header('Location: ecommerce/index.php');
 } else {
     header('Location: login.php');
 }

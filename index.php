@@ -135,8 +135,9 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
 <!-- ============================================================ -->
 <!-- API STATUS + QUICK ACTIONS BANNER                            -->
 <!-- ============================================================ -->
-<div class="flex flex-wrap gap-3 mb-6">
-    <div class="flex items-center gap-2 px-4 py-2.5 bg-white border border-zcBorder rounded-xl text-xs shadow-sm">
+<div class="flex flex-wrap items-center gap-3 mb-6">
+    <!-- Shopee Sync API Indicator (Hidden from UI per scope boundary, backend retained) -->
+    <div class="hidden items-center gap-2 px-4 py-2.5 bg-white border border-zcBorder rounded-xl text-xs shadow-sm">
         <span class="w-2 h-2 rounded-full <?= $shopeeOn ? 'bg-emerald-500' : 'bg-slate-400' ?>"></span>
         <span class="font-semibold text-zcText">Shopee Sync API:</span>
         <span class="font-bold <?= $shopeeOn ? 'text-emerald-600' : 'text-slate-400' ?>"><?= $shopeeOn ? 'ACTIVE (ON)' : 'OFFLINE (OFF)' ?></span>
@@ -148,7 +149,7 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
     </div>
     <div class="ml-auto flex gap-2">
         <a href="pos/pos.php" class="flex items-center gap-2 px-4 py-2.5 bg-zc hover:bg-zcHv text-white text-xs font-semibold rounded-xl transition"><?= icon('pos', 'w-4 h-4') ?> Buka POS Kasir</a>
-        <a href="zencare_store.php" class="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-zcLt text-zc text-xs font-semibold rounded-xl transition border border-zc/30"><?= icon('store', 'w-4 h-4') ?> Buka Store</a>
+        <a href="ecommerce/index.php" class="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-zcLt text-zc text-xs font-semibold rounded-xl transition border border-zc/30"><?= icon('store', 'w-4 h-4') ?> Buka Store</a>
     </div>
 </div>
 

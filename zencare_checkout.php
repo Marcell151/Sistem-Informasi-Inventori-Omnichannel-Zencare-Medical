@@ -85,10 +85,10 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 <div class="w-7 h-7 rounded-lg bg-zc flex items-center justify-center">
                     <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                 </div>
-                <a href="zencare_store.php" class="font-semibold text-zcTxt text-sm"><?= htmlspecialchars($namaToko) ?> <span class="text-zc">Checkout</span></a>
+                <a href="ecommerce/index.php" class="font-semibold text-zcTxt text-sm"><?= htmlspecialchars($namaToko) ?> <span class="text-zc">Checkout</span></a>
             </div>
-            <a href="zencare_store.php" class="text-xs font-medium text-zcMut hover:text-zcTxt border border-zcBrd px-3 py-1.5 rounded-lg bg-white transition flex items-center gap-1">
-                &laquo; Kembali ke Catalog Store
+            <a href="ecommerce/index.php" class="text-xs font-medium text-zcMut hover:text-zcTxt border border-zcBrd px-3 py-1.5 rounded-lg bg-white transition flex items-center gap-1">
+                &laquo; Kembali ke Toko
             </a>
         </div>
     </header>
@@ -610,7 +610,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 container.innerHTML = `
                     <div class="text-center py-6">
                         <p class="text-xs text-zcMut mb-3">Keranjang belanja Anda kosong.</p>
-                        <a href="zencare_store.php" class="inline-block text-xs font-semibold px-4 py-2 bg-zc text-white rounded-xl">Lihat Produk Store</a>
+                        <a href="ecommerce/index.php" class="inline-block text-xs font-semibold px-4 py-2 bg-zc text-white rounded-xl">Lihat Produk</a>
                     </div>
                 `;
                 document.getElementById('btn_checkout').disabled = true;
@@ -704,12 +704,12 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                         onSuccess: function(result) {
                             alert('Pembayaran Berhasil! Order ID: ' + data.order_id);
                             localStorage.removeItem('zencare_cart');
-                            window.location.href = 'zencare_store.php';
+                            window.location.href = 'ecommerce/index.php';
                         },
                         onPending: function(result) {
-                            alert('Menunggu Pembayaran Midtrans. Order ID: ' + data.order_id);
+                            alert('Menunggu Pembayaran. Order ID: ' + data.order_id);
                             localStorage.removeItem('zencare_cart');
-                            window.location.href = 'zencare_store.php';
+                            window.location.href = 'ecommerce/index.php';
                         },
                         onError: function(result) {
                             alert('Transaksi Dibatalkan / Gagal.');

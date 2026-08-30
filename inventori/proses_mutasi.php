@@ -87,43 +87,49 @@ layoutSidebar('mutasi');
 layoutHeader('Mutasi Stok Antar Cabang', 'Transfer stok barang dari cabang asal ke cabang tujuan dengan atomik & audit trail');
 ?>
 
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
     <!-- Form Mutasi -->
     <div class="lg:col-span-5">
-        <div class="bg-white border border-zcBorder rounded-2xl shadow-sm p-6">
-            <h2 class="text-sm font-bold text-zcText mb-4 pb-3 border-b border-zcBorder">📦 Form Transfer Stok</h2>
+        <div class="bg-white border border-zcBrd rounded-2xl shadow-sm p-6">
+            <div class="flex items-center gap-2.5 mb-5 pb-4 border-b border-zcBrd">
+                <div class="w-8 h-8 rounded-lg bg-zcLt text-zc flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                </div>
+                <h2 class="text-base font-bold text-zcTxt">Form Transfer Stok Antar Cabang</h2>
+            </div>
 
             <?php if ($msg): ?>
-                <div class="mb-4 p-3.5 rounded-xl border text-xs font-semibold flex items-center gap-2 <?= $msgType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800' ?>">
-                    <?= $msgType === 'success' ? '✅' : '⛔' ?> <?= htmlspecialchars($msg) ?>
+                <div class="mb-4 p-3.5 rounded-xl border text-sm font-semibold flex items-center gap-2.5 <?= $msgType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800' ?>">
+                    <svg class="w-4 h-4 shrink-0 <?= $msgType === 'success' ? 'text-emerald-600' : 'text-rose-600' ?>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="<?= $msgType === 'success' ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' ?>"/></svg>
+                    <span><?= htmlspecialchars($msg) ?></span>
                 </div>
             <?php endif; ?>
 
             <form method="POST" class="space-y-4" onsubmit="return confirm('Konfirmasi mutasi stok?')">
                 <div>
-                    <label class="block text-xs font-bold text-zcText mb-1.5">Produk / Variasi *</label>
-                    <select name="id_variasi" required class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                    <label class="block text-sm font-semibold text-zcTxt mb-1.5">Produk / Variasi *</label>
+                    <select name="id_variasi" required class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                         <option value="">-- Pilih Barang --</option>
                         <?php foreach ($produkList as $p): ?>
                             <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['label']) ?> (<?= $p['sku_variasi'] ?>)</option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-zcText mb-1.5">Cabang Asal *</label>
-                        <select name="cabang_asal" required class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
-                            <option value="">-- Asal --</option>
+                        <label class="block text-sm font-semibold text-zcTxt mb-1.5">Cabang Asal *</label>
+                        <select name="cabang_asal" required class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                            <option value="">-- Cabang Asal --</option>
                             <?php foreach ($cabangList as $c): ?>
                                 <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nama']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-zcText mb-1.5">Cabang Tujuan *</label>
-                        <select name="cabang_tujuan" required class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
-                            <option value="">-- Tujuan --</option>
+                        <label class="block text-sm font-semibold text-zcTxt mb-1.5">Cabang Tujuan *</label>
+                        <select name="cabang_tujuan" required class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                            <option value="">-- Cabang Tujuan --</option>
                             <?php foreach ($cabangList as $c): ?>
                                 <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nama']) ?></option>
                             <?php endforeach; ?>
@@ -131,12 +137,13 @@ layoutHeader('Mutasi Stok Antar Cabang', 'Transfer stok barang dari cabang asal 
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-zcText mb-1.5">Jumlah Unit yang Dimutasi *</label>
+                    <label class="block text-sm font-semibold text-zcTxt mb-1.5">Jumlah Unit yang Dimutasi (Pcs) *</label>
                     <input type="number" name="qty" required min="1" placeholder="Contoh: 10"
-                        class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                        class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                 </div>
-                <button type="submit" class="w-full bg-zcNavy hover:bg-zcNavyHv text-white font-bold text-xs py-3 rounded-xl transition shadow-sm">
-                    ↔️ Proses Mutasi Stok Antar Cabang
+                <button type="submit" class="w-full bg-zc hover:bg-zcHv text-white font-bold text-sm py-3 px-4 rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                    <span>Proses Mutasi Stok Antar Cabang</span>
                 </button>
             </form>
         </div>
@@ -144,36 +151,42 @@ layoutHeader('Mutasi Stok Antar Cabang', 'Transfer stok barang dari cabang asal 
 
     <!-- Log Mutasi -->
     <div class="lg:col-span-7">
-        <div class="bg-white border border-zcBorder rounded-2xl shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-zcBorder">
-                <h3 class="text-sm font-bold text-zcText">⚡ Riwayat Mutasi Stok (10 Terbaru)</h3>
+        <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-zcBrd flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-zcTxt">Riwayat Mutasi Stok Terbaru</h3>
+                    <p class="text-xs text-zcMut">10 aktivitas transfer fisik antar cabang terakhir</p>
+                </div>
             </div>
             <?php if (empty($mutasiLog)): ?>
-                <div class="p-10 text-center text-xs text-zcMuted italic">Belum ada riwayat mutasi stok antar cabang.</div>
+                <div class="p-10 text-center text-sm text-zcMut italic">Belum ada riwayat mutasi stok antar cabang.</div>
             <?php else: ?>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-xs">
-                        <thead class="bg-slate-50 border-b border-zcBorder text-zcMuted font-bold uppercase tracking-wider">
+                    <table class="w-full text-xs sm:text-sm">
+                        <thead class="bg-slate-50 border-b border-zcBrd text-zcMut font-bold uppercase tracking-wider text-[11px]">
                             <tr>
                                 <th class="px-4 py-3 text-left">Produk</th>
-                                <th class="px-4 py-3 text-left">Asal → Tujuan</th>
+                                <th class="px-4 py-3 text-left">Asal &rarr; Tujuan</th>
                                 <th class="px-4 py-3 text-center">Qty</th>
                                 <th class="px-4 py-3 text-right">Waktu</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-zcBorder/60">
+                        <tbody class="divide-y divide-zcBrd/60">
                             <?php foreach ($mutasiLog as $m): ?>
-                                <tr class="hover:bg-slate-50/60">
-                                    <td class="px-4 py-3 font-semibold text-zcText"><?= htmlspecialchars($m['nama_item']) ?></td>
-                                    <td class="px-4 py-3 text-zcMuted">
+                                <tr class="hover:bg-slate-50/60 transition">
+                                    <td class="px-4 py-3.5 font-semibold text-zcTxt"><?= htmlspecialchars($m['nama_item']) ?></td>
+                                    <td class="px-4 py-3.5 text-zcMut">
                                         <span class="font-semibold text-rose-600"><?= htmlspecialchars($m['nama_asal']) ?></span>
-                                        <span class="mx-1">→</span>
+                                        <span class="mx-1 text-slate-400">&rarr;</span>
                                         <span class="font-semibold text-emerald-600"><?= htmlspecialchars($m['nama_tujuan']) ?></span>
                                     </td>
-                                    <td class="px-4 py-3 text-center">
-                                        <span class="px-2.5 py-1 bg-sky-100 text-sky-700 border border-sky-200 rounded-full font-bold text-[11px]"><?= $m['qty'] ?> unit</span>
+                                    <td class="px-4 py-3.5 text-center">
+                                        <span class="px-2.5 py-1 bg-sky-50 text-sky-700 border border-sky-200 rounded-full font-bold text-xs"><?= $m['qty'] ?> unit</span>
                                     </td>
-                                    <td class="px-4 py-3 text-right text-zcMuted"><?= date('d/m/Y H:i', strtotime($m['tanggal'])) ?></td>
+                                    <td class="px-4 py-3.5 text-right text-zcMut text-xs font-mono"><?= date('d/m/Y H:i', strtotime($m['tanggal'])) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

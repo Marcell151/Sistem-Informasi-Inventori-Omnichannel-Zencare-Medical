@@ -6,7 +6,7 @@ require_once __DIR__ . '/config/koneksi.php';
 
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] === 'pelanggan') {
-        header('Location: zencare_store.php');
+        header('Location: ecommerce/index.php');
     } else {
         header('Location: index.php');
     }
@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </form>
 
                 <div class="mt-4 pt-3 border-t border-zcBrd text-center text-xs text-zcMut">
-                    Anda pembeli / pelanggan? <a href="zencare_store.php" class="font-semibold text-zc hover:underline">Masuk ke E-Commerce</a>
+                    Anda pembeli / pelanggan? <a href="ecommerce/index.php" class="font-semibold text-zc hover:underline">Masuk ke E-Commerce</a>
                 </div>
             </div>
         </div>

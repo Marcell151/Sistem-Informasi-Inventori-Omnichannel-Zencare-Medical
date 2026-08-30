@@ -47,11 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$idCabang, $idVariasi, $jenis, $qty, $sisaStok, $ketFinal]);
 
             $pdo->commit();
-            $msg = "✅ Berhasil menambahkan $qty unit stok. Sisa stok sekarang: <strong>$sisaStok unit</strong>.";
+            $msg = "Berhasil menambahkan $qty unit stok fisik. Sisa stok sekarang: <strong>$sisaStok unit</strong>.";
             $msgType = 'success';
         } catch (Exception $e) {
             $pdo->rollBack();
-            $msg = "❌ Gagal: " . $e->getMessage(); $msgType = 'error';
+            $msg = "Gagal memproses penambahan stok: " . $e->getMessage(); $msgType = 'error';
         }
     }
 }
@@ -119,15 +119,15 @@ layoutHeader('Tambah / Penerimaan Stok', 'Input stok masuk dari supplier atau ko
                 <div class="flex justify-between"><span class="text-zcMut">Satuan Kecil:</span><strong id="info_kecil">-</strong></div>
                 <div class="flex justify-between"><span class="text-zcMut">Satuan Besar:</span><strong id="info_besar">-</strong></div>
                 <div class="flex justify-between"><span class="text-zcMut">Rasio Konversi:</span><strong id="info_rasio">-</strong></div>
-                <div class="mt-2 pt-2 border-t border-blue-200 text-[11px] text-blue-700 font-medium">
-                    ⚠️ Input qty dalam <strong>satuan terkecil</strong> (<?= 'Pcs/Strip/Unit' ?>). Contoh: 1 Box = 100 Strip, input 100.
+                <div class="mt-2 pt-2 border-t border-blue-200 text-xs text-blue-800 font-medium">
+                    Catatan: Input kuantitas selalu dalam <strong>satuan terkecil</strong> (Pcs/Strip/Unit). Contoh: 1 Box = 100 Pcs, input 100.
                 </div>
             </div>
 
             <?php if ($isAdmin): ?>
             <div>
-                <label class="block text-xs font-bold text-zcTxt mb-1.5">Cabang Tujuan *</label>
-                <select name="id_cabang" required class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-zc">
+                <label class="block text-sm font-semibold text-zcTxt mb-1.5">Cabang Tujuan *</label>
+                <select name="id_cabang" required class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:border-zc">
                     <option value="">-- Pilih Cabang --</option>
                     <?php foreach ($cabangList as $c): ?>
                     <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nama']) ?></option>
@@ -136,33 +136,33 @@ layoutHeader('Tambah / Penerimaan Stok', 'Input stok masuk dari supplier atau ko
             </div>
             <?php else: ?>
             <div>
-                <label class="block text-xs font-bold text-zcTxt mb-1.5">Cabang</label>
-                <div class="text-xs border border-zcBrd rounded-xl px-3 py-2 bg-slate-50 text-zcMut">
+                <label class="block text-sm font-semibold text-zcTxt mb-1.5">Cabang</label>
+                <div class="text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 bg-slate-50 text-zcTxt font-medium">
                     <?php $c = array_filter($cabangList, fn($c) => $c['id'] == $userCabang); echo htmlspecialchars(reset($c)['nama'] ?? 'Cabang Anda'); ?>
                 </div>
             </div>
             <?php endif; ?>
 
             <div>
-                <label class="block text-xs font-bold text-zcTxt mb-1.5">Jenis Mutasi *</label>
-                <select name="jenis" required class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-zc">
+                <label class="block text-sm font-semibold text-zcTxt mb-1.5">Jenis Mutasi *</label>
+                <select name="jenis" required class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:border-zc">
                     <option value="Masuk">Masuk – Penerimaan dari Supplier</option>
                     <option value="Opname">Opname – Koreksi Stok Fisik</option>
                 </select>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-zcTxt mb-1.5">Jumlah (Satuan Terkecil / Pcs) *</label>
-                <input type="number" name="qty" min="1" required placeholder="Contoh: 100 (untuk 1 Box isi 100)" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 focus:outline-none focus:border-zc">
-                <p class="text-[10px] text-zcMut mt-1">Input selalu dalam satuan terkecil (Pcs/Strip/Unit). Sistem menyimpan stok dalam satuan terkecil.</p>
+                <label class="block text-sm font-semibold text-zcTxt mb-1.5">Jumlah (Satuan Terkecil / Pcs) *</label>
+                <input type="number" name="qty" min="1" required placeholder="Contoh: 100 (untuk 1 Box isi 100)" class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc">
+                <p class="text-xs text-zcMut mt-1">Input selalu dalam satuan terkecil (Pcs). Sistem menyimpan stok fisik dalam satuan terkecil.</p>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-zcTxt mb-1.5">Keterangan (Opsional)</label>
-                <input type="text" name="keterangan" placeholder="Contoh: PO-001 dari PT. Kimia Farma" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 focus:outline-none focus:border-zc">
+                <label class="block text-sm font-semibold text-zcTxt mb-1.5">Keterangan (Opsional)</label>
+                <input type="text" name="keterangan" placeholder="Contoh: PO-001 dari PT. Kimia Farma" class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc">
             </div>
 
-            <button type="submit" class="w-full py-3 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition shadow-sm flex items-center justify-center gap-2">
+            <button type="submit" class="w-full py-3 px-4 text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-95">
                 <?= icon('download', 'w-4 h-4') ?>
                 Simpan Penerimaan Stok
             </button>

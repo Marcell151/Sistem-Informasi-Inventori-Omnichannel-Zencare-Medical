@@ -6,7 +6,7 @@ require_once __DIR__ . '/config/koneksi.php';
 
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] === 'pelanggan') {
-        header('Location: zencare_store.php');
+        header('Location: ecommerce/index.php');
     } else {
         header('Location: index.php');
     }
@@ -35,8 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     header('Location: zencare_checkout.php');
                 } else if ($redirect === 'checkout_konsep') {
                     header('Location: konsep/zencare_checkout.php');
+                } else if (!empty($redirect) && strpos($redirect, 'ecommerce/') === 0) {
+                    header('Location: ' . $redirect);
                 } else {
-                    header('Location: zencare_store.php');
+                    header('Location: ecommerce/index.php');
                 }
                 exit;
             }
@@ -132,8 +134,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         
         <div class="mt-6 text-center">
-            <a href="zencare_store.php" class="text-xs text-slate-400 hover:text-white font-medium inline-flex items-center gap-1 transition">
-                &larr; Kembali ke Katalog Toko
+            <a href="ecommerce/index.php" class="text-sm text-slate-400 hover:text-white font-medium inline-flex items-center gap-1.5 transition">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                Kembali ke Toko
             </a>
         </div>
 

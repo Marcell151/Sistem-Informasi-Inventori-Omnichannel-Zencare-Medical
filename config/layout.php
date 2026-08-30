@@ -121,7 +121,7 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
     }
 
     if ($isAdmin) {
-        $link('/inventory_zencare/zencare_store.php', 'store', 'Toko E-Commerce', 'store');
+        $link('/inventory_zencare/ecommerce/index.php', 'store', 'Toko E-Commerce', 'store');
 
         echo '<p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2.5 pt-3.5 pb-1.5">Master Data</p>';
         $link('/inventory_zencare/admin/master_produk.php', 'pill', 'Produk & Variasi', 'master_produk');
@@ -132,7 +132,7 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
         echo '<p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2.5 pt-3.5 pb-1.5">Laporan</p>';
         $link('/inventory_zencare/laporan/kartu_stok.php', 'kartu_stok', 'Kartu Stok', 'laporan_kartu_stok');
         $link('/inventory_zencare/laporan/penjualan.php', 'chart', 'Laporan Penjualan', 'laporan_penjualan');
-        $link('/inventory_zencare/laporan/nilai_persediaan.php', 'report', 'Nilai Persediaan', 'laporan_nilai');
+        $link('/inventory_zencare/laporan/ketersediaan_stok.php', 'report', 'Ketersediaan Stok', 'laporan_ketersediaan');
 
         echo '<p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2.5 pt-3.5 pb-1.5">Sistem</p>';
         $link('/inventory_zencare/admin/pengaturan_api.php', 'settings', 'Pengaturan API', 'pengaturan');
@@ -217,5 +217,9 @@ function layoutHeader(string $title, string $subtitle = '', bool $showBranchSele
 
 function layoutEnd() {
     echo '</main></div></body></html>';
+}
+
+function layoutFooter() {
+    layoutEnd();
 }
 ?>

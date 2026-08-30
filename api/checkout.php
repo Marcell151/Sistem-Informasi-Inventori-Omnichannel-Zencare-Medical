@@ -99,7 +99,7 @@ try {
     // 3. Simpan ke penjualan
     session_start();
     $idUser = $_SESSION['user_id'] ?? null;
-    $orderId = "ZNC-" . time() . "-" . rand(10, 99);
+    $orderId = "WEB-" . date('Ymd') . "-" . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
 
     if ($idUser && !empty($input['save_profile'])) {
         $kotaId = intval($input['kota_id'] ?? 0);
@@ -116,17 +116,33 @@ try {
     ]);
     $idPenjualan = $pdo->lastInsertId();
 
-    // Simpan Detail
+    // Simpan Detail & Potong Stok dengan pencatatan Kartu Stok
     $stmtDetail = $pdo->prepare("INSERT INTO detail_penjualan (id_penjualan, id_variasi, qty, harga_satuan) VALUES (?, ?, ?, ?)");
     foreach ($cart as $cartItem) {
         $idVariasi = intval($cartItem['id']);
         $qty = intval($cartItem['qty']);
         
-        $stmtP = $pdo->prepare("SELECT harga_jual_besar FROM produk_variasi WHERE id = ?");
+        $stmtP = $pdo->prepare("SELECT harga_jual_besar, rasio_konversi FROM produk_variasi WHERE id = ?");
         $stmtP->execute([$idVariasi]);
-        $harga = $stmtP->fetchColumn();
+        $rowP = $stmtP->fetch();
+        $harga = $rowP['harga_jual_besar'] ?? 0;
+        $rasio = max(1, intval($rowP['rasio_konversi'] ?: 1));
 
         $stmtDetail->execute([$idPenjualan, $idVariasi, $qty, $harga]);
+
+        // Potong stok fisik cabang (satuan kecil = qty Box * rasio)
+        $qtyPotong = $qty * $rasio;
+        $pdo->prepare("UPDATE stok_cabang SET stok = stok - ? WHERE id_variasi = ? AND id_cabang = ?")
+            ->execute([$qtyPotong, $idVariasi, $idCabang]);
+
+        // Saldo akhir fisik
+        $sisaQ = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi = ? AND id_cabang = ?");
+        $sisaQ->execute([$idVariasi, $idCabang]);
+        $sisa = $sisaQ->fetchColumn();
+
+        // Catat ke kartu_stok dengan referensi nomor invoice WEB-
+        $pdo->prepare("INSERT INTO kartu_stok (id_cabang, id_variasi, jenis_mutasi, qty, sisa_stok, keterangan) VALUES (?, ?, 'Keluar', ?, ?, ?)")
+            ->execute([$idCabang, $idVariasi, $qtyPotong, $sisa, $orderId]);
     }
 
     // 4. Request Midtrans Snap

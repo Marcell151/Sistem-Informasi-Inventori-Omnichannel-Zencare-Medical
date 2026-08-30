@@ -1,12 +1,7 @@
 <?php
-// File: laporan/nilai_persediaan.php – Laporan Nilai Persediaan (Inventory Valuation)
-session_start();
-require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../config/koneksi.php';
-require_once __DIR__ . '/../config/auth.php';
-require_once __DIR__ . '/../config/layout.php';
-
-requireRole(['super_admin']);
+// File: laporan/nilai_persediaan.php – Redirected to ketersediaan_stok.php
+header('Location: ketersediaan_stok.php' . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : ''));
+exit;
 
 $id_cabang = intval($_GET['id_cabang'] ?? 0);
 $cabangList = $pdo->query("SELECT id, nama FROM cabang WHERE is_active=1 ORDER BY id")->fetchAll();

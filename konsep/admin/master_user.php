@@ -112,17 +112,14 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
                         'pelanggan'   => 'bg-emerald-100 text-emerald-700 border-emerald-200',
                         default       => 'bg-slate-100 text-slate-500 border-slate-200',
                     };
-                    $roleIcon = match($u['role']) {
-                        'super_admin' => 'ðŸ‘‘', 'kasir' => 'ðŸª', 'pelanggan' => 'ðŸ›’', default => 'ðŸ‘¤',
-                    };
                     ?>
                     <tr class="hover:bg-slate-50/60 transition <?= !$u['is_active'] ? 'opacity-50' : '' ?>">
-                        <td class="px-5 py-3.5 text-gray-500 font-mono"><?= $u['id'] ?></td>
-                        <td class="px-5 py-3.5 font-bold text-gray-900"><?= htmlspecialchars($u['username']) ?></td>
-                        <td class="px-5 py-3.5 text-gray-900"><?= htmlspecialchars($u['nama_lengkap']) ?></td>
+                        <td class="px-5 py-3.5 text-zcMut font-mono text-sm"><?= $u['id'] ?></td>
+                        <td class="px-5 py-3.5 font-bold text-zcTxt text-sm"><?= htmlspecialchars($u['username']) ?></td>
+                        <td class="px-5 py-3.5 text-zcTxt text-sm"><?= htmlspecialchars($u['nama_lengkap']) ?></td>
                         <td class="px-5 py-3.5 text-center">
-                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border <?= $roleCls ?>">
-                                <?= $roleIcon ?> <?= ucfirst(str_replace('_', ' ', $u['role'])) ?>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border <?= $roleCls ?>">
+                                <?= ucfirst(str_replace('_', ' ', $u['role'])) ?>
                             </span>
                         </td>
                         <td class="px-5 py-3.5 text-gray-500"><?= htmlspecialchars($u['nama_cabang'] ?? '-') ?></td>

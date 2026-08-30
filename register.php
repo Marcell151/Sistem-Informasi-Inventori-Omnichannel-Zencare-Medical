@@ -1,11 +1,11 @@
-﻿<?php
+<?php
 // File: register.php – E-Commerce Customer Sign-Up
 session_start();
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/koneksi.php';
 
 if (isset($_SESSION['user_id'])) {
-    header('Location: zencare_store.php');
+    header('Location: ecommerce/index.php');
     exit;
 }
 
@@ -86,39 +86,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
                 
                 <?php if ($success): ?>
-                    <div class="mb-5 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold text-center">
-                        ✅ <?= htmlspecialchars($success) ?><br>
-                        <a href="login_customer.php" class="inline-block mt-3 px-4 py-2 bg-emerald-600 text-white rounded-lg">Masuk Sekarang</a>
+                    <div class="mb-5 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm font-semibold text-center">
+                        <div class="w-10 h-10 rounded-full border-2 border-emerald-500 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <?= htmlspecialchars($success) ?><br>
+                        <a href="ecommerce/index.php" class="inline-block mt-3 px-5 py-2.5 bg-zc text-white rounded-xl text-sm font-bold hover:bg-zcHv transition">Mulai Belanja</a>
                     </div>
                 <?php else: ?>
 
                 <form method="POST" class="space-y-4">
                     <div>
-                        <label class="block text-[11px] font-bold text-zcMut uppercase tracking-wider mb-2">Nama Lengkap *</label>
+                        <label class="block text-sm font-bold text-zcMut uppercase tracking-wider mb-2">Nama Lengkap *</label>
                         <input type="text" name="nama_lengkap" required placeholder="Sesuai KTP / Nama Instansi"
-                            class="w-full text-xs border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400">
+                            class="w-full text-sm border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-zcMut uppercase tracking-wider mb-2">Username *</label>
+                        <label class="block text-sm font-bold text-zcMut uppercase tracking-wider mb-2">Username *</label>
                         <input type="text" name="username" required placeholder="Pilih username unik"
-                            class="w-full text-xs border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400">
+                            class="w-full text-sm border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-zcMut uppercase tracking-wider mb-2">Kata Sandi *</label>
+                        <label class="block text-sm font-bold text-zcMut uppercase tracking-wider mb-2">Kata Sandi *</label>
                         <input type="password" name="password" required placeholder="Minimal 6 karakter"
-                            class="w-full text-xs border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400">
+                            class="w-full text-sm border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400">
                     </div>
                     
                     <div class="pt-3 border-t border-zcBrd">
-                        <label class="block text-[11px] font-bold text-zcMut uppercase tracking-wider mb-2">Nomor WhatsApp (Opsional)</label>
+                        <label class="block text-sm font-bold text-zcMut uppercase tracking-wider mb-2">Nomor WhatsApp (Opsional)</label>
                         <input type="text" name="telp" placeholder="0812xxxxxx"
-                            class="w-full text-xs border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400">
+                            class="w-full text-sm border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400">
                     </div>
                     
                     <div>
-                        <label class="block text-[11px] font-bold text-zcMut uppercase tracking-wider mb-2">Alamat Pengiriman Default (Opsional)</label>
+                        <label class="block text-sm font-bold text-zcMut uppercase tracking-wider mb-2">Alamat Pengiriman (Opsional)</label>
                         <textarea name="alamat" rows="2" placeholder="Nama Jalan, Kota, dll"
-                            class="w-full text-xs border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400"></textarea>
+                            class="w-full text-sm border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400"></textarea>
                     </div>
 
                     <div class="pt-2">
@@ -138,8 +141,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         
         <div class="mt-6 text-center">
-            <a href="zencare_store.php" class="text-xs text-slate-400 hover:text-white font-medium inline-flex items-center gap-1 transition">
-                &larr; Kembali ke Katalog Toko
+            <a href="ecommerce/index.php" class="text-sm text-slate-400 hover:text-white font-medium inline-flex items-center gap-1.5 transition">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                Kembali ke Toko
             </a>
         </div>
 

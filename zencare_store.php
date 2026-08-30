@@ -25,15 +25,24 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical';
 $logoUrl  = $webCfg['logo_url']  ?? '';
 
 $stmtProduk = $pdo->prepare("
-    SELECT v.id, CONCAT(i.nama_produk, ' - ', v.nama_variasi) AS nama_produk,
-           i.kategori, v.harga_jual_besar AS harga_jual, v.berat AS berat_gram, v.gambar,
-           i.deskripsi, COALESCE(sc.stok, 0) AS stok_sistem,
+    SELECT v.id,
+           i.nama_produk AS nama_induk,
+           v.nama_variasi,
+           CONCAT(i.nama_produk, ' - ', v.nama_variasi) AS nama_produk,
+           i.kategori,
+           v.harga_jual_besar AS harga_jual,
+           v.harga_jual_kecil AS harga_eceran,
+           v.berat AS berat_gram,
+           v.gambar,
+           v.sku_variasi,
+           i.deskripsi,
+           COALESCE(sc.stok, 0) AS stok_sistem,
            v.tampil_di_online, v.satuan_besar, v.satuan_kecil, v.rasio_konversi
     FROM produk_variasi v
     JOIN produk_induk i ON v.id_produk_induk = i.id
     LEFT JOIN stok_cabang sc ON sc.id_variasi = v.id AND sc.id_cabang = ?
     WHERE v.is_active = 1 AND i.is_active = 1 AND v.tampil_di_online = 1
-    ORDER BY i.kategori ASC, v.id ASC
+    ORDER BY i.kategori ASC, i.nama_produk ASC, v.id ASC
 ");
 $stmtProduk->execute([$activeCabangId]);
 $products = $stmtProduk->fetchAll();
@@ -318,108 +327,165 @@ foreach ($products as $p) {
         <!-- Product Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5" id="product-grid">
             <?php foreach ($products as $p):
-                $stokPcs = intval($p['stok_sistem']);
-                $rasio   = intval($p['rasio_konversi']) ?: 1;
-                $stokBox = floor($stokPcs / $rasio);
-                $harga   = $p['harga_jual'];
+                $stokPcs  = intval($p['stok_sistem']);
+                $rasio    = intval($p['rasio_konversi']) ?: 1;
+                $stokBox  = floor($stokPcs / $rasio);
+                $harga    = floatval($p['harga_jual']);
+                $hargaEceran = floatval($p['harga_eceran']);
                 $satBesar = $p['satuan_besar'];
                 $satKecil = $p['satuan_kecil'];
+                // Stock status
+                if ($stokBox <= 0) { $stokClass = 'bg-rose-50 text-rose-600 border-rose-200'; $stokDot = 'bg-rose-500'; $stokLabel = 'Habis'; }
+                elseif ($stokBox <= 5) { $stokClass = 'bg-amber-50 text-amber-700 border-amber-200'; $stokDot = 'bg-amber-400'; $stokLabel = "Sisa $stokBox $satBesar"; }
+                else { $stokClass = 'bg-emerald-50 text-emerald-700 border-emerald-200'; $stokDot = 'bg-emerald-500'; $stokLabel = "$stokBox $satBesar Tersedia"; }
+                // Description excerpt — first sentence only for compactness
+                $desc = trim($p['deskripsi'] ?? '');
+                $descShort = $desc ? mb_strimwidth($desc, 0, 72, '…') : 'Produk medis berkualitas & bersertifikat resmi.';
+                // SKU badge label
+                $sku = $p['sku_variasi'] ?? '';
             ?>
-            <div class="product-card bg-white border border-zcBrd rounded-2xl overflow-hidden flex flex-col shadow-sm"
+            <!-- ── PRODUCT CARD ── -->
+            <div class="product-card group bg-white rounded-2xl overflow-hidden flex flex-col"
+                 style="box-shadow:0 1px 4px rgba(0,0,0,.07);"
                  data-cat="<?= htmlspecialchars($p['kategori']) ?>"
                  data-name="<?= strtolower(htmlspecialchars($p['nama_produk'])) ?>"
                  data-price="<?= $harga ?>"
                  data-id="<?= $p['id'] ?>">
 
-                <!-- Product Image -->
-                <div class="relative h-44 bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden border-b border-zcBrd">
-                    <?php if ($p['gambar']): ?>
-                        <img src="<?= htmlspecialchars($p['gambar']) ?>" alt="<?= htmlspecialchars($p['nama_produk']) ?>" class="w-full h-full object-cover">
+                <!-- ── IMAGE ZONE ── -->
+                <a href="ecommerce/produk.php?id=<?= $p['id'] ?>" class="relative bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 overflow-hidden block" style="height:176px">
+                    <?php if (!empty($p['gambar'])): ?>
+                        <img src="<?= htmlspecialchars($p['gambar']) ?>"
+                             alt="<?= htmlspecialchars($p['nama_produk']) ?>"
+                             class="w-full h-full object-contain p-3 transition-transform duration-300 group-hover:scale-105">
                     <?php else: ?>
-                        <div class="w-full h-full flex flex-col items-center justify-center gap-2 text-slate-300">
-                            <svg class="w-14 h-14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-                            <span class="text-[10px] font-medium">No Image</span>
+                        <div class="w-full h-full flex flex-col items-center justify-center gap-2">
+                            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-zcLt to-blue-100 flex items-center justify-center">
+                                <svg class="w-8 h-8 text-zc/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            </div>
+                            <span class="text-[10px] font-medium text-slate-400">Belum Ada Foto</span>
                         </div>
                     <?php endif; ?>
 
-                    <!-- Stock Badge -->
-                    <div class="absolute top-2.5 right-2.5">
-                        <?php if ($stokBox >= 1): ?>
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-bold rounded-full shadow-sm">
-                                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-                                Stok: <?= $stokBox ?> <?= htmlspecialchars($satBesar) ?>
-                            </span>
-                        <?php else: ?>
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-500 text-white text-[10px] font-bold rounded-full shadow-sm">
-                                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                Habis
-                            </span>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Category Tag -->
+                    <!-- Category pill – top left -->
                     <div class="absolute top-2.5 left-2.5">
-                        <span class="px-2 py-0.5 bg-white/90 backdrop-blur-sm text-zc text-[10px] font-bold rounded-lg border border-zc/20">
+                        <span class="px-2 py-0.5 bg-white/90 backdrop-blur-sm text-zc text-[9px] font-bold rounded-md border border-zc/15 uppercase tracking-wider">
                             <?= htmlspecialchars($p['kategori']) ?>
                         </span>
                     </div>
-                </div>
 
-                <!-- Product Info -->
-                <div class="p-4 flex flex-col flex-1">
-                    <h3 class="text-sm font-bold text-zcTxt leading-snug line-clamp-2 mb-1.5"><?= htmlspecialchars($p['nama_produk']) ?></h3>
-                    <p class="text-[11px] text-zcMut leading-relaxed line-clamp-2 mb-3 flex-1"><?= htmlspecialchars($p['deskripsi'] ?? 'Produk medis berkualitas tinggi dan bersertifikat resmi.') ?></p>
-
-                    <!-- Conversion Info -->
-                    <div class="flex items-center justify-between text-[11px] bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mb-3">
-                        <div class="flex items-center gap-1.5 text-amber-800 font-medium">
-                            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-                            1 <?= htmlspecialchars($satBesar) ?>
-                        </div>
-                        <span class="text-amber-600">=</span>
-                        <span class="font-bold text-amber-800"><?= $rasio ?> <?= htmlspecialchars($satKecil) ?></span>
+                    <!-- Stock indicator – top right -->
+                    <div class="absolute top-2.5 right-2.5">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[9px] font-bold <?= $stokClass ?> backdrop-blur-sm bg-white/80">
+                            <span class="w-1.5 h-1.5 rounded-full <?= $stokDot ?> shrink-0"></span>
+                            <?= htmlspecialchars($stokLabel) ?>
+                        </span>
                     </div>
 
-                    <!-- Price -->
-                    <div class="flex items-baseline justify-between mb-3">
-                        <div>
-                            <span class="text-lg font-extrabold text-zcTxt">Rp <?= number_format($harga, 0, ',', '.') ?></span>
-                            <span class="text-[11px] text-zcMut ml-1">/ <?= htmlspecialchars($satBesar) ?></span>
+                    <!-- SKU micro-badge – bottom left -->
+                    <?php if ($sku): ?>
+                    <div class="absolute bottom-2 left-2.5">
+                        <span class="px-1.5 py-0.5 bg-slate-900/60 text-white text-[9px] font-mono rounded tracking-wide">
+                            <?= htmlspecialchars($sku) ?>
+                        </span>
+                    </div>
+                    <?php endif; ?>
+                </a>
+
+                <!-- ── CONTENT BODY ── -->
+                <div class="p-4 flex flex-col flex-1 gap-0">
+
+                    <!-- Product name -->
+                    <a href="ecommerce/produk.php?id=<?= $p['id'] ?>" class="block group-hover:text-zc transition">
+                        <h3 class="text-[13px] font-bold text-zcTxt leading-snug line-clamp-2 mb-2.5">
+                            <?= htmlspecialchars($p['nama_induk']) ?>
+                            <span class="font-normal text-zcMut"> &mdash; <?= htmlspecialchars($p['nama_variasi']) ?></span>
+                        </h3>
+                    </a>
+
+                    <!-- ── MINI SPECS SHEET ── -->
+                    <div class="mb-3 rounded-lg border border-slate-100 bg-slate-50/80 divide-y divide-slate-100">
+                        <!-- Kategori -->
+                        <div class="flex items-center gap-2 px-2.5 py-1.5">
+                            <svg class="w-3 h-3 text-zc/60 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                            <span class="text-[10px] text-slate-400 w-16 shrink-0">Kategori</span>
+                            <span class="text-[10px] font-semibold text-zcTxt truncate"><?= htmlspecialchars($p['kategori']) ?></span>
                         </div>
-                        <span class="text-[10px] text-zcMut"><?= intval($p['berat_gram']) ?> gr</span>
+                        <!-- Kandungan / Deskripsi singkat -->
+                        <div class="flex items-start gap-2 px-2.5 py-1.5">
+                            <svg class="w-3 h-3 text-zc/60 shrink-0 mt-px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                            <span class="text-[10px] text-slate-400 w-16 shrink-0">Keterangan</span>
+                            <span class="text-[10px] font-medium text-zcMut leading-relaxed line-clamp-2"><?= htmlspecialchars($descShort) ?></span>
+                        </div>
+                        <!-- Konversi / Kemasan -->
+                        <div class="flex items-center gap-2 px-2.5 py-1.5">
+                            <svg class="w-3 h-3 text-zc/60 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+                            <span class="text-[10px] text-slate-400 w-16 shrink-0">Kemasan</span>
+                            <span class="text-[10px] font-semibold text-zcTxt">
+                                1&nbsp;<?= htmlspecialchars($satBesar) ?> &nbsp;=&nbsp; <?= $rasio ?>&nbsp;<?= htmlspecialchars($satKecil) ?>
+                            </span>
+                        </div>
                     </div>
 
-                    <!-- Add to Cart -->
+                    <!-- ── PRICE BLOCK ── -->
+                    <div class="mb-3">
+                        <!-- Grosir price (primary) -->
+                        <div class="flex items-baseline gap-1.5">
+                            <span class="text-[17px] font-extrabold text-zcTxt tracking-tight">
+                                Rp <?= number_format($harga, 0, ',', '.') ?>
+                            </span>
+                            <span class="text-[11px] text-zcMut font-medium">/ <?= htmlspecialchars($satBesar) ?></span>
+                        </div>
+                        <?php if ($hargaEceran > 0): ?>
+                        <!-- Retail / eceran reference (secondary) -->
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                            <span class="text-[10px] text-zcMut">
+                                ~Rp <?= number_format($hargaEceran, 0, ',', '.') ?>
+                                <span class="text-slate-400">/ <?= htmlspecialchars($satKecil) ?> (ref. eceran)</span>
+                            </span>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- ── CTA & QTY ── -->
+                    <div class="mt-auto">
                     <?php if ($stokBox >= 1): ?>
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="text-[11px] text-zcMut shrink-0">Jml:</span>
-                            <div class="flex items-center border border-zcBrd rounded-lg overflow-hidden flex-1">
+                        <!-- Qty stepper -->
+                        <div class="flex items-center gap-2 mb-2.5">
+                            <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg overflow-hidden flex-1">
                                 <button type="button" onclick="adjustQty(<?= $p['id'] ?>, -1, <?= $stokBox ?>)"
-                                    class="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-zcTxt font-bold text-sm transition border-r border-zcBrd">
+                                    class="w-8 h-8 flex items-center justify-center hover:bg-slate-100 text-zcTxt font-bold text-sm transition border-r border-slate-200">
                                     <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg>
                                 </button>
                                 <input type="number" id="qty_<?= $p['id'] ?>" value="1" min="1" max="<?= $stokBox ?>" readonly
-                                    class="flex-1 text-center text-xs font-bold py-1 bg-white focus:outline-none">
+                                    class="flex-1 text-center text-xs font-bold py-1 bg-transparent focus:outline-none select-none">
                                 <button type="button" onclick="adjustQty(<?= $p['id'] ?>, 1, <?= $stokBox ?>)"
-                                    class="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-zcTxt font-bold text-sm transition border-l border-zcBrd">
+                                    class="w-8 h-8 flex items-center justify-center hover:bg-slate-100 text-zcTxt font-bold text-sm transition border-l border-slate-200">
                                     <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
                                 </button>
                             </div>
-                            <span class="text-[10px] text-zcMut shrink-0">Max: <?= $stokBox ?></span>
+                            <span class="text-[9px] text-slate-400 shrink-0 leading-tight text-right">Max<br><?= $stokBox ?> <?= htmlspecialchars($satBesar) ?></span>
                         </div>
+                        <!-- Add to cart button -->
                         <button onclick="addToCart(<?= $p['id'] ?>, '<?= addslashes($p['nama_produk']) ?>', <?= $harga ?>, <?= intval($p['berat_gram']) ?>, '<?= addslashes($p['gambar'] ?? '') ?>', '<?= addslashes($satBesar) ?>', <?= $rasio ?>, <?= $stokBox ?>)"
-                            class="w-full flex items-center justify-center gap-2 text-xs font-bold py-2.5 px-3 rounded-xl border transition bg-zc hover:bg-zcHv text-white border-zc shadow-sm">
-                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.95-1.55L23 6H6"/></svg>
+                            class="w-full flex items-center justify-center gap-2 text-xs font-bold py-2.5 px-3 rounded-xl transition
+                                   bg-zc hover:bg-zcHv active:scale-[.98] text-white shadow-sm">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.95-1.55L23 6H6"/>
+                            </svg>
                             Tambah ke Keranjang
                         </button>
                     <?php else: ?>
-                        <div class="w-full flex items-center justify-center gap-2 text-xs font-bold py-2.5 px-3 rounded-xl border bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed">
+                        <div class="w-full flex items-center justify-center gap-2 text-xs font-semibold py-2.5 px-3 rounded-xl bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed select-none">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
                             Stok Tidak Tersedia
                         </div>
                     <?php endif; ?>
-                </div>
-            </div>
+                    </div><!-- /mt-auto -->
+
+                </div><!-- /content body -->
+            </div><!-- /product-card -->
             <?php endforeach; ?>
 
             <!-- Empty state -->
