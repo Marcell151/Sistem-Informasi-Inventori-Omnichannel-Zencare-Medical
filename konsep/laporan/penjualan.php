@@ -106,7 +106,7 @@ layoutHeader('Laporan Penjualan', 'Ringkasan penjualan POS & Online per periode'
       <label class="block text-[11px] font-semibold text-gray-500 mb-1.5">Kanal Penjualan</label>
       <select name="kanal" class="w-full text-xs border border-gray-200 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-gray-400">
         <option value="semua" <?= $kanal==='semua'?'selected':'' ?>>Semua Kanal</option>
-        <option value="pos" <?= $kanal==='pos'?'selected':'' ?>>POS Kasir</option>
+        <option value="pos" <?= $kanal==='pos'?'selected':'' ?>>POS Karyawan</option>
         <option value="online" <?= $kanal==='online'?'selected':'' ?>>E-Commerce Online</option>
       </select>
     </div>
@@ -123,7 +123,7 @@ layoutHeader('Laporan Penjualan', 'Ringkasan penjualan POS & Online per periode'
   $cards = [
     ['label'=>'Total Transaksi', 'val'=>number_format($summary['total_transaksi']), 'unit'=>'transaksi', 'color'=>'bg-blue-50 border-blue-200 text-blue-700'],
     ['label'=>'Total Omzet', 'val'=>'Rp '.number_format($summary['total_omzet']), 'unit'=>'', 'color'=>'bg-emerald-50 border-emerald-200 text-emerald-700'],
-    ['label'=>'Omzet POS', 'val'=>'Rp '.number_format($summary['omzet_pos']), 'unit'=>'kasir', 'color'=>'bg-violet-50 border-violet-200 text-violet-700'],
+    ['label'=>'Omzet POS', 'val'=>'Rp '.number_format($summary['omzet_pos']), 'unit'=>'karyawan', 'color'=>'bg-violet-50 border-violet-200 text-violet-700'],
     ['label'=>'Omzet Online', 'val'=>'Rp '.number_format($summary['omzet_online']), 'unit'=>'e-commerce', 'color'=>'bg-amber-50 border-amber-200 text-amber-700'],
   ];
   foreach ($cards as $card): ?>

@@ -79,10 +79,10 @@ function icon(string $name, string $cls = 'w-4 h-4'): string {
 function layoutSidebar(string $activeMenu = 'dashboard') {
     $role      = $_SESSION['role'] ?? '';
     $isAdmin   = ($role === 'super_admin');
-    $isKasir   = ($role === 'kasir');
+    $isKaryawan   = ($role === 'karyawan');
     $nama      = htmlspecialchars($_SESSION['nama_lengkap'] ?? 'User');
     $initial   = strtoupper(substr($nama, 0, 1));
-    $roleLabel = match($role) { 'super_admin' => 'Super Admin', 'kasir' => 'Kasir', default => 'Pelanggan' };
+    $roleLabel = match($role) { 'super_admin' => 'Super Admin', 'karyawan' => 'Karyawan', default => 'Pelanggan' };
 
     $link = function(string $href, string $iconName, string $label, string $key) use ($activeMenu) {
         $active = $activeMenu === $key ? ' active' : '';
@@ -109,15 +109,14 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
     echo '<p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2.5 pt-1 pb-1.5">Utama</p>';
     $link('/inventory_zencare/index.php', 'dashboard', 'Dashboard', 'dashboard');
 
-    if ($isKasir || $isAdmin) {
+    if ($isKaryawan || $isAdmin) {
         echo '<p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2.5 pt-3.5 pb-1.5">Transaksi</p>';
         $link('/inventory_zencare/admin/pesanan.php', 'orders', 'Pesanan Online', 'pesanan');
-        $link('/inventory_zencare/pos/pos.php', 'pos', 'Terminal POS Kasir', 'pos');
+        $link('/inventory_zencare/pos/pos.php', 'pos', 'Terminal POS Karyawan', 'pos');
 
         echo '<p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2.5 pt-3.5 pb-1.5">Inventori</p>';
         $link('/inventory_zencare/inventori/tambah_stok.php', 'plus', 'Tambah / Terima Stok', 'tambah_stok');
         $link('/inventory_zencare/inventori/proses_mutasi.php', 'swap', 'Mutasi Stok Cabang', 'mutasi');
-        $link('/inventory_zencare/inventori/karantina.php', 'shield', 'Gudang Karantina', 'karantina');
     }
 
     if ($isAdmin) {
@@ -160,9 +159,9 @@ function layoutHeader(string $title, string $subtitle = '', bool $showBranchSele
     $nama    = htmlspecialchars($_SESSION['nama_lengkap'] ?? 'User');
     $initial = strtoupper(substr($nama, 0, 1));
     $role    = $_SESSION['role'] ?? '';
-    $roleLabel = match($role) { 'super_admin' => 'Super Admin', 'kasir' => 'Kasir', default => 'Pelanggan' };
+    $roleLabel = match($role) { 'super_admin' => 'Super Admin', 'karyawan' => 'Karyawan', default => 'Pelanggan' };
 
-    // Kasir has a fixed branch - cannot switch. Only Super Admin can switch.
+    // Karyawan has a fixed branch - cannot switch. Only Super Admin can switch.
     $isAdmin = ($role === 'super_admin');
 
     echo '<div class="flex-1 flex flex-col min-w-0">
@@ -190,7 +189,7 @@ function layoutHeader(string $title, string $subtitle = '', bool $showBranchSele
                 echo '</select></form>';
             } catch (Exception $e) {}
         } else {
-            // Kasir: show readonly branch name (locked to assigned branch)
+            // Karyawan: show readonly branch name (locked to assigned branch)
             try {
                 $cabangNama = $pdo->prepare("SELECT nama FROM cabang WHERE id = ?");
                 $cabangNama->execute([$activeCabang]);

@@ -1,5 +1,5 @@
 <?php
-// File: login.php – Dedicated Admin & Kasir Login Portal
+// File: login.php – Dedicated Admin & Karyawan Login Portal
 session_start();
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/koneksi.php';
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                 </svg>
             </div>
-            <h1 class="text-xl font-bold text-zcTxt">ZenCare Admin &amp; Kasir</h1>
+            <h1 class="text-xl font-bold text-zcTxt">ZenCare Admin &amp; Karyawan</h1>
             <p class="text-xs text-zcMut mt-1">Portal Internal Operasional Inventaris &amp; POS</p>
         </div>
 
@@ -79,19 +79,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="p-5 border-b border-zcBrd">
                 <p class="text-xs font-semibold text-zcMut mb-3">Quick Login (Akun Internal Staf)</p>
                 <div class="grid grid-cols-3 gap-2">
-                    <form method="POST"><input type="hidden" name="username" value="admin">
+                    <form method="POST"><input type="hidden" name="username" value="superadmin">
                         <button type="submit" class="w-full text-center p-2.5 rounded-xl border border-zcBrd bg-white hover:bg-zcLt hover:border-zc transition">
                             <span class="text-xs font-semibold text-zcTxt block">Super Admin</span>
                         </button>
                     </form>
-                    <form method="POST"><input type="hidden" name="username" value="kasir_muharto">
+                    <form method="POST"><input type="hidden" name="username" value="admin_muharto">
                         <button type="submit" class="w-full text-center p-2.5 rounded-xl border border-zcBrd bg-white hover:bg-zcLt hover:border-zc transition">
-                            <span class="text-xs font-semibold text-zcTxt block">Kasir Muharto</span>
+                            <span class="text-xs font-semibold text-zcTxt block">Karyawan Muharto</span>
                         </button>
                     </form>
-                    <form method="POST"><input type="hidden" name="username" value="kasir_borobudur">
+                    <form method="POST"><input type="hidden" name="username" value="admin_sawojajar">
                         <button type="submit" class="w-full text-center p-2.5 rounded-xl border border-zcBrd bg-white hover:bg-zcLt hover:border-zc transition">
-                            <span class="text-xs font-semibold text-zcTxt block">Kasir Borobudur</span>
+                            <span class="text-xs font-semibold text-zcTxt block">Karyawan Sawojajar</span>
                         </button>
                     </form>
                 </div>

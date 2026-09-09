@@ -1,16 +1,16 @@
 <?php
-// File: pos/pos.php – Terminal POS Kasir Offline ZenCare Medical
+// File: pos/pos.php – Terminal POS Karyawan Offline ZenCare Medical
 session_start();
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 
-requireRole(['super_admin', 'kasir']);
+requireRole(['super_admin', 'karyawan']);
 
-$idCabangKasir = $_SESSION['id_cabang'] ?? 1;
+$idCabangKaryawan = $_SESSION['id_cabang'] ?? 1;
 $stmtCabang = $pdo->prepare("SELECT * FROM cabang WHERE id=? AND is_active=1");
-$stmtCabang->execute([$idCabangKasir]);
-$cabangKasir = $stmtCabang->fetch();
+$stmtCabang->execute([$idCabangKaryawan]);
+$cabangKaryawan = $stmtCabang->fetch();
 
 $msg = ''; $msgType = '';
 
@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
             $totalHarga = 0;
             $invoiceNo  = "POS-" . date('Ymd') . "-" . rand(1000, 9999);
             $pdo->prepare("INSERT INTO penjualan (no_invoice,id_cabang,id_user,tipe_transaksi,status_pesanan,total_harga,created_at) VALUES (?,?,?,'pos','Selesai',0,NOW())")
-                ->execute([$invoiceNo, $idCabangKasir, $_SESSION['user_id'] ?? 2]);
+                ->execute([$invoiceNo, $idCabangKaryawan, $_SESSION['user_id'] ?? 2]);
             $idPenjualan = $pdo->lastInsertId();
 
             foreach ($cartItems as $item) {
@@ -32,27 +32,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                 $satuanTipe = $item['satuan_tipe'] ?? 'kecil'; // 'kecil' or 'besar'
                 
                 // Fetch current prices and stock from DB instead of trusting client
-                $chk   = $pdo->prepare("SELECT v.satuan_kecil, v.satuan_besar, v.rasio_konversi, v.harga_jual_kecil, v.harga_jual_besar, sc.stok FROM produk_variasi v LEFT JOIN stok_cabang sc ON sc.id_variasi = v.id AND sc.id_cabang=? WHERE v.id=? FOR UPDATE");
-                $chk->execute([$idCabangKasir, $idVar]);
+                $chk   = $pdo->prepare("SELECT v.satuan_kecil, v.satuan_besar, v.rasio_konversi, v.harga_jual_kecil, v.harga_jual_besar, sc.stok, pi.kategori FROM produk_variasi v JOIN produk_induk pi ON v.id_produk_induk = pi.id LEFT JOIN stok_cabang sc ON sc.id_variasi = v.id AND sc.id_cabang=? WHERE v.id=? FOR UPDATE");
+                $chk->execute([$idCabangKaryawan, $idVar]);
                 $varData = $chk->fetch();
                 
                 $rasio = intval($varData['rasio_konversi']) ?: 1;
                 $effPrice = ($satuanTipe === 'besar') ? floatval($varData['harga_jual_besar']) : floatval($varData['harga_jual_kecil']);
                 $qtyPotong = ($satuanTipe === 'besar') ? ($qtyInput * $rasio) : $qtyInput;
+                $kategori = $varData['kategori'] ?? '';
                 
                 if (!$varData || intval($varData['stok']) < $qtyPotong) {
                     throw new Exception("Stok ID $idVar tidak cukup! (Pesan: $qtyPotong, Sisa: " . ($varData['stok'] ?? 0) . ")");
                 }
 
                 $pdo->prepare("INSERT INTO detail_penjualan (id_penjualan,id_variasi,qty,harga_satuan) VALUES (?,?,?,?)")->execute([$idPenjualan,$idVar,$qtyInput,$effPrice]);
-                $pdo->prepare("UPDATE stok_cabang SET stok=stok-? WHERE id_variasi=? AND id_cabang=?")->execute([$qtyPotong,$idVar,$idCabangKasir]);
+                $idDetail = $pdo->lastInsertId();
+
+                // FEFO Logic untuk Obat
+                if ($kategori === 'Obat') {
+                    $stmtBatch = $pdo->prepare("SELECT id, stok FROM stok_batch WHERE id_variasi = ? AND id_cabang = ? AND stok > 0 AND is_active = 1 ORDER BY tgl_exp ASC FOR UPDATE");
+                    $stmtBatch->execute([$idVar, $idCabangKaryawan]);
+                    $batches = $stmtBatch->fetchAll();
+                    
+                    $sisaPotong = $qtyPotong;
+                    foreach ($batches as $b) {
+                        if ($sisaPotong <= 0) break;
+                        
+                        $potongBatch = min($b['stok'], $sisaPotong);
+                        $pdo->prepare("UPDATE stok_batch SET stok = stok - ? WHERE id = ?")->execute([$potongBatch, $b['id']]);
+                        
+                        $sisaPotong -= $potongBatch;
+                    }
+                    if ($sisaPotong > 0) {
+                        throw new Exception("Stok Batch Obat tidak mencukupi untuk dipotong FEFO secara berurutan.");
+                    }
+                }
+
+                // SN Auto-Pick untuk Alkes (jika tidak dipilih di UI)
+                if ($kategori === 'Alat Kesehatan') {
+                    $stmtSn = $pdo->prepare("SELECT serial_number FROM unit_serial WHERE id_variasi = ? AND id_cabang = ? AND status = 'Tersedia' LIMIT ? FOR UPDATE");
+                    $stmtSn->bindValue(1, $idVar, PDO::PARAM_INT);
+                    $stmtSn->bindValue(2, $idCabangKaryawan, PDO::PARAM_INT);
+                    $stmtSn->bindValue(3, $qtyPotong, PDO::PARAM_INT);
+                    $stmtSn->execute();
+                    $snList = $stmtSn->fetchAll(PDO::FETCH_COLUMN);
+
+                    if (count($snList) < $qtyPotong) {
+                        throw new Exception("Jumlah Serial Number tersedia tidak mencukupi untuk Alkes ID $idVar.");
+                    }
+
+                    foreach ($snList as $snStr) {
+                        $pdo->prepare("UPDATE unit_serial SET status = 'Terjual', id_penjualan = ? WHERE serial_number = ?")
+                            ->execute([$idPenjualan, $snStr]);
+                    }
+                }
+
+                $pdo->prepare("UPDATE stok_cabang SET stok=stok-? WHERE id_variasi=? AND id_cabang=?")->execute([$qtyPotong,$idVar,$idCabangKaryawan]);
 
                 $sisaQ = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi=? AND id_cabang=?");
-                $sisaQ->execute([$idVar,$idCabangKasir]);
+                $sisaQ->execute([$idVar,$idCabangKaryawan]);
                 $sisa = $sisaQ->fetchColumn();
                 $satLable = ($satuanTipe === 'besar') ? $varData['satuan_besar'] : $varData['satuan_kecil'];
                 $pdo->prepare("INSERT INTO kartu_stok (id_cabang,id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,?,'Keluar',?,?,?)")
-                    ->execute([$idCabangKasir,$idVar,$qtyPotong,$sisa,$invoiceNo]);
+                    ->execute([$idCabangKaryawan,$idVar,$qtyPotong,$sisa,$invoiceNo]);
                 $totalHarga += $effPrice * $qtyInput;
             }
 
@@ -65,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
             if ($shopeeApi) {
                 foreach ($cartItems as $item) {
                     $skuQ = $pdo->prepare("SELECT v.sku_variasi, sc.stok FROM produk_variasi v JOIN stok_cabang sc ON sc.id_variasi=v.id WHERE v.id=? AND sc.id_cabang=?");
-                    $skuQ->execute([$item['id'], $idCabangKasir]);
+                    $skuQ->execute([$item['id'], $idCabangKaryawan]);
                     $skuRow = $skuQ->fetch();
                     if ($skuRow) {
                         $ch = curl_init('https://partner.shopeesz.com/api/v2/product/update_stock');
@@ -91,7 +133,7 @@ $katalog = $pdo->prepare("
     FROM produk_variasi v JOIN produk_induk i ON v.id_produk_induk=i.id
     LEFT JOIN stok_cabang sc ON sc.id_variasi=v.id AND sc.id_cabang=?
     WHERE v.is_active=1 AND i.is_active=1 ORDER BY i.nama_produk ASC");
-$katalog->execute([$idCabangKasir]);
+$katalog->execute([$idCabangKaryawan]);
 $katalog = $katalog->fetchAll();
 
 $shopeeOn = $pdo->prepare("SELECT is_active FROM pengaturan_api WHERE platform='shopee'");
@@ -103,7 +145,7 @@ $shopeeOn = $shopeeOn->fetchColumn();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal POS Kasir – ZenCare Medical</title>
+    <title>Terminal POS Karyawan – ZenCare Medical</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -132,8 +174,8 @@ $shopeeOn = $shopeeOn->fetchColumn();
             <div>
                 <h1 class="text-sm font-bold text-zcTxt leading-tight">TERMINAL POS KASIR OFFLINE</h1>
                 <p class="text-[10px] text-zcMut">
-                    <strong><?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Kasir') ?></strong> &bull;
-                    Cabang: <strong class="text-zc"><?= htmlspecialchars($cabangKasir['nama'] ?? '–') ?></strong> &bull;
+                    <strong><?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Karyawan') ?></strong> &bull;
+                    Cabang: <strong class="text-zc"><?= htmlspecialchars($cabangKaryawan['nama'] ?? '–') ?></strong> &bull;
                     Shopee: <span class="font-bold <?= $shopeeOn ? 'text-emerald-600' : 'text-slate-400' ?>"><?= $shopeeOn ? '● ON' : '● OFF' ?></span>
                 </p>
             </div>
@@ -197,7 +239,7 @@ $shopeeOn = $shopeeOn->fetchColumn();
             <!-- Billing POS -->
             <div class="lg:col-span-5 bg-white border border-zcBrd rounded-2xl shadow-sm flex flex-col">
                 <div class="px-5 py-4 border-b border-zcBrd flex items-center gap-2">
-                    <h2 class="text-sm font-bold text-zcTxt">Billing Transaksi Kasir</h2>
+                    <h2 class="text-sm font-bold text-zcTxt">Billing Transaksi Karyawan</h2>
                 </div>
 
                 <div class="flex-1 overflow-y-auto">
@@ -226,7 +268,7 @@ $shopeeOn = $shopeeOn->fetchColumn();
                         <input type="hidden" name="cart_data" id="cart_input">
                         <button type="submit" id="btn_pay" disabled
                             class="w-full py-3.5 rounded-xl text-xs font-bold transition shadow-sm bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed">
-                            Proses Pembayaran Kasir
+                            Proses Pembayaran Karyawan
                         </button>
                     </form>
                     <button onclick="clearCart()" class="w-full py-2 rounded-xl text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition flex items-center justify-center gap-2">

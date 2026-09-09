@@ -1,13 +1,13 @@
 <?php
 // File: inventori/proses_mutasi.php
-// Modul Mutasi Stok Antar Cabang – Admin & Kasir
+// Modul Mutasi Stok Antar Cabang – Admin & Karyawan
 session_start();
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['super_admin', 'kasir']);
+requireRole(['super_admin', 'karyawan']);
 
 $msg = ''; $msgType = '';
 

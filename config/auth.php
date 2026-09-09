@@ -46,8 +46,8 @@ function isAdmin(): bool {
     return ($_SESSION['role'] ?? '') === 'super_admin';
 }
 
-function isKasir(): bool {
-    return ($_SESSION['role'] ?? '') === 'kasir';
+function isKaryawan(): bool {
+    return ($_SESSION['role'] ?? '') === 'karyawan';
 }
 
 function isPelanggan(): bool {
@@ -61,7 +61,7 @@ function currentRole(): string {
 function roleLabel(): string {
     $map = [
         'super_admin' => 'Super Admin',
-        'kasir'       => 'Kasir',
+        'karyawan'       => 'Karyawan',
         'pelanggan'   => 'Pelanggan',
     ];
     return $map[$_SESSION['role'] ?? ''] ?? 'Guest';

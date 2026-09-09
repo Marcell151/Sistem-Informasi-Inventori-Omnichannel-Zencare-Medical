@@ -75,7 +75,7 @@ layoutHeader('Master Cabang', 'Kelola data cabang fisik ZenCare Medical (2 Caban
             <p class="text-[11px] text-zcMuted mt-1 leading-relaxed"><?= htmlspecialchars($c['alamat']) ?></p>
             <div class="mt-3 pt-3 border-t border-zcBorder flex justify-between text-xs">
                 <span class="text-zcMuted">Total Stok: <strong class="text-zcText"><?= number_format($totalStok) ?> unit</strong></span>
-                <span class="text-zcMuted">Kasir: <strong class="text-zcText"><?= $totalUser ?></strong></span>
+                <span class="text-zcMuted">Karyawan: <strong class="text-zcText"><?= $totalUser ?></strong></span>
             </div>
             <div class="mt-2 text-[11px] text-zcMuted">RajaOngkir Kota ID: <code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded"><?= $c['kota_id'] ?></code></div>
         </div>

@@ -122,16 +122,41 @@ try {
         $idVariasi = intval($cartItem['id']);
         $qty = intval($cartItem['qty']);
         
-        $stmtP = $pdo->prepare("SELECT harga_jual_besar, rasio_konversi FROM produk_variasi WHERE id = ?");
+        $stmtP = $pdo->prepare("SELECT pv.harga_jual_besar, pv.rasio_konversi, pi.kategori 
+                                FROM produk_variasi pv 
+                                JOIN produk_induk pi ON pv.id_produk_induk = pi.id 
+                                WHERE pv.id = ?");
         $stmtP->execute([$idVariasi]);
         $rowP = $stmtP->fetch();
         $harga = $rowP['harga_jual_besar'] ?? 0;
         $rasio = max(1, intval($rowP['rasio_konversi'] ?: 1));
+        $kategori = $rowP['kategori'] ?? '';
 
         $stmtDetail->execute([$idPenjualan, $idVariasi, $qty, $harga]);
 
         // Potong stok fisik cabang (satuan kecil = qty Box * rasio)
         $qtyPotong = $qty * $rasio;
+        
+        // FEFO Logic untuk Obat
+        if ($kategori === 'Obat') {
+            $stmtBatch = $pdo->prepare("SELECT id, stok FROM stok_batch WHERE id_variasi = ? AND id_cabang = ? AND stok > 0 AND is_active = 1 ORDER BY tgl_exp ASC FOR UPDATE");
+            $stmtBatch->execute([$idVariasi, $idCabang]);
+            $batches = $stmtBatch->fetchAll();
+            
+            $sisaPotong = $qtyPotong;
+            foreach ($batches as $b) {
+                if ($sisaPotong <= 0) break;
+                
+                $potongBatch = min($b['stok'], $sisaPotong);
+                $pdo->prepare("UPDATE stok_batch SET stok = stok - ? WHERE id = ?")->execute([$potongBatch, $b['id']]);
+                
+                $sisaPotong -= $potongBatch;
+            }
+            if ($sisaPotong > 0) {
+                throw new Exception("Stok Batch Obat tidak mencukupi untuk dipotong FEFO secara berurutan.");
+            }
+        }
+
         $pdo->prepare("UPDATE stok_cabang SET stok = stok - ? WHERE id_variasi = ? AND id_cabang = ?")
             ->execute([$qtyPotong, $idVariasi, $idCabang]);
 

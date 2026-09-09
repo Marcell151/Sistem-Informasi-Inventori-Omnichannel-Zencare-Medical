@@ -1,13 +1,13 @@
 <?php
 // File: inventori/karantina.php
-// Gudang Karantina Barang Cacat / Garansi – Admin & Kasir
+// Gudang Karantina Barang Cacat / Garansi – Admin & Karyawan
 session_start();
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['super_admin', 'kasir']);
+requireRole(['super_admin', 'karyawan']);
 
 $activeCabang = $_SESSION['id_cabang'] ?? 1;
 if (isset($_GET['cabang'])) $_SESSION['id_cabang'] = $activeCabang = intval($_GET['cabang']);

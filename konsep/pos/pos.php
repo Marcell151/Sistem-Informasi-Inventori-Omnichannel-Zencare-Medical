@@ -1,6 +1,6 @@
 <?php
 // File: pos/pos.php
-// Modul POS Kasir Offline & Integrasi Shopee (FASE 4)
+// Modul POS Karyawan Offline & Integrasi Shopee (FASE 4)
 session_start();
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
@@ -9,11 +9,11 @@ if (!isset($_SESSION['id_cabang'])) {
     $_SESSION['id_cabang'] = 1;
 }
 
-$idCabangKasir = $_SESSION['id_cabang'];
+$idCabangKaryawan = $_SESSION['id_cabang'];
 
 $stmtCabang = $pdo->prepare("SELECT * FROM cabang WHERE id = ? AND is_active = 1");
-$stmtCabang->execute([$idCabangKasir]);
-$cabangKasir = $stmtCabang->fetch();
+$stmtCabang->execute([$idCabangKaryawan]);
+$cabangKaryawan = $stmtCabang->fetch();
 
 $message = '';
 $messageType = 'info';
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
             $invoiceNo = "POS-" . date('Ymd') . "-" . rand(1000, 9999);
             
             $stmtJual = $pdo->prepare("INSERT INTO penjualan (no_invoice, id_cabang, id_user, tipe_transaksi, status_pesanan, total_harga, created_at) VALUES (?, ?, ?, 'pos', 'Selesai', 0, NOW())");
-            $stmtJual->execute([$invoiceNo, $idCabangKasir, $_SESSION['user_id'] ?? 2]);
+            $stmtJual->execute([$invoiceNo, $idCabangKaryawan, $_SESSION['user_id'] ?? 2]);
             $idPenjualan = $pdo->lastInsertId();
 
             $stmtDetail = $pdo->prepare("INSERT INTO detail_penjualan (id_penjualan, id_variasi, qty, harga_satuan) VALUES (?, ?, ?, ?)");
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
                 $totalHarga += $subtotal;
 
                 $stmtCheck = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi = ? AND id_cabang = ? FOR UPDATE");
-                $stmtCheck->execute([$idVar, $idCabangKasir]);
+                $stmtCheck->execute([$idVar, $idCabangKaryawan]);
                 $stokAda = $stmtCheck->fetchColumn();
 
                 if ($stokAda === false || intval($stokAda) < $qty) {
@@ -56,12 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
                 }
 
                 $stmtDetail->execute([$idPenjualan, $idVar, $qty, $harga]);
-                $stmtStok->execute([$qty, $idVar, $idCabangKasir]);
+                $stmtStok->execute([$qty, $idVar, $idCabangKaryawan]);
 
-                $stmtSisa->execute([$idVar, $idCabangKasir]);
+                $stmtSisa->execute([$idVar, $idCabangKaryawan]);
                 $sisaStok = $stmtSisa->fetchColumn();
 
-                $stmtKartu->execute([$idCabangKasir, $idVar, $qty, $sisaStok, "Penjualan POS Offline Invoice #$invoiceNo"]);
+                $stmtKartu->execute([$idCabangKaryawan, $idVar, $qty, $sisaStok, "Penjualan POS Offline Invoice #$invoiceNo"]);
             }
 
             $stmtUpTotal = $pdo->prepare("UPDATE penjualan SET total_harga = ? WHERE id = ?");
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
 
             // cURL Request Update Stok Shopee jika API Toggle ON
             $stmtApi = $pdo->prepare("SELECT * FROM pengaturan_api WHERE id_cabang = ? AND platform = 'shopee' AND is_active = 1");
-            $stmtApi->execute([$idCabangKasir]);
+            $stmtApi->execute([$idCabangKaryawan]);
             $shopeeApiConfig = $stmtApi->fetch();
 
             $shopeeSyncMessage = "";
@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
                 foreach ($cartItems as $item) {
                     $idVar = intval($item['id']);
                     $stmtSku = $pdo->prepare("SELECT v.sku_variasi, sc.stok FROM produk_variasi v JOIN stok_cabang sc ON sc.id_variasi = v.id WHERE v.id = ? AND sc.id_cabang = ?");
-                    $stmtSku->execute([$idVar, $idCabangKasir]);
+                    $stmtSku->execute([$idVar, $idCabangKaryawan]);
                     $skuInfo = $stmtSku->fetch();
 
                     if ($skuInfo) {
@@ -123,11 +123,11 @@ $stmtKatalog = $pdo->prepare("
     WHERE v.is_active = 1 AND i.is_active = 1
     ORDER BY i.nama_produk ASC
 ");
-$stmtKatalog->execute([$idCabangKasir]);
-$katalogKasir = $stmtKatalog->fetchAll();
+$stmtKatalog->execute([$idCabangKaryawan]);
+$katalogKaryawan = $stmtKatalog->fetchAll();
 
 $stmtApiCheck = $pdo->prepare("SELECT is_active FROM pengaturan_api WHERE id_cabang = ? AND platform = 'shopee'");
-$stmtApiCheck->execute([$idCabangKasir]);
+$stmtApiCheck->execute([$idCabangKaryawan]);
 $shopeeStatus = $stmtApiCheck->fetchColumn() == 1 ? 'ACTIVE (ON)' : 'OFFLINE (OFF)';
 ?>
 <!DOCTYPE html>
@@ -135,7 +135,7 @@ $shopeeStatus = $stmtApiCheck->fetchColumn() == 1 ? 'ACTIVE (ON)' : 'OFFLINE (OF
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZenCare POS - Kasir Terminal</title>
+    <title>ZenCare POS - Karyawan Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -158,7 +158,7 @@ $shopeeStatus = $stmtApiCheck->fetchColumn() == 1 ? 'ACTIVE (ON)' : 'OFFLINE (OF
     <header class="bg-black text-white border-b border-gray-800 px-6 py-4 flex justify-between items-center">
         <div>
             <h1 class="text-lg font-bold tracking-wider">ZENCARE POS <span class="font-normal text-gray-400">TERMINAL</span></h1>
-            <p class="text-xs text-gray-400">Kasir Aktif: <strong class="text-white"><?= htmlspecialchars($cabangKasir['nama'] ?? 'Cabang') ?></strong> | Shopee Sync: <span class="font-bold underline"><?= $shopeeStatus ?></span></p>
+            <p class="text-xs text-gray-400">Karyawan Aktif: <strong class="text-white"><?= htmlspecialchars($cabangKaryawan['nama'] ?? 'Cabang') ?></strong> | Shopee Sync: <span class="font-bold underline"><?= $shopeeStatus ?></span></p>
         </div>
         <div class="flex items-center space-x-3">
             <a href="../index.php" class="text-xs bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 px-3 py-1.5 rounded transition">Dashboard Utama</a>
@@ -183,7 +183,7 @@ $shopeeStatus = $stmtApiCheck->fetchColumn() == 1 ? 'ACTIVE (ON)' : 'OFFLINE (OF
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto pr-1" id="product_grid">
-                    <?php foreach ($katalogKasir as $item): ?>
+                    <?php foreach ($katalogKaryawan as $item): ?>
                         <?php $stok = intval($item['stok_sistem']); ?>
                         <div class="product-card bg-gray-50 border border-gray-200 p-3 rounded hover:border-black transition flex flex-col justify-between" data-search="<?= strtolower(htmlspecialchars($item['nama_produk'] . ' ' . $item['sku_variasi'])) ?>">
                             <div>
@@ -208,7 +208,7 @@ $shopeeStatus = $stmtApiCheck->fetchColumn() == 1 ? 'ACTIVE (ON)' : 'OFFLINE (OF
 
             <div class="lg:col-span-5 bg-white border border-gray-300 rounded-lg p-5 flex flex-col justify-between">
                 <div>
-                    <h2 class="text-sm font-bold uppercase tracking-wider text-black border-b border-gray-200 pb-3 mb-4">Struk / Billing Kasir</h2>
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-black border-b border-gray-200 pb-3 mb-4">Struk / Billing Karyawan</h2>
 
                     <div class="overflow-x-auto mb-4">
                         <table class="w-full text-left text-xs border-collapse">
@@ -239,7 +239,7 @@ $shopeeStatus = $stmtApiCheck->fetchColumn() == 1 ? 'ACTIVE (ON)' : 'OFFLINE (OF
                         <input type="hidden" name="aksi" value="bayar_pos">
                         <input type="hidden" name="cart_data" id="cart_data_input">
                         <button type="submit" id="btn_pos_pay" disabled class="w-full bg-gray-300 text-gray-500 font-bold py-3 rounded border border-gray-400 cursor-not-allowed transition">
-                            Proses Pembayaran Kasir
+                            Proses Pembayaran Karyawan
                         </button>
                     </form>
                 </div>

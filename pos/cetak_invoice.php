@@ -114,13 +114,13 @@ $items = $stmtDetail->fetchAll();
         <tr>
             <td style="width: 50%;">
                 <strong>Penerima / Pelanggan:</strong><br>
-                <?= htmlspecialchars($trx['nama_penerima'] ?? 'Pembeli POS Kasir Direct') ?><br>
+                <?= htmlspecialchars($trx['nama_penerima'] ?? 'Pembeli POS Karyawan Direct') ?><br>
                 <?= htmlspecialchars($trx['telepon'] ?? '-') ?><br>
                 <?= htmlspecialchars($trx['alamat_lengkap'] ?? '-') ?>
             </td>
             <td style="width: 50%;" class="text-right">
                 <strong>Pengiriman &amp; Status:</strong><br>
-                Kurir: <?= strtoupper(htmlspecialchars($trx['kurir'] ?? 'POS Kasir')) ?><br>
+                Kurir: <?= strtoupper(htmlspecialchars($trx['kurir'] ?? 'POS Karyawan')) ?><br>
                 Layanan: <?= htmlspecialchars($trx['layanan'] ?? 'Direct Takeaway') ?><br>
                 Status Pesanan: <strong><?= htmlspecialchars($trx['status_pesanan']) ?></strong>
             </td>

@@ -16,16 +16,16 @@ function layoutHead(string $title = 'Dashboard') {
       extend: {
         fontFamily: { sans: ["Inter", "sans-serif"] },
         colors: {
-          zc:      "#1a75d2",
-          zcHv:    "#1562b3",
-          zcLt:    "#e8f2ff",
-          zcRed:   "#c0392b",
-          zcBg:    "#f5f7fa",
+          zc:      "#475569",
+          zcHv:    "#334155",
+          zcLt:    "#f8fafc",
+          zcRed:   "#64748b",
+          zcBg:    "#f1f5f9",
           zcCard:  "#ffffff",
-          zcBrd:   "#e4e9f0",
-          zcTxt:   "#1e293b",
-          zcMut:   "#64748b",
-          zcEm:    "#059669",
+          zcBrd:   "#e2e8f0",
+          zcTxt:   "#0f172a",
+          zcMut:   "#94a3b8",
+          zcEm:    "#475569",
         }
       }
     }
@@ -39,11 +39,11 @@ function layoutHead(string $title = 'Dashboard') {
   @keyframes fadeIn{from{opacity:.8;transform:translateY(3px)}to{opacity:1;transform:none}}
   .sidebar-link{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;font-size:12.5px;font-weight:500;color:#475569;transition:all .15s}
   .sidebar-link:hover{background:#f1f5f9;color:#1e293b}
-  .sidebar-link.active{background:#eff6ff;color:#1a75d2;font-weight:600}
-  .sidebar-link.active svg{color:#1a75d2}
+  .sidebar-link.active{background:#f1f5f9;color:#334155;font-weight:600}
+  .sidebar-link.active svg{color:#334155}
   .sidebar-link svg{flex-shrink:0;opacity:.65}
   .sidebar-link.active svg{opacity:1}
-  .sidebar-link.active{border-left:3px solid #1a75d2;padding-left:9px}
+  .sidebar-link.active{border-left:3px solid #334155;padding-left:9px}
 </style>';
 }
 
@@ -79,10 +79,10 @@ function icon(string $name, string $cls = 'w-4 h-4'): string {
 function layoutSidebar(string $activeMenu = 'dashboard') {
     $role      = $_SESSION['role'] ?? '';
     $isAdmin   = ($role === 'super_admin');
-    $isKasir   = ($role === 'kasir');
+    $isKaryawan   = ($role === 'karyawan');
     $nama      = htmlspecialchars($_SESSION['nama_lengkap'] ?? 'User');
     $initial   = strtoupper(substr($nama, 0, 1));
-    $roleLabel = match($role) { 'super_admin' => 'Super Admin', 'kasir' => 'Kasir', default => 'Pelanggan' };
+    $roleLabel = match($role) { 'super_admin' => 'Super Admin', 'karyawan' => 'Karyawan', default => 'Pelanggan' };
 
     $link = function(string $href, string $iconName, string $label, string $key) use ($activeMenu) {
         $active = $activeMenu === $key ? ' active' : '';
@@ -109,10 +109,10 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
     echo '<p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2.5 pt-1 pb-1.5">Utama</p>';
     $link('/inventory_zencare/index.php', 'dashboard', 'Dashboard', 'dashboard');
 
-    if ($isKasir || $isAdmin) {
+    if ($isKaryawan || $isAdmin) {
         echo '<p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2.5 pt-3.5 pb-1.5">Transaksi</p>';
         $link('/inventory_zencare/admin/pesanan.php', 'orders', 'Pesanan Online', 'pesanan');
-        $link('/inventory_zencare/pos/pos.php', 'pos', 'Terminal POS Kasir', 'pos');
+        $link('/inventory_zencare/pos/pos.php', 'pos', 'Terminal POS Karyawan', 'pos');
 
         echo '<p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2.5 pt-3.5 pb-1.5">Inventori</p>';
         $link('/inventory_zencare/inventori/tambah_stok.php', 'plus', 'Tambah / Terima Stok', 'tambah_stok');
@@ -160,9 +160,9 @@ function layoutHeader(string $title, string $subtitle = '', bool $showBranchSele
     $nama    = htmlspecialchars($_SESSION['nama_lengkap'] ?? 'User');
     $initial = strtoupper(substr($nama, 0, 1));
     $role    = $_SESSION['role'] ?? '';
-    $roleLabel = match($role) { 'super_admin' => 'Super Admin', 'kasir' => 'Kasir', default => 'Pelanggan' };
+    $roleLabel = match($role) { 'super_admin' => 'Super Admin', 'karyawan' => 'Karyawan', default => 'Pelanggan' };
 
-    // Kasir has a fixed branch - cannot switch. Only Super Admin can switch.
+    // Karyawan has a fixed branch - cannot switch. Only Super Admin can switch.
     $isAdmin = ($role === 'super_admin');
 
     echo '<div class="flex-1 flex flex-col min-w-0">
@@ -190,7 +190,7 @@ function layoutHeader(string $title, string $subtitle = '', bool $showBranchSele
                 echo '</select></form>';
             } catch (Exception $e) {}
         } else {
-            // Kasir: show readonly branch name (locked to assigned branch)
+            // Karyawan: show readonly branch name (locked to assigned branch)
             try {
                 $cabangNama = $pdo->prepare("SELECT nama FROM cabang WHERE id = ?");
                 $cabangNama->execute([$activeCabang]);

@@ -1,13 +1,13 @@
 <?php
 // File: inventori/karantina.php
-// Gudang Karantina Barang Cacat / Garansi (Sistem Tiket Helpdesk) – Admin & Kasir
+// Gudang Karantina Barang Cacat / Garansi (Sistem Tiket Helpdesk) – Admin & Karyawan
 session_start();
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['super_admin', 'kasir']);
+requireRole(['super_admin', 'karyawan']);
 
 $activeCabang = $_SESSION['id_cabang'] ?? 1;
 if (isset($_GET['cabang'])) $_SESSION['id_cabang'] = $activeCabang = intval($_GET['cabang']);
@@ -107,7 +107,7 @@ layoutHeader('Gudang Karantina & Retur Garansi', 'Tiket pelacakan barang defect/
 
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-    <!-- Form Buat Tiket Karantina Baru (Kasir & Admin) -->
+    <!-- Form Buat Tiket Karantina Baru (Karyawan & Admin) -->
     <div class="lg:col-span-4">
         <div class="bg-white border border-zcBrd rounded-2xl shadow-sm p-6">
             <h2 class="text-sm font-bold text-zcTxt mb-4 pb-3 border-b border-zcBrd flex items-center gap-2">

@@ -6,7 +6,7 @@ require_once __DIR__ . '/config/koneksi.php';
 require_once __DIR__ . '/config/auth.php';
 require_once __DIR__ . '/config/layout.php';
 
-requireRole(['super_admin', 'kasir']);
+requireRole(['super_admin', 'karyawan']);
 if (!isset($_SESSION['id_cabang'])) $_SESSION['id_cabang'] = 1;
 
 // Branch selector
@@ -147,7 +147,7 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
         <span class="font-bold text-emerald-600">ACTIVE</span>
     </div>
     <div class="ml-auto flex gap-2">
-        <a href="pos/pos.php" class="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold rounded-xl transition"><?= icon('pos', 'w-4 h-4') ?> Buka POS Kasir</a>
+        <a href="pos/pos.php" class="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold rounded-xl transition"><?= icon('pos', 'w-4 h-4') ?> Buka POS Karyawan</a>
         <a href="zencare_store.php" class="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-100 text-gray-800 text-xs font-semibold rounded-xl transition border border-gray-400/30"><?= icon('store', 'w-4 h-4') ?> Buka Store</a>
     </div>
 </div>

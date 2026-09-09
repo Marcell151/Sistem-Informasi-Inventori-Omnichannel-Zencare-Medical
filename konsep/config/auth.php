@@ -34,7 +34,7 @@ function requireRole(array $roles) {
                 <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-bold mx-auto mb-4 border border-rose-100">🔒</div>
                 <h1 class="text-lg font-bold text-[#1e293b] mb-1">Akses Ditolak (403)</h1>
                 <p class="text-xs text-[#64748b] mb-6">Akun Anda (' . htmlspecialchars($currentRole) . ') tidak memiliki izin untuk mengakses halaman ini.</p>
-                <a href="' . BASE_URL . '/index.php" class="inline-block bg-[#1a75d2] hover:bg-[#1562b3] text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition">
+                <a href="' . BASE_URL . '/index.php" class="inline-block bg-[#475569] hover:bg-[#334155] text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition">
                     &larr; Kembali ke Dashboard
                 </a>
             </div></body></html>
@@ -46,8 +46,8 @@ function isAdmin(): bool {
     return ($_SESSION['role'] ?? '') === 'super_admin';
 }
 
-function isKasir(): bool {
-    return ($_SESSION['role'] ?? '') === 'kasir';
+function isKaryawan(): bool {
+    return ($_SESSION['role'] ?? '') === 'karyawan';
 }
 
 function isPelanggan(): bool {
@@ -61,9 +61,10 @@ function currentRole(): string {
 function roleLabel(): string {
     $map = [
         'super_admin' => 'Super Admin',
-        'kasir'       => 'Kasir',
+        'karyawan'       => 'Karyawan',
         'pelanggan'   => 'Pelanggan',
     ];
     return $map[$_SESSION['role'] ?? ''] ?? 'Guest';
 }
 ?>
+

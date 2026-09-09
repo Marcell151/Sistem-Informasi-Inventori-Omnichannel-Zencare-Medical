@@ -63,13 +63,13 @@ if (!$settings) {
           extend: {
             fontFamily: { sans: ['Inter', 'sans-serif'] },
             colors: {
-              zc:    '#1a75d2',
-              zcHv:  '#1562b3',
-              zcLt:  '#e8f2ff',
-              zcEm:  '#059669',
-              zcBrd: '#e4e9f0',
-              zcTxt: '#1e293b',
-              zcMut: '#64748b',
+              zc:    '#475569',
+              zcHv:  '#334155',
+              zcLt:  '#f8fafc',
+              zcEm:  '#475569',
+              zcBrd: '#e2e8f0',
+              zcTxt: '#0f172a',
+              zcMut: '#94a3b8',
             }
           }
         }
@@ -104,7 +104,7 @@ if (!$settings) {
                     </select>
                 </form>
 
-                <?php if (isset($_SESSION['user_id']) && ($_SESSION['role'] === 'super_admin' || $_SESSION['role'] === 'kasir')): ?>
+                <?php if (isset($_SESSION['user_id']) && ($_SESSION['role'] === 'super_admin' || $_SESSION['role'] === 'karyawan')): ?>
                     <a href="index.php" class="text-xs font-medium text-zcMut hover:text-zcTxt border border-zcBrd px-3 py-1.5 rounded-lg bg-white transition">Dashboard</a>
                 <?php endif; ?>
 
@@ -137,19 +137,17 @@ if (!$settings) {
         <!-- Hero Banner Slate-900 & Sky Accents -->
         <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-800 rounded-xl p-8 mb-8 shadow-sm relative overflow-hidden">
             <?php if (!empty($settings['hero_banner'])): ?>
-                <div class="absolute inset-0 opacity-20 mix-blend-overlay">
-                    <img src="<?= htmlspecialchars($settings['hero_banner']) ?>" class="w-full h-full object-cover">
-                </div>
-            <?php endif; ?>
-            <div class="relative z-10">
-                <span class="px-3 py-1 bg-sky-500/20 text-sky-300 border border-sky-500/30 rounded-full text-xs font-bold uppercase tracking-wider inline-block mb-3">🩺 Distributor Resmi Alkes &amp; Medis</span>
+                <div class="relative z-10 max-w-xl">
+                <h2 class="text-3xl font-bold mb-3 leading-tight tracking-tight text-white">Solusi Persediaan Medis Akurasi Tinggi</h2>
+                <p class="text-slate-300 text-sm mb-6 leading-relaxed">Distribusi Alkes & Obat dengan standar FEFO dan Multi-Gudang Terpusat. Real-time sinkronisasi tanpa selisih.</p>
+                <span class="px-3 py-1 bg-slate-500/20 text-slate-300 border border-slate-500/30 rounded-full text-xs font-bold uppercase tracking-wider inline-block mb-3">🩺 Distributor Resmi Alkes & Medis</span>
                 <h1 class="text-2xl sm:text-3xl font-bold tracking-tight mb-2">Peralatan Kesehatan Bergaransi Resmi</h1>
                 <p class="text-slate-300 max-w-2xl text-xs sm:text-sm leading-relaxed mb-6">Pilih cabang terdekat Anda untuk mendapatkan pengiriman instan Kurir Internal ZenCare Malang Raya atau ekspedisi pengiriman nasional.</p>
-                <div class="flex flex-wrap gap-2 text-xs text-slate-300">
+                    <div class="flex flex-wrap gap-2 text-[11px] font-bold mt-4 text-slate-300">
                     <span class="px-3 py-1 bg-slate-800/80 border border-slate-700 rounded-lg">✓ 100% Produk Original</span>
                     <span class="px-3 py-1 bg-slate-800/80 border border-slate-700 rounded-lg">✓ Garansi Alkes Resmi</span>
-                    <?php if (!empty($settings['kontak_wa'])): ?>
-                        <span class="px-3 py-1 bg-emerald-600/80 border border-emerald-500 text-white rounded-lg">✓ Hubungi Kami (WA): <?= htmlspecialchars($settings['kontak_wa']) ?></span>
+                    <?php if(!empty($settings['kontak_wa'])): ?>
+                        <span class="px-3 py-1 bg-slate-600/80 border border-slate-500 text-white rounded-lg">✓ Hubungi Kami (WA): <?= htmlspecialchars($settings['kontak_wa']) ?></span>
                     <?php endif; ?>
                 </div>
             </div>
@@ -170,19 +168,19 @@ if (!$settings) {
                 <div class="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col justify-between hover:shadow-md transition duration-200">
                     <div>
                         <div class="h-48 bg-slate-100 overflow-hidden relative border-b border-slate-200">
-                            <img src="<?= htmlspecialchars($p['gambar']) ?>" alt="<?= htmlspecialchars($p['nama_produk']) ?>" class="w-full h-full object-cover">
-                            <span class="absolute top-2 right-2 text-xs font-bold px-2.5 py-0.5 rounded-full <?= $stokBox > 0 ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white' ?>">
-                                <?= $stokBox > 0 ? "Stok: $stokBox $satBesar" : 'Stok Tidak Tersedia' ?>
+                            <img src="<?= htmlspecialchars($p['gambar']) ?>" alt="<?= htmlspecialchars($p['nama_produk']) ?>">
+                            <span class="absolute top-2 right-2 text-xs font-bold px-2.5 py-0.5 rounded-full <?= $stokBox > 0 ? 'bg-slate-600 text-white' : 'bg-slate-500 text-white' ?>">
+                                <?= $stokBox > 0 ? 'Tersedia' : 'Habis' ?>
                             </span>
                         </div>
-                        <div class="p-4">
-                            <span class="text-[10px] uppercase font-bold text-sky-600 tracking-wider bg-sky-50 px-2 py-0.5 rounded border border-sky-100 inline-block mb-1"><?= htmlspecialchars($p['kategori']) ?></span>
+                        <div class="p-5 flex flex-col flex-1 relative">
+                            <span class="text-[10px] uppercase font-bold text-slate-600 tracking-wider bg-slate-100 px-2 py-0.5 rounded border border-slate-200 inline-block mb-1"><?= htmlspecialchars($p['kategori']) ?></span>
                             <h3 class="text-sm font-bold text-slate-900 mt-1 line-clamp-2"><?= htmlspecialchars($p['nama_produk']) ?></h3>
                             <p class="text-xs text-slate-500 mt-1.5 line-clamp-2"><?= htmlspecialchars($p['deskripsi'] ?? 'Peralatan medis standar berkualitas.') ?></p>
-                            
-                            <div class="mt-3 flex items-center justify-between text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 font-medium">
-                                <span>📦 1 <?= $satBesar ?> =</span>
-                                <strong class="bg-amber-100 px-2 py-0.5 rounded"><?= $rasio ?> <?= $satKecil ?></strong>
+                            <!-- Specs / Packaging -->
+                            <div class="mt-3 flex items-center justify-between text-xs text-slate-700 bg-slate-100 border border-slate-200 rounded-lg p-2 font-medium">
+                                <span>1 <?= $satBesar ?></span>
+                                <strong class="bg-slate-200 px-2 py-0.5 rounded"><?= $rasio ?> <?= $satKecil ?></strong>
                             </div>
                         </div>
                     </div>
@@ -201,12 +199,12 @@ if (!$settings) {
                                 <input type="number" id="qty_input_<?= $p['id'] ?>" value="1" min="1" max="<?= $stokBox ?>" class="w-20 text-center text-xs border border-slate-300 rounded-lg py-1 px-2 focus:ring-1 focus:ring-zc focus:outline-none" onchange="validateQty(this, <?= $stokBox ?>)">
                             </div>
                             <button onclick="addToCart(<?= $p['id'] ?>, '<?= addslashes($p['nama_produk']) ?>', <?= $hargaDisplay ?>, <?= $p['berat_gram'] ?>, '<?= addslashes($p['gambar']) ?>', <?= $stokBox ?>, <?= $rasio ?>, '<?= $satBesar ?>', '<?= $satKecil ?>')" 
-                                    class="w-full text-xs font-bold py-2.5 px-3 rounded-lg border transition shadow-xs bg-sky-500 hover:bg-cyan-600 text-white border-sky-500">
-                                + Tambah ke Keranjang
+                                    class="w-full text-xs font-bold py-2.5 px-3 rounded-lg border transition shadow-xs bg-slate-600 hover:bg-slate-700 text-white border-slate-600">
+                                🛒 Tambah Keranjang
                             </button>
                         <?php else: ?>
-                            <div class="text-xs text-center text-rose-600 font-bold bg-rose-50 border border-rose-200 py-2.5 rounded-lg">
-                                Stok Tidak Cukup (Perlu minimal <?= $rasio ?> <?= $satKecil ?>)
+                            <div class="text-xs text-center text-slate-600 font-bold bg-slate-100 border border-slate-200 py-2.5 rounded-lg">
+                                Stok Habis / Pre-Order
                             </div>
                         <?php endif; ?>
                     </div>

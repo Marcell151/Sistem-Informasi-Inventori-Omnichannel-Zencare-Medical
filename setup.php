@@ -40,7 +40,7 @@ try {
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(50) NOT NULL,
         password VARCHAR(255) NOT NULL,
-        role ENUM('super_admin', 'kasir', 'pelanggan') NOT NULL,
+        role ENUM('super_admin', 'karyawan', 'pelanggan') NOT NULL,
         id_cabang INT NULL,
         is_active BOOLEAN DEFAULT 1
     ) ENGINE=InnoDB;

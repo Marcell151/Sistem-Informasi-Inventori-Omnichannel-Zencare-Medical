@@ -1,5 +1,5 @@
 <?php
-// File: login.php – Dedicated Admin & Kasir Login Portal
+// File: login.php – Dedicated Admin & Karyawan Login Portal
 session_start();
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/koneksi.php';
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         theme: {
           extend: {
             fontFamily: { sans: ['Inter', 'sans-serif'] },
-            colors: { zc: '#1a75d2', zcHv: '#1562b3', zcLt: '#e8f2ff', zcBrd: '#e4e9f0', zcTxt: '#1e293b', zcMut: '#64748b' }
+            colors: { zc: '#475569', zcHv: '#334155', zcLt: '#f8fafc', zcBrd: '#e4e9f0', zcTxt: '#1e293b', zcMut: '#64748b' }
           }
         }
       }
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                 </svg>
             </div>
-            <h1 class="text-xl font-bold text-gray-900">ZenCare Admin &amp; Kasir</h1>
+            <h1 class="text-xl font-bold text-gray-900">ZenCare Admin &amp; Karyawan</h1>
             <p class="text-xs text-gray-500 mt-1">Portal Internal Operasional Inventaris &amp; POS</p>
         </div>
 
@@ -86,12 +86,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </form>
                     <form method="POST"><input type="hidden" name="username" value="kasir_muharto">
                         <button type="submit" class="w-full text-center p-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 hover:border-gray-400 transition">
-                            <span class="text-xs font-semibold text-gray-900 block">Kasir Muharto</span>
+                            <span class="text-xs font-semibold text-gray-900 block">Karyawan Muharto</span>
                         </button>
                     </form>
                     <form method="POST"><input type="hidden" name="username" value="kasir_borobudur">
                         <button type="submit" class="w-full text-center p-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 hover:border-gray-400 transition">
-                            <span class="text-xs font-semibold text-gray-900 block">Kasir Borobudur</span>
+                            <span class="text-xs font-semibold text-gray-900 block">Karyawan Borobudur</span>
                         </button>
                     </form>
                 </div>
@@ -134,4 +134,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </body>
 </html>
+
 

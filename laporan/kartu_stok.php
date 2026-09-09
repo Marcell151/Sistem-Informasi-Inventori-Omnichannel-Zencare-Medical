@@ -6,7 +6,7 @@ require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['super_admin', 'admin_cabang', 'kasir']);
+requireRole(['super_admin', 'admin_cabang', 'karyawan']);
 
 $id_variasi = intval($_GET['id_variasi'] ?? 0);
 $id_cabang  = intval($_GET['id_cabang']  ?? ($_SESSION['id_cabang'] ?? 0));

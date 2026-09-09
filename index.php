@@ -6,7 +6,7 @@ require_once __DIR__ . '/config/koneksi.php';
 require_once __DIR__ . '/config/auth.php';
 require_once __DIR__ . '/config/layout.php';
 
-requireRole(['super_admin', 'kasir']);
+requireRole(['super_admin', 'karyawan']);
 if (!isset($_SESSION['id_cabang'])) $_SESSION['id_cabang'] = 1;
 
 // Branch selector
@@ -32,9 +32,9 @@ try {
     $omsetQuery->execute([$activeCabang]);
     $omset = $omsetQuery->fetchColumn();
 
-    $karantina = $pdo->prepare("SELECT COALESCE(SUM(qty),0) FROM gudang_karantina WHERE id_cabang=?");
-    $karantina->execute([$activeCabang]);
-    $karantina = $karantina->fetchColumn();
+    $pesananBaru = $pdo->prepare("SELECT COUNT(*) FROM penjualan WHERE id_cabang=? AND status_pesanan='Menunggu'");
+    $pesananBaru->execute([$activeCabang]);
+    $pesananBaru = $pesananBaru->fetchColumn();
 
     $lowItems = $pdo->prepare("
         SELECT CONCAT(i.nama_produk,' - ',v.nama_variasi) AS nama, sc.stok
@@ -121,13 +121,13 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
         </div>
     </div>
 
-    <!-- Card 4: Karantina -->
+    <!-- Card 4: Pesanan Baru -->
     <div class="bg-white border border-zcBorder rounded-2xl p-5 flex items-start justify-between shadow-sm">
-        <div class="w-11 h-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0"><?= icon('shield', 'w-5 h-5') ?></div>
+        <div class="w-11 h-11 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center text-violet-600 shrink-0"><?= icon('store', 'w-5 h-5') ?></div>
         <div class="text-right">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-zcMuted block">Gudang Karantina</span>
-            <span class="text-3xl font-bold text-amber-600 mt-1 block"><?= number_format($karantina) ?></span>
-            <span class="text-[10px] text-zcMuted">Unit diisolasi</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-zcMuted block">Pesanan Baru</span>
+            <span class="text-3xl font-bold text-violet-600 mt-1 block"><?= number_format($pesananBaru) ?></span>
+            <span class="text-[10px] text-zcMuted">Status: Menunggu</span>
         </div>
     </div>
 </div>
@@ -148,7 +148,7 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
         <span class="font-bold text-emerald-600">ACTIVE</span>
     </div>
     <div class="ml-auto flex gap-2">
-        <a href="pos/pos.php" class="flex items-center gap-2 px-4 py-2.5 bg-zc hover:bg-zcHv text-white text-xs font-semibold rounded-xl transition"><?= icon('pos', 'w-4 h-4') ?> Buka POS Kasir</a>
+        <a href="pos/pos.php" class="flex items-center gap-2 px-4 py-2.5 bg-zc hover:bg-zcHv text-white text-xs font-semibold rounded-xl transition"><?= icon('pos', 'w-4 h-4') ?> Buka POS Karyawan</a>
         <a href="ecommerce/index.php" class="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-zcLt text-zc text-xs font-semibold rounded-xl transition border border-zc/30"><?= icon('store', 'w-4 h-4') ?> Buka Store</a>
     </div>
 </div>

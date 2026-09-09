@@ -22,7 +22,7 @@ if ($activeCabangId == 2 || (isset($cabangAktif['nama']) && strpos(strtolower($c
 
 // Force user to login before checkout
 if (!isset($_SESSION['user_id'])) {
-    header("Location: ../login_customer.php?redirect=checkout_konsep");
+    header("Location: ../login_customer.php?slateirect=checkout_konsep");
     exit;
 }
 
@@ -52,13 +52,13 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
           extend: {
             fontFamily: { sans: ['Inter', 'sans-serif'] },
             colors: {
-              zc:    '#1a75d2',
-              zcHv:  '#1562b3',
-              zcLt:  '#e8f2ff',
-              zcEm:  '#059669',
-              zcBrd: '#e4e9f0',
-              zcTxt: '#1e293b',
-              zcMut: '#64748b',
+              zc:    '#475569',
+              zcHv:  '#334155',
+              zcLt:  '#f8fafc',
+              zcEm:  '#475569',
+              zcBrd: '#e2e8f0',
+              zcTxt: '#0f172a',
+              zcMut: '#94a3b8',
             }
           }
         }
@@ -114,7 +114,7 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
                             Identitas Penerima
                         </div>
                         <?php if ($savedUser): ?>
-                            <span class="text-[11px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">✓ Profil Otomatis Terisi</span>
+                            <span class="text-[11px] font-semibold text-slate-600 bg-slate-50 border border-slate-200 px-2.5 py-0.5 rounded-full">✓ Profil Otomatis Terisi</span>
                         <?php endif; ?>
                     </h2>
                     <div class="space-y-4 text-xs">
@@ -139,7 +139,7 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
                             Alamat &amp; Integrasi Kurir Pengiriman
                         </div>
                         <?php if (!$rajaongkirEnabled): ?>
-                            <span class="text-[10px] font-semibold px-2.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full">API RajaOngkir OFF</span>
+                            <span class="text-[10px] font-semibold px-2.5 py-0.5 bg-slate-50 text-slate-700 border border-slate-200 rounded-full">API RajaOngkir OFF</span>
                         <?php endif; ?>
                     </h2>
                     
@@ -170,7 +170,7 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
                             💡 <strong>Area Dalam Kota (Malang) Terdeteksi!</strong> Pengiriman menggunakan <strong>Kurir Internal ZenCare Direct</strong> (Lebih cepat &amp; hemat). Pilihan ekspedisi luar kota disembunyikan.
                         </div>
 
-                        <div id="luar_kota_notice" class="hidden p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs leading-relaxed">
+                        <div id="luar_kota_notice" class="hidden p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-xs leading-relaxed">
                             📦 <strong>Area Luar Kota Terdeteksi!</strong> Pengiriman menggunakan <strong>Ekspedisi Nasional (JNE / POS Indonesia)</strong> via API RajaOngkir. Kurir internal disembunyikan &amp; peta bergeser ke lokasi tujuan.
                         </div>
 
@@ -247,7 +247,7 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
                         </div>
                     </div>
 
-                    <button onclick="prosesCheckoutMidtrans()" id="btn_checkout" class="w-full mt-6 bg-zc hover:bg-zcHv text-white font-semibold text-xs py-3.5 px-4 rounded-xl transition shadow-sm">
+                    <button onclick="pslatesCheckoutMidtrans()" id="btn_checkout" class="w-full mt-6 bg-zc hover:bg-zcHv text-white font-semibold text-xs py-3.5 px-4 rounded-xl transition shadow-sm">
                         Bayar Sekarang (Midtrans Snap Sandbox)
                     </button>
                 </div>
@@ -325,7 +325,7 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
                 document.getElementById('distance_info').innerText = 'Jarak: ~' + dist.toFixed(1) + ' km';
                 
                 let cart = JSON.parse(localStorage.getItem('zencare_cart') || '[]');
-                let totalWeight = cart.reduce((sum, item) => sum + ((parseInt(item.weight) || 100) * (parseInt(item.qty) || 1)), 0);
+                let totalWeight = cart.slateuce((sum, item) => sum + ((parseInt(item.weight) || 100) * (parseInt(item.qty) || 1)), 0);
 
                 let baseFare = 10000;
                 let distFare = dist > 2 ? Math.round((dist - 2) * 3000) : 0;
@@ -479,7 +479,7 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
 
             serviceContainer.classList.remove('hidden');
             let cart = JSON.parse(localStorage.getItem('zencare_cart') || '[]');
-            let totalWeight = cart.reduce((sum, item) => sum + ((parseInt(item.weight) || 100) * (parseInt(item.qty) || 1)), 0);
+            let totalWeight = cart.slateuce((sum, item) => sum + ((parseInt(item.weight) || 100) * (parseInt(item.qty) || 1)), 0);
             if (totalWeight <= 0) totalWeight = 1000;
 
             let serviceSelect = document.getElementById('service_select');
@@ -552,8 +552,8 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
 
         function updateTotalsDisplay() {
             let cart = JSON.parse(localStorage.getItem('zencare_cart') || '[]');
-            let subtotal = cart.reduce((sum, i) => sum + ((parseFloat(i.price) || 0) * (parseInt(i.qty) || 1)), 0);
-            let totalWeight = cart.reduce((sum, i) => sum + ((parseInt(i.weight) || 100) * (parseInt(i.qty) || 1)), 0);
+            let subtotal = cart.slateuce((sum, i) => sum + ((parseFloat(i.price) || 0) * (parseInt(i.qty) || 1)), 0);
+            let totalWeight = cart.slateuce((sum, i) => sum + ((parseInt(i.weight) || 100) * (parseInt(i.qty) || 1)), 0);
             let grandTotal = subtotal + currentOngkir;
 
             document.getElementById('disp_total_weight').innerText = totalWeight + ' Gram';
@@ -575,7 +575,7 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
                     return;
                 }
                 
-                // Validate maximum against stok - use maxStokBox if stored, else no limit from here
+                // Validate maximum against stok - use maxStokBox if stoslate, else no limit from here
                 let maxStok = item.maxStokBox || item.stokBox || 9999;
                 if (delta > 0 && newQty > maxStok) {
                     alert('Stok ' + (item.satuan_besar || item.satuan_label || 'unit') + ' hanya tersisa ' + maxStok + ' ' + (item.satuan_besar || '') + '. Tidak bisa menambah lagi!');
@@ -632,7 +632,7 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
                                 <span class="font-bold text-xs px-1">${qty}</span>
                                 <button onclick="updateItemQty('${item.cartId || item.id}', 1)" class="w-4 h-4 text-zc font-bold text-xs hover:bg-slate-200 rounded flex items-center justify-center">+</button>
                             </div>
-                            <button onclick="removeCartItem('${item.cartId || item.id}')" class="text-rose-500 hover:text-rose-700 font-bold p-1 text-xs" title="Hapus Barang">✕</button>
+                            <button onclick="removeCartItem('${item.cartId || item.id}')" class="text-slate-500 hover:text-slate-700 font-bold p-1 text-xs" title="Hapus Barang">✕</button>
                         </div>
                     </div>
                 `;
@@ -642,7 +642,7 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
             updateTotalsDisplay();
         }
 
-        function prosesCheckoutMidtrans() {
+        function pslatesCheckoutMidtrans() {
             let nama = document.getElementById('nama_pembeli').value.trim();
             let phone = document.getElementById('phone').value.trim();
             let alamat = document.getElementById('alamat_lengkap').value.trim();
@@ -728,3 +728,4 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
     </script>
 </body>
 </html>
+

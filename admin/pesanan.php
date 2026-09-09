@@ -1,13 +1,13 @@
 <?php
 // File: admin/pesanan.php
-// Manajemen Pesanan Online E-Commerce & POS – Kasir & Super Admin
+// Manajemen Pesanan Online E-Commerce & POS – Karyawan & Super Admin
 session_start();
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['super_admin', 'kasir']);
+requireRole(['super_admin', 'karyawan']);
 
 $activeCabang = $_SESSION['id_cabang'] ?? 1;
 if (isset($_GET['cabang'])) $_SESSION['id_cabang'] = $activeCabang = intval($_GET['cabang']);

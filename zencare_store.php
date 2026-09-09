@@ -145,7 +145,7 @@ foreach ($products as $p) {
                     </select>
                 </form>
 
-                <?php if (isset($_SESSION['user_id']) && in_array($_SESSION['role'] ?? '', ['super_admin','kasir'])): ?>
+                <?php if (isset($_SESSION['user_id']) && in_array($_SESSION['role'] ?? '', ['super_admin','karyawan'])): ?>
                     <a href="index.php" class="text-xs font-medium text-zcMut hover:text-zcTxt border border-zcBrd px-3 py-1.5 rounded-lg bg-white transition hidden sm:block">Dashboard</a>
                 <?php endif; ?>
 
@@ -164,103 +164,55 @@ foreach ($products as $p) {
                     <a href="register.php" class="text-xs font-semibold bg-zcLt text-zc border border-zc/20 px-3 py-1.5 rounded-lg hover:bg-zc/10 transition">Daftar</a>
                 <?php endif; ?>
 
-                <!-- Cart Button -->
-                <a href="zencare_checkout.php" class="relative inline-flex items-center gap-2 px-4 py-2 bg-zc hover:bg-zcHv text-white text-xs font-bold rounded-xl transition shadow-sm">
+                <!-- Cart Button (Side Drawer Toggle) -->
+                <button onclick="toggleCartDrawer()" class="relative inline-flex items-center gap-2 px-4 py-2 bg-zc hover:bg-zcHv text-white text-xs font-bold rounded-xl transition shadow-sm">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.95-1.55L23 6H6"/></svg>
                     <span class="hidden sm:inline">Keranjang</span>
                     <span id="cart-badge" class="px-1.5 py-0.5 text-[10px] font-bold bg-white text-zc rounded-full min-w-[18px] text-center">0</span>
-                </a>
+                </button>
+            </div>
+        </div>
+        <!-- Mega Menu / Nav -->
+        <div class="border-t border-zcBrd bg-white hidden md:block">
+            <div class="max-w-7xl mx-auto px-4 lg:px-8 h-10 flex items-center gap-6 text-[11px] font-bold text-zcMut uppercase tracking-widest">
+                <a href="zencare_store.php" class="text-zc hover:text-zcHv">Beranda</a>
+                <div class="group relative py-3">
+                    <a href="#" class="hover:text-zcTxt flex items-center gap-1">
+                        Kategori Produk
+                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                    </a>
+                    <!-- Dropdown -->
+                    <div class="absolute top-full left-0 w-48 bg-white border border-zcBrd rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 py-2">
+                        <button onclick="filterCat('semua')" class="w-full text-left px-4 py-2 hover:bg-slate-50 hover:text-zc transition">Semua Produk</button>
+                        <?php foreach ($categories as $cat): ?>
+                        <button onclick="filterCat('<?= htmlspecialchars(addslashes($cat)) ?>')" class="w-full text-left px-4 py-2 hover:bg-slate-50 hover:text-zc transition"><?= htmlspecialchars($cat) ?></button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <a href="#" class="hover:text-zcTxt">Alat Kesehatan</a>
+                <a href="#" class="hover:text-zcTxt">Obat &amp; Suplemen</a>
+                <a href="#" class="hover:text-zcTxt">Promo B2B</a>
             </div>
         </div>
     </header>
 
-    <!-- =========================================================== -->
-    <!-- HERO BANNER SLIDER                                           -->
-    <!-- =========================================================== -->
-    <section class="max-w-7xl mx-auto px-4 lg:px-8 pt-6 pb-4">
-        <div class="relative rounded-2xl overflow-hidden shadow-lg" id="hero-slider">
-            
-            <!-- Slide 1 -->
-            <div class="slide active min-h-[220px] sm:min-h-[260px] bg-gradient-to-r from-[#0f2d5a] via-[#1a4a8a] to-[#1a75d2] text-white items-center gap-8 p-8 sm:p-12">
-                <div class="flex-1">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/15 border border-white/25 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                        Distributor Resmi
-                    </span>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight mb-3">Alat Kesehatan &amp;<br>Medis Bergaransi Resmi</h1>
-                    <p class="text-blue-100 text-sm leading-relaxed mb-5 max-w-md">Pembelian grosir langsung ke distributor. Kualitas terjamin, harga kompetitif, pengiriman ke seluruh Indonesia.</p>
-                    <div class="flex flex-wrap gap-2 text-xs">
-                        <span class="inline-flex items-center gap-1 px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg">
-                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            100% Original
-                        </span>
-                        <span class="inline-flex items-center gap-1 px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg">
-                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                            Garansi Resmi
-                        </span>
-                        <span class="inline-flex items-center gap-1 px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg">
-                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M14 18V6a2 2 0 00-2-2H4a2 2 0 00-2 2v11a1 1 0 001 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 001-1v-3.65a1 1 0 00-.22-.624l-3.48-4.35A1 1 0 0017.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
-                            Kirim Cepat Malang
-                        </span>
-                    </div>
-                </div>
-                <div class="hidden lg:flex items-center justify-center w-48 h-36 bg-white/10 rounded-2xl border border-white/20">
-                    <svg class="w-20 h-20 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    <!-- Minimal Whitespace Banner (Pharmify Style) -->
+    <section class="max-w-7xl mx-auto px-4 lg:px-8 pt-8 pb-4">
+        <div class="bg-gradient-to-r from-slate-50 to-white border border-zcBrd rounded-2xl p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8 shadow-sm">
+            <div class="max-w-lg">
+                <span class="inline-block px-3 py-1 bg-zc/10 text-zc text-[10px] font-bold uppercase tracking-widest rounded-md mb-4 border border-zc/20">Distributor Resmi</span>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-zcTxt tracking-tight leading-[1.15] mb-4">Solusi Pengadaan<br>Alkes &amp; Obat Medis.</h1>
+                <p class="text-zcMut text-sm leading-relaxed mb-6">Pembelian grosir B2B untuk klinik dan apotek dengan jaminan produk bersertifikat BPOM & Kemenkes RI.</p>
+                <div class="flex gap-3">
+                    <button class="px-5 py-2.5 bg-zc text-white text-xs font-bold rounded-xl hover:bg-zcHv transition">Belanja Sekarang</button>
+                    <button class="px-5 py-2.5 bg-white text-zcTxt text-xs font-bold rounded-xl border border-zcBrd hover:border-zc transition">Lihat Katalog</button>
                 </div>
             </div>
-
-            <!-- Slide 2 -->
-            <div class="slide min-h-[220px] sm:min-h-[260px] bg-gradient-to-r from-[#064e3b] via-[#065f46] to-[#059669] text-white items-center gap-8 p-8 sm:p-12">
-                <div class="flex-1">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/15 border border-white/25 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-                        Pembelian Grosir B2B
-                    </span>
-                    <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight mb-3">Harga Grosir Khusus<br>Klinik &amp; Apotek</h2>
-                    <p class="text-emerald-100 text-sm leading-relaxed mb-5 max-w-md">Sistem B2B modern untuk klinik, rumah sakit, dan apotek. Kelola pesanan grosir langsung dari dashboard Anda.</p>
-                    <div class="flex flex-wrap gap-2 text-xs">
-                        <span class="inline-flex items-center gap-1 px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg">Harga Khusus Grosir</span>
-                        <span class="inline-flex items-center gap-1 px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg">Invoice Otomatis</span>
-                        <span class="inline-flex items-center gap-1 px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg">Multi Ekspedisi</span>
-                    </div>
-                </div>
-                <div class="hidden lg:flex items-center justify-center w-48 h-36 bg-white/10 rounded-2xl border border-white/20">
-                    <svg class="w-20 h-20 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
-                </div>
+            <div class="hidden md:flex items-center justify-center w-64 h-48 bg-slate-50 rounded-2xl border border-zcBrd/50 relative overflow-hidden">
+                <!-- Abstract Clean Illustration Placeholder -->
+                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNlNGU5ZjAiLz48L3N2Zz4=')] opacity-50"></div>
+                <svg class="w-24 h-24 text-zc/20 relative z-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
             </div>
-
-            <!-- Slide 3 -->
-            <div class="slide min-h-[220px] sm:min-h-[260px] bg-gradient-to-r from-[#4c1d95] via-[#5b21b6] to-[#7c3aed] text-white items-center gap-8 p-8 sm:p-12">
-                <div class="flex-1">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/15 border border-white/25 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-                        Kualitas Terjamin
-                    </span>
-                    <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight mb-3">Produk Medis Tersertifikasi<br>BPOM &amp; Kemenkes RI</h2>
-                    <p class="text-purple-100 text-sm leading-relaxed mb-5 max-w-md">Semua produk kami melewati seleksi ketat dan bersertifikat resmi dari lembaga berwenang Republik Indonesia.</p>
-                    <div class="flex flex-wrap gap-2 text-xs">
-                        <span class="inline-flex items-center gap-1 px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg">Sertifikat BPOM</span>
-                        <span class="inline-flex items-center gap-1 px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg">ISO 13485</span>
-                        <span class="inline-flex items-center gap-1 px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg">CE Marking</span>
-                    </div>
-                </div>
-                <div class="hidden lg:flex items-center justify-center w-48 h-36 bg-white/10 rounded-2xl border border-white/20">
-                    <svg class="w-20 h-20 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                </div>
-            </div>
-
-            <!-- Slider Controls -->
-            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                <button onclick="goToSlide(0)" class="slide-dot w-2 h-2 rounded-full bg-white/50 hover:bg-white transition" data-slide="0"></button>
-                <button onclick="goToSlide(1)" class="slide-dot w-2 h-2 rounded-full bg-white/50 hover:bg-white transition" data-slide="1"></button>
-                <button onclick="goToSlide(2)" class="slide-dot w-2 h-2 rounded-full bg-white/50 hover:bg-white transition" data-slide="2"></button>
-            </div>
-            <button onclick="prevSlide()" class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center text-white transition">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-            </button>
-            <button onclick="nextSlide()" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center text-white transition">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-            </button>
         </div>
     </section>
 
@@ -474,13 +426,13 @@ foreach ($products as $p) {
                                 <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
                                 <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.95-1.55L23 6H6"/>
                             </svg>
-                            Tambah ke Keranjang
+                            Beli
                         </button>
                     <?php else: ?>
-                        <div class="w-full flex items-center justify-center gap-2 text-xs font-semibold py-2.5 px-3 rounded-xl bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed select-none">
-                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
-                            Stok Tidak Tersedia
-                        </div>
+                        <a href="https://wa.me/6281234567890?text=Halo%20Admin,%20saya%20ingin%20menanyakan%20stok%20untuk%20produk%20<?= urlencode($p['nama_induk']) ?>" target="_blank" class="w-full flex items-center justify-center gap-2 text-xs font-bold py-2.5 px-3 rounded-xl transition bg-[#25D366] hover:bg-[#1DA851] active:scale-[.98] text-white shadow-sm">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+                            Hubungi via WhatsApp
+                        </a>
                     <?php endif; ?>
                     </div><!-- /mt-auto -->
 
@@ -523,6 +475,37 @@ foreach ($products as $p) {
         <div class="bg-emerald-600 text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-lg flex items-center gap-2.5 max-w-xs">
             <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span id="toast-msg">Ditambahkan ke keranjang!</span>
+        </div>
+    </div>
+
+    <!-- =========================================================== -->
+    <!-- SIDE DRAWER CART                                              -->
+    <!-- =========================================================== -->
+    <div id="cart-drawer-overlay" class="fixed inset-0 bg-slate-900/40 z-[60] opacity-0 invisible transition-all duration-300 backdrop-blur-sm" onclick="toggleCartDrawer()"></div>
+    <div id="cart-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white z-[70] shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col border-l border-zcBrd">
+        <div class="px-5 py-4 border-b border-zcBrd flex items-center justify-between bg-slate-50">
+            <h2 class="text-sm font-bold text-zcTxt flex items-center gap-2">
+                <svg class="w-4 h-4 text-zc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.95-1.55L23 6H6"/></svg>
+                Keranjang Belanja
+            </h2>
+            <button onclick="toggleCartDrawer()" class="text-zcMut hover:text-rose-500 transition p-1">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div id="cart-drawer-items" class="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+            <!-- Cart items injected here -->
+        </div>
+        <div class="p-5 border-t border-zcBrd bg-slate-50">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-xs font-semibold text-zcMut">Subtotal:</span>
+                <span id="cart-drawer-total" class="text-lg font-extrabold text-zcTxt tracking-tight">Rp 0</span>
+            </div>
+            <a href="zencare_checkout.php" class="flex items-center justify-center w-full py-3 bg-zc hover:bg-zcHv text-white text-xs font-bold rounded-xl transition shadow-md">
+                Lanjut ke Pembayaran
+            </a>
+            <button onclick="toggleCartDrawer()" class="w-full text-center py-2 mt-2 text-xs font-medium text-zcMut hover:text-zcTxt transition">
+                Lanjutkan Belanja
+            </button>
         </div>
     </div>
 
@@ -679,26 +662,96 @@ foreach ($products as $p) {
         cards.forEach(c => grid.appendChild(c));
     }
 
-    // ─── Hero Slider ──────────────────────────────────────────────
-    let currentSlide = 0;
-    const slides = document.querySelectorAll('.slide');
-    const dots   = document.querySelectorAll('.slide-dot');
-
-    function goToSlide(n) {
-        slides.forEach(s => s.classList.remove('active'));
-        dots.forEach(d => d.classList.remove('bg-white'));
-        currentSlide = (n + slides.length) % slides.length;
-        slides[currentSlide].classList.add('active');
-        dots[currentSlide]?.classList.add('bg-white');
+    // ─── Cart Drawer Logic ────────────────────────────────────────
+    function toggleCartDrawer() {
+        const drawer = document.getElementById('cart-drawer');
+        const overlay = document.getElementById('cart-drawer-overlay');
+        const isOpen = !drawer.classList.contains('translate-x-full');
+        
+        if (isOpen) {
+            drawer.classList.add('translate-x-full');
+            overlay.classList.remove('opacity-100', 'visible');
+            overlay.classList.add('opacity-0', 'invisible');
+        } else {
+            renderCartDrawer();
+            drawer.classList.remove('translate-x-full');
+            overlay.classList.remove('opacity-0', 'invisible');
+            overlay.classList.add('opacity-100', 'visible');
+        }
     }
-    function nextSlide() { goToSlide(currentSlide + 1); }
-    function prevSlide() { goToSlide(currentSlide - 1); }
-    
-    // Auto-play
-    let autoSlide = setInterval(nextSlide, 5000);
-    document.getElementById('hero-slider').addEventListener('mouseenter', () => clearInterval(autoSlide));
-    document.getElementById('hero-slider').addEventListener('mouseleave', () => { autoSlide = setInterval(nextSlide, 5000); });
-    goToSlide(0);
+
+    function renderCartDrawer() {
+        const cart = getCart();
+        const container = document.getElementById('cart-drawer-items');
+        const totalEl = document.getElementById('cart-drawer-total');
+        
+        if (cart.length === 0) {
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full text-center gap-3 opacity-60">
+                    <svg class="w-12 h-12 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.95-1.55L23 6H6"/></svg>
+                    <p class="text-xs font-medium text-zcMut">Keranjang masih kosong</p>
+                </div>
+            `;
+            totalEl.innerText = 'Rp 0';
+            return;
+        }
+
+        let html = '';
+        let total = 0;
+
+        cart.forEach(item => {
+            const sub = item.price * item.qty;
+            total += sub;
+            html += `
+            <div class="flex gap-3 bg-white border border-zcBrd rounded-xl p-2">
+                <div class="w-16 h-16 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 overflow-hidden">
+                    ${item.image ? `<img src="${item.image}" class="w-full h-full object-contain p-1">` : `<svg class="w-6 h-6 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`}
+                </div>
+                <div class="flex-1 flex flex-col justify-between py-0.5">
+                    <div class="flex justify-between items-start gap-2">
+                        <p class="text-[11px] font-bold text-zcTxt leading-tight line-clamp-2">${item.name}</p>
+                        <button onclick="removeDrawerItem(${item.id})" class="text-rose-400 hover:text-rose-600 transition shrink-0">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                        </button>
+                    </div>
+                    <div class="flex justify-between items-end">
+                        <span class="text-[11px] font-semibold text-zc">Rp ${new Intl.NumberFormat('id-ID').format(item.price)}</span>
+                        <div class="flex items-center gap-2 text-[10px]">
+                            <button onclick="updateDrawerQty(${item.id}, -1)" class="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200">-</button>
+                            <span class="font-bold w-4 text-center">${item.qty}</span>
+                            <button onclick="updateDrawerQty(${item.id}, 1)" class="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        container.innerHTML = html;
+        totalEl.innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(total);
+    }
+
+    function removeDrawerItem(id) {
+        let cart = getCart();
+        cart = cart.filter(i => i.id !== id);
+        saveCart(cart);
+        renderCartDrawer();
+    }
+
+    function updateDrawerQty(id, delta) {
+        let cart = getCart();
+        let item = cart.find(i => i.id === id);
+        if (item) {
+            let newQty = item.qty + delta;
+            if (newQty < 1) newQty = 1;
+            if (newQty > item.maxStokBox) {
+                showToast('Maksimal stok tercapai!', 'error');
+                return;
+            }
+            item.qty = newQty;
+            saveCart(cart);
+            renderCartDrawer();
+        }
+    }
 
     // Init
     document.addEventListener('DOMContentLoaded', updateCartBadge);

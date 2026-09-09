@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         theme: {
           extend: {
             fontFamily: { sans: ['Inter', 'sans-serif'] },
-            colors: { zc: '#1a75d2', zcHv: '#1562b3', zcLt: '#e8f2ff', zcBrd: '#e4e9f0', zcTxt: '#1e293b', zcMut: '#64748b' }
+            colors: { zc: '#475569', zcHv: '#334155', zcLt: '#f8fafc', zcBrd: '#e4e9f0', zcTxt: '#1e293b', zcMut: '#64748b' }
           }
         }
       }
@@ -141,4 +141,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </body>
 </html>
+
 

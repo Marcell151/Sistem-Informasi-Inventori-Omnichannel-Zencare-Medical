@@ -18,8 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($aksi === 'tambah_user') {
         $uname  = trim($_POST['username'] ?? '');
         $nama   = trim($_POST['nama_lengkap'] ?? '');
-        $role   = $_POST['role'] ?? 'kasir';
-        $cabang = ($role === 'kasir') ? intval($_POST['id_cabang'] ?? 1) : null;
+        $role   = $_POST['role'] ?? 'karyawan';
+        $cabang = ($role === 'karyawan') ? intval($_POST['id_cabang'] ?? 1) : null;
         $pass   = password_hash($_POST['password'] ?? '123456', PASSWORD_BCRYPT);
         if ($uname && $nama) {
             try {
@@ -54,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($aksi === 'edit_user') {
         $id    = intval($_POST['id_user'] ?? 0);
         $nama  = trim($_POST['nama_lengkap'] ?? '');
-        $role  = $_POST['role'] ?? 'kasir';
-        $cabang = ($role === 'kasir') ? intval($_POST['id_cabang'] ?? 1) : null;
+        $role  = $_POST['role'] ?? 'karyawan';
+        $cabang = ($role === 'karyawan') ? intval($_POST['id_cabang'] ?? 1) : null;
         if ($id && $nama) {
             $pdo->prepare("UPDATE users SET nama_lengkap=?,role=?,id_cabang=? WHERE id=?")->execute([$nama,$role,$cabang,$id]);
             $msg = "User diperbarui."; $msgType = 'success';
@@ -108,7 +108,7 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
                     <?php
                     $roleCls = match($u['role']) {
                         'super_admin' => 'bg-gray-800/10 text-gray-950 border-zcNavy/20',
-                        'kasir'       => 'bg-sky-100 text-sky-700 border-sky-200',
+                        'karyawan'       => 'bg-sky-100 text-sky-700 border-sky-200',
                         'pelanggan'   => 'bg-emerald-100 text-emerald-700 border-emerald-200',
                         default       => 'bg-slate-100 text-slate-500 border-slate-200',
                     };
@@ -182,13 +182,13 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
                 <label class="block text-xs font-bold text-gray-900 mb-1.5">Role *</label>
                 <select name="role" id="add_role" onchange="toggleCabangField('add_cabang_row', this.value)"
                     class="w-full text-xs border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-gray-400 bg-slate-50">
-                    <option value="kasir">Kasir</option>
+                    <option value="karyawan">Karyawan</option>
                     <option value="super_admin">Super Admin</option>
                     <option value="pelanggan">Pelanggan</option>
                 </select>
             </div>
             <div id="add_cabang_row">
-                <label class="block text-xs font-bold text-gray-900 mb-1.5">Cabang (wajib untuk Kasir)</label>
+                <label class="block text-xs font-bold text-gray-900 mb-1.5">Cabang (wajib untuk Karyawan)</label>
                 <select name="id_cabang" class="w-full text-xs border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-gray-400 bg-slate-50">
                     <?php foreach ($cabangList as $c): ?>
                         <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nama']) ?></option>
@@ -221,7 +221,7 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
                 <label class="block text-xs font-bold text-gray-900 mb-1.5">Role *</label>
                 <select name="role" id="eu_role" onchange="toggleCabangField('eu_cabang_row', this.value)"
                     class="w-full text-xs border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-gray-400 bg-slate-50">
-                    <option value="kasir">Kasir</option>
+                    <option value="karyawan">Karyawan</option>
                     <option value="super_admin">Super Admin</option>
                     <option value="pelanggan">Pelanggan</option>
                 </select>
@@ -252,10 +252,10 @@ function openEditUser(id, nama, role, cabangId) {
     document.getElementById('modal_edit_user').classList.remove('hidden');
 }
 function toggleCabangField(rowId, roleVal) {
-    document.getElementById(rowId).style.display = (roleVal === 'kasir') ? 'block' : 'none';
+    document.getElementById(rowId).style.display = (roleVal === 'karyawan') ? 'block' : 'none';
 }
 // Initial hide cabang for non-kasir
-toggleCabangField('add_cabang_row', document.getElementById('add_role')?.value ?? 'kasir');
+toggleCabangField('add_cabang_row', document.getElementById('add_role')?.value ?? 'karyawan');
 </script>
 
 <?php layoutEnd(); ?>

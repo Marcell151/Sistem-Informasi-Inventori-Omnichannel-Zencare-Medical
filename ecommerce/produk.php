@@ -281,55 +281,110 @@ $related = $stmtRelated->fetchAll();
             </div>
         </div>
 
-        <!-- ── Mini Specs-Sheet & Detailed Tabulation ── -->
-        <div class="mt-10 pt-8 border-t border-slate-100">
-            <h3 class="text-base font-extrabold text-zcTxt mb-4 flex items-center gap-2">
-                <svg class="w-4 h-4 text-zc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                Spesifikasi Medis &amp; Keterangan Produk
-            </h3>
+        <!-- ── TABBED CONTENT ZONE (Pharmify Style) ── -->
+        <div class="mt-10 pt-4">
+            <!-- Tab Headers -->
+            <div class="flex gap-4 border-b border-slate-200 mb-6 overflow-x-auto scrollbar-thin">
+                <button onclick="switchTab('tab-desc')" id="btn-tab-desc" class="px-4 py-3 text-[13px] font-extrabold text-zc border-b-2 border-zc transition whitespace-nowrap">Deskripsi Produk</button>
+                <button onclick="switchTab('tab-specs')" id="btn-tab-specs" class="px-4 py-3 text-[13px] font-bold text-slate-500 hover:text-zc border-b-2 border-transparent transition whitespace-nowrap">Spesifikasi &amp; Indikasi</button>
+                <button onclick="switchTab('tab-ship')" id="btn-tab-ship" class="px-4 py-3 text-[13px] font-bold text-slate-500 hover:text-zc border-b-2 border-transparent transition whitespace-nowrap">Informasi Pengiriman</button>
+            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Specs Table -->
-                <div class="border border-slate-100 rounded-2xl overflow-hidden divide-y divide-slate-100 bg-slate-50/50 text-xs">
-                    <div class="flex justify-between px-4 py-2.5">
-                        <span class="text-zcMut font-medium">Kategori Produk</span>
-                        <span class="font-bold text-zcTxt"><?= htmlspecialchars($p['kategori']) ?></span>
-                    </div>
-                    <div class="flex justify-between px-4 py-2.5">
-                        <span class="text-zcMut font-medium">SKU Variasi</span>
-                        <span class="font-mono font-bold text-zcTxt"><?= htmlspecialchars($p['sku_variasi'] ?: '-') ?></span>
-                    </div>
-                    <div class="flex justify-between px-4 py-2.5">
-                        <span class="text-zcMut font-medium">Satuan Kemasan Grosir</span>
-                        <span class="font-bold text-zcTxt"><?= htmlspecialchars($satBesar) ?></span>
-                    </div>
-                    <div class="flex justify-between px-4 py-2.5">
-                        <span class="text-zcMut font-medium">Satuan Eceran (Terkecil)</span>
-                        <span class="font-bold text-zcTxt"><?= htmlspecialchars($satKecil) ?></span>
-                    </div>
-                    <div class="flex justify-between px-4 py-2.5">
-                        <span class="text-zcMut font-medium">Rasio Konversi Kemasan</span>
-                        <span class="font-bold text-zcTxt">1 <?= htmlspecialchars($satBesar) ?> = <?= $rasio ?> <?= htmlspecialchars($satKecil) ?></span>
-                    </div>
-                    <div class="flex justify-between px-4 py-2.5">
-                        <span class="text-zcMut font-medium">Berat per Box</span>
-                        <span class="font-bold text-zcTxt"><?= intval($p['berat_gram']) ?> Gram</span>
-                    </div>
-                </div>
-
-                <!-- Medical Description -->
-                <div class="p-5 border border-slate-100 rounded-2xl bg-white text-xs leading-relaxed">
-                    <h4 class="font-bold text-zcTxt mb-2">Deskripsi &amp; Indikasi Medis:</h4>
-                    <p class="text-zcMut whitespace-pre-line mb-4">
+            <!-- Tab Panels -->
+            <div class="bg-white text-[13px] leading-relaxed text-zcMut">
+                
+                <!-- Panel: Deskripsi -->
+                <div id="tab-desc" class="block animate-fade-in">
+                    <h4 class="font-bold text-zcTxt mb-3">Informasi Umum Produk</h4>
+                    <p class="whitespace-pre-line mb-4">
                         <?= htmlspecialchars($p['deskripsi'] ?? 'Produk berstandar medis tinggi, disimpan dalam ruangan beriklim kontrol sesuai standar Good Distribution Practice (GDP).') ?>
                     </p>
-                    <div class="p-3 bg-blue-50/60 border border-blue-100 rounded-xl text-[11px] text-blue-900 flex items-start gap-2">
+                    <div class="p-3 bg-blue-50/60 border border-blue-100 rounded-xl text-[11px] text-blue-900 flex items-start gap-2 max-w-2xl">
                         <svg class="w-4 h-4 text-zc shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                         <span>Untuk pembelian jumlah kontainer/karton besar rumah sakit, hubungi bagian logistik cabang untuk pengiriman kargo khusus.</span>
                     </div>
                 </div>
+
+                <!-- Panel: Spesifikasi -->
+                <div id="tab-specs" class="hidden animate-fade-in">
+                    <h4 class="font-bold text-zcTxt mb-3">Spesifikasi Teknis</h4>
+                    <div class="max-w-2xl border border-slate-100 rounded-xl overflow-hidden divide-y divide-slate-100 bg-slate-50/50">
+                        <div class="flex justify-between px-4 py-3">
+                            <span class="text-slate-500 font-medium">Kategori Produk</span>
+                            <span class="font-bold text-zcTxt"><?= htmlspecialchars($p['kategori']) ?></span>
+                        </div>
+                        <div class="flex justify-between px-4 py-3">
+                            <span class="text-slate-500 font-medium">SKU Variasi</span>
+                            <span class="font-mono font-bold text-zcTxt"><?= htmlspecialchars($p['sku_variasi'] ?: '-') ?></span>
+                        </div>
+                        <div class="flex justify-between px-4 py-3">
+                            <span class="text-slate-500 font-medium">Kemasan Besar (Grosir)</span>
+                            <span class="font-bold text-zcTxt"><?= htmlspecialchars($satBesar) ?></span>
+                        </div>
+                        <div class="flex justify-between px-4 py-3">
+                            <span class="text-slate-500 font-medium">Kemasan Kecil (Eceran)</span>
+                            <span class="font-bold text-zcTxt"><?= htmlspecialchars($satKecil) ?></span>
+                        </div>
+                        <div class="flex justify-between px-4 py-3 bg-amber-50/30">
+                            <span class="text-slate-500 font-medium text-amber-900">Rasio Konversi</span>
+                            <span class="font-bold text-amber-900">1 <?= htmlspecialchars($satBesar) ?> = <?= $rasio ?> <?= htmlspecialchars($satKecil) ?></span>
+                        </div>
+                        <div class="flex justify-between px-4 py-3">
+                            <span class="text-slate-500 font-medium">Berat Pengiriman</span>
+                            <span class="font-bold text-zcTxt"><?= intval($p['berat_gram']) ?> Gram / <?= htmlspecialchars($satBesar) ?></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel: Pengiriman -->
+                <div id="tab-ship" class="hidden animate-fade-in">
+                    <h4 class="font-bold text-zcTxt mb-3">Ketentuan Pengiriman B2B</h4>
+                    <ul class="list-disc list-inside space-y-2 text-slate-600 mb-4">
+                        <li>Pengiriman diproses dari <strong>Cabang <?= htmlspecialchars($cabangAktif['nama'] ?? 'Utama') ?></strong>.</li>
+                        <li>Estimasi pengiriman logistik medis menggunakan armada khusus berpendingin (jika diperlukan) memakan waktu 1-3 hari kerja.</li>
+                        <li>Pickup In-Store tersedia. Anda bisa mengambil pesanan langsung ke gudang cabang terdekat.</li>
+                    </ul>
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold mt-2">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 18V6a2 2 0 00-2-2H4a2 2 0 00-2 2v11a1 1 0 001 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 001-1v-3.65a1 1 0 00-.22-.624l-3.48-4.35A1 1 0 0017.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+                        Mendukung Ekspedisi Nasional & Instan
+                    </div>
+                </div>
+
             </div>
         </div>
+
+        <script>
+        function switchTab(tabId) {
+            // Hide all
+            document.getElementById('tab-desc').classList.add('hidden');
+            document.getElementById('tab-desc').classList.remove('block');
+            document.getElementById('tab-specs').classList.add('hidden');
+            document.getElementById('tab-specs').classList.remove('block');
+            document.getElementById('tab-ship').classList.add('hidden');
+            document.getElementById('tab-ship').classList.remove('block');
+            
+            // Reset buttons
+            const btns = ['btn-tab-desc', 'btn-tab-specs', 'btn-tab-ship'];
+            btns.forEach(id => {
+                const b = document.getElementById(id);
+                b.classList.remove('text-zc', 'border-zc', 'font-extrabold');
+                b.classList.add('text-slate-500', 'border-transparent', 'font-bold');
+            });
+            
+            // Show active
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
+            
+            // Highlight button
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.remove('text-slate-500', 'border-transparent', 'font-bold');
+            activeBtn.classList.add('text-zc', 'border-zc', 'font-extrabold');
+        }
+        </script>
+        <style>
+        .animate-fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        </style>
 
     </div>
 

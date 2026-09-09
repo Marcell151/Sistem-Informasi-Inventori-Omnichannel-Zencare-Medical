@@ -1,0 +1,788 @@
+RANCANG BANGUN SISTEM INFORMASI INVENTORY OMNICHANNEL ALAT KESEHATAN DAN OBAT (STUDI KASUS ZENCARE MEDICAL)
+TUGAS AKHIR
+MARCELL CHANDRA KENCHANA
+NIM :
+ 322310015
+PROGRAM STUDI SISTEM INFORMASI
+FAKULTAS TEKNOLOGI DAN DESAIN
+UNIVERSITAS MA CHUNG
+MALANG
+2026
+LEMBAR PENGESAHAN
+TUGAS AKHIR
+RANCANG BANGUN SISTEM INFORMASI INVENTORY OMNICHANNEL ALAT KESEHATAN DAN OBAT (STUDI KASUS ZENCARE MEDICAL
+)
+Oleh:
+MARCELL CHANDRA KENCHANA
+NIM
+.
+ 322310015
+dari:
+PROGRAM STUDI SISTEM INFORMASI
+FAKULTAS TEKNOLOGI DAN DESAIN
+UNIVERSITAS MA CHUNG
+Dosen Pembimbing,
+Dr.
+ 
+Soetam Rizky Wicaksono, 
+S.Kom
+., MM., MCP., MCTS., MOSM.
+NIP. 
+20090006
+Dekan Fakultas Teknologi dan Desain,
+Prof. Dr. Eng. Romy Budhi, ST., MT., M.Pd.
+NIP. 
+20070035
+Kata Pengantar
+Puji syukur ke hadirat Tuhan Yang Maha Esa atas segala rahmat-Nya, sehingga Laporan Tugas Akhir berjudul 
+"RANCANG BANGUN SISTEM INFORMASI INVENTORI 
+OMNICHANNEL
+ ALAT KESEHATAN DAN OBAT BERBASIS WEB (STUDI KASUS ZENCARE MEDICAL)"
+ dapat diselesaikan. Laporan ini disusun untuk memenuhi syarat kelulusan jenjang Sarjana pada Program Studi Sistem Informasi, Fakultas Teknologi dan Desain, Universitas Ma Chung.
+Penyelesaian tugas akhir ini tidak lepas dari doa dan dukungan banyak pihak. Oleh karena itu, ungkapan terima kasih yang tulus penulis sampaikan kepada
+:
+Tuhan Yang Maha Esa, yang atas kehendak dan penyertaan-Nya senantiasa memberikan kesehatan, kekuatan, serta kelancaran bagi penulis dalam menuntaskan seluruh rangkaian penelitian dan penyusunan laporan ini.
+ 
+Orang tua dan keluarga tercinta, atas doa yang tiada henti, kasih sayang, serta dukungan moral dan material selama masa perkuliahan.
+Bapak Dr. Soetam Rizky Wicaksono, 
+S.Kom
+., MM., MCP., MCTS., MOSM. selaku Dosen Pembimbing, yang telah sabar memberikan waktu, arahan, dan ilmu yang sangat berharga
+.
+Pemilik beserta segenap staf ZenCare Medical atas izin penelitian dan kerjasamanya selama observasi di lapangan.
+Rekan-rekan mahasiswa Sistem Informasi dan semua pihak yang selalu memberikan semangat dan bantuan
+.
+Penulis menyadari laporan ini masih memiliki banyak kekurangan. Oleh karena itu, kritik dan saran yang membangun sangat diharapkan demi perbaikan ke depannya. Semoga Tugas Akhir ini bermanfaat bagi pengembangan keilmuan dan mendukung operasional ZenCare Medical
+.
+Malang, …
+Marcell Chandra Kenchana
+Daftar Isi
+Kata Pengantar
+i
+Daftar Isi
+ii
+Daftar Gambar
+iv
+Daftar Tabel
+v
+Bab I Pendahuluan
+6
+1.1
+Latar Belakang
+6
+1.2
+Identifikasi Masalah
+7
+1.3
+Batasan Masalah
+8
+1.4
+Rumusan Masalah
+8
+1.5
+Tujuan Penelitian
+9
+1.6
+Manfaat Penelitian
+9
+1.7
+Luaran Penelitian
+10
+1.8
+Sistematika Penulisan
+10
+Bab II Tinjauan Pustaka
+12
+2.1
+Penelitian Terdahulu
+12
+2.2
+Sistem Informasi
+14
+2.3
+Sistem Informasi Inventori
+14
+2.4
+Kartu Stok (
+Stock Ledger
+)
+15
+2.5
+Omnichannel
+15
+2.6
+First Expired First Out 
+(FEFO) dan Sistem Batch
+16
+2.7
+E-Commerce
+16
+2.8
+Point of Sale
+ (POS)
+17
+2.9
+Metode RAD
+17
+2.10
+PHP & MySQL
+18
+2.11
+Application Programming Interface
+ (API)
+18
+2.12
+Unified Modeling Language
+ (UML)
+19
+Bab III Analisis dan Perancangan Sistem
+20
+3.1
+Perencanaan Kebutuhan (
+Requirements Planning
+)
+20
+3.1.1
+Analisis Proses Bisnis Berjalan
+20
+Bab IV Hasil Dan Pembahasan
+22
+Bab V Penutup
+23
+5.1
+Simpulan
+23
+5.2
+Saran
+23
+Daftar Pustaka
+24
+Lampiran
+26
+Daftar Gambar
+No table of figures entries found.
+Gambar 2.1 RAD (Rapid Application Development)
+18
+Gambar 2.2 Unified Modeling Language (UML)
+19
+No table of figures entries found.
+No table of figures entries found.
+No table of figures entries found.
+No table of figures entries found.
+No table of figures entries found.
+No table of figures entries found.
+No table of figures entries found.
+Daftar Tabel
+No table of figures entries found.
+No table of figures entries found.
+Bab I
+Pendahuluan
+Latar Belakang
+ZenCare Medical merupakan usaha yang bergerak di bidang penyediaan alat kesehatan dan obat-obatan. Dalam operasionalnya, ZenCare menerapkan strategi penjualan ganda, di mana mereka melayani pelanggan eceran dan grosir secara langsung melalui toko fisik, sekaligus melayani pesanan khusus dari pelanggan grosir secara daring (
+online
+).
+Untuk menunjang operasional harian di toko fisik, ZenCare saat ini masih bergantung pada aplikasi kasir berlangganan dari pihak ketiga. Sistem kasir tersebut sebenarnya sudah cukup memadai untuk mencatat penjualan luring, namun sifatnya umum dan tertutup (
+stand-alone
+) sehingga tidak memiliki fitur omnichannel yang dapat menghubungkannya dengan saluran penjualan daring. Keterbatasan ini memunculkan kendala operasional yang cukup serius: admin toko terpaksa harus melakukan pencocokan dan penyamaan sisa barang secara manual setiap harinya untuk menghindari selisih data. Akibatnya, risiko pesanan ganda (
+overselling
+) menjadi sangat tinggi. Barang yang fisiknya sudah habis terjual di toko fisik masih kerap terpajang dan bisa dibeli oleh pelanggan di etalase darin
+g
+.
+Kerumitan operasional ini semakin bertambah dengan adanya fleksibilitas satuan jual yang dinamis. Penjualan daring di ZenCare difokuskan murni pada pembelian grosir menggunakan satuan besar (seperti 
+Box
+), sementara kasir di toko fisik harus melayani transaksi multi-satuan sekaligus, yakni grosir maupun eceran menggunakan satuan terkecil yang bervariasi (seperti Strip untuk obat atau Pcs untuk alat kesehatan). Pembatasan satuan besar pada saluran daring ini pada dasarnya dilatarbelakangi oleh karakteristik obat-obatan, yang lazim dikemas dalam jumlah besar sebelum dipecah menjadi satuan eceran saat dijual langsung di toko fisik. Karakteristik ini berbeda dari sebagian besar alat kesehatan, yang pada umumnya tidak memiliki tingkatan kemasan sehingga satuan pengemasan dan satuan jualnya bernilai sama
+, sehingga
+ penerapan aturan satuan besar pada saluran daring tidak serta-merta membebani pelanggan alat kesehatan untuk membeli dalam jumlah besar, karena satuan terkecil dari alat kesehatan itu sendiri sudah setara dengan satuan grosirnya. Meskipun aplikasi kasir fisik yang ada memiliki 
+fitur pemotongan stok, ketiadaan integrasi membuat admin harus menghitung rasio konversi dan memotong sisa persediaan satuan terkecil secara manual setiap kali ada barang dalam satuan besar yang terjual dari saluran mana pun. Proses kerja ganda semacam ini tidak praktis dan rentan terhadap kesalahan manusia (
+human error
+).
+Selain masalah sinkronisasi dan konversi, karakteristik produk medis yang dijual juga menuntut ketelitian tinggi. Obat-obatan memiliki masa kedaluwarsa yang kritis, namun pencatatan saat ini belum mendata tanggal kedaluwarsa per gelombang kedatangan barang (
+batch
+), sehingga memunculkan risiko keamanan jika obat yang masa pakainya lebih pendek tidak terjual lebih awal. Di sisi lain, alat kesehatan bernilai tinggi (seperti tensimeter) juga belum dicatat berdasarkan nomor seri (
+Serial Number
+), yang berdampak pada sulitnya proses validasi saat pelanggan melakukan klaim garansi.
+Melihat kendala operasional tersebut, ZenCare membutuhkan sebuah sistem informasi inventori 
+omnichannel
+ buatan sendiri yang dapat bertindak sebagai pusat kendali persediaan tunggal. Mengingat 
+marketplace
+ pihak ketiga memiliki pembatasan akses untuk dihubungkan dengan sistem inventori lokal, maka sistem ini perlu dilengkapi dengan platform 
+e-commerce
+ mandiri. Dengan pendekatan ini, setiap transaksi keluar, baik yang berasal dari kasir di toko fisik maupun pesanan dari 
+e-commerce
+, dapat langsung terpotong dari satu basis data stok yang sama secara waktu nyata (
+real-time
+). Melalui otomatisasi algoritma konversi dan pelacakan barang terstruktur ini, akar masalah terkait selisih data, rumitnya penyesuaian multi-satuan, hingga pelacakan masa kedaluwarsa dapat diselesaikan dengan baik
+.
+Identifikasi
+ Masalah
+Berdasarkan latar belakang operasional di atas, permasalahan yang terjadi di ZenCare Medical dapat diidentifikasi sebagai berikut:
+Terjadinya disparitas atau selisih data persediaan barang karena sistem kasir fisik yang digunakan tidak saling terhubung dengan platform penjualan daring.
+Tingginya risiko pesanan ganda (
+overselling
+), di mana barang yang fisiknya sudah kosong di toko masih bisa dipesan secara daring oleh pelanggan.
+Proses konversi pemotongan stok lintas saluran sangat rumit dan rawan kesalahan, karena sistem harus mampu menangani transaksi multi-satuan secara dinamis pada kasir luring, serta menyinkronkannya dengan penjualan daring
+.
+Ketiadaan sistem pelacakan tanggal kedaluwarsa berbasis 
+batch
+ untuk obat-obatan, yang berisiko pada keamanan produk dan penumpukan barang rusak.
+Belum adanya pencatatan terpusat untuk nomor seri (
+Serial Number
+) pada produk alat kesehatan, sehingga menyulitkan proses validasi saat terjadi klaim garansi dari pelanggan.
+Batasan
+ Masalah
+Agar ruang lingkup perancangan sistem lebih terarah, fokus, dan realistis untuk dikerjakan, maka ditetapkan batasan masalah sebagai berikut:
+Modul inventori difokuskan pada pencatatan jumlah fisik dan riwayat pergerakan barang, serta tidak mencakup pembukuan akuntansi keuangan (seperti perhitungan HPP atau Laba Rugi)
+.
+Sistem 
+e-commerce
+ dibangun secara mandiri dan dioperasikan tanpa melakukan penarikan data (API) dari 
+marketplace
+ pihak ketiga seperti Shopee. Sistem ini melayani pesanan daring dengan opsi pengiriman logistik maupun pengambilan langsung di toko fisik (
+Pick-up in Store
+)
+.
+Pengendalian persediaan obat-obatan menerapkan pencatatan tanggal kedaluwarsa dengan sistem 
+batching
+ menggunakan metode 
+First Expired First Out
+ (FEFO). Namun, modul ini tidak mencakup otomatisasi perhitungan pengadaan. Pencatatan barang masuk difokuskan pada penerimaan fisik yang mengakomodasi dua jalur, yakni berbasis dokumen 
+Purchase Order
+ (PO) dan pembelian langsung
+.
+Sistem memfasilitasi pencatatan 
+Serial Number
+ (SN) khusus untuk melacak masa garansi pada produk alat kesehatan yang bernilai tinggi.
+Modul 
+Point of Sale
+ (POS) dirancang khusus untuk mencatat transaksi penjualan luring yang memotong stok secara langsung, tanpa menyertakan fitur manajemen promosi tambahan seperti poin pelanggan
+.
+Integrasi layanan API pihak ketiga untuk pembayaran (Midtrans) dan kalkulasi ongkos kirim (RajaOngkir) pada 
+e-commerce
+ diimplementasikan murni menggunakan lingkungan pengujian (
+Sandbox
+).
+Sistem tidak mencakup modul manajemen retur penjualan maupun proses pengembalian dana (
+refund
+) secara otomatis. Apabila terjadi pengembalian barang fisik yang masih layak jual atau klaim garansi, proses pembaruan stok tersebut akan dicatat melalui fitur penyesuaian persediaan (Mutasi Stok) oleh admin.
+Sistem tidak menyediakan fitur pemesanan tunggu (pre-order/inden) untuk produk dengan ketersediaan stok kosong. Permintaan semacam ini diarahkan untuk ditindaklanjuti secara manual oleh admin melalui kanal komunikasi eksternal (
+WhatsApp
+)
+.
+Rumusan
+ Masalah
+Merujuk pada uraian latar belakang dan batasan masalah yang telah ditetapkan, maka rumusan masalah dalam penelitian ini adalah: Bagaimana merancang dan membangun Sistem Informasi Inventori 
+Omnichannel
+ berbasis web pada ZenCare Medical yang mampu menyinkronkan data ketersediaan stok secara 
+real-time
+ antara transaksi kasir fisik dan platform 
+e-commerce
+ mandiri, dengan menerapkan algoritma konversi multi-satuan yang dinamis serta pelacakan kedaluwarsa berbasis FEFO
+?
+Tujuan Penelitian
+Penelitian ini bertujuan untuk merancang dan membangun sebuah Sistem Informasi Inventori 
+Omnichannel
+ berbasis web di ZenCare Medical yang berfungsi sebagai pusat data tunggal untuk menghubungkan operasional transaksi fisik dan 
+e-commerce
+. Sistem ini dirancang untuk mengotomatisasi proses konversi dan pemotongan stok lintas saluran (dari Satuan Besar ke Satuan Terkecil) agar sisa barang selalu akurat. Selain itu, sistem juga bertujuan memfasilitasi pelacakan masa kedaluwarsa obat (FEFO) dan validasi garansi alat kesehatan, sekaligus mempercepat alur transaksi daring melalui integrasi layanan pembayaran dan pengiriman dalam satu pintu persediaan yang selaras
+.
+Manfaat Penelitian
+ 
+Pengembangan sistem informasi inventori ini diharapkan dapat memberikan manfaat sebagai berikut
+:
+Bagi ZenCare Medical:
+ 
+Membantu pihak manajemen dalam mengurangi risiko 
+overselling
+ dan meminimalisasi kerugian akibat obat kedaluwarsa. Sistem ini juga mempercepat proses operasional harian karena perhitungan konversi multi-satuan dan pelacakan 
+batch
+ barang telah diotomatisasi secara langsung saat transaksi berlangsung
+.
+Bagi Penulis:
+ 
+Memberikan pengalaman praktis untuk mengaplikasikan keilmuan rekayasa perangkat lunak, khususnya dalam merancang arsitektur basis data relasional untuk menangani permasalahan inventori 
+omnichannel
+ dan manajemen FEFO di ekosistem industri medis yang nyata
+.
+Bagi Perguruan Tinggi (Universitas Ma Chung)
+:
+ 
+Menjadi tambahan literatur, bahan ajar, maupun referensi empiris yang aplikatif di lingkungan perguruan tinggi mengenai implementasi sistem informasi inventori terpusat bagi UMKM, khususnya di sektor farmasi dan alat kesehatan
+.
+Luaran Penelitian
+Penelitian ini menghasilkan beberapa luaran (
+output
+) yang dapat digunakan sebagai solusi nyata atas permasalahan operasional di ZenCare Medical, sekaligus menjadi landasan bagi pengembangan sistem di masa mendatang. Adapun luaran dari penelitian ini adalah sebagai berikut:
+Sistem informasi inventori 
+omnichannel
+ berbasis web, lengkap dengan modul kasir (POS) dan platform 
+e-commerce
+ mandiri yang terintegrasi dalam satu basis data
+.
+Sistem yang mampu melakukan konversi dan pemotongan stok multi-satuan secara otomatis, dilengkapi dengan fitur pelacakan 
+batch
+ kedaluwarsa (FEFO) dan 
+Serial Number
+ garansi
+.
+Dokumentasi perancangan sistem yang komprehensif, mencakup diagram alur proses, perancangan basis data, dan desain antarmuka pengguna.
+Laporan hasil pengujian sistem yang berfokus pada keakuratan sinkronisasi data ketersediaan barang lintas saluran serta evaluasi penerimaan pengguna.
+Sistematika Penulisan
+Sistematika penulisan laporan tugas akhir ini disusun untuk memberikan gambaran yang jelas, terarah, dan terstruktur mengenai alur penelitian yang dilakukan. Setiap bab memiliki fungsi dan fokus pembahasan yang saling berkesinambungan. Adapun sistematika penulisan laporan ini dibagi ke dalam lima bab sebagai berikut:
+BAB I PENDAHULUAN
+ 
+Bagian pembuka ini memaparkan alasan di balik pemilihan topik penelitian, mulai dari kondisi operasional ZenCare Medical saat ini, permasalahan yang teridentifikasi di lapangan, hingga batasan yang ditetapkan agar pengerjaan sistem tetap berada pada cakupan yang realistis untuk diselesaikan. Rumusan masalah, tujuan, manfaat, serta luaran penelitian turut disertakan sebagai penutup bab ini
+.
+BAB II TINJAUAN PUSTAKA
+ 
+Pembahasan berlanjut ke tinjauan pustaka, yang memuat penelitian-penelitian sejenis sebagai bahan perbandingan sekaligus dasar penentuan posisi penelitian ini di antara karya terdahulu. Bab kedua ini juga menguraikan sejumlah teori pendukung, seperti konsep sistem informasi persediaan, prinsip omnichannel dari sudut pandang integrasi data, mekanisme kerja e-commerce dan Point of Sale (
+POS
+), serta metode pengembangan perangkat lunak dan basis data yang menjadi rujukan dalam perancangan sistem
+.
+BAB III ANALISIS DAN PERANCANGAN SISTEM
+ 
+Bab ketiga berisi inti dari proses perancangan. Pembahasan dimulai dari penjabaran metode penelitian yang dipakai, yakni Rapid Application Development (
+RAD
+), kemudian berlanjut ke analisis kebutuhan sistem baik dari sisi fungsional maupun non-fungsional. Rancangan arsitektur basis data, struktur tabel, use case diagram, activity diagram, hingga wireframe antarmuka turut dijabarkan di bagian ini sebagai fondasi sebelum sistem benar-benar dibangun pada tahap berikutnya
+.
+BAB IV HASIL DAN PEMBAHASAN
+ 
+Setelah tahap perancangan selesai, bab keempat menampilkan hasil implementasi sistem secara nyata, baik pada antarmuka kasir fisik maupun platform e-commerce yang sudah saling terhubung dalam satu basis data. Hasil pengujian fungsional melalui black box testing turut dibahas pada bagian ini, khususnya untuk memverifikasi ketepatan pemotongan stok pada berbagai satuan barang, dilengkapi dengan hasil evaluasi pengguna melalui User Acceptance Testing (
+UAT
+).
+BAB V KESIMPULAN DAN SARAN
+ 
+Bab terakhir memuat kesimpulan dari keseluruhan proses penelitian dan implementasi yang telah dijalankan di ZenCare Medical, disusun berdasarkan temuan yang diperoleh pada bab-bab sebelumnya. Sejumlah saran turut dicantumkan sebagai bahan pertimbangan bagi pengembangan sistem pada tahap selanjutnya
+.
+Bab II
+Tinjauan Pustaka
+Penelitian Terdahulu
+Kajian terhadap penelitian terdahulu dilakukan sebagai landasan perbandingan dalam pengembangan sistem informasi inventori 
+omnichannel
+ pada ZenCare Medical. Melalui analisis literatur, dapat diidentifikasi keunggulan teknologi serta celah penelitian (
+research gap
+) yang dapat disempurnakan. Berikut adalah tabel perbandingan antara sistem yang diusulkan dengan penelitian sebelumnya:
+Tabel 2.
+1
+ 
+Perbandingan Penelitian Terdahulu
+Komponen Analisis
+Penelitian 1
+Penelitian 2
+Penelitian 3
+Peneliti & Tahun
+Rachman, Hartanto, & Hadiwijaya (2024)
+Nuralisa, Nirsal, & Tangkelangi (2024)
+Mattegunta (2025)
+Judul Penelitian
+Rancang Bangun Sistem Informasi Persediaan Obat Berbasis Web Pada Apotek Murah Bung Tomo
+Rancang Bangun Sistem Informasi Persediaan Obat Berbasis Website pada Apotek Amanah Karya Farma
+Retail-Time Inventory Visibility: Transforming Retail Operations Through Real-Time Data Integration
+Fokus & Metode
+Fokus: Migrasi tata kelola stok data obat masuk/keluar dari manual (buku) ke sistem digital.
+Metode: Waterfall.
+Fokus: Mengatasi pencarian data yang lambat serta mempermudah proses laporan data obat.
+Metode: R&D (Waterfall).
+Fokus: Pengelolaan stok secara 
+real-time
+ lintas saluran fisik dan digital pada ekosistem ritel 
+omnichannel
+.
+Tabel 2.
+2
+ 
+(Lanjutan)
+Komponen Analisis
+Penelitian 1
+Penelitian 2
+Penelitian 3
+Platform & Teknologi
+Berbasis Web (JavaScript dengan kerangka kerja React.js, Express.js, dan MySQL).
+Berbasis Web (PHP Laravel 10, Bootstrap, MySQL).
+Sistem 
+Point of Sale
+ (POS) yang terintegrasi langsung dengan platform berbasis 
+cloud
+.
+Hasil Penelitian
+Berhasil mengintegrasikan data obat, meminimalkan kesalahan input, dan mempercepat pembuatan laporan operasional.
+Sistem mempermudah karyawan mengelola persediaan dan meningkatkan efektivitas serta efisiensi tenaga, biaya, waktu.
+Integrasi data transaksi langsung mampu meningkatkan akurasi inventaris hingga 95–97%, meminimalkan kehabisan stok (
+stockout
+), dan menaikkan efisiensi operasional.
+Perbedaan dengan ZenCare
+Sistem bersifat stand-alone (toko fisik saja) dan tidak memiliki algoritma konversi multi-satuan.
+Sistem tidak mengadopsi sinkronisasi omnichannel dengan penjualan daring (e-commerce).
+Berfokus pada ekosistem ritel skala makro. ZenCare membangun arsitektur 
+omnichannel
+ mandiri khusus apotek, dengan penambahan algoritma konversi multi-satuan dan pelacakan FEFO
+.
+Penelitian terdahulu menunjukkan bahwa digitalisasi manajemen inventori terbukti krusial bagi operasional apotek
+. 
+(Rachman et al., 2024)
+ dan 
+(Nuralisa et al., 2024)
+ 
+membuktikan bahwa sistem berbasis web mampu menekan risiko kesalahan pencatatan manual, namun arsitektur yang mereka bangun masih bersifat tertutup (
+single-channel
+) dan hanya difokuskan untuk kasir luring. Sebagai solusi untuk sinkronisasi lintas saluran, kajian dari
+ 
+(Mattegunta, 2025)
+ 
+menyoroti bahwa 
+penerapan 
+omnichannel
+ dengan visibilitas data 
+real-time
+ sangat efektif untuk meningkatkan akurasi inventaris hingga 97% dan mencegah terjadinya pesanan ganda (
+overselling
+)
+. 
+Mengisi celah penelitian (
+research gap
+) tersebut, pengembangan Sistem Informasi Inventori ZenCare Medical mengusulkan rancang bangun arsitektur 
+omnichannel
+ mandiri yang mengadopsi konsep integrasi data terpusat ala 
+(Mattegunta, 2025)
+,
+ namun mengusulkan pembaruan yang disesuaikan dengan kompleksitas industri medis. Perbedaan utamanya terletak pada karakteristik barang dan logika sistem. Penelitian Mattegunta berfokus pada ritel umum secara luas. Kebaruan utama yang membedakan sistem ini dari penelitian 
+(Rachman et al., 2024)
+ dan 
+(Nuralisa et al., 2024)
+ 
+adalah diterapkannya pelacakan masa kedaluwarsa berbasis FEFO serta algoritma konversi multi-satuan (
+Dual-UOM
+) 
+pada basis data. Logika ini memungkinkan transaksi eceran di toko fisik maupun grosir di 
+e-commerce
+ terpotong secara otomatis pada satu riwayat kartu stok yang sama. Hal ini memberikan penyelesaian operasional yang belum terakomodasi pada ketiga penelitian sebelumnya.
+Sistem Informasi
+Pada hakikatnya, sistem informasi merupakan keterpaduan elemen-elemen yang saling bertautan untuk mentransformasikan data menjadi informasi yang berdaya guna. Sinergi antar komponen ini dirancang guna mendukung kegiatan operasional dan pemenuhan kebutuhan di dalam sebuah organisasi. Kehadiran kerangka kerja yang tertata dengan baik memungkinkan proses pemantauan maupun pengambilan keputusan berjalan lebih terarah. Lebih jauh lagi, integrasi dari berbagai elemen pendukung di dalamnya memastikan bahwa setiap input data diproses secara sistematis. Hasil pengolahan tersebut kemudian disajikan dalam bentuk keluaran yang akurat, sehingga pihak manajemen maupun pelaksana teknis dapat mengandalkannya sebagai pijakan dalam menjalankan aktivitas operasional sehari-hari 
+(Harahap et al., 2022)
+.
+Sistem Informasi Inventori
+Peralihan dari pencatatan konvensional menuju digitalisasi melahirkan konsep sistem informasi inventori. Kehadiran sistem ini bertujuan untuk mengelola data persediaan secara terkomputerisasi, terutama ketika metode konvensional 
+seperti penggunaan lembar kerja 
+spreadsheet
+ dinilai tidak lagi memadai. Dengan penerapan teknologi tersebut, pengawasan terhadap ketersediaan barang menjadi lebih terstruktur dan riwayat mutasinya sangat mudah dipantau. Langkah ini terbukti efektif untuk menekan secara signifikan risiko ketidaksesuaian antara catatan di atas kertas dengan jumlah fisik obat yang ada di rak penyimpanan. Pada akhirnya, otomasi pencatatan stok ini membantu pihak pengelola klinik atau apotek dalam meminimalkan kesalahan manusiawi (
+human error
+) sekaligus mempercepat proses validasi ketersediaan barang 
+(Anggraini & Syahputra, 2024)
+.
+Kartu Stok (
+Stock Ledger
+)
+Dalam ranah pengelolaan fisik persediaan, kartu stok memegang peranan vital sebagai instrumen pencatatan historis yang merekam seluruh jejak pergerakan barang. Catatan ini secara rinci menunjukkan dinamika perubahan persediaan, mulai dari rekaman stok awal, kuantitas barang masuk, jumlah barang keluar, hingga kalkulasi sisa stok pasca-transaksi. Ketiadaan dokumentasi yang terstruktur sering kali memicu hilangnya jejak mutasi barang yang berujung pada selisih inventaris. Oleh karena itu, implementasi kartu stok memungkinkan penelusuran riwayat pergerakan barang menjadi jauh lebih akurat. Melalui metode pemantauan ini, setiap keping barang yang berpindah tangan akan selalu terdokumentasi dengan baik, sehingga pihak pengelola dapat memvalidasi ketersediaan fisik secara pasti kapan pun dibutuhkan 
+(Pitasari et al., 2025)
+.
+Omnichannel
+Strategi 
+omnichannel
+ merujuk pada integrasi berbagai kanal penjualan ke dalam satu ekosistem yang saling terhubung erat. Konsep ini menjembatani aktivitas transaksi dari berbagai platform, baik daring maupun luring, sehingga pengelolaan informasi penjualan dan ketersediaan barang dapat dikoordinasikan secara terpusat. Dari sudut pandang sistem informasi, implementasi 
+omnichannel
+ dapat dilihat pada ekosistem operasional seperti Apotek K24 atau platform Bhinneka. Pada ekosistem tersebut, pemusatan data memungkinkan pelanggan memesan produk secara daring dan mengambilnya secara langsung di toko fisik (
+Pick-up in Store
+), dengan jaminan bahwa persediaan yang ditampilkan di layar sinkron dengan fisik di lokasi. Melalui pemusatan data tersebut, tingkat ketersediaan stok fisik di berbagai saluran akan selalu terkoordinasi secara seketika 
+(
+real-time
+) setiap kali terjadi transaksi pemotongan barang
+ 
+(Sarasi et al., 2024)
+. 
+Pendekatan ini sangat krusial untuk mencegah terjadinya tumpang tindih pesanan terhadap satu barang yang sama dari jalur penjualan yang berbeda. Dengan demikian, sinkronisasi ketersediaan persediaan menjadi lebih terukur dan manajemen operasional mampu memberikan kepastian kepada para pelanggannya 
+(Mattegunta, 2025)
+.
+First Expired First Out 
+(FEFO) dan Sistem Batch
+Pengelolaan persediaan untuk produk farmasi menuntut standar penanganan khusus guna memastikan keamanan dan kualitas obat yang dikonsumsi pengguna akhir. 
+First Expired First Out
+ (FEFO) merupakan metode manajemen alur keluar-masuk barang yang memprioritaskan pengeluaran stok berdasarkan tanggal kedaluwarsa yang paling dekat 
+(Hafidzhoh, 2024)
+. Dalam implementasinya secara digital, metode ini membutuhkan sistem pencatatan berbasis 
+batch
+ atau gelombang kedatangan. Sistem basis data tidak menyatukan seluruh persediaan ke dalam satu angka tunggal, melainkan memecahnya berdasarkan nomor identitas 
+batch
+ yang mengikat pada tanggal kedaluwarsanya masing-masing. Saat terjadi transaksi penjualan, algoritma sistem akan mengarahkan pemotongan stok pada 
+batch
+ yang memiliki masa kedaluwarsa terdekat. Otomatisasi metode FEFO ini sangat efektif untuk meminimalisasi kerugian akibat penumpukan obat rusak sekaligus menjamin keamanan produk medis 
+(Hafidzhoh, 2024)
+.
+E-Commerce
+Perdagangan elektronik atau 
+e-commerce
+ memfasilitasi aktivitas jual beli produk melalui pemanfaatan media digital dan infrastruktur internet. Platform ini tidak hanya dirancang untuk menyajikan katalog informasi produk kepada para pelanggan, tetapi sekaligus mendukung kelancaran seluruh proses pemesanan secara interaktif. Kehadiran etalase digital ini memberikan ruang bagi penyedia barang untuk menjangkau pembeli tanpa harus terhalang oleh batasan waktu dan lokasi geografis. Selain itu, sistem ini juga mengambil peran penting dalam pencatatan transaksi secara daring, memastikan setiap pesanan pelanggan terekam dengan jelas beserta rincian kuantitas produk yang dipilih. Dengan alur yang serba otomatis tersebut, pengalaman bertransaksi antara pihak penjual dan pembeli menjadi jauh lebih terstruktur dan terdokumentasi 
+(Najwa et al., 2022)
+.
+Point of Sale
+ (POS)
+Sebagai fasilitas kelengkapan transaksi luring, terminal 
+Point of Sale
+ (POS) berfungsi menangani proses penjualan tatap muka secara terkomputerisasi dan ringkas. Keberadaan sistem kasir ini memastikan bahwa setiap pencatatan transaksi di lokasi fisik dapat dieksekusi secara sistematis, meminimalisasi potensi antrean panjang maupun kesalahan hitung. Di dalam ekosistem pengelolaan yang terintegrasi, transaksi yang diproses melalui mesin POS ini pada gilirannya akan langsung menghasilkan penyesuaian terhadap jumlah persediaan barang utama. Setiap kali struk atau bukti bayar diterbitkan, sistem di balik layar akan secara otomatis memotong kuantitas stok yang tersimpan di basis data. Hal ini membuat operasional harian apotek atau toko menjadi jauh lebih efisien karena riwayat penjualan dan sisa barang selalu sinkron dalam satu waktu 
+(Atmoko et al., 2025)
+.
+Metode RAD
+Gambar 2.
+1
+ 
+RAD (Rapid Application Development)
+Gambar 2.
+1
+ 
+RAD (Rapid Application Development)
+Dalam proses pengembangan perangkat lunak ini, penulis 
+menggunakan 
+metodologi 
+Rapid Application Development
+ (RAD)
+ karena relevansinya yang tinggi terhadap kebutuhan sistem
+. 
+Karakteristik utama dari metode ini terletak pada siklus pengerjaannya yang iteratif dan berdurasi cepat, memungkinkan pengembang merespons perubahan kebutuhan dengan lebih adaptif. Pendekatan ini memprioritaskan pembuatan rancangan awal berupa purwarupa (
+prototype
+) yang dapat langsung dievaluasi sebelum masuk ke tahap pengkodean akhir.
+ 
+RAD
+ menitikberatkan pada keterlibatan aktif pengguna melalui tiga fase utama, meliputi perencanaan kebutuhan (
+requirements planning
+), proses pengembangan prototipe secara berulang berdasarkan umpan balik (
+construction
+), serta tahap implementasi (
+cutover
+)
+. 
+Melalui komunikasi dua arah tersebut, hasil akhir aplikasi dipastikan benar-benar sejalan dengan alur kerja operasional yang diharapkan oleh pihak pengelola 
+(Nur Adiya et al., 2024)
+.
+ 
+PHP
+ & MySQL
+Pembangunan arsitektur aplikasi web yang dinamis tidak terlepas dari peran bahasa pemrograman serta sistem manajemen basis data relasional. Pada ekosistem ini, PHP memegang kendali sebagai bahasa pemrograman di sisi peladen (
+server-side
+) yang bertugas memproses logika komputasi aplikasi secara utuh. Fungsi utamanya mencakup penerjemahan instruksi dari antarmuka pengguna hingga menjembatani jalur komunikasi menuju pusat data. Sementara itu, MySQL difungsikan sebagai perangkat lunak pengelola basis data yang berperan penting dalam menyimpan, mengatur, serta merelasikan tumpukan informasi secara terstruktur. Kolaborasi antara kedua teknologi ini memastikan bahwa setiap manipulasi data persediaan, mulai dari penambahan, pembaruan, hingga pemotongan stok, dapat dikelola secara responsif, aman, dan dapat diandalkan 
+(Hidayatullah & Tubagus, 2024)
+.
+ 
+Application Programming Interface
+ (API)
+Untuk memperluas fungsionalitas dan keterhubungan sebuah perangkat lunak, diperlukan jembatan komunikasi yang dikenal dengan istilah 
+Application Programming Interface
+ (API). Teknologi ini memungkinkan sebuah aplikasi web untuk bertukar data dan menginstruksikan perintah ke layanan eksternal secara sistematis, tanpa harus merombak struktur kode utama dari layanan tersebut. Dalam implementasi praktisnya, API sering dimanfaatkan untuk mendelegasikan proses-proses yang spesifik kepada penyedia layanan pihak ketiga yang sudah terspesialisasi. Contoh penerapannya mencakup integrasi modul gerbang pembayaran digital maupun kalkulasi logistik pengiriman barang secara instan. Pada tahap pengembangan, pertukaran data melalui jalur ini umumnya diujicobakan terlebih dahulu di dalam lingkungan 
+Sandbox
+ guna memastikan keamanannya sebelum diluncurkan untuk publik 
+(Dalimonthe et al., 2023)
+.
+ 
+Unified Modeling Language
+ (UML)
+Gambar 2.
+2
+ 
+Unified Modeling Language (UML)
+Gambar 2.
+2
+ 
+Unified Modeling Language (UML)
+ 
+Tahapan perancangan arsitektur sistem membutuhkan bahasa pemodelan visual yang terstandarisasi, yakni 
+Unified Modeling Language
+ (UML). Alat ini berfungsi membantu para pengembang dalam memvisualisasikan, mendefinisikan spesifikasi, hingga mendokumentasikan cetak biru perancangan perangkat lunak secara utuh. Tanpa adanya pemodelan yang jelas, proses penerjemahan kebutuhan bisnis ke dalam bentuk kode teknis rentan mengalami bias interpretasi. Melalui penggambaran berbagai diagram spesifik, seperti 
+Use Case Diagram
+ maupun diagram aktivitas, alur interaksi antara aktor pengguna dengan sistem dapat dipetakan dengan sangat terperinci. Hasil pemetaan visual inilah yang nantinya menjadi panduan baku dalam merangkai struktur basis data serta logika antarmuka agar sistem yang dibangun sesuai dengan tujuan awal 
+(Narulita et al., 2024)
+ 
+Bab I
+II
+Analisis dan Perancangan Sistem
+Metode Penelitian
+Pengembangan Sistem Informasi Inventori Omnichannel pada ZenCare Medical menerapkan metode 
+Rapid Application Development
+ (RAD). Pendekatan ini dipilih karena siklus pengembangannya yang terfokus, relatif singkat, dan bersifat iteratif dengan melibatkan umpan balik langsung dari pihak pengguna. Mengingat ZenCare saat ini masih mengandalkan aplikasi kasir pihak ketiga yang tidak terintegrasi dengan saluran penjualan daring, metode RAD dinilai sangat tepat. Fleksibilitas metode ini memungkinkan penulis untuk melakukan penyesuaian rancangan secara dinamis bersama pengelola toko selama proses transisi menuju arsitektur 
+omnichannel
+ terpusat
+.
+Secara keseluruhan, tahapan metode RAD yang digunakan dalam penelitian ini mencakup empat fase utama, yaitu: Perencanaan Kebutuhan (
+Requirements Planning
+), Desain Pengguna (
+User Design
+), Konstruksi (
+Construction
+), dan Peralihan (
+Cutover
+)
+.
+Perencanaan Kebutuhan (
+Requirements Planning
+)
+Fase awal ini bertujuan untuk menggali informasi secara mendalam mengenai proses operasional di ZenCare Medical. Tujuannya adalah memetakan kendala nyata di lapangan dan merumuskan kebutuhan fungsional sistem secara akurat. Proses ini menekankan diskusi langsung dengan pihak toko agar ruang lingkup pengembangan sistem menjadi lebih terarah
+:
+Pengumpulan Data
+Guna mendapatkan data yang objektif dan sesuai dengan fakta operasional, proses pengumpulan data dilakukan melalui dua pendekatan:
+Wawancara:
+ 
+Diskusi dilakukan secara langsung dengan pihak manajemen dan staf toko. Dari proses ini, terungkap bahwa masalah utama yang membebani operasional adalah tingginya risiko selisih persediaan (
+overselling
+). Hal ini dipicu oleh penggunaan aplikasi kasir fisik (
+stand-alone
+) yang sama sekali tidak terhubung dengan platform pesanan daring. Selain itu, aplikasi tersebut belum memiliki fitur pelacakan riwayat kedaluwarsa berbasis 
+batch
+ untuk produk medis
+.
+Observasi:
+ 
+Pengamatan dilakukan terhadap aktivitas harian kasir dan proses pengadaan barang. Hasil observasi mengonfirmasi adanya celah kesalahan manusia (
+human error
+) yang tinggi saat memproses pesanan lintas saluran. Karena pesanan dari platform daring (seperti 
+E-Commerce
+ pihak ketiga) tidak masuk ke sistem toko, karyawan terpaksa harus menghitung konversi satuan barang (misalnya dari kemasan 
+Box
+ ke 
+Strip
+) secara manual. Setelah itu, karyawan harus membuka aplikasi kasir fisik secara terpisah untuk memasukkan angka pengurangan stok agar persediaan di rak tetap sinkron
+.
+Analisis Proses Bisnis Berjalan
+Dari data yang telah dikumpulkan, dapat disimpulkan bahwa titik lemah operasional toko berada pada ketiadaan integrasi antar saluran penjualan serta hilangnya kendali logistik medis. Proses bisnis yang saat ini diterapkan dijabarkan melalui analisis diagram alur (
+workflow
+) berikut:
+Workflow Barang Keluar Lintas Saluran (Sistem Berjalan)
+ 
+Deskripsi:
+Alur ini menggambarkan bagaimana transaksi penjualan saat ini masih berjalan secara terpisah (
+sta
+nd-alone
+) dan sangat bergantung pada proses manual. Alur kerja terbagi berdasarkan dua jalur pembelian pelanggan:
+Jalur Toko Fisik:
+ Pelanggan menyebutkan produk secara langsung di lokasi. Karyawan mengambilkan barang, menerima pembayaran tunai, lalu mencatat transaksi pada aplikasi kasir pihak ketiga yang secara otomatis hanya memotong persediaan untuk lingkungan lokal toko tersebut.
+Jalur Daring (E-Commerce):
+ Pelanggan memesan barang via platform pihak ketiga. Setelah karyawan mengemas produk, mereka 
+diwajibkan menghitung konversi satuan produk (misalnya dari kemasan 
+Box
+ ke 
+Strip
+) secara manual menggunakan alat hitung. Karyawan kemudian harus membuka kembali aplikasi kasir fisik secara terpisah untuk memasukkan angka pengurangan sisa persediaan tersebut agar fisik di rak seimbang dengan data di sistem.
+Workflow Barang Masuk (Sistem Berjalan)
+ 
+Deskripsi:
+Alur ini memaparkan tahapan pengadaan hingga penerimaan barang dari pemasok yang masih berjalan secara konvensional, dengan kelemahan utama pada ketiadaan penyaringan data logistik.
+Fase Pengadaan:
+ Proses dipicu oleh pengecekan fisik di rak saat persediaan dirasa menipis. Karyawan kemudian menentukan metode pengadaan, baik melalui pemesanan (
+Purchase Order
+) ke distributor maupun melakukan pembelian langsung ke grosir rekanan.
+Fase Penerimaan:
+ Saat pengiriman tiba, karyawan hanya menghitung kesesuaian fisik barang dengan nota pembelian. Setelah itu, karyawan langsung mencatatkan total kuantitas barang ke dalam aplikasi kasir. Proses pendataan ini sama sekali tidak mencatat Nomor 
+Batch
+ maupun Tanggal Kedaluwarsa, dan diakhiri dengan menyusun barang ke dalam rak secara acak tanpa memperhatikan aturan kedaluwarsa.
+Desain Pengguna (
+User Design
+)
+Setelah seluruh kebutuhan fungsional berhasil dipetakan, tahapan selanjutnya adalah menerjemahkan kebutuhan tersebut ke dalam rancangan visual dan struktural. Fase ini berfokus pada pemodelan alur kerja, perancangan sistem menggunakan pemodelan 
+Unified Modeling Language
+ (UML), penyusunan pangkalan data, hingga pembuatan rancangan antarmuka. Tujuannya adalah menciptakan cetak biru sistem inventori yang terintegrasi, mampu menangani konversi multi-satuan secara otomatis, serta mengamankan pergerakan barang medis menggunakan logika 
+First Expired First Out
+ (FEFO).
+Workflow Sistem Usulan
+Sistem usulan dirancang untuk menyatukan seluruh kanal operasional toko ke dalam satu pangkalan data yang terpusat. Rekayasa ulang proses bisnis ini divisualisasikan melalui diagram alur berikut
+:
+Workflow Barang Keluar Terintegrasi (Sistem Usulan) 
+Deskripsi:
+Alur usulan ini merombak proses bisnis lama dengan menyatukan transaksi luring dan daring ke dalam satu pangkalan data terpusat, mengeliminasi beban konversi manual. Alur kerja melibatkan interaksi langsung antara pengguna dan sistem 
+backend
+:
+Aktivitas Transaksi Lintas Saluran:
+ Transaksi diawali dari dua titik yang berbeda. Pelanggan daring memilih produk (lengkap dengan opsi 
+Pick-up in Store
+ atau kurir) dan menyelesaikannya melalui 
+Payment Gateway
+. Di saat yang sama, transaksi luring dilayani melalui input terminal POS di toko. Kedua jalur pesanan ini akan diteruskan ke dalam satu gerbang pemrosesan sistem.
+Pemrosesan Sistem (Otomatisasi):
+ Sistem secara otomatis menghitung konversi multi-satuan (
+Dual-UOM
+) dari pesanan yang masuk. Selanjutnya, sistem menjalankan fungsi penyaringan logika (
+gateway
+): apabila barang berupa obat, sistem akan mengalokasikan pemotongan persediaan pada 
+Batch
+ FEFO terdekat. Jika barang berupa alat kesehatan, stok akan dipotong secara normal. Proses ini merekam riwayat transaksi dan memotong persediaan utama secara 
+real-time
+.
+Workflow Barang Masuk & Logistik (Sistem Usulan) 
+Deskripsi:
+Fase usulan ini dirancang secara ketat untuk menjamin kelengkapan data logistik farmasi, di mana sistem bertindak sebagai penjaga gerbang (
+gatekeeper
+) sebelum stok ditambahkan.
+Fase Pengadaan dan Pemeriksaan:
+ Alur dimulai saat karyawan memantau laporan persediaan kritis pada sistem inventori, kemudian menerbitkan pesanan atau melakukan pembelian langsung. Saat barang fisik dan dokumen nota tiba, karyawan menghitung kesesuaian kuantitasnya secara manual.
+Fase Validasi Logistik (Sistem):
+ Karyawan mengakses modul Penerimaan Barang dan diwajibkan mengisi kelengkapan identitas logistik berupa Nomor Referensi Nota, Kuantitas, Nomor 
+Batch
+ dan Tanggal Kedaluwarsa (untuk kategori Obat), atau 
+Serial Number
+ (untuk kategori Alat Kesehatan). Sistem akan memvalidasi form tersebut. Jika input terdeteksi tidak lengkap, sistem akan menolak dan mengembalikan pengguna ke halaman form. Jika data valid, sistem baru akan merekam riwayat tersebut ke dalam tabel Kartu Stok dan memperbarui total ketersediaan barang, sebelum akhirnya karyawan menyusun barang di rak sesuai urutan kedaluwarsa.
+Sitemap
+Bab IV
+Hasil Dan Pembahasan
+Bab V
+Penutup
+Simpulan
+Saran
+Daftar Pustaka
+Anggraini, S., & Syahputra, M. (2024). Perancangan Sistem Informasi Persediaan Obat pada PT. Kencana Sawit Indonesia Menggunakan PHP dan MySQL. 
+JEKIN (Jurnal Teknik Informatika)
+, 
+4
+(2), 82–87. https://doi.org/10.58794/jekin.v4i2.705
+Atmoko, F. Y., Putra, I. G. J. E., & Wijaya, I. N. Y. A. (2025). Pengembangan Sistem Point of Sale (POS) Pada Bengkel Otomotif Untuk Meningkatkan Efisiensi Pengelolaan Transaksi. 
+INFOTECH Journal
+, 
+11
+(2), 333–337. https://doi.org/10.31949/infotech.v11i2.15853
+Dalimonthe, Y. N., Kalifia, A. D., & Diwandari, S. (2023). Pemanfaatan API (Application Programming Interface) Untuk Pengembangan Sistem Pelayanan Dinas Kependudukan Dan Pencatatan Sipil. 
+Jurnal TEKINKOM
+, 
+6
+(2), 760–772. https://doi.org/10.37600/tekinkom.v6i2.1053
+Hafidzhoh, L. I. (2024). Sistem Informasi Persediaan Obat Dengan Metode FEFO Berbasis Multiuser di Apotek Jati Sayung Demak. 
+Jurnal Perkivi
+, 
+1
+(2), 73–84. perkivi.or.id
+Harahap, E. F., Adisuwiryo, S., & Fitriana, R. (2022). 
+Analisis dan Perancangan Sistem Informasi
+. Wawasan Ilmu.
+Hidayatullah, P., & Tubagus, R. (2024). 
+Pemrograman web: edisi 4
+. Informatika.
+Mattegunta, V. K. P. (2025). Retail-Time Inventory Visibility: Transforming Retail Operations Through Real-Time Data Integration. 
+Journal of Computer Science and Technology Studies
+, 
+7
+(3), 58–64. https://doi.org/10.32996/jcsts.2025.7.3.7
+Najwa, N. F., Furqon, M. A., & Kartika, V. (2022). Rancang Bangun Sistem E-Commerce untuk Usaha Penjualan Elektronik. 
+Jurnal Nasional Teknologi Dan Sistem Informasi
+, 
+8
+(1), 34–43. https://doi.org/10.25077/teknosi.v8i1.2022.34-43
+Narulita, S., Nugroho, A., & Abdillah, M. Z. (2024). Diagram Unified Modelling Language (UML) untuk Perancangan Sistem Informasi Manajemen Penelitian dan Pengabdian Masyarakat (SIMLITABMAS). 
+Bridge : Jurnal Publikasi Sistem Informasi Dan Telekomunikasi
+, 
+2
+(3), 244–256. https://doi.org/10.62951/bridge.v2i3.174
+Nur Adiya, A. Z. D., Anggraeni, D. L., & Ilham Albana. (2024). Analisa Perbandingan Penggunaan Metodologi Pengembangan Perangkat Lunak (Waterfall, Prototype, Iterative, Spiral, Rapid Application Development (RAD)). 
+Merkurius : Jurnal Riset Sistem Informasi Dan Teknik Informatika
+, 
+2
+(4), 122–134. https://doi.org/10.61132/merkurius.v2i4.148
+Nuralisa, Nirsal, & Tangkelangi, N. I. (2024). Rancang Bangun Sistem Informasi Persediaan Obat Berbasis Website pada Apotek Amanah Karya Farma. 
+Seminar Nasional Hasil Penelitian & Pengabdian Masyarakat Bidang Ilmu Komputer (SENDIKO)
+, 1–15. https://prosiding.unipma.ac.id/index.php/sendiko/article/view/5377
+Pitasari, A. D., Munambar, S., & Rimartin, G. A. (2025). Optimalisasi Manajemen Persediaan Melalui Implementasi Kartu Stok pada Minuman Racikan di P4S X Kulon Progo. 
+ARZUSIN: Jurnal Manajemen Dan Pendidikan Dasar
+, 
+5
+(4), 1619–1631. https://doi.org/10.58578/arzusin.v5i4.6077
+Rachman, D. A., Hartanto, S., & Hadiwijaya, N. A. (2024). Rancang Bangun Sistem Informasi Persediaan Obat Berbasis Web pada Apotek Murah Bung Tomo. 
+JATI (Jurnal Mahasiswa Teknik Informatika)
+, 
+8
+(6), 11199–11207. https://doi.org/https://doi.org/10.36040/jati.v8i6.11234
+Sarasi, V., Chaerudin, I., & Nurfauzia, F. (2024). Performance of Omnichannel Warehouse of Muslim Fashion Company in Indonesia Based on Workforce, Equipment, Space, and Information System Aspects. 
+Cogent Social Sciences
+, 
+10
+(1), 1–20. https://doi.org/10.1080/23311886.2024.2302214
+Lampiran
