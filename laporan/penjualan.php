@@ -1,199 +1,151 @@
 <?php
-// File: laporan/penjualan.php – Laporan Penjualan (Sales Report)
+// File: laporan/penjualan.php - Laporan Volume Penjualan (Kuantitas Fisik Terjual)
+// Tidak memuat Harga/Omzet/HPP. Hanya melacak volume barang keluar melalui Omnichannel.
 session_start();
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['super_admin']);
+requireRole(['superadmin']);
 
 $dari   = $_GET['dari']    ?? date('Y-m-01');
 $sampai = $_GET['sampai']  ?? date('Y-m-d');
-$cabang = intval($_GET['id_cabang'] ?? 0);
 $kanal  = $_GET['kanal']   ?? 'semua';  // semua / pos / online
 
-$cabangList = $pdo->query("SELECT id, nama FROM cabang WHERE is_active=1 ORDER BY id")->fetchAll();
-
-// Build filter
-$cabangWhere = $cabang ? "AND sc.id_cabang = $cabang" : "";
-$kanalWhere  = '';
-if ($kanal === 'pos')    $kanalWhere = "AND t.tipe_transaksi = 'pos'";
-if ($kanal === 'online') $kanalWhere = "AND t.tipe_transaksi = 'online'";
+$kanalWhere = '';
+if ($kanal === 'pos')    $kanalWhere = "AND pj.tipe_transaksi = 'pos'";
+if ($kanal === 'online') $kanalWhere = "AND pj.tipe_transaksi = 'online'";
 
 // Summary stats
 $stmtSum = $pdo->prepare("
     SELECT
-        COUNT(DISTINCT t.id)                      AS total_transaksi,
-        COALESCE(SUM(t.total_harga),0)             AS total_omzet,
-        COALESCE(SUM(CASE WHEN t.tipe_transaksi='pos' THEN t.total_harga ELSE 0 END),0) AS omzet_pos,
-        COALESCE(SUM(CASE WHEN t.tipe_transaksi='online' THEN t.total_harga ELSE 0 END),0) AS omzet_online
-    FROM penjualan t
-    WHERE DATE(t.created_at) BETWEEN ? AND ?
+        COUNT(DISTINCT pj.id) AS total_transaksi,
+        COALESCE(SUM(dp.qty), 0) AS total_item_terjual,
+        COALESCE(SUM(CASE WHEN pj.tipe_transaksi='pos' THEN dp.qty ELSE 0 END), 0) AS item_pos,
+        COALESCE(SUM(CASE WHEN pj.tipe_transaksi='online' THEN dp.qty ELSE 0 END), 0) AS item_online
+    FROM penjualan pj
+    JOIN detail_penjualan dp ON pj.id = dp.id_penjualan
+    WHERE DATE(pj.created_at) BETWEEN ? AND ?
     $kanalWhere
 ");
 try { $stmtSum->execute([$dari, $sampai]); $summary = $stmtSum->fetch(); }
-catch(Exception $e) { $summary = ['total_transaksi'=>0,'total_omzet'=>0,'omzet_pos'=>0,'omzet_online'=>0]; }
+catch(Exception $e) { $summary = ['total_transaksi'=>0,'total_item_terjual'=>0,'item_pos'=>0,'item_online'=>0]; }
 
-// Top products
+// Daftar produk terjual
 try {
-    $topProd = $pdo->prepare("
-        SELECT pi.nama_produk, pv.nama_variasi,
-               SUM(td.qty) AS total_qty,
-               SUM(td.qty * td.harga_satuan) AS total_rev
-        FROM detail_penjualan td
-        JOIN penjualan t ON t.id = td.id_penjualan
-        JOIN produk_variasi pv ON pv.id = td.id_variasi
-        JOIN produk_induk pi ON pi.id = pv.id_produk_induk
-        WHERE DATE(t.created_at) BETWEEN ? AND ?
-        GROUP BY td.id_variasi
-        ORDER BY total_rev DESC
-        LIMIT 10
+    $stmtProd = $pdo->prepare("
+        SELECT
+            pi.nama_produk, pv.nama_variasi, pi.kategori, pv.sku_variasi,
+            SUM(dp.qty) as total_qty,
+            SUM(CASE WHEN pj.tipe_transaksi='pos' THEN dp.qty ELSE 0 END) as qty_pos,
+            SUM(CASE WHEN pj.tipe_transaksi='online' THEN dp.qty ELSE 0 END) as qty_online
+        FROM penjualan pj
+        JOIN detail_penjualan dp ON pj.id = dp.id_penjualan
+        JOIN produk_variasi pv ON dp.id_variasi = pv.id
+        JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+        WHERE DATE(pj.created_at) BETWEEN ? AND ?
+        $kanalWhere
+        GROUP BY pv.id
+        ORDER BY total_qty DESC
     ");
-    $topProd->execute([$dari, $sampai]);
-    $topProducts = $topProd->fetchAll();
-} catch(Exception $e) { $topProducts = []; }
+    $stmtProd->execute([$dari, $sampai]);
+    $produkTerjual = $stmtProd->fetchAll();
+} catch(Exception $e) { $produkTerjual = []; }
 
-// Daily breakdown
-try {
-    $stmtDaily = $pdo->prepare("
-        SELECT DATE(t.created_at) AS tgl,
-               COUNT(*) AS jml,
-               SUM(t.total_harga) AS omzet
-        FROM penjualan t
-        WHERE DATE(t.created_at) BETWEEN ? AND ?
-        GROUP BY DATE(t.created_at)
-        ORDER BY tgl ASC
-    ");
-    $stmtDaily->execute([$dari, $sampai]);
-    $daily = $stmtDaily->fetchAll();
-} catch(Exception $e) { $daily = []; }
-
-layoutHead('Laporan Penjualan');
+layoutHead('Laporan Penjualan Barang');
 layoutBodyOpen();
 layoutSidebar('laporan_penjualan');
-layoutHeader('Laporan Penjualan', 'Ringkasan penjualan POS & Online per periode');
+layoutHeader('Laporan Penjualan Barang', 'Rekapitulasi kuantitas fisik barang yang terjual (Omnichannel) tanpa data nilai finansial.');
 ?>
 
-<style>
-@media print {
-  .no-print { display: none !important; }
-  aside, header { display: none !important; }
-}
-</style>
-
-<!-- Filter -->
-<div class="bg-white border border-zcBrd rounded-2xl shadow-sm p-5 mb-6 no-print">
-  <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+<div class="mb-5 p-4 rounded-xl border bg-blue-50 border-blue-200 text-blue-800 text-xs flex gap-3 items-start">
+    <svg class="w-5 h-5 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
     <div>
-      <label class="block text-[11px] font-semibold text-zcMut mb-1.5">Dari Tanggal</label>
-      <input type="date" name="dari" value="<?= $dari ?>" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 focus:outline-none focus:border-zc">
+        <strong>Mode Inventori Ketat Aktif</strong>: Laporan ini hanya menampilkan <strong>kuantitas fisik barang keluar</strong> dari transaksi POS dan E-Commerce. Nilai finansial (Omzet, HPP, Margin) telah disembunyikan sesuai batasan sistem Manajemen Fisik Persediaan.
     </div>
-    <div>
-      <label class="block text-[11px] font-semibold text-zcMut mb-1.5">Sampai Tanggal</label>
-      <input type="date" name="sampai" value="<?= $sampai ?>" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 focus:outline-none focus:border-zc">
-    </div>
-    <div>
-      <label class="block text-[11px] font-semibold text-zcMut mb-1.5">Cabang</label>
-      <select name="id_cabang" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-zc">
-        <option value="0">Semua Cabang</option>
-        <?php foreach ($cabangList as $c): ?>
-          <option value="<?= $c['id'] ?>" <?= $c['id']==$cabang?'selected':'' ?>><?= htmlspecialchars($c['nama']) ?></option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-    <div>
-      <label class="block text-[11px] font-semibold text-zcMut mb-1.5">Kanal Penjualan</label>
-      <select name="kanal" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-zc">
-        <option value="semua" <?= $kanal==='semua'?'selected':'' ?>>Semua Kanal</option>
-        <option value="pos" <?= $kanal==='pos'?'selected':'' ?>>POS Karyawan</option>
-        <option value="online" <?= $kanal==='online'?'selected':'' ?>>E-Commerce Online</option>
-      </select>
-    </div>
-    <div class="flex gap-2">
-      <button type="submit" class="flex-1 px-4 py-2 bg-zc hover:bg-zcHv text-white text-xs font-bold rounded-xl transition">Tampilkan</button>
-      <button type="button" onclick="window.print()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">Cetak</button>
-    </div>
-  </form>
 </div>
 
-<!-- Summary Cards -->
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-  <?php
-  $cards = [
-    ['label'=>'Total Transaksi', 'val'=>number_format($summary['total_transaksi']), 'unit'=>'transaksi', 'color'=>'bg-blue-50 border-blue-200 text-blue-700'],
-    ['label'=>'Total Omzet', 'val'=>'Rp '.number_format($summary['total_omzet']), 'unit'=>'', 'color'=>'bg-emerald-50 border-emerald-200 text-emerald-700'],
-    ['label'=>'Omzet POS', 'val'=>'Rp '.number_format($summary['omzet_pos']), 'unit'=>'karyawan', 'color'=>'bg-violet-50 border-violet-200 text-violet-700'],
-    ['label'=>'Omzet Online', 'val'=>'Rp '.number_format($summary['omzet_online']), 'unit'=>'e-commerce', 'color'=>'bg-amber-50 border-amber-200 text-amber-700'],
-  ];
-  foreach ($cards as $card): ?>
-  <div class="bg-white border border-zcBrd rounded-2xl p-5 shadow-sm">
-    <p class="text-[10px] font-bold text-zcMut uppercase tracking-wider mb-1.5"><?= $card['label'] ?></p>
-    <p class="text-xl font-bold text-zcTxt leading-tight"><?= $card['val'] ?></p>
-    <?php if ($card['unit']): ?><p class="text-[10px] text-zcMut mt-0.5"><?= $card['unit'] ?></p><?php endif; ?>
-  </div>
-  <?php endforeach; ?>
+<form method="GET" class="flex flex-wrap items-end gap-3 mb-6 p-5 bg-white border border-zcBrd rounded-2xl shadow-sm">
+    <div>
+        <label class="block text-xs font-semibold text-zcTxt mb-1.5">Dari Tanggal</label>
+        <input type="date" name="dari" value="<?= htmlspecialchars($dari) ?>" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
+    </div>
+    <div>
+        <label class="block text-xs font-semibold text-zcTxt mb-1.5">Sampai Tanggal</label>
+        <input type="date" name="sampai" value="<?= htmlspecialchars($sampai) ?>" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
+    </div>
+    <div>
+        <label class="block text-xs font-semibold text-zcTxt mb-1.5">Kanal Penjualan</label>
+        <select name="kanal" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc min-w-[150px]">
+            <option value="semua" <?= $kanal==='semua'?'selected':'' ?>>Semua Kanal</option>
+            <option value="pos" <?= $kanal==='pos'?'selected':'' ?>>POS (Kasir Luring)</option>
+            <option value="online" <?= $kanal==='online'?'selected':'' ?>>Online (E-Commerce)</option>
+        </select>
+    </div>
+    <div class="flex-1 flex justify-end gap-2">
+        <button type="submit" class="px-5 py-2.5 bg-zc hover:bg-zcHv text-white font-bold text-sm rounded-xl transition">
+            Tampilkan Data
+        </button>
+    </div>
+</form>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-2xl border border-zcBrd p-5 shadow-sm">
+        <div class="text-xs font-bold text-zcMut mb-1">Total Transaksi</div>
+        <div class="text-2xl font-extrabold text-zcTxt"><?= number_format($summary['total_transaksi']??0) ?></div>
+    </div>
+    <div class="bg-white rounded-2xl border border-zcBrd p-5 shadow-sm">
+        <div class="text-xs font-bold text-zcMut mb-1">Total Item Terjual (Kuantitas)</div>
+        <div class="text-2xl font-extrabold text-blue-600"><?= number_format($summary['total_item_terjual']??0) ?> <span class="text-sm font-medium">unit</span></div>
+    </div>
+    <div class="bg-white rounded-2xl border border-zcBrd p-5 shadow-sm">
+        <div class="text-xs font-bold text-zcMut mb-1">Item Terjual Via POS</div>
+        <div class="text-2xl font-extrabold text-emerald-600"><?= number_format($summary['item_pos']??0) ?> <span class="text-sm font-medium">unit</span></div>
+    </div>
+    <div class="bg-white rounded-2xl border border-zcBrd p-5 shadow-sm">
+        <div class="text-xs font-bold text-zcMut mb-1">Item Terjual Via Online</div>
+        <div class="text-2xl font-extrabold text-purple-600"><?= number_format($summary['item_online']??0) ?> <span class="text-sm font-medium">unit</span></div>
+    </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-  <!-- Top Products -->
-  <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden">
-    <div class="px-5 py-4 border-b border-zcBrd"><h3 class="text-sm font-bold text-zcTxt">Produk Terlaris</h3></div>
+<div class="bg-white rounded-2xl border border-zcBrd shadow-sm overflow-hidden mb-8">
+    <div class="px-5 py-4 border-b border-zcBrd">
+        <h3 class="text-sm font-bold text-zcTxt">Rincian Volume per Produk</h3>
+    </div>
     <div class="overflow-x-auto">
-      <table class="w-full text-xs">
-        <thead class="bg-slate-50 border-b border-zcBrd text-zcMut font-bold uppercase tracking-wider">
-          <tr>
-            <th class="px-4 py-3 text-left">#</th>
-            <th class="px-4 py-3 text-left">Produk</th>
-            <th class="px-4 py-3 text-right">Qty</th>
-            <th class="px-4 py-3 text-right">Revenue</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-zcBrd/60">
-          <?php if (empty($topProducts)): ?>
-            <tr><td colspan="4" class="px-4 py-6 text-center text-zcMut italic">Tidak ada data transaksi.</td></tr>
-          <?php else: foreach ($topProducts as $i => $p): ?>
-          <tr class="hover:bg-slate-50/60 transition">
-            <td class="px-4 py-3 text-zcMut font-mono"><?= $i+1 ?></td>
-            <td class="px-4 py-3">
-              <span class="font-semibold text-zcTxt"><?= htmlspecialchars($p['nama_produk']) ?></span>
-              <span class="text-zcMut block text-[10px]"><?= htmlspecialchars($p['nama_variasi']) ?></span>
-            </td>
-            <td class="px-4 py-3 text-right font-semibold"><?= number_format($p['total_qty']) ?></td>
-            <td class="px-4 py-3 text-right font-bold text-emerald-700">Rp <?= number_format($p['total_rev']) ?></td>
-          </tr>
-          <?php endforeach; endif; ?>
-        </tbody>
-      </table>
+        <table class="w-full text-xs sm:text-sm">
+            <thead class="bg-slate-50 border-b border-zcBrd">
+                <tr>
+                    <th class="px-4 py-3 text-left font-bold text-zcMut">Produk</th>
+                    <th class="px-4 py-3 text-left font-bold text-zcMut">Kategori</th>
+                    <th class="px-4 py-3 text-right font-bold text-zcMut text-blue-600">Total Kuantitas</th>
+                    <th class="px-4 py-3 text-right font-bold text-zcMut text-emerald-600">Qty Luring (POS)</th>
+                    <th class="px-4 py-3 text-right font-bold text-zcMut text-purple-600">Qty Daring (Online)</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-zcBrd">
+                <?php if (empty($produkTerjual)): ?>
+                <tr>
+                    <td colspan="5" class="px-4 py-12 text-center text-zcMut italic">Tidak ada pergerakan barang terjual pada periode ini.</td>
+                </tr>
+                <?php else: ?>
+                    <?php foreach ($produkTerjual as $p): ?>
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-4 py-3">
+                            <div class="font-bold text-zcTxt"><?= htmlspecialchars($p['nama_produk']) ?></div>
+                            <div class="text-xs text-zcMut"><?= htmlspecialchars($p['nama_variasi']) ?> (<?= htmlspecialchars($p['sku_variasi']) ?>)</div>
+                        </td>
+                        <td class="px-4 py-3 text-zcMut"><?= htmlspecialchars($p['kategori']) ?></td>
+                        <td class="px-4 py-3 text-right font-extrabold text-blue-600 bg-blue-50/30"><?= number_format($p['total_qty']) ?></td>
+                        <td class="px-4 py-3 text-right font-semibold text-emerald-600"><?= number_format($p['qty_pos']) ?></td>
+                        <td class="px-4 py-3 text-right font-semibold text-purple-600"><?= number_format($p['qty_online']) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
     </div>
-  </div>
-
-  <!-- Daily Breakdown -->
-  <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden">
-    <div class="px-5 py-4 border-b border-zcBrd"><h3 class="text-sm font-bold text-zcTxt">Penjualan Per Hari</h3></div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-xs">
-        <thead class="bg-slate-50 border-b border-zcBrd text-zcMut font-bold uppercase tracking-wider">
-          <tr>
-            <th class="px-4 py-3 text-left">Tanggal</th>
-            <th class="px-4 py-3 text-right">Transaksi</th>
-            <th class="px-4 py-3 text-right">Omzet</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-zcBrd/60">
-          <?php if (empty($daily)): ?>
-            <tr><td colspan="3" class="px-4 py-6 text-center text-zcMut italic">Tidak ada data.</td></tr>
-          <?php else: foreach ($daily as $d): ?>
-          <tr class="hover:bg-slate-50/60 transition">
-            <td class="px-4 py-3 font-mono text-zcTxt"><?= date('D, d M Y', strtotime($d['tgl'])) ?></td>
-            <td class="px-4 py-3 text-right"><?= number_format($d['jml']) ?></td>
-            <td class="px-4 py-3 text-right font-bold text-emerald-700">Rp <?= number_format($d['omzet']) ?></td>
-          </tr>
-          <?php endforeach; endif; ?>
-        </tbody>
-      </table>
-    </div>
-  </div>
 </div>
 
-<?php layoutEnd(); ?>
+<?php layoutFooter(); ?>

@@ -15,7 +15,7 @@ try {
         SELECT v.id, v.sku_variasi, i.nama_produk, v.nama_variasi, i.kategori, v.harga, COALESCE(sc.stok, 0) AS stok
         FROM produk_variasi v
         JOIN produk_induk i ON v.id_produk_induk = i.id
-        LEFT JOIN stok_cabang sc ON sc.id_variasi = v.id AND sc.id_cabang = ?
+        LEFT JOIN stok_toko sc ON sc.id_variasi = v.id 
         WHERE v.is_active = 1 AND i.is_active = 1
         ORDER BY i.nama_produk ASC
     ");

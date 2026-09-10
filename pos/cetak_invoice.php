@@ -11,9 +11,8 @@ if (empty($noInvoice)) {
 }
 
 $stmt = $pdo->prepare("
-    SELECT p.*, c.nama AS nama_cabang, c.alamat AS alamat_cabang
+    SELECT p.*, 'ZenCare Medical - Muharto' AS nama_cabang, 'Jl. Muharto No.1, Malang' AS alamat_cabang
     FROM penjualan p
-    JOIN cabang c ON p.id_cabang = c.id
     WHERE p.no_invoice = ?
 ");
 $stmt->execute([$noInvoice]);

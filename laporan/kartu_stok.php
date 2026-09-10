@@ -1,20 +1,17 @@
 <?php
-// File: laporan/kartu_stok.php – Laporan Kartu Stok (Audit Trail Omnichannel)
+// File: laporan/kartu_stok.php - Laporan Kartu Stok (Audit Trail Omnichannel)
 session_start();
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['super_admin', 'admin_cabang', 'karyawan']);
+requireRole(['superadmin', 'admin']);
 
 $id_variasi = intval($_GET['id_variasi'] ?? 0);
-$id_cabang  = intval($_GET['id_cabang']  ?? ($_SESSION['id_cabang'] ?? 0));
 $dari       = $_GET['dari'] ?? date('Y-m-01');
 $sampai     = $_GET['sampai'] ?? date('Y-m-d');
-$jenis_filter = trim($_GET['jenis'] ?? '');
 
-$cabangList  = $pdo->query("SELECT id, nama FROM cabang WHERE is_active=1 ORDER BY id")->fetchAll();
 $variasiList = $pdo->query("
     SELECT pv.id, pv.sku_variasi, CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS label 
     FROM produk_variasi pv 
@@ -23,250 +20,153 @@ $variasiList = $pdo->query("
     ORDER BY pi.nama_produk ASC, pv.nama_variasi ASC
 ")->fetchAll();
 
-// Build query
-$whereClauses = ["DATE(ks.tanggal) BETWEEN ? AND ?"];
-$params = [$dari, $sampai];
-
-if ($id_cabang > 0) {
-    $whereClauses[] = "ks.id_cabang = ?";
-    $params[] = $id_cabang;
-}
+$produkData = null;
+$logData = [];
 
 if ($id_variasi > 0) {
-    $whereClauses[] = "ks.id_variasi = ?";
-    $params[] = $id_variasi;
+    // Info Barang
+    $stmtProd = $pdo->prepare("
+        SELECT pv.sku_variasi, pi.nama_produk, pv.nama_variasi, 
+               pv.satuan_kecil as nama_satuan, pv.stok_minimum, sc.stok
+        FROM produk_variasi pv
+        JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+        LEFT JOIN stok_toko sc ON pv.id = sc.id_variasi 
+        WHERE pv.id = ?
+    ");
+    $stmtProd->execute([$id_variasi]);
+    $produkData = $stmtProd->fetch();
+
+    // Ambil Data Log
+    $stmtLog = $pdo->prepare("
+        SELECT ks.tanggal, ks.keterangan as deskripsi, ks.jenis_mutasi, ks.qty, ks.sisa_stok, u.nama_lengkap
+        FROM kartu_stok ks
+        LEFT JOIN users u ON ks.dibuat_oleh = u.id
+        WHERE 1=1 AND ks.id_variasi = ?
+          AND DATE(ks.tanggal) BETWEEN ? AND ?
+        ORDER BY ks.tanggal ASC, ks.id ASC
+    ");
+    $stmtLog->execute([$id_variasi, $dari, $sampai]);
+    $logData = $stmtLog->fetchAll();
 }
 
-if (!empty($jenis_filter)) {
-    $whereClauses[] = "ks.jenis_mutasi = ?";
-    $params[] = $jenis_filter;
-}
-
-$whereSQL = implode(" AND ", $whereClauses);
-
-$stmt = $pdo->prepare("
-    SELECT ks.*, 
-           pv.sku_variasi, 
-           pv.nama_variasi, 
-           pi.nama_produk, 
-           c.nama AS nama_cabang
-    FROM kartu_stok ks
-    JOIN produk_variasi pv ON ks.id_variasi = pv.id
-    JOIN produk_induk pi ON pv.id_produk_induk = pi.id
-    LEFT JOIN cabang c ON ks.id_cabang = c.id
-    WHERE $whereSQL
-    ORDER BY ks.tanggal DESC, ks.id DESC
-");
-$stmt->execute($params);
-$movements = $stmt->fetchAll();
-
-// Summary stats
-$totalMasuk = 0;
-$totalKeluar = 0;
-$totalTransaksi = count($movements);
-
-foreach ($movements as $m) {
-    if ($m['jenis_mutasi'] === 'Masuk') {
-        $totalMasuk += intval($m['qty']);
-    } elseif (in_array($m['jenis_mutasi'], ['Keluar', 'Pengembalian/Batal', 'Karantina'])) {
-        $totalKeluar += intval($m['qty']);
-    }
-}
-
-layoutHead('Laporan Kartu Stok');
+layoutHead('Kartu Stok');
 layoutBodyOpen();
 layoutSidebar('laporan_kartu_stok');
-layoutHeader('Kartu Stok Omnichannel', 'Audit trail pergerakan stok fisik kasir POS, e-commerce, mutasi, dan penerimaan supplier');
+layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto)');
 ?>
+
+<div class="bg-white border border-zcBrd rounded-2xl p-6 shadow-sm mb-6">
+    <form method="GET" class="flex flex-wrap items-end gap-4">
+        <div class="flex-1 min-w-[250px]">
+            <label class="block text-xs font-semibold text-zcTxt mb-1.5">Pilih Barang *</label>
+            <select name="id_variasi" required class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                <option value="">-- Pilih Barang / SKU --</option>
+                <?php foreach($variasiList as $v): ?>
+                <option value="<?= $v['id'] ?>" <?= $id_variasi==$v['id']?'selected':'' ?>>
+                    <?= htmlspecialchars($v['label']) ?> (<?= htmlspecialchars($v['sku_variasi']) ?>)
+                </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-zcTxt mb-1.5">Dari Tanggal</label>
+            <input type="date" name="dari" value="<?= htmlspecialchars($dari) ?>" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-zcTxt mb-1.5">Sampai Tanggal</label>
+            <input type="date" name="sampai" value="<?= htmlspecialchars($sampai) ?>" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+        </div>
+        <div class="flex gap-2">
+            <button type="submit" class="px-5 py-2.5 bg-zc hover:bg-zcHv text-white font-bold text-sm rounded-xl transition flex items-center gap-2">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Tampilkan
+            </button>
+            <?php if ($produkData): ?>
+            <button type="button" onclick="window.print()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm rounded-xl transition flex items-center gap-2 print:hidden">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Cetak Format Fisik
+            </button>
+            <?php endif; ?>
+        </div>
+    </form>
+</div>
+
+<?php if ($id_variasi > 0 && $produkData): ?>
+<!-- CETAK KARTU STOK FORMAT FISIK -->
+<div class="bg-white p-8 md:p-12 shadow-sm rounded-none border border-slate-300 w-full max-w-5xl mx-auto font-sans print:m-0 print:border-none print:shadow-none print:p-0">
+    <h1 class="text-center text-xl md:text-2xl font-black mb-10 tracking-wide text-black">Kartu Stok Barang</h1>
+    
+    <!-- Informasi Header Kartu -->
+    <div class="grid grid-cols-2 gap-x-12 mb-6 text-sm font-semibold text-black">
+        <div class="grid grid-cols-[130px_10px_auto] gap-y-1">
+            <div>Nama Barang</div><div>:</div><div><?= htmlspecialchars($produkData['nama_produk'] . ' - ' . $produkData['nama_variasi']) ?></div>
+            <div>Kode Barang</div><div>:</div><div><?= htmlspecialchars($produkData['sku_variasi']) ?></div>
+            <div>Satuan Barang</div><div>:</div><div><?= htmlspecialchars($produkData['nama_satuan'] ?? '-') ?></div>
+        </div>
+        <div class="grid grid-cols-[130px_10px_auto] gap-y-1">
+            <div>Minimum Stok</div><div>:</div><div><?= htmlspecialchars($produkData['stok_minimum']) ?></div>
+            <div>Stok Riil (Sisa)</div><div>:</div><div class="text-rose-600 font-bold"><?= htmlspecialchars($produkData['stok']) ?></div>
+            <div>Lokasi (Toko)</div><div>:</div><div>Pusat (Muharto)</div>
+        </div>
+    </div>
+
+    <!-- Tabel Kartu Stok -->
+    <table class="w-full border-collapse border border-slate-900 text-sm print:text-xs">
+        <thead class="bg-emerald-600 text-white border-b-2 border-slate-900">
+            <tr>
+                <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-32">Tanggal</th>
+                <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle">Deskripsi</th>
+                <th colspan="3" class="border border-slate-900 px-3 py-1.5 text-center">Barang</th>
+                <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-32">Penanggung Jawab</th>
+                <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-32">Keterangan</th>
+            </tr>
+            <tr>
+                <th class="border border-slate-900 px-2 py-1.5 text-center w-16">Masuk</th>
+                <th class="border border-slate-900 px-2 py-1.5 text-center w-16">Keluar</th>
+                <th class="border border-slate-900 px-2 py-1.5 text-center w-16">Sisa</th>
+            </tr>
+        </thead>
+        <tbody class="text-black bg-white">
+            <?php if (empty($logData)): ?>
+                <tr>
+                    <td colspan="7" class="border border-slate-900 px-3 py-8 text-center italic text-slate-500">Tidak ada data pergerakan stok untuk periode yang dipilih.</td>
+                </tr>
+            <?php else: ?>
+                <?php foreach ($logData as $log): ?>
+                <tr class="hover:bg-slate-50 print:hover:bg-transparent">
+                    <td class="border border-slate-900 px-2 py-1.5 text-center whitespace-nowrap"><?= date('d/m/Y H:i', strtotime($log['tanggal'])) ?></td>
+                    <td class="border border-slate-900 px-3 py-1.5"><?= htmlspecialchars($log['deskripsi'] ?? '-') ?></td>
+                    <td class="border border-slate-900 px-2 py-1.5 text-center font-bold <?= $log['jenis_mutasi']=='Masuk'?'text-emerald-700':'' ?>"><?= $log['jenis_mutasi']=='Masuk' ? number_format($log['qty']) : '' ?></td>
+                    <td class="border border-slate-900 px-2 py-1.5 text-center font-bold <?= $log['jenis_mutasi']=='Keluar'?'text-rose-700':'' ?>"><?= $log['jenis_mutasi']=='Keluar' ? number_format($log['qty']) : '' ?></td>
+                    <td class="border border-slate-900 px-2 py-1.5 text-center font-black bg-slate-50"><?= number_format($log['sisa_stok']) ?></td>
+                    <td class="border border-slate-900 px-2 py-1.5 text-center text-xs"><?= htmlspecialchars($log['nama_lengkap'] ?? 'Sistem') ?></td>
+                    <td class="border border-slate-900 px-2 py-1.5"></td>
+                </tr>
+                <?php endforeach; ?>
+                <!-- Baris Kosong Tambahan untuk Estetika Fisik -->
+                <?php for($i=0; $i<5; $i++): ?>
+                <tr>
+                    <td class="border border-slate-900 px-2 py-3.5 text-center"></td>
+                    <td class="border border-slate-900 px-3 py-3.5"></td>
+                    <td class="border border-slate-900 px-2 py-3.5 text-center"></td>
+                    <td class="border border-slate-900 px-2 py-3.5 text-center"></td>
+                    <td class="border border-slate-900 px-2 py-3.5 text-center bg-slate-50"></td>
+                    <td class="border border-slate-900 px-2 py-3.5 text-center"></td>
+                    <td class="border border-slate-900 px-2 py-3.5"></td>
+                </tr>
+                <?php endfor; ?>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</div>
 
 <style>
 @media print {
-  .no-print { display: none !important; }
-  aside, header { display: none !important; }
-  body { background: white; }
+    body * { visibility: hidden; }
+    .print\:m-0, .print\:m-0 * { visibility: visible; }
+    .print\:m-0 { position: absolute; left: 0; top: 0; width: 100%; margin: 0 !important; }
 }
 </style>
+<?php endif; ?>
 
-<!-- Filter Panel -->
-<div class="bg-white border border-zcBrd rounded-2xl shadow-sm p-5 mb-6 no-print">
-  <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
-    <div>
-      <label class="block text-xs font-bold text-zcTxt mb-1.5">Cabang</label>
-      <select name="id_cabang" class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:border-zc">
-        <option value="0">Semua Cabang</option>
-        <?php foreach ($cabangList as $c): ?>
-          <option value="<?= $c['id'] ?>" <?= $c['id']==$id_cabang?'selected':'' ?>><?= htmlspecialchars($c['nama']) ?></option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-    <div class="sm:col-span-2">
-      <label class="block text-xs font-bold text-zcTxt mb-1.5">Produk / Variasi</label>
-      <select name="id_variasi" class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:border-zc">
-        <option value="0">Semua Produk (Audit Omnichannel)</option>
-        <?php foreach ($variasiList as $v): ?>
-          <option value="<?= $v['id'] ?>" <?= $v['id']==$id_variasi?'selected':'' ?>>
-            <?= htmlspecialchars($v['label']) ?> (<?= htmlspecialchars($v['sku_variasi']) ?>)
-          </option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-    <div>
-      <label class="block text-xs font-bold text-zcTxt mb-1.5">Dari Tanggal</label>
-      <input type="date" name="dari" value="<?= $dari ?>" class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc">
-    </div>
-    <div>
-      <label class="block text-xs font-bold text-zcTxt mb-1.5">Sampai Tanggal</label>
-      <input type="date" name="sampai" value="<?= $sampai ?>" class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc">
-    </div>
-    <div class="flex gap-2">
-      <button type="submit" class="flex-1 px-4 py-2.5 bg-zc hover:bg-zcHv text-white text-sm font-bold rounded-xl transition shadow-sm cursor-pointer">
-        Tampilkan
-      </button>
-      <button type="button" onclick="window.print()" class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition cursor-pointer">
-        Cetak
-      </button>
-    </div>
-  </form>
-</div>
-
-<!-- Summary Cards -->
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-  <div class="bg-white border border-zcBrd rounded-2xl p-5 shadow-sm">
-    <span class="text-xs font-bold text-zcMut block mb-1">Total Mutasi Tercatat</span>
-    <span class="text-2xl font-black text-zcTxt"><?= number_format($totalTransaksi) ?></span>
-    <span class="text-xs text-zcMut block mt-1">Peristiwa perpindahan fisik</span>
-  </div>
-  <div class="bg-white border border-zcBrd rounded-2xl p-5 shadow-sm">
-    <span class="text-xs font-bold text-emerald-700 block mb-1">Total Unit Masuk</span>
-    <span class="text-2xl font-black text-emerald-600">+<?= number_format($totalMasuk) ?></span>
-    <span class="text-xs text-emerald-700 block mt-1">Penerimaan fisik (Pcs)</span>
-  </div>
-  <div class="bg-white border border-zcBrd rounded-2xl p-5 shadow-sm">
-    <span class="text-xs font-bold text-rose-700 block mb-1">Total Unit Keluar</span>
-    <span class="text-2xl font-black text-rose-600">-<?= number_format($totalKeluar) ?></span>
-    <span class="text-xs text-rose-700 block mt-1">Penjualan POS &amp; Web (Pcs)</span>
-  </div>
-</div>
-
-<!-- Table Container -->
-<div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden">
-  <div class="px-6 py-4 border-b border-zcBrd bg-slate-50 flex items-center justify-between flex-wrap gap-2">
-    <div>
-      <h2 class="text-base font-bold text-zcTxt">Tabel Audit Kartu Stok (Omnichannel)</h2>
-      <p class="text-xs text-zcMut mt-0.5">Bukti sinkronisasi mutasi fisik kasir offline dan pesanan online e-commerce</p>
-    </div>
-    <span class="px-3 py-1 bg-zcLt text-zc font-bold text-xs rounded-full border border-zc/20">
-      Periode: <?= date('d M Y', strtotime($dari)) ?> &ndash; <?= date('d M Y', strtotime($sampai)) ?>
-    </span>
-  </div>
-
-  <div class="overflow-x-auto">
-    <table class="w-full text-left text-sm">
-      <thead class="bg-slate-50 border-b border-zcBrd text-zcMut font-bold uppercase tracking-wider text-xs">
-        <tr>
-          <th class="py-3.5 px-5">Waktu &amp; Tanggal</th>
-          <th class="py-3.5 px-5">SKU &amp; Nama Produk</th>
-          <th class="py-3.5 px-5 text-center">Jenis Mutasi</th>
-          <th class="py-3.5 px-5 text-right">Jumlah (Pcs)</th>
-          <th class="py-3.5 px-5 text-right">Sisa Stok (Pcs)</th>
-          <th class="py-3.5 px-5 text-left">Referensi / Keterangan</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-zcBrd/70">
-        <?php if (empty($movements)): ?>
-          <tr>
-            <td colspan="6" class="py-12 text-center text-sm text-zcMut italic">
-              Tidak ada catatan mutasi stok pada parameter filter ini.
-            </td>
-          </tr>
-        <?php else: ?>
-          <?php foreach ($movements as $m): 
-            $jenis = trim($m['jenis_mutasi']);
-            $qtyVal = intval($m['qty']);
-            $sisaVal = intval($m['sisa_stok']);
-            $ket = trim($m['keterangan'] ?? '');
-
-            // Badge Color Rules:
-            // Hijau: Masuk / Opname tambah
-            // Merah: Keluar / Karantina
-            // Kuning: Penyesuaian / Transfer
-            if ($jenis === 'Masuk') {
-                $badgeCls = 'bg-emerald-50 border-emerald-200 text-emerald-700';
-                $qtyCls   = 'text-emerald-700 font-bold';
-                $qtySign  = '+';
-            } elseif (in_array($jenis, ['Keluar', 'Karantina', 'Pengembalian/Batal'])) {
-                $badgeCls = 'bg-rose-50 border-rose-200 text-rose-700';
-                $qtyCls   = 'text-rose-600 font-bold';
-                $qtySign  = '-';
-            } else { // Transfer / Penyesuaian / Opname
-                $badgeCls = 'bg-amber-50 border-amber-200 text-amber-700';
-                $qtyCls   = 'text-amber-700 font-bold';
-                $qtySign  = '';
-            }
-
-            // Channel Identifier Pill based on Reference Format:
-            $isPos = (stripos($ket, 'POS-') !== false || stripos($ket, 'POS') !== false);
-            $isWeb = (stripos($ket, 'WEB-') !== false || stripos($ket, 'ZNC-') !== false || stripos($ket, 'Online') !== false);
-          ?>
-          <tr class="hover:bg-slate-50/70 transition">
-            <!-- 1. Waktu & Tanggal -->
-            <td class="py-3.5 px-5 whitespace-nowrap text-zcTxt font-mono text-xs">
-              <span class="font-bold text-slate-800"><?= date('d/m/Y', strtotime($m['tanggal'])) ?></span>
-              <span class="text-zcMut block text-[11px]"><?= date('H:i:s', strtotime($m['tanggal'])) ?> WIB</span>
-            </td>
-
-            <!-- 2. SKU & Nama Produk -->
-            <td class="py-3.5 px-5">
-              <span class="font-mono text-xs text-slate-500 block font-semibold"><?= htmlspecialchars($m['sku_variasi']) ?></span>
-              <span class="font-bold text-zcTxt block leading-snug">
-                <?= htmlspecialchars($m['nama_produk']) ?> &ndash; <span class="font-medium text-slate-600"><?= htmlspecialchars($m['nama_variasi']) ?></span>
-              </span>
-              <?php if (!empty($m['nama_cabang'])): ?>
-                <span class="inline-block mt-0.5 text-[10px] text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded">
-                  <?= htmlspecialchars($m['nama_cabang']) ?>
-                </span>
-              <?php endif; ?>
-            </td>
-
-            <!-- 3. Jenis Mutasi (Badge Warna) -->
-            <td class="py-3.5 px-5 text-center whitespace-nowrap">
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border <?= $badgeCls ?>">
-                <?= htmlspecialchars($jenis) ?>
-              </span>
-            </td>
-
-            <!-- 4. Jumlah (Kuantitas fisik dalam Pcs) -->
-            <td class="py-3.5 px-5 text-right font-mono <?= $qtyCls ?> whitespace-nowrap">
-              <?= $qtySign ?><?= number_format($qtyVal) ?> <span class="text-xs font-normal text-zcMut">Pcs</span>
-            </td>
-
-            <!-- 5. Sisa Stok (Saldo akhir fisik dalam Pcs) -->
-            <td class="py-3.5 px-5 text-right font-mono font-bold text-zcTxt whitespace-nowrap">
-              <?= number_format($sisaVal) ?> <span class="text-xs font-normal text-zcMut">Pcs</span>
-            </td>
-
-            <!-- 6. Referensi / Keterangan (Bukti Omnichannel) -->
-            <td class="py-3.5 px-5 text-left">
-              <?php if ($isPos): ?>
-                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 font-mono text-xs font-bold">
-                  <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
-                  <?= htmlspecialchars($ket) ?>
-                </div>
-              <?php elseif ($isWeb): ?>
-                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-mono text-xs font-bold">
-                  <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.95-1.55L23 6H6"/></svg>
-                  <?= htmlspecialchars($ket) ?>
-                </div>
-              <?php else: ?>
-                <span class="text-zcTxt text-xs font-medium"><?= htmlspecialchars($ket ?: '-') ?></span>
-              <?php endif; ?>
-            </td>
-          </tr>
-          <?php endforeach; ?>
-        <?php endif; ?>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<?php layoutEnd(); ?>
+<?php layoutFooter(); ?>

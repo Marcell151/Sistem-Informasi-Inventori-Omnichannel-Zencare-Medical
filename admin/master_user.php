@@ -7,7 +7,7 @@ require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['super_admin']);
+requireRole(['superadmin']);
 
 $msg = ''; $msgType = '';
 
@@ -19,12 +19,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $uname  = trim($_POST['username'] ?? '');
         $nama   = trim($_POST['nama_lengkap'] ?? '');
         $role   = $_POST['role'] ?? 'karyawan';
-        $cabang = ($role === 'karyawan') ? intval($_POST['id_cabang'] ?? 1) : null;
-        $pass   = password_hash($_POST['password'] ?? '123456', PASSWORD_BCRYPT);
+                $pass   = password_hash($_POST['password'] ?? '123456', PASSWORD_BCRYPT);
         if ($uname && $nama) {
             try {
-                $pdo->prepare("INSERT INTO users (username,password,nama_lengkap,role,id_cabang,is_active) VALUES (?,?,?,?,?,1)")
-                    ->execute([$uname,$pass,$nama,$role,$cabang]);
+                $pdo->prepare("INSERT INTO users (username,password,nama_lengkap,role,is_active) VALUES (?,?,?,?,?,1)")
+                    ->execute([$uname,$pass,$nama,$role]);
                 $msg = "User '$uname' ($role) berhasil ditambahkan."; $msgType = 'success';
             } catch (Exception $e) {
                 $msg = "Error: " . $e->getMessage(); $msgType = 'error';
@@ -55,16 +54,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id    = intval($_POST['id_user'] ?? 0);
         $nama  = trim($_POST['nama_lengkap'] ?? '');
         $role  = $_POST['role'] ?? 'karyawan';
-        $cabang = ($role === 'karyawan') ? intval($_POST['id_cabang'] ?? 1) : null;
-        if ($id && $nama) {
-            $pdo->prepare("UPDATE users SET nama_lengkap=?,role=?,id_cabang=? WHERE id=?")->execute([$nama,$role,$cabang,$id]);
+                if ($id && $nama) {
+            $pdo->prepare("UPDATE users SET nama_lengkap=?,role=?,1=1 WHERE id=?")->execute([$nama,$role,$cabang,$id]);
             $msg = "User diperbarui."; $msgType = 'success';
         }
     }
 }
 
-$users    = $pdo->query("SELECT u.*, c.nama AS nama_cabang FROM users u LEFT JOIN cabang c ON u.id_cabang=c.id ORDER BY u.id ASC")->fetchAll();
-$cabangList = $pdo->query("SELECT id, nama FROM cabang WHERE is_active=1")->fetchAll();
+$users = $pdo->query("SELECT u.* FROM users u ORDER BY u.id ASC")->fetchAll();
+
 
 layoutHead('Manajemen User');
 layoutBodyOpen();
@@ -107,8 +105,8 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
                 <?php foreach ($users as $u): ?>
                     <?php
                     $roleCls = match($u['role']) {
-                        'super_admin' => 'bg-zc/10 text-zcNavy border-zcNavy/20',
-                        'karyawan'    => 'bg-sky-100 text-sky-700 border-sky-200',
+                        'superadmin' => 'bg-zc/10 text-zcNavy border-zcNavy/20',
+                        'admin'    => 'bg-sky-100 text-sky-700 border-sky-200',
                         'pelanggan'   => 'bg-emerald-100 text-emerald-700 border-emerald-200',
                         default       => 'bg-slate-100 text-slate-500 border-slate-200',
                     };
@@ -183,7 +181,7 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
                 <select name="role" id="add_role" onchange="toggleCabangField('add_cabang_row', this.value)"
                     class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                     <option value="karyawan">Karyawan</option>
-                    <option value="super_admin">Super Admin</option>
+                    <option value="superadmin">Superadmin</option>
                     <option value="pelanggan">Pelanggan</option>
                 </select>
             </div>
@@ -222,7 +220,7 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
                 <select name="role" id="eu_role" onchange="toggleCabangField('eu_cabang_row', this.value)"
                     class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                     <option value="karyawan">Karyawan</option>
-                    <option value="super_admin">Super Admin</option>
+                    <option value="superadmin">Superadmin</option>
                     <option value="pelanggan">Pelanggan</option>
                 </select>
             </div>

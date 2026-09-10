@@ -63,9 +63,8 @@ $user = $stmtUser->fetch();
 
 // Fetch orders history for this customer
 $stmtOrders = $pdo->prepare("
-    SELECT p.*, c.nama AS nama_cabang
+    SELECT p.*, 'Pusat' AS nama_cabang
     FROM penjualan p
-    LEFT JOIN cabang c ON p.id_cabang = c.id
     WHERE p.id_user = ?
     ORDER BY p.id DESC
 ");

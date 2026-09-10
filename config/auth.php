@@ -1,6 +1,7 @@
 <?php
 // File: config/auth.php
-// Auth Guard Functions – ZenCare Medical System
+// Auth Guard Functions – ZenCare Medical System (Final TA v3.0)
+// Role baru: superadmin | admin | pelanggan
 
 define('BASE_URL', '/inventory_zencare');
 
@@ -16,7 +17,7 @@ function requireRole(array $roles) {
     $currentRole = $_SESSION['role'] ?? '';
     
     if (!in_array($currentRole, $roles)) {
-        // If customer tries to access admin/kasir pages, redirect to ecommerce store
+        // Jika pelanggan mencoba akses halaman staf, redirect ke toko
         if ($currentRole === 'pelanggan') {
             header('Location: ' . BASE_URL . '/ecommerce/index.php');
             exit;
@@ -42,14 +43,33 @@ function requireRole(array $roles) {
     }
 }
 
+// ─── Role Check Functions ───────────────────────────────────────────────────
+
+/**
+ * Superadmin: akses penuh (pemilik/manajer)
+ */
+function isSuperadmin(): bool {
+    return ($_SESSION['role'] ?? '') === 'superadmin';
+}
+
+/**
+ * Admin: staf operasional & kasir (sebelumnya "karyawan")
+ */
 function isAdmin(): bool {
-    return ($_SESSION['role'] ?? '') === 'super_admin';
+    return ($_SESSION['role'] ?? '') === 'admin';
 }
 
-function isKaryawan(): bool {
-    return ($_SESSION['role'] ?? '') === 'karyawan';
+/**
+ * Staff: superadmin ATAU admin (akses operasional)
+ * Digunakan untuk requireRole(['superadmin','admin'])
+ */
+function isStaff(): bool {
+    return in_array($_SESSION['role'] ?? '', ['superadmin', 'admin']);
 }
 
+/**
+ * Pelanggan: akses e-commerce saja
+ */
 function isPelanggan(): bool {
     return ($_SESSION['role'] ?? '') === 'pelanggan';
 }
@@ -58,12 +78,15 @@ function currentRole(): string {
     return $_SESSION['role'] ?? 'guest';
 }
 
+/**
+ * Label tampilan untuk role (konsisten di semua halaman)
+ */
 function roleLabel(): string {
     $map = [
-        'super_admin' => 'Super Admin',
-        'karyawan'       => 'Karyawan',
-        'pelanggan'   => 'Pelanggan',
+        'superadmin' => 'Superadmin',
+        'admin'      => 'Admin',
+        'pelanggan'  => 'Pelanggan',
     ];
-    return $map[$_SESSION['role'] ?? ''] ?? 'Guest';
+    return $map[$_SESSION['role'] ?? ''] ?? 'Tamu';
 }
 ?>

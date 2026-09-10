@@ -7,7 +7,7 @@ require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['super_admin']);
+requireRole(['superadmin', 'admin']);
 
 $msg = ''; $msgType = '';
 
@@ -72,13 +72,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare("INSERT INTO produk_variasi (id_produk_induk,sku_variasi,nama_variasi,satuan_kecil,satuan_besar,rasio_konversi,harga_jual_kecil,harga_jual_besar,berat,gambar,tampil_di_online,is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,1)")
                     ->execute([$idInduk,$sku,$namaVar,$satKecil,$satBesar,$rasio,$hrgKecil,$hrgBesar,$berat,$gambar,$tampil]);
                 
-                // Auto-init stok 0 untuk setiap cabang
-                $cabangAll = $pdo->query("SELECT id FROM cabang WHERE is_active=1")->fetchAll();
+                // Auto-init stok 0
                 $newVarId  = $pdo->lastInsertId();
-                foreach ($cabangAll as $c) {
-                    $pdo->prepare("INSERT IGNORE INTO stok_cabang (id_variasi,id_cabang,stok) VALUES (?,?,0)")
-                        ->execute([$newVarId, $c['id']]);
-                }
+                $pdo->prepare("INSERT IGNORE INTO stok_toko (id_variasi, stok) VALUES (?,0)")
+                    ->execute([$newVarId]);
                 $msg = "Variasi '$namaVar' berhasil ditambahkan."; $msgType = 'success';
             } catch (Exception $e) { $msg = "Error: " . $e->getMessage(); $msgType = 'error'; }
         } else { $msg = "Semua field variasi wajib diisi!"; $msgType = 'error'; }
@@ -131,15 +128,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $namaInduk  = trim($data[1]);
                         $kategori   = trim($data[2]);
                         $deskripsi  = trim($data[3]);
-                        $skuVar     = trim($data[4]);
-                        $namaVar    = trim($data[5]);
-                        $satKecil   = trim($data[6]) ?: 'Pcs';
-                        $satBesar   = trim($data[7]) ?: 'Box';
-                        $rasio      = intval($data[8]) ?: 1;
-                        $hrgKecil   = floatval($data[9]);
-                        $hrgBesar   = floatval($data[10]);
-                        $berat      = intval($data[11]) ?: 100;
-                        $cabangId   = intval($data[12]);
+                        $idSupplier = intval($data[4]) ?: null;
+                        $skuVar     = trim($data[5]);
+                        $namaVar    = trim($data[6]);
+                        $satKecil   = trim($data[7]) ?: 'Pcs';
+                        $satBesar   = trim($data[8]) ?: 'Box';
+                        $rasio      = intval($data[9]) ?: 1;
+                        $hrgKecil   = floatval($data[10]);
+                        $hrgBesar   = floatval($data[11]);
+                        $berat      = intval($data[12]) ?: 100;
                         $stokAwal   = intval($data[13]);
 
                         if (empty($skuInduk) || empty($skuVar)) continue;
@@ -149,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmtInduk->execute([$skuInduk]);
                         $idInduk = $stmtInduk->fetchColumn();
                         if (!$idInduk) {
-                            $pdo->prepare("INSERT INTO produk_induk (sku_induk,nama_produk,deskripsi,kategori,is_active) VALUES (?,?,?,?,1)")->execute([$skuInduk, $namaInduk, $deskripsi, $kategori]);
+                            $pdo->prepare("INSERT INTO produk_induk (sku_induk,nama_produk,deskripsi,kategori,id_supplier,is_active) VALUES (?,?,?,?,?,1)")->execute([$skuInduk, $namaInduk, $deskripsi, $kategori, $idSupplier]);
                             $idInduk = $pdo->lastInsertId();
                         }
 
@@ -162,32 +159,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 ->execute([$idInduk, $skuVar, $namaVar, $satKecil, $satBesar, $rasio, $hrgKecil, $hrgBesar, $berat]);
                             $idVar = $pdo->lastInsertId();
 
-                            // Initialize zero stock for all branches
-                            $cabangAll = $pdo->query("SELECT id FROM cabang WHERE is_active=1")->fetchAll();
-                            foreach ($cabangAll as $c) {
-                                $pdo->prepare("INSERT IGNORE INTO stok_cabang (id_variasi,id_cabang,stok) VALUES (?,?,0)")->execute([$idVar, $c['id']]);
-                            }
+                            // Initialize zero stock
+                            $pdo->prepare("INSERT IGNORE INTO stok_toko (id_variasi, stok) VALUES (?,0)")->execute([$idVar]);
                         } else {
                             // Update existing variasi prices
                             $pdo->prepare("UPDATE produk_variasi SET satuan_kecil=?, satuan_besar=?, rasio_konversi=?, harga_jual_kecil=?, harga_jual_besar=? WHERE id=?")->execute([$satKecil, $satBesar, $rasio, $hrgKecil, $hrgBesar, $idVar]);
                         }
 
                         // Initial Stock Mutation
-                        if ($cabangId > 0 && $stokAwal > 0) {
-                            $chkStock = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi=? AND id_cabang=? FOR UPDATE");
-                            $chkStock->execute([$idVar, $cabangId]);
+                        if ($stokAwal > 0) {
+                            $chkStock = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi=? FOR UPDATE");
+                            $chkStock->execute([$idVar]);
                             $currentStock = $chkStock->fetchColumn();
                             
                             if ($currentStock === false) {
-                                $pdo->prepare("INSERT INTO stok_cabang (id_variasi,id_cabang,stok) VALUES (?,?,?)")->execute([$idVar, $cabangId, $stokAwal]);
+                                $pdo->prepare("INSERT INTO stok_toko (id_variasi, stok) VALUES (?,?)")->execute([$idVar, $stokAwal]);
                                 $currentStock = 0;
                             } else {
-                                $pdo->prepare("UPDATE stok_cabang SET stok = stok + ? WHERE id_variasi=? AND id_cabang=?")->execute([$stokAwal, $idVar, $cabangId]);
+                                $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi=?")->execute([$stokAwal, $idVar]);
                             }
 
                             $sisaStock = $currentStock + $stokAwal;
-                            $pdo->prepare("INSERT INTO kartu_stok (id_cabang,id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,?,'Masuk',?,?,?)")
-                                ->execute([$cabangId, $idVar, $stokAwal, $sisaStock, "Import Excel / Stok Awal"]);
+                            $pdo->prepare("INSERT INTO kartu_stok (id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,'Masuk',?,?,?)")
+                                ->execute([$idVar, $stokAwal, $sisaStock, "Import Excel / Stok Awal"]);
                         }
                         
                         $successCount++;
@@ -617,7 +611,7 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
             <?= icon('download', 'w-5 h-5 text-emerald-600') ?> Import Produk & Variasi (CSV)
         </h3>
         <p class="text-xs text-zcMut mb-4">
-            Upload file CSV. Kolom wajib: <code>SKU_INDUK, NAMA_PRODUK, KATEGORI, DESKRIPSI, SKU_VARIASI, NAMA_VARIASI, SATUAN_KECIL, SATUAN_BESAR, RASIO, HARGA_KECIL, HARGA_BESAR, BERAT, CABANG_ID, STOK_AWAL</code>.
+            Upload file CSV. Kolom format: <code>SKU_INDUK, NAMA_PRODUK, KATEGORI, DESKRIPSI, ID_SUPPLIER, SKU_VARIASI, NAMA_VARIASI, SATUAN_KECIL, SATUAN_BESAR, RASIO_KONVERSI, HARGA_JUAL_KECIL, HARGA_JUAL_BESAR, BERAT_GRAM, STOK_AWAL</code>.
         </p>
         <form method="POST" enctype="multipart/form-data">
             <input type="hidden" name="aksi" value="import_csv">

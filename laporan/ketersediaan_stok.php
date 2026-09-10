@@ -6,13 +6,11 @@ require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['super_admin', 'admin_cabang']);
-
-$id_cabang = intval($_GET['id_cabang'] ?? 0);
+requireRole(['superadmin', 'admin']);
 $status_filter = $_GET['status'] ?? 'semua';
 
-$cabangList = $pdo->query("SELECT id, nama FROM cabang WHERE is_active=1 ORDER BY id")->fetchAll();
-$cabangWhere = $id_cabang ? "AND sc.id_cabang = $id_cabang" : "";
+$cabangList = [];
+$cabangWhere = "";
 
 try {
     $stmt = $pdo->prepare("
@@ -26,14 +24,13 @@ try {
             pv.satuan_besar,
             pv.rasio_konversi,
             COALESCE(sc.stok, 0) AS stok_pcs,
-            c.id AS id_cabang,
-            c.nama AS nama_cabang
+            1 AS id_cabang,
+            'Pusat' AS nama_cabang
         FROM produk_variasi pv
         JOIN produk_induk pi ON pi.id = pv.id_produk_induk
-        LEFT JOIN stok_cabang sc ON sc.id_variasi = pv.id $cabangWhere
-        LEFT JOIN cabang c ON c.id = sc.id_cabang
+        LEFT JOIN stok_toko sc ON sc.id_variasi = pv.id $cabangWhere
         WHERE pi.is_active = 1 AND pv.is_active = 1
-        ORDER BY pi.kategori ASC, pi.nama_produk ASC, pv.nama_variasi ASC, c.nama ASC
+        ORDER BY pi.kategori ASC, pi.nama_produk ASC, pv.nama_variasi ASC
     ");
     $stmt->execute();
     $rawRows = $stmt->fetchAll();

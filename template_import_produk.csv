@@ -1,0 +1,5 @@
+SKU_INDUK,NAMA_PRODUK,KATEGORI,DESKRIPSI,ID_SUPPLIER,SKU_VARIASI,NAMA_VARIASI,SATUAN_KECIL,SATUAN_BESAR,RASIO_KONVERSI,HARGA_JUAL_KECIL,HARGA_JUAL_BESAR,BERAT_GRAM,STOK_AWAL
+PRD-OBT-001,Paracetamol Sirup Anak 60ml,Obat,Obat penurun demam anak,1,OBT-001-60ML,Sirup 60ml per Botol,Botol,Karton,50,18500,875000,150,100
+PRD-OBT-002,Amoxicillin Kapsul 500mg,Obat,Antibiotik golongan penisilin,1,OBT-002-500MG,Kapsul 500mg per Strip,Strip,Box,10,7500,70000,50,200
+PRD-ALK-001,Tensimeter Digital Omron,Alat Kesehatan,Akurasi tinggi memori 60 data,2,ALK-001-HEM7120,Set Lengkap,Unit,Unit,1,495000,495000,900,15
+,,,,,OBT-002-500MG-BOX,Kapsul 500mg per Box (Langsung),Box,Karton,20,70000,1350000,500,50

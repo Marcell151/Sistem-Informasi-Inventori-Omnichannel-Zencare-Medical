@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // File: admin/master_supplier.php
 // Master Supplier – Super Admin Only
 session_start();
@@ -7,7 +7,7 @@ require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['super_admin']);
+requireRole(['superadmin', 'admin']);
 
 $msg = ''; $msgType = '';
 

@@ -2,8 +2,6 @@
 // File: laporan/nilai_persediaan.php – Redirected to ketersediaan_stok.php
 header('Location: ketersediaan_stok.php' . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : ''));
 exit;
-
-$id_cabang = intval($_GET['id_cabang'] ?? 0);
 $cabangList = $pdo->query("SELECT id, nama FROM cabang WHERE is_active=1 ORDER BY id")->fetchAll();
 $cabangWhere = $id_cabang ? "AND sc.id_cabang = $id_cabang" : "";
 
@@ -20,7 +18,7 @@ try {
             c.nama AS nama_cabang
         FROM produk_variasi pv
         JOIN produk_induk pi ON pi.id = pv.id_produk_induk
-        LEFT JOIN stok_cabang sc ON sc.id_variasi = pv.id $cabangWhere
+        LEFT JOIN stok_toko sc ON sc.id_variasi = pv.id $cabangWhere
         LEFT JOIN cabang c ON c.id = sc.id_cabang
         WHERE pi.is_active = 1
         ORDER BY pi.kategori, pi.nama_produk, pv.nama_variasi, c.nama

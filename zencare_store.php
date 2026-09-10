@@ -5,19 +5,8 @@ session_start();
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/koneksi.php';
 
-if (isset($_GET['set_cabang'])) {
-    $_SESSION['id_cabang'] = intval($_GET['set_cabang']);
-}
-if (!isset($_SESSION['id_cabang']) || $_SESSION['id_cabang'] <= 0) {
-    $_SESSION['id_cabang'] = 1;
-}
-$activeCabangId = $_SESSION['id_cabang'];
-
-$stmtCabangAktif = $pdo->prepare("SELECT * FROM cabang WHERE id = ? AND is_active = 1");
-$stmtCabangAktif->execute([$activeCabangId]);
-$cabangAktif = $stmtCabangAktif->fetch();
-
-$daftarCabang = $pdo->query("SELECT * FROM cabang WHERE is_active = 1 ORDER BY id ASC")->fetchAll();
+$activeCabangId = 1;
+$daftarCabang = []; // Single store - no branch list needed
 
 $stmtWeb = $pdo->query("SELECT * FROM pengaturan_web WHERE id=1");
 $webCfg  = $stmtWeb->fetch() ?: [];
@@ -40,11 +29,11 @@ $stmtProduk = $pdo->prepare("
            v.tampil_di_online, v.satuan_besar, v.satuan_kecil, v.rasio_konversi
     FROM produk_variasi v
     JOIN produk_induk i ON v.id_produk_induk = i.id
-    LEFT JOIN stok_cabang sc ON sc.id_variasi = v.id AND sc.id_cabang = ?
+    LEFT JOIN stok_toko sc ON sc.id_variasi = v.id
     WHERE v.is_active = 1 AND i.is_active = 1 AND v.tampil_di_online = 1
     ORDER BY i.kategori ASC, i.nama_produk ASC, v.id ASC
 ");
-$stmtProduk->execute([$activeCabangId]);
+$stmtProduk->execute();
 $products = $stmtProduk->fetchAll();
 
 // Get unique categories
@@ -145,7 +134,7 @@ foreach ($products as $p) {
                     </select>
                 </form>
 
-                <?php if (isset($_SESSION['user_id']) && in_array($_SESSION['role'] ?? '', ['super_admin','karyawan'])): ?>
+                <?php if (isset($_SESSION['user_id']) && in_array($_SESSION['role'] ?? '', ['superadmin','admin'])): ?>
                     <a href="index.php" class="text-xs font-medium text-zcMut hover:text-zcTxt border border-zcBrd px-3 py-1.5 rounded-lg bg-white transition hidden sm:block">Dashboard</a>
                 <?php endif; ?>
 

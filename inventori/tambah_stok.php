@@ -1,304 +1,303 @@
 <?php
 // File: inventori/tambah_stok.php
-// Modul Tambah / Penerimaan Stok (Input Masuk dari Supplier / Opname)
+// Modul Penerimaan Barang (Masuk dari Supplier) - ZenCare Medical
 session_start();
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['super_admin', 'karyawan']);
+requireRole(['superadmin', 'admin']);
 
 $msg = ''; $msgType = '';
-$isAdmin = ($_SESSION['role'] === 'super_admin');
-$userCabang = intval($_SESSION['id_cabang'] ?? 1);
+$userId = $_SESSION['user_id'];
+$idCabang = 1;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $idVariasi  = intval($_POST['id_variasi'] ?? 0);
-    $idCabang   = $isAdmin ? intval($_POST['id_cabang'] ?? 0) : $userCabang;
-    $qty        = intval($_POST['qty'] ?? 0);
-    $jenis      = in_array($_POST['jenis'] ?? '', ['Masuk','Opname']) ? ($_POST['jenis'] ?? 'Masuk') : 'Masuk';
-    $keterangan = trim($_POST['keterangan'] ?? '');
+    $sumber      = $_POST['sumber'] ?? 'Pembelian Langsung';
+    $noReferensi = trim($_POST['no_referensi'] ?? '');
+    $idSupplier  = intval($_POST['id_supplier'] ?? 0) ?: null;
+    $tglTerima   = $_POST['tanggal_terima'] ?? date('Y-m-d');
+    $catatan     = trim($_POST['catatan'] ?? '');
+    
+    // Auto-generate No Referensi jika kosong & Pembelian Langsung
+    if ($sumber === 'Pembelian Langsung' && empty($noReferensi)) {
+        $prefix = 'KLK-' . date('ymd') . '-';
+        $stmtSeq = $pdo->query("SELECT COUNT(*) FROM penerimaan_stok WHERE no_referensi LIKE '$prefix%'");
+        $count = $stmtSeq->fetchColumn() + 1;
+        $noReferensi = $prefix . str_pad($count, 3, '0', STR_PAD_LEFT);
+    }
+    
+    // Handle Upload File Nota (Opsional)
+    $fileNotaName = null;
+    if (isset($_FILES['file_nota']) && $_FILES['file_nota']['error'] === UPLOAD_ERR_OK) {
+        $tmpName = $_FILES['file_nota']['tmp_name'];
+        $ext = strtolower(pathinfo($_FILES['file_nota']['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg','jpeg','png','pdf'];
+        if (in_array($ext, $allowed)) {
+            $uploadDir = __DIR__ . '/../uploads/nota/';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+            $fileNotaName = 'NOTA_' . date('YmdHis') . '_' . uniqid() . '.' . $ext;
+            move_uploaded_file($tmpName, $uploadDir . $fileNotaName);
+        }
+    }
 
-    if (!$idVariasi || !$idCabang || $qty <= 0) {
-        $msg = "Semua field wajib diisi dan qty harus > 0!"; $msgType = 'error';
+    $idVariasis = $_POST['id_variasi'] ?? [];
+    $qtys       = $_POST['qty'] ?? [];
+    $batchNos   = $_POST['no_batch'] ?? [];
+    $tglExps    = $_POST['tgl_exp'] ?? [];
+    $snList     = $_POST['serial_number'] ?? [];
+
+    if (empty($idVariasis) || !$noReferensi) {
+        $msg = "No Referensi dan minimal 1 produk wajib diisi."; $msgType = 'error';
     } else {
-        $pdo->beginTransaction();
         try {
-            $stmtK = $pdo->prepare("SELECT pi.kategori FROM produk_variasi pv JOIN produk_induk pi ON pv.id_produk_induk = pi.id WHERE pv.id = ?");
-            $stmtK->execute([$idVariasi]);
-            $kategori = $stmtK->fetchColumn();
+            $pdo->beginTransaction();
 
-            $noBatch = trim($_POST['no_batch'] ?? '');
-            $tglExp = trim($_POST['tgl_exp'] ?? '');
-            $snRaw = trim($_POST['serial_number'] ?? '');
+            // 1. Insert Header Penerimaan
+            $stmtHeader = $pdo->prepare("INSERT INTO penerimaan_stok (no_referensi, sumber, id_supplier, tanggal_terima, catatan, file_nota, dibuat_oleh) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmtHeader->execute([$noReferensi, $sumber, $idSupplier, $tglTerima, $catatan, $fileNotaName, $userId]);
+            $idPenerimaan = $pdo->lastInsertId();
 
-            if ($kategori === 'Obat') {
-                if (empty($noBatch) || empty($tglExp)) throw new Exception("No Batch dan Tgl Exp wajib diisi untuk produk Obat.");
-                // Check if batch exists
-                $chkBatch = $pdo->prepare("SELECT id FROM stok_batch WHERE id_variasi=? AND id_cabang=? AND no_batch=? AND tgl_exp=?");
-                $chkBatch->execute([$idVariasi, $idCabang, $noBatch, $tglExp]);
-                $bId = $chkBatch->fetchColumn();
-                if ($bId) {
-                    $pdo->prepare("UPDATE stok_batch SET stok = stok + ? WHERE id=?")->execute([$qty, $bId]);
-                } else {
-                    $pdo->prepare("INSERT INTO stok_batch (id_cabang, id_variasi, no_batch, tgl_exp, stok) VALUES (?, ?, ?, ?, ?)")
-                        ->execute([$idCabang, $idVariasi, $noBatch, $tglExp, $qty]);
-                }
-            } elseif ($kategori === 'Alat Kesehatan') {
-                if (empty($snRaw)) throw new Exception("Serial Number wajib diisi untuk Alat Kesehatan.");
-                $snList = preg_split('/[\n,]+/', $snRaw, -1, PREG_SPLIT_NO_EMPTY);
-                $snList = array_map('trim', $snList);
-                if (count($snList) !== $qty) throw new Exception("Jumlah SN (" . count($snList) . ") tidak sesuai dengan Qty yang diinput ($qty).");
-                
-                $stmtSN = $pdo->prepare("INSERT INTO unit_serial (id_cabang, id_variasi, serial_number, status) VALUES (?, ?, ?, 'Tersedia')");
-                foreach ($snList as $sn) {
-                    // Check duplicate
-                    $chkSN = $pdo->prepare("SELECT id FROM unit_serial WHERE serial_number=?");
-                    $chkSN->execute([$sn]);
-                    if ($chkSN->fetchColumn()) throw new Exception("Serial Number '$sn' sudah terdaftar di sistem!");
-                    $stmtSN->execute([$idCabang, $idVariasi, $sn]);
+            $stmtDetail = $pdo->prepare("INSERT INTO penerimaan_detail (id_penerimaan, id_variasi, qty_terima, no_batch, tgl_exp) VALUES (?, ?, ?, ?, ?)");
+            $stmtStok   = $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi = ? AND 1=1");
+            $stmtBatch  = $pdo->prepare("INSERT INTO stok_batch (id_variasi, no_batch, tgl_exp, stok_sisa) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE stok_sisa = stok_sisa + ?");
+            $stmtSN     = $pdo->prepare("INSERT INTO unit_serial (id_variasi, serial_number) VALUES (?, ?)");
+            $stmtKartu  = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Masuk', 'Penerimaan', 'Penerimaan Barang', ?, ?, ?, ?, ?)");
+
+            foreach ($idVariasis as $i => $idV) {
+                $qty = intval($qtys[$i] ?? 0);
+                if ($idV && $qty > 0) {
+                    $batch = trim($batchNos[$i] ?? '') ?: null;
+                    $exp   = trim($tglExps[$i] ?? '') ?: null;
+                    
+                    // Insert Detail
+                    $stmtDetail->execute([$idPenerimaan, $idV, $qty, $batch, $exp]);
+                    
+                    // Update Stok Fisik
+                    $stmtStok->execute([$qty, $idV]);
+                    
+                    // Jika Obat (Ada Batch & Exp)
+                    if ($batch && $exp) {
+                        $stmtBatch->execute([$idV, $batch, $exp, $qty, $qty]);
+                    }
+                    
+                    // Jika Alkes (Ada Serial Number dipisah koma)
+                    $snStr = trim($snList[$i] ?? '');
+                    if ($snStr) {
+                        $snArr = array_filter(array_map('trim', explode(',', $snStr)));
+                        foreach ($snArr as $sn) {
+                            $stmtSN->execute([$idV, $sn]);
+                        }
+                    }
+
+                    // Log Kartu Stok
+                    $sisaStok = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idV AND 1=1")->fetchColumn();
+                    $deskripsi = "Penerimaan Barang [$sumber] - Ref: $noReferensi";
+                    $stmtKartu->execute([$idV, $idPenerimaan, $qty, $sisaStok, $deskripsi, $userId]);
                 }
             }
-
-            // Check if stock row exists
-            $chk = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi=? AND id_cabang=? FOR UPDATE");
-            $chk->execute([$idVariasi, $idCabang]);
-            $stokSkrg = $chk->fetchColumn();
-
-            if ($stokSkrg === false) {
-                // Insert new row
-                $pdo->prepare("INSERT INTO stok_cabang (id_variasi,id_cabang,stok) VALUES (?,?,?)")
-                    ->execute([$idVariasi, $idCabang, $qty]);
-                $sisaStok = $qty;
-            } else {
-                $pdo->prepare("UPDATE stok_cabang SET stok = stok + ? WHERE id_variasi=? AND id_cabang=?")
-                    ->execute([$qty, $idVariasi, $idCabang]);
-                $sisaStok = intval($stokSkrg) + $qty;
-            }
-
-            // Kartu Stok entry
-            $ketFinal = $keterangan ?: ($jenis === 'Opname' ? 'Stock Opname / Koreksi Stok' : 'Penerimaan Stok (PO / Pembelian Langsung)');
-            $pdo->prepare("INSERT INTO kartu_stok (id_cabang,id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,?,?,?,?,?)")
-                ->execute([$idCabang, $idVariasi, $jenis, $qty, $sisaStok, $ketFinal]);
 
             $pdo->commit();
-            $msg = "Berhasil menambahkan $qty unit stok fisik. Sisa stok sekarang: <strong>$sisaStok unit</strong>.";
-            $msgType = 'success';
+            $msg = "Penerimaan Barang (Ref: $noReferensi) berhasil disimpan."; $msgType = 'success';
         } catch (Exception $e) {
             $pdo->rollBack();
-            $msg = "Gagal memproses penambahan stok: " . $e->getMessage(); $msgType = 'error';
+            $msg = 'Gagal menyimpan penerimaan: ' . $e->getMessage(); $msgType = 'error';
         }
     }
 }
 
-$cabangList = $pdo->query("SELECT * FROM cabang WHERE is_active=1 ORDER BY id ASC")->fetchAll();
-$produkList = $pdo->query("
-    SELECT v.id, CONCAT(i.nama_produk,' – ',v.nama_variasi,' (',v.satuan_kecil,')') AS label, 
-           v.sku_variasi, v.satuan_kecil, v.satuan_besar, v.rasio_konversi, i.kategori
-    FROM produk_variasi v 
-    JOIN produk_induk i ON v.id_produk_induk=i.id
-    WHERE v.is_active=1 AND i.is_active=1 ORDER BY i.nama_produk ASC")->fetchAll();
+$supplierList = $pdo->query("SELECT id, nama FROM supplier WHERE is_active = 1 ORDER BY nama")->fetchAll();
+$produkList   = $pdo->query("
+    SELECT pv.id, CONCAT(pi.nama_produk, ' — ', pv.nama_variasi) AS label, pi.kategori
+    FROM produk_variasi pv 
+    JOIN produk_induk pi ON pi.id = pv.id_produk_induk 
+    WHERE pv.is_active = 1 ORDER BY pi.nama_produk
+")->fetchAll();
 
-// Recent additions log
-$logRecent = $pdo->prepare("
-    SELECT ks.tanggal, ks.qty, ks.sisa_stok, ks.keterangan, ks.jenis_mutasi,
-           CONCAT(pi.nama_produk,' – ',pv.nama_variasi) AS nama_item,
-           c.nama AS nama_cabang
-    FROM kartu_stok ks
-    JOIN produk_variasi pv ON ks.id_variasi = pv.id
-    JOIN produk_induk pi ON pv.id_produk_induk = pi.id
-    JOIN cabang c ON ks.id_cabang = c.id
-    WHERE ks.jenis_mutasi IN ('Masuk','Opname')
-    " . (!$isAdmin ? "AND ks.id_cabang = $userCabang" : "") . "
-    ORDER BY ks.tanggal DESC LIMIT 15
-");
-$logRecent->execute();
-$recentLogs = $logRecent->fetchAll();
-
-layoutHead('Tambah Stok (Penerimaan)');
+layoutHead('Penerimaan Barang');
 layoutBodyOpen();
 layoutSidebar('tambah_stok');
-layoutHeader('Tambah / Penerimaan Stok', 'Input stok masuk dari supplier atau koreksi opname per cabang');
+layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari Supplier / PO');
 ?>
 
 <?php if ($msg): ?>
-<div class="mb-5 p-4 rounded-xl border text-xs font-semibold <?= $msgType==='success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800' ?>">
-    <?= $msg ?>
+<div class="mb-5 flex items-center gap-3 p-3.5 rounded-xl text-sm font-medium border <?= $msgType === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700' ?>">
+    <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+    <span><?= htmlspecialchars($msg) ?></span>
 </div>
 <?php endif; ?>
 
-<div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-
-    <!-- Form Input -->
-    <div class="lg:col-span-2 bg-white border border-zcBrd rounded-2xl shadow-sm p-6">
-        <h2 class="text-sm font-bold text-zcTxt mb-5 flex items-center gap-2">
-            <?= icon('download', 'w-4 h-4 text-emerald-600') ?>
-            Form Penerimaan Stok
-        </h2>
-        <form method="POST" class="space-y-4">
-            <div>
-                <label class="block text-xs font-bold text-zcTxt mb-1.5">Produk / Variasi *</label>
-                <select name="id_variasi" required class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-zc" onchange="updateSatuan(this)">
-                    <option value="">-- Pilih Produk --</option>
-                    <?php foreach ($produkList as $p): ?>
-                    <option value="<?= $p['id'] ?>" data-kategori="<?= htmlspecialchars($p['kategori']) ?>" data-sku="<?= htmlspecialchars($p['sku_variasi']) ?>" data-kecil="<?= htmlspecialchars($p['satuan_kecil']) ?>" data-besar="<?= htmlspecialchars($p['satuan_besar']) ?>" data-rasio="<?= intval($p['rasio_konversi']) ?: 1 ?>">
-                        <?= htmlspecialchars($p['label']) ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <!-- SKU & Satuan Info -->
-            <div id="produk_info" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs space-y-1">
-                <div class="flex justify-between"><span class="text-zcMut">SKU:</span><strong id="info_sku">-</strong></div>
-                <div class="flex justify-between"><span class="text-zcMut">Satuan Kecil:</span><strong id="info_kecil">-</strong></div>
-                <div class="flex justify-between"><span class="text-zcMut">Satuan Besar:</span><strong id="info_besar">-</strong></div>
-                <div class="flex justify-between"><span class="text-zcMut">Rasio Konversi:</span><strong id="info_rasio">-</strong></div>
-                <div class="mt-2 pt-2 border-t border-blue-200 text-xs text-blue-800 font-medium">
-                    Catatan: Input kuantitas selalu dalam <strong>satuan terkecil</strong> (Pcs/Strip/Unit). Contoh: 1 Box = 100 Pcs, input 100.
-                </div>
-            </div>
-
-            <?php if ($isAdmin): ?>
-            <div>
-                <label class="block text-sm font-semibold text-zcTxt mb-1.5">Cabang Tujuan *</label>
-                <select name="id_cabang" required class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:border-zc">
-                    <option value="">-- Pilih Cabang --</option>
-                    <?php foreach ($cabangList as $c): ?>
-                    <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nama']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <?php else: ?>
-            <div>
-                <label class="block text-sm font-semibold text-zcTxt mb-1.5">Cabang</label>
-                <div class="text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 bg-slate-50 text-zcTxt font-medium">
-                    <?php $c = array_filter($cabangList, fn($c) => $c['id'] == $userCabang); echo htmlspecialchars(reset($c)['nama'] ?? 'Cabang Anda'); ?>
-                </div>
-            </div>
-            <?php endif; ?>
-
-            <div>
-                <label class="block text-sm font-semibold text-zcTxt mb-1.5">Jenis Mutasi *</label>
-                <select name="jenis" required class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:border-zc">
-                    <option value="Masuk">Pembelian Langsung / Purchase Order (PO)</option>
-                    <option value="Opname">Opname – Koreksi Stok Fisik</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-zcTxt mb-1.5">Jumlah (Satuan Terkecil / Pcs) *</label>
-                <input type="number" name="qty" min="1" required placeholder="Contoh: 100 (untuk 1 Box isi 100)" class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc">
-                <p class="text-xs text-zcMut mt-1">Input selalu dalam satuan terkecil (Pcs). Sistem menyimpan stok fisik dalam satuan terkecil.</p>
-            </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-zcTxt mb-1.5">No. Dokumen / Keterangan (PO/Faktur)</label>
-                <input type="text" name="keterangan" placeholder="Contoh: PO-001 dari PT. Kimia Farma" class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc">
-            </div>
-
-            <!-- Dynamic Fields -->
-            <div id="field_obat" class="hidden space-y-3 p-4 bg-amber-50 rounded-xl border border-amber-200">
-                <p class="text-xs font-bold text-amber-800 border-b border-amber-200 pb-2 mb-2">📋 Atribut Obat (FEFO)</p>
+<div class="bg-white border border-zcBrd rounded-2xl p-6 shadow-sm">
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        
+        <!-- Header Info -->
+        <div>
+            <h3 class="text-sm font-bold text-zcTxt mb-4 border-b border-zcBrd pb-2">Informasi Dokumen Penerimaan</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                    <label class="block text-xs font-semibold text-zcTxt mb-1">No Batch *</label>
-                    <input type="text" name="no_batch" id="inp_no_batch" placeholder="Maks 20 Karakter" class="w-full text-xs border border-amber-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-amber-400">
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5">Sumber *</label>
+                    <select name="sumber" id="sumber_select" required class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                        <option value="PO">Purchase Order (PO)</option>
+                        <option value="Pembelian Langsung">Pembelian Langsung</option>
+                    </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-zcTxt mb-1">Tanggal Expired *</label>
-                    <input type="date" name="tgl_exp" id="inp_tgl_exp" class="w-full text-xs border border-amber-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-amber-400">
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5" id="label_referensi">No. Referensi (PO/Nota) *</label>
+                    <input type="text" name="no_referensi" id="inp_referensi" placeholder="INV/PO/..." 
+                        class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
+                    <div id="hint_referensi" class="hidden text-[10px] text-zcMut mt-1 leading-tight">Kosongkan jika ingin digenerate otomatis oleh sistem (KLK-YYMMDD-XXX).</div>
                 </div>
-            </div>
-
-            <div id="field_alkes" class="hidden space-y-3 p-4 bg-indigo-50 rounded-xl border border-indigo-200">
-                <p class="text-xs font-bold text-indigo-800 border-b border-indigo-200 pb-2 mb-2">🏷️ Serial Number Alat Kesehatan</p>
                 <div>
-                    <label class="block text-xs font-semibold text-zcTxt mb-1">Daftar Serial Number *</label>
-                    <textarea name="serial_number" id="inp_sn" rows="3" placeholder="Masukkan SN dipisah dengan koma atau baris baru..." class="w-full text-xs border border-indigo-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-indigo-400"></textarea>
-                    <p class="text-[10px] text-indigo-700 mt-1">Jumlah SN yang diinput harus sama persis dengan Qty stok masuk.</p>
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5">Supplier (Opsional)</label>
+                    <select name="id_supplier" class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
+                        <option value="">Umum / Tidak Terdaftar</option>
+                        <?php foreach($supplierList as $s): ?>
+                        <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nama']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5">Tanggal Terima *</label>
+                    <input type="date" name="tanggal_terima" required value="<?= date('Y-m-d') ?>"
+                        class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
                 </div>
             </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5">Upload Bukti Nota Fisik (Opsional)</label>
+                    <input type="file" name="file_nota" accept=".jpg,.jpeg,.png,.pdf" 
+                        class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 focus:outline-none focus:border-zc">
+                    <div class="text-[10px] text-zcMut mt-1">Format: JPG, PNG, PDF (Maks. 2MB)</div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5">Keterangan / Catatan Tambahan</label>
+                    <input type="text" name="catatan" placeholder="Kondisi barang saat diterima..." 
+                        class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2 focus:outline-none focus:border-zc">
+                </div>
+            </div>
+        </div>
 
-            <button type="submit" class="w-full py-3 px-4 text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-95">
-                <?= icon('download', 'w-4 h-4') ?>
-                Simpan Penerimaan Stok
+        <!-- Detail Produk -->
+        <div>
+            <div class="flex items-center justify-between border-b border-zcBrd pb-2 mb-4">
+                <h3 class="text-sm font-bold text-zcTxt">Daftar Barang Masuk Fisik</h3>
+                <button type="button" onclick="addRow()" class="px-3 py-1.5 bg-zcLt text-zc rounded-lg text-xs font-bold hover:bg-blue-100 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Tambah Baris
+                </button>
+            </div>
+            
+            <div class="border border-zcBrd rounded-xl overflow-x-auto">
+                <table class="w-full text-xs min-w-[800px]">
+                    <thead class="bg-slate-50 border-b border-zcBrd">
+                        <tr>
+                            <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[25%]">Produk *</th>
+                            <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[10%]">Qty Fisik *</th>
+                            <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[15%]">No. Batch (Obat)</th>
+                            <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[15%]">Tgl Exp (Obat)</th>
+                            <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[30%]">Serial Number (Alkes)</th>
+                            <th class="px-2 py-2.5 w-[5%]"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="items-body">
+                        <tr id="row-0" class="border-b border-zcBrd/50">
+                            <td class="px-2 py-2 align-top">
+                                <select name="id_variasi[]" required onchange="checkProduk(this, 0)" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs">
+                                    <option value="">-- Pilih --</option>
+                                    <?php foreach ($produkList as $p): ?>
+                                    <option value="<?= $p['id'] ?>" data-kat="<?= htmlspecialchars($p['kategori']) ?>"><?= htmlspecialchars($p['label']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                            <td class="px-2 py-2 align-top"><input type="number" name="qty[]" min="1" required class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs"></td>
+                            <td class="px-2 py-2 align-top"><input type="text" name="no_batch[]" id="b-0" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly placeholder="Wajib untuk obat"></td>
+                            <td class="px-2 py-2 align-top"><input type="date" name="tgl_exp[]" id="e-0" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly></td>
+                            <td class="px-2 py-2 align-top"><textarea name="serial_number[]" id="s-0" rows="1" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly placeholder="SN dipisah koma (Alkes)"></textarea></td>
+                            <td class="px-2 py-2 align-top text-center"><button type="button" onclick="removeRow(0)" class="text-slate-300 hover:text-red-500 font-bold text-lg leading-none">&times;</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-2 text-[10px] text-zcMut flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                Pilih produk terlebih dahulu untuk mengaktifkan kolom Batch/Exp (khusus Obat) atau Serial Number (khusus Alkes).
+            </div>
+        </div>
+
+        <div class="flex justify-end pt-4">
+            <button type="submit" class="px-8 py-3 bg-zc hover:bg-zcHv text-white font-bold rounded-xl shadow-md shadow-blue-500/20 active:scale-95 transition flex items-center gap-2">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Simpan & Update Stok
             </button>
-        </form>
-    </div>
-
-    <!-- Log Terbaru -->
-    <div class="lg:col-span-3 bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden">
-        <div class="px-5 py-4 border-b border-zcBrd flex items-center gap-2">
-            <?= icon('kartu_stok', 'w-4 h-4 text-emerald-600') ?>
-            <h2 class="text-sm font-bold text-zcTxt">Log Penerimaan Stok Terbaru</h2>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-xs">
-                <thead class="bg-slate-50 border-b border-zcBrd text-zcMut font-bold uppercase tracking-wider">
-                    <tr>
-                        <th class="px-4 py-3 text-left">Waktu</th>
-                        <th class="px-4 py-3 text-left">Produk</th>
-                        <th class="px-4 py-3 text-left">Cabang</th>
-                        <th class="px-4 py-3 text-right text-emerald-700">+Qty</th>
-                        <th class="px-4 py-3 text-right">Saldo</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-zcBrd/60">
-                    <?php if (empty($recentLogs)): ?>
-                    <tr><td colspan="5" class="px-4 py-10 text-center text-zcMut italic">Belum ada data penerimaan stok.</td></tr>
-                    <?php else: ?>
-                    <?php foreach ($recentLogs as $log): ?>
-                    <tr class="hover:bg-slate-50/60 transition">
-                        <td class="px-4 py-3 font-mono text-zcMut text-[10px]"><?= date('d/m/y H:i', strtotime($log['tanggal'])) ?></td>
-                        <td class="px-4 py-3">
-                            <span class="font-semibold text-zcTxt block leading-snug"><?= htmlspecialchars($log['nama_item']) ?></span>
-                            <span class="text-[10px] text-zcMut"><?= htmlspecialchars($log['keterangan'] ?? '') ?></span>
-                        </td>
-                        <td class="px-4 py-3 text-zcMut"><?= htmlspecialchars($log['nama_cabang']) ?></td>
-                        <td class="px-4 py-3 text-right font-bold text-emerald-600">+<?= number_format($log['qty']) ?></td>
-                        <td class="px-4 py-3 text-right font-bold text-zcTxt"><?= number_format($log['sisa_stok']) ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    </form>
 </div>
 
 <script>
-function updateSatuan(sel) {
-    const opt = sel.options[sel.selectedIndex];
-    
-    // Hide Dynamic Fields
-    document.getElementById('field_obat').classList.add('hidden');
-    document.getElementById('field_alkes').classList.add('hidden');
-    document.getElementById('inp_no_batch').required = false;
-    document.getElementById('inp_tgl_exp').required = false;
-    document.getElementById('inp_sn').required = false;
+let rC = 1;
+const optStr = `<?php foreach ($produkList as $p): ?><option value="<?= $p['id'] ?>" data-kat="<?= htmlspecialchars($p['kategori']) ?>"><?= htmlspecialchars(addslashes($p['label'])) ?></option><?php endforeach; ?>`;
 
-    if (!opt.value) { 
-        document.getElementById('produk_info').classList.add('hidden'); 
-        return; 
+document.getElementById('sumber_select').addEventListener('change', function() {
+    const inp = document.getElementById('inp_referensi');
+    const lbl = document.getElementById('label_referensi');
+    const hint = document.getElementById('hint_referensi');
+    if (this.value === 'Pembelian Langsung') {
+        inp.required = false;
+        lbl.innerText = 'No. Referensi (PO/Nota) (Opsional)';
+        hint.classList.remove('hidden');
+    } else {
+        inp.required = true;
+        lbl.innerText = 'No. Referensi (PO/Nota) *';
+        hint.classList.add('hidden');
     }
-    
-    document.getElementById('produk_info').classList.remove('hidden');
-    document.getElementById('info_sku').innerText   = opt.dataset.sku || '-';
-    document.getElementById('info_kecil').innerText = opt.dataset.kecil || '-';
-    document.getElementById('info_besar').innerText = opt.dataset.besar || '-';
-    document.getElementById('info_rasio').innerText = '1 ' + (opt.dataset.besar||'Box') + ' = ' + (opt.dataset.rasio||'1') + ' ' + (opt.dataset.kecil||'Pcs');
+});
+document.getElementById('sumber_select').dispatchEvent(new Event('change'));
 
-    // Show Dynamic Fields based on Kategori
-    if (opt.dataset.kategori === 'Obat') {
-        document.getElementById('field_obat').classList.remove('hidden');
-        document.getElementById('inp_no_batch').required = true;
-        document.getElementById('inp_tgl_exp').required = true;
-    } else if (opt.dataset.kategori === 'Alat Kesehatan') {
-        document.getElementById('field_alkes').classList.remove('hidden');
-        document.getElementById('inp_sn').required = true;
+function addRow() {
+    const tbody = document.getElementById('items-body');
+    const tr = document.createElement('tr');
+    tr.id = 'row-' + rC;
+    tr.className = 'border-b border-zcBrd/50';
+    tr.innerHTML = `
+        <td class="px-2 py-2 align-top">
+            <select name="id_variasi[]" required onchange="checkProduk(this, ${rC})" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs">
+                <option value="">-- Pilih --</option>${optStr}
+            </select>
+        </td>
+        <td class="px-2 py-2 align-top"><input type="number" name="qty[]" min="1" required class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs"></td>
+        <td class="px-2 py-2 align-top"><input type="text" name="no_batch[]" id="b-${rC}" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly></td>
+        <td class="px-2 py-2 align-top"><input type="date" name="tgl_exp[]" id="e-${rC}" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly></td>
+        <td class="px-2 py-2 align-top"><textarea name="serial_number[]" id="s-${rC}" rows="1" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly></textarea></td>
+        <td class="px-2 py-2 align-top text-center"><button type="button" onclick="removeRow(${rC})" class="text-slate-300 hover:text-red-500 font-bold text-lg leading-none">&times;</button></td>
+    `;
+    tbody.appendChild(tr);
+    rC++;
+}
+
+function removeRow(n) {
+    const row = document.getElementById('row-' + n);
+    if (row) row.remove();
+}
+
+function checkProduk(sel, i) {
+    const opt = sel.options[sel.selectedIndex];
+    const kat = opt ? opt.getAttribute('data-kat') : '';
+    const b = document.getElementById('b-'+i);
+    const e = document.getElementById('e-'+i);
+    const s = document.getElementById('s-'+i);
+    
+    // Reset state
+    [b,e,s].forEach(el => { el.readOnly = true; el.classList.add('bg-slate-100'); el.required = false; });
+    
+    if (kat === 'Obat') {
+        b.readOnly = false; b.classList.remove('bg-slate-100'); b.required = true;
+        e.readOnly = false; e.classList.remove('bg-slate-100'); e.required = true;
+    } else if (kat === 'Alat Kesehatan') {
+        s.readOnly = false; s.classList.remove('bg-slate-100'); s.required = true;
     }
 }
 </script>
 
-<?php layoutEnd(); ?>
+<?php layoutFooter(); ?>

@@ -10,7 +10,7 @@ if (isset($_GET['set_cabang'])) {
 }
 
 if (!isset($_SESSION['id_cabang']) || $_SESSION['id_cabang'] <= 0) {
-    $_SESSION['id_cabang'] = 1;
+    
 }
 
 $activeCabangId = $_SESSION['id_cabang'];
@@ -28,7 +28,7 @@ $stmtProduk = $pdo->prepare("
            v.tampil_di_online, v.satuan_besar, v.satuan_kecil, v.rasio_konversi
     FROM produk_variasi v
     JOIN produk_induk i ON v.id_produk_induk = i.id
-    LEFT JOIN stok_cabang sc ON sc.id_variasi = v.id AND sc.id_cabang = ?
+    LEFT JOIN stok_toko sc ON sc.id_variasi = v.id 
     WHERE v.is_active = 1 AND i.is_active = 1 AND v.tampil_di_online = 1
     ORDER BY v.id ASC
 ");

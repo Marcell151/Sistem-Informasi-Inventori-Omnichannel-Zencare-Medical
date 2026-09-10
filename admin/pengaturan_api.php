@@ -1,64 +1,64 @@
 <?php
-// File: admin/pengaturan_api.php
-// Pengaturan API Global System (Shopee, Midtrans, RajaOngkir) – Super Admin Only
 session_start();
-require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../config/koneksi.php';
-require_once __DIR__ . '/../config/auth.php';
-require_once __DIR__ . '/../config/layout.php';
+require_once '../config/config.php';
+require_once '../config/koneksi.php';
+require_once '../config/auth.php';
+require_once '../config/layout.php';
 
-requireRole(['super_admin']);
+// Hanya superadmin
+requireRole(['superadmin']);
 
-$msg = ''; $msgType = '';
+$msg = '';
+$msgType = '';
+$configFile = __DIR__ . '/../config/api_keys.php';
 
-// Handle toggle & key update
+// Ensure config file exists
+if (!file_exists($configFile)) {
+    $defaultConfig = [
+        'midtrans' => [
+            'is_active' => false,
+            'is_production' => false,
+            'server_key' => '',
+            'client_key' => ''
+        ],
+        'rajaongkir' => [
+            'is_active' => false,
+            'api_key' => '',
+            'account_type' => 'starter'
+        ]
+    ];
+    file_put_contents($configFile, "<?php\nreturn " . var_export($defaultConfig, true) . ";\n");
+}
+
+$apiConfig = require $configFile;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $aksi = $_POST['aksi'] ?? '';
-
-    if ($aksi === 'toggle_api') {
-        $platform = $_POST['platform'] ?? '';
-        $currentState = intval($_POST['current_state'] ?? 0);
-        $newState = 1 - $currentState;
+    $platform = $_POST['platform'] ?? '';
+    
+    if (isset($apiConfig[$platform])) {
+        if ($aksi === 'toggle_api') {
+            $apiConfig[$platform]['is_active'] = !$apiConfig[$platform]['is_active'];
+            $msg = "Status API {$platform} berhasil diubah.";
+            $msgType = 'success';
+        } elseif ($aksi === 'update_key') {
+            if ($platform === 'midtrans') {
+                $apiConfig['midtrans']['server_key'] = $_POST['server_key'] ?? '';
+                $apiConfig['midtrans']['client_key'] = $_POST['client_key'] ?? '';
+            } elseif ($platform === 'rajaongkir') {
+                $apiConfig['rajaongkir']['api_key'] = $_POST['api_key'] ?? '';
+            }
+            $msg = "Kredensial API {$platform} berhasil disimpan secara aman.";
+            $msgType = 'success';
+        }
         
-        $pdo->prepare("UPDATE pengaturan_api SET is_active = ? WHERE platform = ?")->execute([$newState, $platform]);
-        $msg = "Status API " . strtoupper($platform) . " berhasil diubah ke " . ($newState ? 'AKTIF (ON)' : 'NONAKTIF (OFF)') . ".";
-        $msgType = 'success';
-    }
-
-    if ($aksi === 'update_key') {
-        $platform = $_POST['platform'] ?? '';
-        $apiKey   = trim($_POST['api_key'] ?? '');
-        $apiSec   = trim($_POST['api_secret'] ?? '');
-        $webhook  = trim($_POST['webhook_url'] ?? '');
-        
-        $pdo->prepare("UPDATE pengaturan_api SET api_key=?, api_secret=?, webhook_url=? WHERE platform=?")
-            ->execute([$apiKey ?: null, $apiSec ?: null, $webhook ?: null, $platform]);
-        $msg = "Konfigurasi API " . strtoupper($platform) . " berhasil diperbarui.";
-        $msgType = 'success';
+        // Save back to file
+        $content = "<?php\n// FILE INI HARUS DI-IGNORE DI .gitignore PADA PRODUKSI\n// Berisi kredensial rahasia (API Keys)\n\nreturn " . var_export($apiConfig, true) . ";\n";
+        file_put_contents($configFile, $content);
     }
 }
-
-// Ensure 1 row per platform in pengaturan_api
-$platforms = ['shopee', 'midtrans', 'rajaongkir'];
-foreach ($platforms as $p) {
-    $chk = $pdo->prepare("SELECT id FROM pengaturan_api WHERE platform = ?");
-    $chk->execute([$p]);
-    if (!$chk->fetch()) {
-        $pdo->prepare("INSERT INTO pengaturan_api (platform, api_key, api_secret, webhook_url, is_active) VALUES (?, NULL, NULL, NULL, 1)")
-            ->execute([$p]);
-    }
-}
-
-// Fetch 1 row per platform
-$apiList = $pdo->query("SELECT * FROM pengaturan_api GROUP BY platform ORDER BY id ASC")->fetchAll();
 
 $platformMeta = [
-    'shopee'     => [
-        'label' => 'Shopee Sandbox API',
-        'desc' => 'Sinkronisasi stok otomatis ke toko Shopee saat transaksi kasir terjadi. Jika OFF, POS hanya memotong stok lokal.',
-        'icon' => 'bolt',
-        'color' => 'orange'
-    ],
     'midtrans'   => [
         'label' => 'Midtrans Snap Payment Gateway',
         'desc' => 'Gerbang pembayaran E-Commerce (QRIS, Transfer Bank, Credit Card). Jika OFF, checkout toko online dinonaktifkan.',
@@ -76,42 +76,22 @@ $platformMeta = [
 layoutHead('Pengaturan API System');
 layoutBodyOpen();
 layoutSidebar('pengaturan');
-layoutHeader('Pengaturan Integrasi API System', 'Kontrol status ON/OFF dan kunci API Shopee, Midtrans, dan RajaOngkir secara terpusat');
+layoutHeader('Pengaturan Integrasi API System', 'Kontrol status ON/OFF dan kunci API Midtrans dan RajaOngkir secara aman tanpa database.');
 ?>
 
 <?php if ($msg): ?>
     <div class="mb-5 p-4 rounded-xl border text-xs font-semibold flex items-center gap-2
         <?= $msgType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800' ?>">
-        <span><?= $msgType === 'success' ? '✅' : '⛔' ?></span>
+        <span><?= $msgType === 'success' ? '✓' : '✗' ?></span>
         <?= htmlspecialchars($msg) ?>
     </div>
 <?php endif; ?>
 
-<!-- Skenario Bisnis Info Banner -->
-<div class="bg-zc/5 border border-zc/20 rounded-2xl p-5 mb-6">
-    <h2 class="text-sm font-semibold text-zcTxt mb-2 flex items-center gap-2">
-        <svg class="w-4 h-4 text-zc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        Sistem Integrasi Terpusat ZenCare Omnichannel
-    </h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-zcMut">
-        <div class="p-3 bg-white border border-zcBrd rounded-xl">
-            <span class="font-semibold text-zcTxt block mb-1">📦 1. Synchronous Shopee API</span>
-            Mengontrol sinkronisasi stok otomatis saat kasir POS memproses transaksi offline.
-        </div>
-        <div class="p-3 bg-white border border-zcBrd rounded-xl">
-            <span class="font-semibold text-zcTxt block mb-1">🛒 2. E-Commerce & RajaOngkir API</span>
-            Mengatur gerbang pembayaran Snap Sandbox dan kalkulasi ongkir ekspedisi nasional.
-        </div>
-    </div>
-</div>
-
 <!-- API Cards List -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-    <?php foreach ($apiList as $api): ?>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <?php foreach ($platformMeta as $pKey => $meta): ?>
         <?php
-        $pKey = $api['platform'];
-        $meta = $platformMeta[$pKey] ?? ['label' => strtoupper($pKey), 'desc' => '', 'icon' => 'settings'];
-        $isOn = (bool)$api['is_active'];
+        $isOn = $apiConfig[$pKey]['is_active'] ?? false;
         ?>
         <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden flex flex-col justify-between">
             <!-- Card Header & Toggle -->
@@ -135,7 +115,6 @@ layoutHeader('Pengaturan Integrasi API System', 'Kontrol status ON/OFF dan kunci
                     <form method="POST">
                         <input type="hidden" name="aksi" value="toggle_api">
                         <input type="hidden" name="platform" value="<?= $pKey ?>">
-                        <input type="hidden" name="current_state" value="<?= $isOn ? 1 : 0 ?>">
                         <button type="submit" onclick="return confirm('Ubah status API <?= $meta['label'] ?>?')"
                             class="text-xs font-semibold px-3.5 py-1.5 rounded-xl border transition
                                 <?= $isOn
@@ -151,7 +130,6 @@ layoutHeader('Pengaturan Integrasi API System', 'Kontrol status ON/OFF dan kunci
             <div class="p-4 bg-slate-50/50">
                 <button onclick="toggleKeyForm('kf_<?= $pKey ?>')"
                     class="text-xs font-semibold text-zcMut hover:text-zc flex items-center gap-1.5 transition">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
                     Konfigurasi Kunci API
                 </button>
 
@@ -159,26 +137,32 @@ layoutHeader('Pengaturan Integrasi API System', 'Kontrol status ON/OFF dan kunci
                     <form method="POST" class="space-y-2.5">
                         <input type="hidden" name="aksi" value="update_key">
                         <input type="hidden" name="platform" value="<?= $pKey ?>">
+                        
+                        <?php if ($pKey === 'rajaongkir'): ?>
                         <div>
                             <label class="block text-[11px] font-medium text-zcMut mb-1">API Key</label>
-                            <input type="text" name="api_key" value="<?= htmlspecialchars($api['api_key'] ?? '') ?>"
-                                placeholder="API Key..."
-                                class="w-full text-xs border border-zcBrd rounded-lg px-3 py-2 focus:outline-none focus:border-zc bg-white font-mono">
-                        </div>
-                        <?php if ($pKey !== 'rajaongkir'): ?>
-                        <div>
-                            <label class="block text-[11px] font-medium text-zcMut mb-1">API Secret / Client Key</label>
-                            <input type="text" name="api_secret" value="<?= htmlspecialchars($api['api_secret'] ?? '') ?>"
-                                placeholder="API Secret..."
+                            <input type="text" name="api_key" value="<?= htmlspecialchars($apiConfig['rajaongkir']['api_key'] ?? '') ?>"
+                                placeholder="API Key RajaOngkir..."
                                 class="w-full text-xs border border-zcBrd rounded-lg px-3 py-2 focus:outline-none focus:border-zc bg-white font-mono">
                         </div>
                         <?php endif; ?>
+
+                        <?php if ($pKey === 'midtrans'): ?>
                         <div>
-                            <label class="block text-[11px] font-medium text-zcMut mb-1">Webhook Endpoint URL</label>
-                            <input type="text" name="webhook_url" value="<?= htmlspecialchars($api['webhook_url'] ?? '') ?>"
+                            <label class="block text-[11px] font-medium text-zcMut mb-1">Server Key</label>
+                            <input type="text" name="server_key" value="<?= htmlspecialchars($apiConfig['midtrans']['server_key'] ?? '') ?>"
+                                placeholder="SB-Mid-server-..."
                                 class="w-full text-xs border border-zcBrd rounded-lg px-3 py-2 focus:outline-none focus:border-zc bg-white font-mono">
                         </div>
-                        <button type="submit" class="w-full text-xs font-semibold py-2 bg-zc hover:bg-zcHv text-white rounded-lg transition shadow-xs">Simpan Kunci API</button>
+                        <div>
+                            <label class="block text-[11px] font-medium text-zcMut mb-1">Client Key</label>
+                            <input type="text" name="client_key" value="<?= htmlspecialchars($apiConfig['midtrans']['client_key'] ?? '') ?>"
+                                placeholder="SB-Mid-client-..."
+                                class="w-full text-xs border border-zcBrd rounded-lg px-3 py-2 focus:outline-none focus:border-zc bg-white font-mono">
+                        </div>
+                        <?php endif; ?>
+
+                        <button type="submit" class="w-full text-xs font-semibold py-2 bg-zc hover:bg-zcHv text-white rounded-lg transition shadow-xs">Simpan Kunci API Secara Aman</button>
                     </form>
                 </div>
             </div>

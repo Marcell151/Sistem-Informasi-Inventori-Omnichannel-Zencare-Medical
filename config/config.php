@@ -7,7 +7,7 @@ loadEnv(__DIR__ . '/../.env');
 
 // 1. DATABASE CONFIGURATION
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_NAME', getenv('DB_NAME') ?: 'db_ta_mini');
+define('DB_NAME', getenv('DB_NAME') ?: 'db_inventory'); // db_inventory = database baru Final TA
 define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
 
@@ -22,7 +22,11 @@ define('MIDTRANS_API_URL', 'https://api.sandbox.midtrans.com');
 define('KOMERCE_API_KEY', getenv('KOMERCE_API_KEY') ?: '');
 define('KOMERCE_BASE_URL', 'https://rajaongkir.komerce.id/api/v1');
 
-// 4. ZENCARE BRANCHES (MALANG AREA)
+// 4. ZENCARE BRANCH — Sistem Single-Branch View (sesuai batasan TA)
+// Fitur multi-cabang disembunyikan di UI, kode tetap ada untuk tidak menghapus riwayat
+
+
+/* === MULTI-BRANCH CONFIG (DISEMBUNYIKAN, BUKAN DIHAPUS) ===
 const ZENCARE_BRANCHES = [
     'muharto'   => [
         'lat' => -7.9881, 
@@ -37,6 +41,7 @@ const ZENCARE_BRANCHES = [
         'alamat' => 'Jl. Borobudur, Kota Malang'
     ]
 ];
+=== END MULTI-BRANCH CONFIG === */
 
 // Delivery fee configuration for internal courier (per KM)
 define('INTERNAL_COURIER_RATE_PER_KM', 3000);

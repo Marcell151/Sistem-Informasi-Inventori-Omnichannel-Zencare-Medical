@@ -19,17 +19,17 @@ $stmt = $pdo->prepare("
            v.harga_jual_besar AS harga_jual,
            v.harga_jual_kecil AS harga_eceran,
            v.berat AS berat_gram,
-           v.gambar,
+           i.gambar,
            v.sku_variasi,
            i.deskripsi,
            COALESCE(sc.stok, 0) AS stok_sistem,
            v.satuan_besar, v.satuan_kecil, v.rasio_konversi
     FROM produk_variasi v
     JOIN produk_induk i ON v.id_produk_induk = i.id
-    LEFT JOIN stok_cabang sc ON sc.id_variasi = v.id AND sc.id_cabang = ?
+    LEFT JOIN stok_toko sc ON sc.id_variasi = v.id 
     WHERE v.id = ? AND v.is_active = 1 AND i.is_active = 1
 ");
-$stmt->execute([$activeCabangId, $productId]);
+$stmt->execute([$productId]);
 $p = $stmt->fetch();
 
 if (!$p) {
@@ -69,16 +69,16 @@ if ($stokBox <= 0) {
 $stmtVariants = $pdo->prepare("
     SELECT v.id, v.nama_variasi, v.harga_jual_besar, v.sku_variasi, COALESCE(sc.stok, 0) AS stok_sistem, v.rasio_konversi
     FROM produk_variasi v
-    LEFT JOIN stok_cabang sc ON sc.id_variasi = v.id AND sc.id_cabang = ?
+    LEFT JOIN stok_toko sc ON sc.id_variasi = v.id 
     WHERE v.id_produk_induk = ? AND v.is_active = 1
     ORDER BY v.id ASC
 ");
-$stmtVariants->execute([$activeCabangId, $p['id_produk_induk']]);
+$stmtVariants->execute([$p['id_produk_induk']]);
 $siblings = $stmtVariants->fetchAll();
 
 // Related products in the same category
 $stmtRelated = $pdo->prepare("
-    SELECT v.id, i.nama_produk AS nama_induk, v.nama_variasi, v.harga_jual_besar AS harga_jual, v.gambar, v.satuan_besar
+    SELECT v.id, i.nama_produk AS nama_induk, v.nama_variasi, v.harga_jual_besar AS harga_jual, i.gambar, v.satuan_besar
     FROM produk_variasi v
     JOIN produk_induk i ON v.id_produk_induk = i.id
     WHERE i.kategori = ? AND v.id != ? AND v.is_active = 1

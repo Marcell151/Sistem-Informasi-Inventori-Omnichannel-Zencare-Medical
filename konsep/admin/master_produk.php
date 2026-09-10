@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $cabangAll = $pdo->query("SELECT id FROM cabang WHERE is_active=1")->fetchAll();
                 $newVarId  = $pdo->lastInsertId();
                 foreach ($cabangAll as $c) {
-                    $pdo->prepare("INSERT IGNORE INTO stok_cabang (id_variasi,id_cabang,stok) VALUES (?,?,0)")
+                    $pdo->prepare("INSERT IGNORE INTO stok_toko (id_variasi,id_cabang,stok) VALUES (?,?,0)")
                         ->execute([$newVarId, $c['id']]);
                 }
                 $msg = "Variasi '$namaVar' berhasil ditambahkan."; $msgType = 'success';
@@ -165,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             // Initialize zero stock for all branches
                             $cabangAll = $pdo->query("SELECT id FROM cabang WHERE is_active=1")->fetchAll();
                             foreach ($cabangAll as $c) {
-                                $pdo->prepare("INSERT IGNORE INTO stok_cabang (id_variasi,id_cabang,stok) VALUES (?,?,0)")->execute([$idVar, $c['id']]);
+                                $pdo->prepare("INSERT IGNORE INTO stok_toko (id_variasi,id_cabang,stok) VALUES (?,?,0)")->execute([$idVar, $c['id']]);
                             }
                         } else {
                             // Update existing variasi prices
@@ -174,15 +174,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         // Initial Stock Mutation
                         if ($cabangId > 0 && $stokAwal > 0) {
-                            $chkStock = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi=? AND id_cabang=? FOR UPDATE");
+                            $chkStock = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi=? AND 1=1 FOR UPDATE");
                             $chkStock->execute([$idVar, $cabangId]);
                             $currentStock = $chkStock->fetchColumn();
                             
                             if ($currentStock === false) {
-                                $pdo->prepare("INSERT INTO stok_cabang (id_variasi,id_cabang,stok) VALUES (?,?,?)")->execute([$idVar, $cabangId, $stokAwal]);
+                                $pdo->prepare("INSERT INTO stok_toko (id_variasi,id_cabang,stok) VALUES (?,?,?)")->execute([$idVar, $cabangId, $stokAwal]);
                                 $currentStock = 0;
                             } else {
-                                $pdo->prepare("UPDATE stok_cabang SET stok = stok + ? WHERE id_variasi=? AND id_cabang=?")->execute([$stokAwal, $idVar, $cabangId]);
+                                $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi=? AND 1=1")->execute([$stokAwal, $idVar, $cabangId]);
                             }
 
                             $sisaStock = $currentStock + $stokAwal;

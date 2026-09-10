@@ -5,12 +5,9 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 
-requireRole(['super_admin', 'karyawan']);
+requireRole(['superadmin', 'admin']);
 
 $idCabangKaryawan = $_SESSION['id_cabang'] ?? 1;
-$stmtCabang = $pdo->prepare("SELECT * FROM cabang WHERE id=? AND is_active=1");
-$stmtCabang->execute([$idCabangKaryawan]);
-$cabangKaryawan = $stmtCabang->fetch();
 
 $msg = ''; $msgType = '';
 
@@ -23,8 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
         try {
             $totalHarga = 0;
             $invoiceNo  = "POS-" . date('Ymd') . "-" . rand(1000, 9999);
-            $pdo->prepare("INSERT INTO penjualan (no_invoice,id_cabang,id_user,tipe_transaksi,status_pesanan,total_harga,created_at) VALUES (?,?,?,'pos','Selesai',0,NOW())")
-                ->execute([$invoiceNo, $idCabangKaryawan, $_SESSION['user_id'] ?? 2]);
+            $pdo->prepare("INSERT INTO penjualan (no_invoice,id_user,tipe_transaksi,status_pesanan,total_harga,created_at) VALUES (?,?,?,'pos','Selesai',0,NOW())")
+                ->execute([$invoiceNo, $_SESSION['user_id'] ?? 2]);
             $idPenjualan = $pdo->lastInsertId();
 
             foreach ($cartItems as $item) {
@@ -32,8 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                 $satuanTipe = $item['satuan_tipe'] ?? 'kecil'; // 'kecil' or 'besar'
                 
                 // Fetch current prices and stock from DB instead of trusting client
-                $chk   = $pdo->prepare("SELECT v.satuan_kecil, v.satuan_besar, v.rasio_konversi, v.harga_jual_kecil, v.harga_jual_besar, sc.stok, pi.kategori FROM produk_variasi v JOIN produk_induk pi ON v.id_produk_induk = pi.id LEFT JOIN stok_cabang sc ON sc.id_variasi = v.id AND sc.id_cabang=? WHERE v.id=? FOR UPDATE");
-                $chk->execute([$idCabangKaryawan, $idVar]);
+                $chk   = $pdo->prepare("SELECT v.satuan_kecil, v.satuan_besar, v.rasio_konversi, v.harga_jual_kecil, v.harga_jual_besar, sc.stok, pi.kategori FROM produk_variasi v JOIN produk_induk pi ON v.id_produk_induk = pi.id LEFT JOIN stok_toko sc ON sc.id_variasi = v.id  WHERE v.id=? FOR UPDATE");
+                $chk->execute([$idVar]);
                 $varData = $chk->fetch();
                 
                 $rasio = intval($varData['rasio_konversi']) ?: 1;
@@ -50,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
 
                 // FEFO Logic untuk Obat
                 if ($kategori === 'Obat') {
-                    $stmtBatch = $pdo->prepare("SELECT id, stok FROM stok_batch WHERE id_variasi = ? AND id_cabang = ? AND stok > 0 AND is_active = 1 ORDER BY tgl_exp ASC FOR UPDATE");
-                    $stmtBatch->execute([$idVar, $idCabangKaryawan]);
+                    $stmtBatch = $pdo->prepare("SELECT id, stok FROM stok_batch WHERE id_variasi = ? AND 1=1 AND stok > 0 AND is_active = 1 ORDER BY tgl_exp ASC FOR UPDATE");
+                    $stmtBatch->execute([$idVar]);
                     $batches = $stmtBatch->fetchAll();
                     
                     $sisaPotong = $qtyPotong;
@@ -70,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
 
                 // SN Auto-Pick untuk Alkes (jika tidak dipilih di UI)
                 if ($kategori === 'Alat Kesehatan') {
-                    $stmtSn = $pdo->prepare("SELECT serial_number FROM unit_serial WHERE id_variasi = ? AND id_cabang = ? AND status = 'Tersedia' LIMIT ? FOR UPDATE");
+                    $stmtSn = $pdo->prepare("SELECT serial_number FROM unit_serial WHERE id_variasi = ? AND 1=1 AND status = 'Tersedia' LIMIT ? FOR UPDATE");
                     $stmtSn->bindValue(1, $idVar, PDO::PARAM_INT);
                     $stmtSn->bindValue(2, $idCabangKaryawan, PDO::PARAM_INT);
                     $stmtSn->bindValue(3, $qtyPotong, PDO::PARAM_INT);
@@ -87,27 +84,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                     }
                 }
 
-                $pdo->prepare("UPDATE stok_cabang SET stok=stok-? WHERE id_variasi=? AND id_cabang=?")->execute([$qtyPotong,$idVar,$idCabangKaryawan]);
+                $pdo->prepare("UPDATE stok_toko SET stok=stok-? WHERE id_variasi=?")->execute([$qtyPotong,$idVar]);
 
-                $sisaQ = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi=? AND id_cabang=?");
+                $sisaQ = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi=? AND 1=1");
                 $sisaQ->execute([$idVar,$idCabangKaryawan]);
                 $sisa = $sisaQ->fetchColumn();
                 $satLable = ($satuanTipe === 'besar') ? $varData['satuan_besar'] : $varData['satuan_kecil'];
-                $pdo->prepare("INSERT INTO kartu_stok (id_cabang,id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,?,'Keluar',?,?,?)")
-                    ->execute([$idCabangKaryawan,$idVar,$qtyPotong,$sisa,$invoiceNo]);
+                $pdo->prepare("INSERT INTO kartu_stok (id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,?,'Keluar',?,?,?)")
+                    ->execute([$idVar,'Keluar',$qtyPotong,$sisa,"Penjualan Luring $invoiceNo"]);
                 $totalHarga += $effPrice * $qtyInput;
             }
 
             $pdo->prepare("UPDATE penjualan SET total_harga=? WHERE id=?")->execute([$totalHarga, $idPenjualan]);
 
-            // Shopee cURL Sync (Backend retained)
-            $apiCfg = $pdo->prepare("SELECT * FROM pengaturan_api WHERE platform='shopee' AND is_active=1");
-            $apiCfg->execute();
-            $shopeeApi = $apiCfg->fetch();
+            // Shopee cURL Sync (Backend retained - baca dari config/api_keys.php)
+            $apiKeys = file_exists(__DIR__ . '/../config/api_keys.php') ? (require __DIR__ . '/../config/api_keys.php') : [];
+            $shopeeApi = (!empty($apiKeys['shopee']['active']) && !empty($apiKeys['shopee']['api_key'])) ? $apiKeys['shopee'] : null;
             if ($shopeeApi) {
                 foreach ($cartItems as $item) {
-                    $skuQ = $pdo->prepare("SELECT v.sku_variasi, sc.stok FROM produk_variasi v JOIN stok_cabang sc ON sc.id_variasi=v.id WHERE v.id=? AND sc.id_cabang=?");
-                    $skuQ->execute([$item['id'], $idCabangKaryawan]);
+                    $skuQ = $pdo->prepare("SELECT v.sku_variasi, sc.stok FROM produk_variasi v JOIN stok_toko sc ON sc.id_variasi=v.id WHERE v.id=? ");
+                    $skuQ->execute([$item['id']]);
                     $skuRow = $skuQ->fetch();
                     if ($skuRow) {
                         $ch = curl_init('https://partner.shopeesz.com/api/v2/product/update_stock');
@@ -131,14 +127,12 @@ $katalog = $pdo->prepare("
     SELECT v.id, v.sku_variasi, CONCAT(i.nama_produk,' – ',v.nama_variasi) AS nama,
            v.satuan_kecil, v.satuan_besar, v.rasio_konversi, v.harga_jual_kecil, v.harga_jual_besar, COALESCE(sc.stok,0) AS stok, i.kategori
     FROM produk_variasi v JOIN produk_induk i ON v.id_produk_induk=i.id
-    LEFT JOIN stok_cabang sc ON sc.id_variasi=v.id AND sc.id_cabang=?
+    LEFT JOIN stok_toko sc ON sc.id_variasi=v.id 
     WHERE v.is_active=1 AND i.is_active=1 ORDER BY i.nama_produk ASC");
-$katalog->execute([$idCabangKaryawan]);
+$katalog->execute();
 $katalog = $katalog->fetchAll();
 
-$shopeeOn = $pdo->prepare("SELECT is_active FROM pengaturan_api WHERE platform='shopee'");
-$shopeeOn->execute();
-$shopeeOn = $shopeeOn->fetchColumn();
+$shopeeOn = false;
 ?>
 <!DOCTYPE html>
 <html lang="id">

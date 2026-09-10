@@ -7,7 +7,7 @@ require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['super_admin', 'karyawan']);
+requireRole(['superadmin', 'admin']);
 
 $activeCabang = $_SESSION['id_cabang'] ?? 1;
 if (isset($_GET['cabang'])) $_SESSION['id_cabang'] = $activeCabang = intval($_GET['cabang']);
@@ -28,14 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
 
 // Fetch orders for active branch (or all branches for super_admin)
 $query = "
-    SELECT p.*, c.nama AS nama_cabang, u.nama_lengkap AS nama_kasir
+    SELECT p.*, 'Pusat' AS nama_cabang, u.nama_lengkap AS nama_kasir
     FROM penjualan p
-    JOIN cabang c ON p.id_cabang = c.id
     LEFT JOIN users u ON p.id_user = u.id
 ";
-if (!isAdmin()) {
-    $query .= " WHERE p.id_cabang = " . intval($activeCabang);
-}
 $query .= " ORDER BY p.id DESC LIMIT 50";
 
 $orders = $pdo->query($query)->fetchAll();

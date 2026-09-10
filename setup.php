@@ -26,7 +26,7 @@ try {
         'riwayat_stok', 'detail_pesanan', 'pesanan', 'produk', // Old ones
         'gudang_karantina', 'kartu_stok', 'stock_opname', 'mutasi_stok', // New history
         'detail_penjualan', 'penjualan', // New transactions
-        'pengaturan_api', 'stok_cabang', 'produk_variasi', 'produk_induk', 'supplier', 'cabang', 'users' // New master
+        'pengaturan_api', 'stok_toko', 'produk_variasi', 'produk_induk', 'supplier', 'cabang', 'users' // New master
     ];
     foreach ($tables as $table) {
         $pdo->exec("DROP TABLE IF EXISTS $table;");
@@ -83,7 +83,7 @@ try {
         FOREIGN KEY (id_produk_induk) REFERENCES produk_induk(id) ON DELETE SET NULL
     ) ENGINE=InnoDB;
 
-    CREATE TABLE stok_cabang (
+    CREATE TABLE stok_toko (
         id INT AUTO_INCREMENT PRIMARY KEY,
         id_variasi INT NOT NULL,
         id_cabang INT NOT NULL,
@@ -242,7 +242,7 @@ try {
 
     $insInduk = $pdo->prepare("INSERT INTO produk_induk (sku_induk, nama_produk, deskripsi, kategori, id_supplier) VALUES (?, ?, ?, ?, ?)");
     $insVar = $pdo->prepare("INSERT INTO produk_variasi (id_produk_induk, sku_variasi, nama_variasi, harga, berat, gambar) VALUES (?, ?, ?, ?, ?, ?)");
-    $insStok = $pdo->prepare("INSERT INTO stok_cabang (id_variasi, id_cabang, stok) VALUES (?, ?, ?)");
+    $insStok = $pdo->prepare("INSERT INTO stok_toko (id_variasi, id_cabang, stok) VALUES (?, ?, ?)");
     $insKartu = $pdo->prepare("INSERT INTO kartu_stok (id_cabang, id_variasi, jenis_mutasi, qty, sisa_stok, keterangan) VALUES (?, ?, 'Masuk', ?, ?, 'STOK AWAL (SETUP)')");
 
     foreach ($dummyProducts as $prod) {

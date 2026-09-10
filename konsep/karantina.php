@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $pdo->beginTransaction();
             try {
-                $stokQ = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi=? AND id_cabang=? FOR UPDATE");
+                $stokQ = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi=? AND 1=1 FOR UPDATE");
                 $stokQ->execute([$idVariasi, $activeCabang]);
                 $stok = $stokQ->fetchColumn();
 
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 // Potong stok cabang
-                $pdo->prepare("UPDATE stok_cabang SET stok=stok-? WHERE id_variasi=? AND id_cabang=?")->execute([$qty, $idVariasi, $activeCabang]);
+                $pdo->prepare("UPDATE stok_toko SET stok=stok-? WHERE id_variasi=? AND 1=1")->execute([$qty, $idVariasi, $activeCabang]);
                 $sisa = intval($stok) - $qty;
 
                 // Buat no tiket bantuan unik
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $produkList = $pdo->prepare("
     SELECT v.id, CONCAT(i.nama_produk,' - ',v.nama_variasi) AS label, COALESCE(sc.stok,0) AS stok
     FROM produk_variasi v JOIN produk_induk i ON v.id_produk_induk=i.id
-    LEFT JOIN stok_cabang sc ON sc.id_variasi=v.id AND sc.id_cabang=?
+    LEFT JOIN stok_toko sc ON sc.id_variasi=v.id 
     WHERE v.is_active=1 AND i.is_active=1 ORDER BY i.nama_produk ASC");
 $produkList->execute([$activeCabang]);
 $produkList = $produkList->fetchAll();
@@ -93,7 +93,7 @@ $karantinaLog = $pdo->prepare("
     SELECT gk.*, CONCAT(i.nama_produk,' - ',v.nama_variasi) AS nama
     FROM gudang_karantina gk JOIN produk_variasi v ON gk.id_variasi=v.id
     JOIN produk_induk i ON v.id_produk_induk=i.id
-    WHERE gk.id_cabang=? ORDER BY gk.tanggal DESC LIMIT 30");
+    WHERE gk.1=1 ORDER BY gk.tanggal DESC LIMIT 30");
 $karantinaLog->execute([$activeCabang]);
 $karantinaLog = $karantinaLog->fetchAll();
 

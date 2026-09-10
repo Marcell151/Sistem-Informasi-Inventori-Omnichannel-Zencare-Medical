@@ -69,10 +69,10 @@ try {
             $idVar = $item['id_variasi'];
             $qty = $item['qty'];
 
-            $stmtStok = $pdo->prepare("UPDATE stok_cabang SET stok = stok - ? WHERE id_variasi = ? AND id_cabang = ?");
+            $stmtStok = $pdo->prepare("UPDATE stok_toko SET stok = stok - ? WHERE id_variasi = ? AND 1=1");
             $stmtStok->execute([$qty, $idVar, $idCabang]);
 
-            $stmtSisa = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi = ? AND id_cabang = ?");
+            $stmtSisa = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ? AND 1=1");
             $stmtSisa->execute([$idVar, $idCabang]);
             $sisaStok = $stmtSisa->fetchColumn();
 
@@ -86,10 +86,10 @@ try {
             $idVar = $item['id_variasi'];
             $qty = $item['qty'];
 
-            $stmtStok = $pdo->prepare("UPDATE stok_cabang SET stok = stok + ? WHERE id_variasi = ? AND id_cabang = ?");
+            $stmtStok = $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi = ? AND 1=1");
             $stmtStok->execute([$qty, $idVar, $idCabang]);
 
-            $stmtSisa = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi = ? AND id_cabang = ?");
+            $stmtSisa = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ? AND 1=1");
             $stmtSisa->execute([$idVar, $idCabang]);
             $sisaStok = $stmtSisa->fetchColumn();
 

@@ -40,7 +40,7 @@ try {
     $itemDetails = [];
     $totalHargaBarang = 0;
 
-    // 1. Validasi Stok dari stok_cabang
+    // 1. Validasi Stok dari stok_toko
     foreach ($cart as $cartItem) {
         $idVariasi = intval($cartItem['id']);
         $qty = intval($cartItem['qty']);
@@ -50,7 +50,7 @@ try {
         $stmt = $pdo->prepare("SELECT pv.id, pv.nama_variasi, pv.harga_jual_kecil AS harga, pv.harga_jual_besar AS harga_grosir, pi.nama_produk, sc.stok, pv.rasio_konversi
                                FROM produk_variasi pv 
                                JOIN produk_induk pi ON pv.id_produk_induk = pi.id 
-                               LEFT JOIN stok_cabang sc ON sc.id_variasi = pv.id AND sc.id_cabang = ?
+                               LEFT JOIN stok_toko sc ON sc.id_variasi = pv.id 
                                WHERE pv.id = ? FOR UPDATE");
         $stmt->execute([$idCabang, $idVariasi]);
         $produk = $stmt->fetch();
@@ -139,7 +139,7 @@ try {
         
         // FEFO Logic untuk Obat
         if ($kategori === 'Obat') {
-            $stmtBatch = $pdo->prepare("SELECT id, stok FROM stok_batch WHERE id_variasi = ? AND id_cabang = ? AND stok > 0 AND is_active = 1 ORDER BY tgl_exp ASC FOR UPDATE");
+            $stmtBatch = $pdo->prepare("SELECT id, stok FROM stok_batch WHERE id_variasi = ? AND 1=1 AND stok > 0 AND is_active = 1 ORDER BY tgl_exp ASC FOR UPDATE");
             $stmtBatch->execute([$idVariasi, $idCabang]);
             $batches = $stmtBatch->fetchAll();
             
@@ -157,11 +157,11 @@ try {
             }
         }
 
-        $pdo->prepare("UPDATE stok_cabang SET stok = stok - ? WHERE id_variasi = ? AND id_cabang = ?")
+        $pdo->prepare("UPDATE stok_toko SET stok = stok - ? WHERE id_variasi = ? AND 1=1")
             ->execute([$qtyPotong, $idVariasi, $idCabang]);
 
         // Saldo akhir fisik
-        $sisaQ = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi = ? AND id_cabang = ?");
+        $sisaQ = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ? AND 1=1");
         $sisaQ->execute([$idVariasi, $idCabang]);
         $sisa = $sisaQ->fetchColumn();
 

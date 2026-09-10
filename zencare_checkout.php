@@ -5,20 +5,12 @@ session_start();
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/koneksi.php';
 
-$activeCabangId = $_SESSION['id_cabang'] ?? 1;
+$activeCabangId = 1;
+$originKotaId = 256; // Malang
 
-$stmtCabang = $pdo->prepare("SELECT * FROM cabang WHERE id = ? AND is_active = 1");
-$stmtCabang->execute([$activeCabangId]);
-$cabangAktif = $stmtCabang->fetch();
-$originKotaId = $cabangAktif['kota_id'] ?? 256;
-
-// Determine branch lat/lng coordinates
+// Branch coordinates (single store)
 $branchLat = -7.9881;
 $branchLng = 112.6371;
-if ($activeCabangId == 2 || (isset($cabangAktif['nama']) && strpos(strtolower($cabangAktif['nama']), 'borobudur') !== false)) {
-    $branchLat = -7.9400;
-    $branchLng = 112.6258;
-}
 
 // Force user to login before checkout
 if (!isset($_SESSION['user_id'])) {
@@ -30,11 +22,9 @@ $uStmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $uStmt->execute([$_SESSION['user_id']]);
 $savedUser = $uStmt->fetch();
 
-// Check API RajaOngkir toggle
-$chkRajaOngkir = $pdo->prepare("SELECT is_active FROM pengaturan_api WHERE platform='rajaongkir'");
-$chkRajaOngkir->execute();
-$apiRow = $chkRajaOngkir->fetchColumn();
-$rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
+// Check API RajaOngkir toggle (baca dari config/api_keys.php)
+$apiKeys = file_exists(__DIR__ . '/config/api_keys.php') ? (require __DIR__ . '/config/api_keys.php') : [];
+$rajaongkirEnabled = !empty($apiKeys['rajaongkir']['active']);
 
 $stmtWeb = $pdo->query("SELECT * FROM pengaturan_web WHERE id=1");
 $webCfg = $stmtWeb->fetch() ?: [];

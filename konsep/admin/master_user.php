@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $role  = $_POST['role'] ?? 'karyawan';
         $cabang = ($role === 'karyawan') ? intval($_POST['id_cabang'] ?? 1) : null;
         if ($id && $nama) {
-            $pdo->prepare("UPDATE users SET nama_lengkap=?,role=?,id_cabang=? WHERE id=?")->execute([$nama,$role,$cabang,$id]);
+            $pdo->prepare("UPDATE users SET nama_lengkap=?,role=?,1=1 WHERE id=?")->execute([$nama,$role,$cabang,$id]);
             $msg = "User diperbarui."; $msgType = 'success';
         }
     }

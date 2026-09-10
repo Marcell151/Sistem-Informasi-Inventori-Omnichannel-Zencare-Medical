@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $pdo->beginTransaction();
         try {
-            $stokAsalQ = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi=? AND id_cabang=? FOR UPDATE");
+            $stokAsalQ = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi=? AND 1=1 FOR UPDATE");
             $stokAsalQ->execute([$idVariasi, $cabangAsal]);
             $stokAsal = $stokAsalQ->fetchColumn();
 
@@ -33,20 +33,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // Kurangi stok cabang asal
-            $pdo->prepare("UPDATE stok_cabang SET stok=stok-? WHERE id_variasi=? AND id_cabang=?")->execute([$qty, $idVariasi, $cabangAsal]);
+            $pdo->prepare("UPDATE stok_toko SET stok=stok-? WHERE id_variasi=? AND 1=1")->execute([$qty, $idVariasi, $cabangAsal]);
             $sisaAsal = intval($stokAsal) - $qty;
             $pdo->prepare("INSERT INTO kartu_stok (id_cabang,id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,?,'Keluar',?,?,?)")
                 ->execute([$cabangAsal, $idVariasi, $qty, $sisaAsal, "Mutasi Stok Keluar → Cabang ID $cabangTujuan"]);
 
             // Tambah stok cabang tujuan
-            $chkTujuan = $pdo->prepare("SELECT id FROM stok_cabang WHERE id_variasi=? AND id_cabang=?");
+            $chkTujuan = $pdo->prepare("SELECT id FROM stok_toko WHERE id_variasi=? AND 1=1");
             $chkTujuan->execute([$idVariasi, $cabangTujuan]);
             if ($chkTujuan->fetchColumn()) {
-                $pdo->prepare("UPDATE stok_cabang SET stok=stok+? WHERE id_variasi=? AND id_cabang=?")->execute([$qty, $idVariasi, $cabangTujuan]);
+                $pdo->prepare("UPDATE stok_toko SET stok=stok+? WHERE id_variasi=? AND 1=1")->execute([$qty, $idVariasi, $cabangTujuan]);
             } else {
-                $pdo->prepare("INSERT INTO stok_cabang (id_variasi,id_cabang,stok) VALUES (?,?,?)")->execute([$idVariasi, $cabangTujuan, $qty]);
+                $pdo->prepare("INSERT INTO stok_toko (id_variasi,id_cabang,stok) VALUES (?,?,?)")->execute([$idVariasi, $cabangTujuan, $qty]);
             }
-            $sisaTujuanQ = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi=? AND id_cabang=?");
+            $sisaTujuanQ = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi=? AND 1=1");
             $sisaTujuanQ->execute([$idVariasi, $cabangTujuan]);
             $sisaTujuan = $sisaTujuanQ->fetchColumn();
             $pdo->prepare("INSERT INTO kartu_stok (id_cabang,id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,?,'Masuk',?,?,?)")

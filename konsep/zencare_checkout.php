@@ -31,7 +31,7 @@ $uStmt->execute([$_SESSION['user_id']]);
 $savedUser = $uStmt->fetch();
 
 // Check API RajaOngkir toggle
-$chkRajaOngkir = $pdo->prepare("SELECT is_active FROM pengaturan_api WHERE id_cabang=? AND platform='rajaongkir'");
+$chkRajaOngkir = $pdo->prepare("SELECT is_active FROM pengaturan_api WHERE 1=1 AND platform='rajaongkir'");
 $chkRajaOngkir->execute([$activeCabangId]);
 $apiRow = $chkRajaOngkir->fetchColumn();
 $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // File: admin/master_cabang.php
 // Master Cabang – Super Admin Only
 session_start();
@@ -7,7 +7,7 @@ require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['super_admin']);
+requireRole(['superadmin']);
 
 $msg = ''; $msgType = '';
 
@@ -57,10 +57,10 @@ layoutHeader('Master Cabang', 'Kelola data cabang fisik ZenCare Medical (2 Caban
 <div class="grid grid-cols-1 sm:grid-cols-<?= count($cabangList) ?> gap-4 mb-6">
     <?php foreach ($cabangList as $c): ?>
         <?php
-        $stokQuery = $pdo->prepare("SELECT COALESCE(SUM(stok),0) FROM stok_cabang WHERE id_cabang=?");
+        $stokQuery = $pdo->prepare("SELECT COALESCE(SUM(stok),0) FROM stok_toko WHERE 1=1");
         $stokQuery->execute([$c['id']]);
         $totalStok = $stokQuery->fetchColumn();
-        $userCount = $pdo->prepare("SELECT COUNT(*) FROM users WHERE id_cabang=? AND is_active=1");
+        $userCount = $pdo->prepare("SELECT COUNT(*) FROM users WHERE 1=1 AND is_active=1");
         $userCount->execute([$c['id']]);
         $totalUser = $userCount->fetchColumn();
         ?>

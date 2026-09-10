@@ -26,17 +26,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->beginTransaction();
         try {
             // Check if stock row exists
-            $chk = $pdo->prepare("SELECT stok FROM stok_cabang WHERE id_variasi=? AND id_cabang=? FOR UPDATE");
+            $chk = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi=? AND 1=1 FOR UPDATE");
             $chk->execute([$idVariasi, $idCabang]);
             $stokSkrg = $chk->fetchColumn();
 
             if ($stokSkrg === false) {
                 // Insert new row
-                $pdo->prepare("INSERT INTO stok_cabang (id_variasi,id_cabang,stok) VALUES (?,?,?)")
+                $pdo->prepare("INSERT INTO stok_toko (id_variasi,id_cabang,stok) VALUES (?,?,?)")
                     ->execute([$idVariasi, $idCabang, $qty]);
                 $sisaStok = $qty;
             } else {
-                $pdo->prepare("UPDATE stok_cabang SET stok = stok + ? WHERE id_variasi=? AND id_cabang=?")
+                $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi=? AND 1=1")
                     ->execute([$qty, $idVariasi, $idCabang]);
                 $sisaStok = intval($stokSkrg) + $qty;
             }

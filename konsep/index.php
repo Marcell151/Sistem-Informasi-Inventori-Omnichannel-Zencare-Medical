@@ -7,7 +7,7 @@ require_once __DIR__ . '/config/auth.php';
 require_once __DIR__ . '/config/layout.php';
 
 requireRole(['super_admin', 'karyawan']);
-if (!isset($_SESSION['id_cabang'])) $_SESSION['id_cabang'] = 1;
+if (!isset($_SESSION['id_cabang'])) 
 
 // Branch selector
 if (isset($_GET['cabang'])) {
@@ -20,28 +20,28 @@ try {
     $cabangList = $pdo->query("SELECT * FROM cabang WHERE is_active = 1 ORDER BY id ASC")->fetchAll();
     $cabangInfo = $pdo->query("SELECT * FROM cabang WHERE id = $activeCabang")->fetch();
 
-    $totalStok = $pdo->prepare("SELECT COALESCE(SUM(stok),0) FROM stok_cabang WHERE id_cabang=?");
+    $totalStok = $pdo->prepare("SELECT COALESCE(SUM(stok),0) FROM stok_toko WHERE 1=1");
     $totalStok->execute([$activeCabang]);
     $totalStok = $totalStok->fetchColumn();
 
-    $stokTipis = $pdo->prepare("SELECT COUNT(*) FROM stok_cabang WHERE id_cabang=? AND stok < 5");
+    $stokTipis = $pdo->prepare("SELECT COUNT(*) FROM stok_toko WHERE 1=1 AND stok < 5");
     $stokTipis->execute([$activeCabang]);
     $stokTipis = $stokTipis->fetchColumn();
 
-    $omsetQuery = $pdo->prepare("SELECT COALESCE(SUM(total_harga),0) FROM penjualan WHERE id_cabang=? AND DATE(created_at)=CURDATE() AND status_pesanan!='Dibatalkan'");
+    $omsetQuery = $pdo->prepare("SELECT COALESCE(SUM(total_harga),0) FROM penjualan WHERE 1=1 AND DATE(created_at)=CURDATE() AND status_pesanan!='Dibatalkan'");
     $omsetQuery->execute([$activeCabang]);
     $omset = $omsetQuery->fetchColumn();
 
-    $karantina = $pdo->prepare("SELECT COALESCE(SUM(qty),0) FROM gudang_karantina WHERE id_cabang=?");
+    $karantina = $pdo->prepare("SELECT COALESCE(SUM(qty),0) FROM gudang_karantina WHERE 1=1");
     $karantina->execute([$activeCabang]);
     $karantina = $karantina->fetchColumn();
 
     $lowItems = $pdo->prepare("
         SELECT CONCAT(i.nama_produk,' - ',v.nama_variasi) AS nama, sc.stok
-        FROM stok_cabang sc
+        FROM stok_toko sc
         JOIN produk_variasi v ON sc.id_variasi=v.id
         JOIN produk_induk i ON v.id_produk_induk=i.id
-        WHERE sc.id_cabang=? AND sc.stok<5
+        WHERE 1=1 AND sc.stok<5
         ORDER BY sc.stok ASC LIMIT 5");
     $lowItems->execute([$activeCabang]);
     $lowItems = $lowItems->fetchAll();
@@ -51,7 +51,7 @@ try {
         FROM kartu_stok ks
         JOIN produk_variasi v ON ks.id_variasi=v.id
         JOIN produk_induk i ON v.id_produk_induk=i.id
-        WHERE ks.id_cabang=?
+        WHERE ks.1=1
         ORDER BY ks.tanggal DESC LIMIT 5");
     $auditLogs->execute([$activeCabang]);
     $auditLogs = $auditLogs->fetchAll();
@@ -61,7 +61,7 @@ try {
                COALESCE(sc.stok,0) AS stok
         FROM produk_variasi v
         JOIN produk_induk i ON v.id_produk_induk=i.id
-        LEFT JOIN stok_cabang sc ON sc.id_variasi=v.id AND sc.id_cabang=?
+        LEFT JOIN stok_toko sc ON sc.id_variasi=v.id 
         WHERE v.is_active=1 AND i.is_active=1
         ORDER BY i.nama_produk ASC");
     $stokProduk->execute([$activeCabang]);

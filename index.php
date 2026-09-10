@@ -1,269 +1,607 @@
 <?php
-// File: index.php – Dashboard Utama ZenCare Medical
+// File: index.php - Dashboard Operasional ZenCare Medical (v3.0 - Minimalist)
 session_start();
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/koneksi.php';
 require_once __DIR__ . '/config/auth.php';
 require_once __DIR__ . '/config/layout.php';
 
-requireRole(['super_admin', 'karyawan']);
-if (!isset($_SESSION['id_cabang'])) $_SESSION['id_cabang'] = 1;
+requireRole(['superadmin', 'admin']);
 
-// Branch selector
-if (isset($_GET['cabang'])) {
-    $_SESSION['id_cabang'] = intval($_GET['cabang']);
-}
-$activeCabang = $_SESSION['id_cabang'] ?? 1;
+$isSuperadmin = ($_SESSION['role'] === 'superadmin');
+$namaUser     = $_SESSION['nama_lengkap'] ?? 'Pengguna';
 
-// Fetch metrics
-try {
-    $cabangList = $pdo->query("SELECT * FROM cabang WHERE is_active = 1 ORDER BY id ASC")->fetchAll();
-    $cabangInfo = $pdo->query("SELECT * FROM cabang WHERE id = $activeCabang")->fetch();
+// ─── WIDGET DATA BERSAMA (Admin & Superadmin) ─────────────────────────────
+$totalStokFisik   = (int)$pdo->query("SELECT COALESCE(SUM(stok),0) FROM stok_toko")->fetchColumn();
+$stokKritisCount  = (int)$pdo->query("SELECT COUNT(*) FROM stok_toko WHERE stok < 5")->fetchColumn();
+$expWarningCount  = (int)$pdo->query("SELECT COUNT(*) FROM stok_batch WHERE stok_sisa > 0 AND tgl_exp <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)")->fetchColumn();
+$pesananMenunggu  = (int)$pdo->query("SELECT COUNT(*) FROM penjualan WHERE status_pesanan IN ('Menunggu Pembayaran','Diproses')")->fetchColumn();
+$transaksiHariIni = (int)$pdo->query("SELECT COUNT(*) FROM penjualan WHERE DATE(created_at)=CURDATE() AND status_pesanan NOT IN ('Dibatalkan')")->fetchColumn();
 
-    $totalStok = $pdo->prepare("SELECT COALESCE(SUM(stok),0) FROM stok_cabang WHERE id_cabang=?");
-    $totalStok->execute([$activeCabang]);
-    $totalStok = $totalStok->fetchColumn();
+// ─── DATA SUPERADMIN (Semua berbasis Kuantitas/Unit — tanpa Rupiah) ────────
+if ($isSuperadmin) {
+    // Volume penjualan hari ini — terpisah per kanal (unit qty)
+    $row = $pdo->query("
+        SELECT
+            COALESCE(SUM(CASE WHEN p.tipe_transaksi='pos'       THEN dp.qty ELSE 0 END),0) AS qty_pos,
+            COALESCE(SUM(CASE WHEN p.tipe_transaksi='ecommerce' THEN dp.qty ELSE 0 END),0) AS qty_online
+        FROM penjualan p
+        JOIN detail_penjualan dp ON dp.id_penjualan = p.id
+        WHERE DATE(p.created_at) = CURDATE()
+          AND p.status_pesanan NOT IN ('Dibatalkan','Menunggu Pembayaran')
+    ")->fetch();
+    $volPosHariIni    = (int)($row['qty_pos']    ?? 0);
+    $volOnlineHariIni = (int)($row['qty_online'] ?? 0);
 
-    $stokTipis = $pdo->prepare("SELECT COUNT(*) FROM stok_cabang WHERE id_cabang=? AND stok < 5");
-    $stokTipis->execute([$activeCabang]);
-    $stokTipis = $stokTipis->fetchColumn();
+    // Pergerakan inventaris bulan ini (unit masuk vs keluar dari kartu_stok)
+    $mutasiBulan = $pdo->query("
+        SELECT
+            COALESCE(SUM(CASE WHEN jenis_mutasi='Masuk'  THEN qty ELSE 0 END),0) AS total_masuk,
+            COALESCE(SUM(CASE WHEN jenis_mutasi='Keluar' THEN qty ELSE 0 END),0) AS total_keluar
+        FROM kartu_stok
+        WHERE MONTH(tanggal)=MONTH(CURDATE()) AND YEAR(tanggal)=YEAR(CURDATE())
+    ")->fetch();
 
-    $omsetQuery = $pdo->prepare("SELECT COALESCE(SUM(total_harga),0) FROM penjualan WHERE id_cabang=? AND DATE(created_at)=CURDATE() AND status_pesanan!='Dibatalkan'");
-    $omsetQuery->execute([$activeCabang]);
-    $omset = $omsetQuery->fetchColumn();
+    // Total produk & stok menipis detail
+    $totalProdukAktif = (int)$pdo->query("SELECT COUNT(*) FROM produk_variasi WHERE is_active=1")->fetchColumn();
+    $totalSupplier    = (int)$pdo->query("SELECT COUNT(*) FROM supplier WHERE is_active=1")->fetchColumn();
 
-    $pesananBaru = $pdo->prepare("SELECT COUNT(*) FROM penjualan WHERE id_cabang=? AND status_pesanan='Menunggu'");
-    $pesananBaru->execute([$activeCabang]);
-    $pesananBaru = $pesananBaru->fetchColumn();
+    // Stok menipis detail
+    $stokMenipis = $pdo->query("
+        SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sc.stok, pv.satuan_kecil
+        FROM stok_toko sc
+        JOIN produk_variasi pv ON sc.id_variasi=pv.id
+        JOIN produk_induk pi ON pv.id_produk_induk=pi.id
+        WHERE sc.stok < 5 AND pv.is_active=1
+        ORDER BY sc.stok ASC LIMIT 10
+    ")->fetchAll();
 
-    $lowItems = $pdo->prepare("
-        SELECT CONCAT(i.nama_produk,' - ',v.nama_variasi) AS nama, sc.stok
-        FROM stok_cabang sc
-        JOIN produk_variasi v ON sc.id_variasi=v.id
-        JOIN produk_induk i ON v.id_produk_induk=i.id
-        WHERE sc.id_cabang=? AND sc.stok<5
-        ORDER BY sc.stok ASC LIMIT 5");
-    $lowItems->execute([$activeCabang]);
-    $lowItems = $lowItems->fetchAll();
+    // Top 5 produk terlaris bulan ini (berdasarkan qty unit terjual)
+    $produkTerlaris = $pdo->query("
+        SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama_produk,
+               SUM(dp.qty) AS total_qty, pi.kategori
+        FROM detail_penjualan dp
+        JOIN produk_variasi pv ON dp.id_variasi=pv.id
+        JOIN produk_induk pi ON pv.id_produk_induk=pi.id
+        JOIN penjualan p ON dp.id_penjualan=p.id
+        WHERE MONTH(p.created_at)=MONTH(CURDATE()) AND YEAR(p.created_at)=YEAR(CURDATE())
+          AND p.status_pesanan NOT IN ('Dibatalkan')
+        GROUP BY dp.id_variasi ORDER BY total_qty DESC LIMIT 5
+    ")->fetchAll();
 
-    $auditLogs = $pdo->prepare("
-        SELECT ks.*, CONCAT(i.nama_produk,' - ',v.nama_variasi) AS nama
+    // Log audit mutasi terbaru (hanya mutasi manual)
+    $auditMutasi = $pdo->query("
+        SELECT ks.tanggal, ks.jenis_mutasi, ks.qty, ks.sisa_stok, ks.keterangan,
+               CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama_produk,
+               u.nama_lengkap AS operator, ks.kanal, ks.alasan_mutasi
         FROM kartu_stok ks
-        JOIN produk_variasi v ON ks.id_variasi=v.id
-        JOIN produk_induk i ON v.id_produk_induk=i.id
-        WHERE ks.id_cabang=?
-        ORDER BY ks.tanggal DESC LIMIT 5");
-    $auditLogs->execute([$activeCabang]);
-    $auditLogs = $auditLogs->fetchAll();
+        JOIN produk_variasi pv ON ks.id_variasi=pv.id
+        JOIN produk_induk pi ON pv.id_produk_induk=pi.id
+        LEFT JOIN users u ON ks.dibuat_oleh=u.id
+        ORDER BY ks.id DESC LIMIT 10
+    ")->fetchAll();
 
-    $stokProduk = $pdo->prepare("
-        SELECT v.id, v.sku_variasi, i.nama_produk, v.nama_variasi, i.kategori, v.harga_jual_kecil AS harga,
-               COALESCE(sc.stok,0) AS stok
-        FROM produk_variasi v
-        JOIN produk_induk i ON v.id_produk_induk=i.id
-        LEFT JOIN stok_cabang sc ON sc.id_variasi=v.id AND sc.id_cabang=?
-        WHERE v.is_active=1 AND i.is_active=1
-        ORDER BY i.nama_produk ASC");
-    $stokProduk->execute([$activeCabang]);
-    $stokProduk = $stokProduk->fetchAll();
+    // Data Grafik: Volume Penjualan 7 Hari Terakhir (POS vs E-Commerce)
+    $grafikData = $pdo->query("
+        SELECT 
+            DATE(p.created_at) as tgl,
+            COALESCE(SUM(CASE WHEN p.tipe_transaksi='pos' THEN dp.qty ELSE 0 END), 0) as qty_pos,
+            COALESCE(SUM(CASE WHEN p.tipe_transaksi='ecommerce' THEN dp.qty ELSE 0 END), 0) as qty_online
+        FROM penjualan p
+        JOIN detail_penjualan dp ON dp.id_penjualan = p.id
+        WHERE p.created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+          AND p.status_pesanan NOT IN ('Dibatalkan','Menunggu Pembayaran')
+        GROUP BY DATE(p.created_at)
+        ORDER BY tgl ASC
+    ")->fetchAll();
 
-} catch (Exception $e) {
-    die("Error: " . $e->getMessage());
+    // Fill missing dates
+    $chartLabels = [];
+    $chartDataPos = [];
+    $chartDataOnline = [];
+    for ($i = 6; $i >= 0; $i--) {
+        $dateStr = date('Y-m-d', strtotime("-$i days"));
+        $chartLabels[] = date('d M', strtotime($dateStr));
+        $found = false;
+        foreach ($grafikData as $row) {
+            if ($row['tgl'] === $dateStr) {
+                $chartDataPos[] = (int)$row['qty_pos'];
+                $chartDataOnline[] = (int)$row['qty_online'];
+                $found = true;
+                break;
+            }
+        }
+        if (!$found) {
+            $chartDataPos[] = 0;
+            $chartDataOnline[] = 0;
+        }
+    }
 }
 
-// API Statuses
-$apiShopee = $pdo->prepare("SELECT is_active FROM pengaturan_api WHERE platform='shopee'");
-$apiShopee->execute();
-$shopeeOn = $apiShopee->fetchColumn();
+// ─── DATA ADMIN & SHARED ──────────────────────────────────────────────────
+// Stok menipis (shared, needed for admin panel too)
+$kartuTerbaru = $pdo->query("
+    SELECT ks.tanggal, ks.jenis_mutasi, ks.qty, ks.sisa_stok,
+           CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama_produk, ks.keterangan
+    FROM kartu_stok ks
+    JOIN produk_variasi pv ON ks.id_variasi=pv.id
+    JOIN produk_induk pi ON pv.id_produk_induk=pi.id
+    ORDER BY ks.id DESC LIMIT 8
+")->fetchAll();
 
-layoutHead('Dashboard Inventaris');
+$pesananProses = $pdo->query("
+    SELECT p.no_invoice, p.status_pesanan, p.tipe_transaksi, p.total_harga, p.created_at,
+           u.nama_lengkap AS nama_pelanggan
+    FROM penjualan p LEFT JOIN users u ON p.id_user=u.id
+    WHERE p.status_pesanan IN ('Menunggu Pembayaran','Diproses')
+    ORDER BY p.id DESC LIMIT 5
+")->fetchAll();
+
+$pesananPickup = $pdo->query("
+    SELECT p.no_invoice, p.created_at, p.paid_at, u.nama_lengkap AS nama_pelanggan,
+           DATEDIFF(CURDATE(), DATE(COALESCE(p.paid_at, p.created_at))) AS hari_tunggu
+    FROM penjualan p
+    LEFT JOIN users u ON p.id_user=u.id
+    WHERE p.tipe_transaksi = 'ecommerce' 
+      AND p.metode_pengambilan = 'Pick-up' 
+      AND p.status_pesanan = 'Siap Diambil'
+    ORDER BY hari_tunggu DESC
+    LIMIT 5
+")->fetchAll();
+
+layoutHead('Dashboard');
 layoutBodyOpen();
 layoutSidebar('dashboard');
-layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['nama'] ?? '') . ' – Real-time Single Source of Truth');
+layoutHeader(
+    $isSuperadmin ? 'Dashboard Manajerial Inventori' : 'Dashboard Operasional',
+    $isSuperadmin ? 'Monitoring fisik persediaan & kinerja operasional — Pusat (Muharto).' : 'Ringkasan operasional kasir & inventori hari ini.'
+);
 ?>
 
+<?php if ($isSuperadmin): ?>
 <!-- ============================================================ -->
-<!-- METRIC CARDS ROW                                              -->
+<!-- SUPERADMIN DASHBOARD — Berbasis Kuantitas Fisik, tanpa Rupiah -->
 <!-- ============================================================ -->
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
-    <!-- Card 1: Total Stok -->
-    <div class="bg-white border border-zcBorder rounded-2xl p-5 flex items-start justify-between shadow-sm">
-        <div class="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0"><?= icon('dashboard', 'w-5 h-5') ?></div>
-        <div class="text-right">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-zcMuted block">Total Stok Fisik</span>
-            <span class="text-3xl font-bold text-zcText mt-1 block"><?= number_format($totalStok) ?></span>
-            <span class="text-[10px] text-zcMuted">Unit tersedia</span>
+<!-- ROW 1: Widgets Inventori Utama (4 kotak) -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;">
+
+    <!-- Total Stok Fisik -->
+    <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:5px;letter-spacing:.04em;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+            TOTAL STOK FISIK
+        </div>
+        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokFisik) ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Unit tersedia di gudang</div>
+    </div>
+
+    <!-- Stok Menipis -->
+    <a href="laporan/ketersediaan_stok.php" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $stokKritisCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STOK MENIPIS (&lt; 5 UNIT)</div>
+        <div style="font-size:30px;font-weight:900;color:<?= $stokKritisCount>0?'#dc2626':'#1e293b' ?>;line-height:1;"><?= number_format($stokKritisCount) ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $stokKritisCount==0 ? 'Semua stok aman ✓' : 'SKU perlu restock' ?></div>
+    </a>
+
+    <!-- Hampir Kedaluwarsa -->
+    <a href="laporan/logistik_medis.php" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $expWarningCount>0?'#fde68a':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">BATCH HAMPIR EXP.</div>
+        <div style="font-size:30px;font-weight:900;color:<?= $expWarningCount>0?'#d97706':'#1e293b' ?>;line-height:1;"><?= number_format($expWarningCount) ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Batch ≤ 30 hari</div>
+    </a>
+
+    <!-- Antrean Pesanan Daring -->
+    <a href="admin/pesanan.php" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $pesananMenunggu>0?'#bfdbfe':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">ANTREAN PESANAN DARING</div>
+        <div style="font-size:30px;font-weight:900;color:<?= $pesananMenunggu>0?'#2563eb':'#1e293b' ?>;line-height:1;"><?= number_format($pesananMenunggu) ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Status: Menunggu</div>
+    </a>
+</div>
+
+<!-- ROW 2: Grafik Penjualan & Volume Hari Ini -->
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:18px;">
+
+    <!-- Grafik Kuantitas Penjualan -->
+    <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:12px;">Kuantitas Penjualan (Luring vs Daring) — 7 Hari Terakhir</div>
+        <div style="position:relative;height:240px;width:100%;">
+            <canvas id="salesChart"></canvas>
         </div>
     </div>
 
-    <!-- Card 2: Stok Menipis -->
-    <div class="bg-white border border-zcBorder rounded-2xl p-5 flex items-start justify-between shadow-sm">
-        <div class="w-11 h-11 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shrink-0"><?= icon('chart', 'w-5 h-5') ?></div>
-        <div class="text-right">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-zcMuted block">Stok Menipis</span>
-            <span class="text-3xl font-bold text-rose-600 mt-1 block"><?= $stokTipis ?></span>
-            <?php if ($stokTipis > 0): ?>
-                <span class="inline-block px-2 py-0.5 bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-bold rounded-full"><?= $stokTipis ?> item kritis</span>
-            <?php else: ?>
-                <span class="text-[10px] text-emerald-600 font-semibold">Semua stok aman ✓</span>
-            <?php endif; ?>
+    <!-- Volume & Transaksi Hari Ini (Stacked) -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+        <!-- Volume POS Hari Ini -->
+        <div style="flex:1;background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;justify-content:center;">
+            <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:6px;letter-spacing:.04em;">VOLUME JUAL POS (HARI INI)</div>
+            <div style="font-size:26px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($volPosHariIni) ?></div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:4px;">Unit terjual via Kasir Luring</div>
         </div>
-    </div>
 
-    <!-- Card 3: Omset Hari Ini -->
-    <div class="bg-white border border-zcBorder rounded-2xl p-5 flex items-start justify-between shadow-sm">
-        <div class="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0"><?= icon('report', 'w-5 h-5') ?></div>
-        <div class="text-right">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-zcMuted block">Omset Hari Ini</span>
-            <span class="text-xl font-bold text-zcEm mt-1 block">Rp <?= number_format($omset, 0, ',', '.') ?></span>
-            <span class="text-[10px] text-zcMuted">POS + E-Commerce</span>
+        <!-- Volume E-Commerce Hari Ini -->
+        <div style="flex:1;background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;justify-content:center;">
+            <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:6px;letter-spacing:.04em;">VOLUME JUAL E-COMMERCE</div>
+            <div style="font-size:26px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($volOnlineHariIni) ?></div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:4px;">Unit terjual via Toko Online</div>
         </div>
-    </div>
 
-    <!-- Card 4: Pesanan Baru -->
-    <div class="bg-white border border-zcBorder rounded-2xl p-5 flex items-start justify-between shadow-sm">
-        <div class="w-11 h-11 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center text-violet-600 shrink-0"><?= icon('store', 'w-5 h-5') ?></div>
-        <div class="text-right">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-zcMuted block">Pesanan Baru</span>
-            <span class="text-3xl font-bold text-violet-600 mt-1 block"><?= number_format($pesananBaru) ?></span>
-            <span class="text-[10px] text-zcMuted">Status: Menunggu</span>
+        <!-- Transaksi Total Hari Ini -->
+        <div style="flex:1;background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;justify-content:center;">
+            <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:6px;letter-spacing:.04em;">TOTAL TRANSAKSI (HARI INI)</div>
+            <div style="font-size:26px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($transaksiHariIni) ?></div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:4px;"><?= number_format($totalProdukAktif) ?> SKU aktif · <?= $totalSupplier ?> supplier</div>
         </div>
     </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- API STATUS + QUICK ACTIONS BANNER                            -->
-<!-- ============================================================ -->
-<div class="flex flex-wrap items-center gap-3 mb-6">
-    <!-- Shopee Sync API Indicator (Hidden from UI per scope boundary, backend retained) -->
-    <div class="hidden items-center gap-2 px-4 py-2.5 bg-white border border-zcBorder rounded-xl text-xs shadow-sm">
-        <span class="w-2 h-2 rounded-full <?= $shopeeOn ? 'bg-emerald-500' : 'bg-slate-400' ?>"></span>
-        <span class="font-semibold text-zcText">Shopee Sync API:</span>
-        <span class="font-bold <?= $shopeeOn ? 'text-emerald-600' : 'text-slate-400' ?>"><?= $shopeeOn ? 'ACTIVE (ON)' : 'OFFLINE (OFF)' ?></span>
+<!-- Quick Actions -->
+<div style="display:flex;gap:10px;margin-bottom:20px;">
+    <a href="admin/pesanan.php" style="background:#1a75d2;color:#fff;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;display:flex;align-items:center;gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/></svg>
+        Kelola Pesanan
+    </a>
+    <a href="laporan/ketersediaan_stok.php" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Laporan Stok</a>
+    <a href="laporan/logistik_medis.php" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Logistik Medis</a>
+    <a href="laporan/kartu_stok.php" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Kartu Stok</a>
+    <a href="zencare_store.php" target="_blank" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Buka Store</a>
+</div>
+
+<!-- ROW 3: Stok Menipis + Log Audit Kartu Stok -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+
+    <!-- Panel: Stok Menipis -->
+    <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
+        <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:6px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="<?= $stokKritisCount>0?'#dc2626':'#64748b' ?>" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                Stok Menipis (&lt;5 Unit)
+            </div>
+            <span style="font-size:10px;color:#94a3b8;">Pusat (Muharto)</span>
+        </div>
+        <?php if (empty($stokMenipis)): ?>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Semua item stok aman (≥ 5 unit) ✓</div>
+        <?php else: ?>
+        <?php foreach ($stokMenipis as $s): ?>
+        <div style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:#334155;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($s['nama']) ?></span>
+            <span style="font-size:12px;font-weight:700;color:<?= $s['stok']==0?'#dc2626':'#f59e0b' ?>;margin-left:12px;white-space:nowrap;"><?= $s['stok'] ?> <span style="font-weight:400;color:#94a3b8;"><?= htmlspecialchars($s['satuan_kecil']) ?></span></span>
+        </div>
+        <?php endforeach; ?>
+        <?php endif; ?>
     </div>
-    <div class="flex items-center gap-2 px-4 py-2.5 bg-white border border-zcBorder rounded-xl text-xs shadow-sm">
-        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-        <span class="font-semibold text-zcText">Midtrans Sandbox:</span>
-        <span class="font-bold text-emerald-600">ACTIVE</span>
-    </div>
-    <div class="ml-auto flex gap-2">
-        <a href="pos/pos.php" class="flex items-center gap-2 px-4 py-2.5 bg-zc hover:bg-zcHv text-white text-xs font-semibold rounded-xl transition"><?= icon('pos', 'w-4 h-4') ?> Buka POS Karyawan</a>
-        <a href="ecommerce/index.php" class="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-zcLt text-zc text-xs font-semibold rounded-xl transition border border-zc/30"><?= icon('store', 'w-4 h-4') ?> Buka Store</a>
+
+    <!-- Panel: Top 5 Produk Terlaris (qty/unit) -->
+    <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
+        <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:700;color:#1e293b;">Top 5 Produk Terlaris Bulan Ini</div>
+            <span style="font-size:10px;color:#94a3b8;">berdasarkan unit terjual</span>
+        </div>
+        <?php if (empty($produkTerlaris)): ?>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Belum ada data transaksi bulan ini.</div>
+        <?php else: 
+            $maxQty = max(array_column($produkTerlaris, 'total_qty')) ?: 1;
+        ?>
+        <?php foreach ($produkTerlaris as $i => $p): 
+            $pct = round(($p['total_qty'] / $maxQty) * 100);
+        ?>
+        <div style="padding:10px 16px;border-bottom:1px solid #f8fafc;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;">
+                    <span style="font-size:10px;font-weight:700;color:#94a3b8;width:14px;flex-shrink:0;"><?= $i+1 ?>.</span>
+                    <span style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($p['nama_produk']) ?></span>
+                </div>
+                <span style="font-size:12px;font-weight:700;color:#1a75d2;white-space:nowrap;margin-left:10px;"><?= number_format($p['total_qty']) ?> unit</span>
+            </div>
+            <div style="height:4px;background:#f1f5f9;border-radius:4px;overflow:hidden;">
+                <div style="height:4px;background:#1a75d2;border-radius:4px;width:<?= $pct ?>%;"></div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+        <?php endif; ?>
     </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- 2-COLUMN WIDGETS: LOW STOCK + AUDIT FEED                     -->
-<!-- ============================================================ -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+<!-- ROW 4: Ringkasan Pergerakan Inventaris + Log Audit Mutasi -->
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;">
 
-    <!-- Low Stock -->
-    <div class="bg-white border border-zcBorder rounded-2xl shadow-sm overflow-hidden">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-zcBorder">
-            <h3 class="text-sm font-bold text-zcText flex items-center gap-2"><?= icon('chart', 'w-4 h-4 text-rose-500') ?> Stok Menipis (&lt;5 Unit)</h3>
-            <span class="text-[11px] text-zcMuted"><?= htmlspecialchars($cabangInfo['nama'] ?? '') ?></span>
+    <!-- Log Audit Mutasi & Kartu Stok Terbaru -->
+    <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
+        <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:700;color:#1e293b;">Log Audit Mutasi &amp; Kartu Stok Terbaru</div>
+            <a href="laporan/kartu_stok.php" style="font-size:11px;color:#1a75d2;text-decoration:none;font-weight:600;">Lihat Semua →</a>
         </div>
-        <div class="p-4 space-y-2.5">
-            <?php if (empty($lowItems)): ?>
-                <p class="text-xs text-zcMuted italic text-center py-6">Semua item stok aman (≥ 5 unit) ✓</p>
-            <?php else: ?>
-                <?php foreach ($lowItems as $item): ?>
-                    <div class="flex items-center justify-between p-3 bg-rose-50 border border-rose-100 rounded-xl text-xs">
-                        <span class="font-semibold text-zcText"><?= htmlspecialchars($item['nama']) ?></span>
-                        <span class="px-2.5 py-1 bg-white text-rose-700 font-bold rounded-lg border border-rose-200">Sisa <?= $item['stok'] ?> Unit</span>
-                    </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <!-- Audit Log Feed -->
-    <div class="bg-white border border-zcBorder rounded-2xl shadow-sm overflow-hidden">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-zcBorder">
-            <h3 class="text-sm font-bold text-zcText flex items-center gap-2"><?= icon('kartu_stok', 'w-4 h-4 text-amber-500') ?> Audit Kartu Stok Terbaru</h3>
-            <a href="inventori/proses_mutasi.php" class="text-[11px] font-medium text-zc hover:underline">Lihat Semua →</a>
-        </div>
-        <div class="p-4 space-y-2.5">
-            <?php if (empty($auditLogs)): ?>
-                <p class="text-xs text-zcMuted italic text-center py-6">Belum ada riwayat perubahan stok.</p>
-            <?php else: ?>
-                <?php foreach ($auditLogs as $log): ?>
-                    <div class="flex items-center justify-between p-3 bg-amber-50 border border-amber-100 rounded-xl text-xs">
-                        <div>
-                            <div class="font-semibold text-zcText"><?= htmlspecialchars($log['nama']) ?></div>
-                            <div class="text-[10px] text-zcMuted mt-0.5"><?= htmlspecialchars($log['keterangan']) ?> &bull; <?= date('d/m H:i', strtotime($log['tanggal'])) ?></div>
-                        </div>
-                        <span class="px-2.5 py-1 bg-white text-zcText font-bold rounded-lg border border-amber-200 text-[11px]"><?= $log['jenis_mutasi'] ?>: <?= $log['qty'] ?></span>
-                    </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
-    </div>
-</div>
-
-<!-- ============================================================ -->
-<!-- TABEL INVENTARIS UTAMA                                        -->
-<!-- ============================================================ -->
-<div class="bg-white border border-zcBorder rounded-2xl shadow-sm overflow-hidden">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-zcBorder">
-        <div>
-            <h3 class="text-sm font-bold text-zcText flex items-center gap-2"><?= icon('dashboard', 'w-4 h-4 text-zc') ?> Rincian Inventaris Operasional (Single Source of Truth)</h3>
-            <p class="text-[11px] text-zcMuted mt-0.5">Stok real-time tersinkronisasi POS & E-Commerce &bull; Cabang: <strong><?= htmlspecialchars($cabangInfo['nama'] ?? '') ?></strong></p>
-        </div>
-        <div class="flex items-center gap-2 shrink-0">
-            <input type="text" id="inv_search" onkeyup="filterInv()" placeholder="Cari SKU / Nama..."
-                class="text-xs border border-zcBorder rounded-xl px-3 py-2 w-52 focus:outline-none focus:border-zcNavy bg-slate-50">
-            <?php if (isAdmin()): ?>
-                <a href="admin/master_produk.php" class="text-xs bg-zc hover:bg-zcHv text-white font-semibold px-4 py-2 rounded-xl transition">+ Produk Baru</a>
-            <?php endif; ?>
-        </div>
-    </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-xs" id="inv_table">
-            <thead class="bg-slate-50 border-b border-zcBorder text-zcMuted uppercase tracking-wider font-bold">
-                <tr>
-                    <th class="px-5 py-3 text-left">SKU Variasi</th>
-                    <th class="px-5 py-3 text-left">Kategori</th>
-                    <th class="px-5 py-3 text-left">Nama Produk / Variasi</th>
-                    <th class="px-5 py-3 text-right">Harga Jual</th>
-                    <th class="px-5 py-3 text-center">Stok</th>
-                    <th class="px-5 py-3 text-center">Status</th>
+        <?php if (empty($auditMutasi)): ?>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Belum ada aktivitas pergerakan stok.</div>
+        <?php else: ?>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">PRODUK</th>
+                    <th style="padding:7px 8px;text-align:center;font-size:10px;color:#64748b;font-weight:600;">KANAL</th>
+                    <th style="padding:7px 8px;text-align:right;font-size:10px;color:#64748b;font-weight:600;">QTY</th>
+                    <th style="padding:7px 8px;text-align:right;font-size:10px;color:#64748b;font-weight:600;">SISA</th>
+                    <th style="padding:7px 16px;text-align:right;font-size:10px;color:#64748b;font-weight:600;">WAKTU</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-zcBorder/60">
-                <?php if (empty($stokProduk)): ?>
-                    <tr><td colspan="6" class="px-5 py-10 text-center text-zcMuted italic">Belum ada produk di cabang ini.</td></tr>
-                <?php else: ?>
-                    <?php foreach ($stokProduk as $p): ?>
-                        <?php $stok = intval($p['stok']); $stokCls = $stok > 5 ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : ($stok > 0 ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-rose-100 text-rose-800 border-rose-200'); ?>
-                        <tr class="hover:bg-slate-50/60 transition">
-                            <td class="px-5 py-3.5 font-mono font-semibold text-zcMuted"><?= htmlspecialchars($p['sku_variasi']) ?></td>
-                            <td class="px-5 py-3.5"><span class="px-2 py-0.5 bg-slate-100 border border-zcBorder rounded-lg text-[10px] font-semibold"><?= htmlspecialchars($p['kategori']) ?></span></td>
-                            <td class="px-5 py-3.5">
-                                <span class="font-bold text-zcText block"><?= htmlspecialchars($p['nama_produk']) ?></span>
-                                <span class="text-zcMuted"><?= htmlspecialchars($p['nama_variasi']) ?></span>
-                            </td>
-                            <td class="px-5 py-3.5 text-right font-bold">Rp <?= number_format($p['harga'], 0, ',', '.') ?></td>
-                            <td class="px-5 py-3.5 text-center"><span class="px-2.5 py-1 rounded-full font-bold border text-[11px] <?= $stokCls ?>"><?= $stok ?> Unit</span></td>
-                            <td class="px-5 py-3.5 text-center font-semibold <?= $stok > 0 ? 'text-emerald-600' : 'text-rose-500' ?>">
-                                <?= $stok > 0 ? '✓ Tersedia' : '✕ Habis' ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+            <tbody>
+            <?php foreach ($auditMutasi as $a): ?>
+            <tr style="border-top:1px solid #f1f5f9;hover:background:#f8fafc;">
+                <td style="padding:8px 16px;">
+                    <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;"><?= htmlspecialchars($a['nama_produk']) ?></div>
+                    <div style="font-size:10px;color:#94a3b8;"><?= htmlspecialchars($a['operator'] ?? 'Sistem') ?></div>
+                </td>
+                <td style="padding:8px;text-align:center;">
+                    <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:#f1f5f9;color:#64748b;"><?= htmlspecialchars($a['kanal'] ?? '-') ?></span>
+                </td>
+                <td style="padding:8px;text-align:right;font-weight:700;color:<?= $a['jenis_mutasi']==='Masuk'?'#16a34a':'#dc2626' ?>;">
+                    <?= $a['jenis_mutasi']==='Masuk'?'+':'-' ?><?= number_format($a['qty']) ?>
+                </td>
+                <td style="padding:8px;text-align:right;color:#64748b;"><?= number_format($a['sisa_stok']) ?></td>
+                <td style="padding:8px 16px;text-align:right;color:#94a3b8;font-size:10px;"><?= date('d/m H:i', strtotime($a['tanggal'])) ?></td>
+            </tr>
+            <?php endforeach; ?>
             </tbody>
         </table>
+        <?php endif; ?>
+    </div>
+
+    <!-- Ringkasan Pergerakan Inventaris Bulan Ini -->
+    <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:18px;">
+        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:16px;">Pergerakan Inventaris Bulan Ini</div>
+
+        <div style="padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #f1f5f9;">
+            <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:4px;letter-spacing:.03em;">TOTAL BARANG MASUK</div>
+            <div style="font-size:26px;font-weight:900;color:#16a34a;line-height:1;">+<?= number_format($mutasiBulan['total_masuk'] ?? 0) ?></div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:3px;">unit diterima ke gudang</div>
+        </div>
+
+        <div style="padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #f1f5f9;">
+            <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:4px;letter-spacing:.03em;">TOTAL BARANG KELUAR</div>
+            <div style="font-size:26px;font-weight:900;color:#dc2626;line-height:1;">-<?= number_format($mutasiBulan['total_keluar'] ?? 0) ?></div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:3px;">unit keluar dari gudang</div>
+        </div>
+
+        <div>
+            <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:4px;letter-spacing:.03em;">PERUBAHAN BERSIH STOK (UNIT)</div>
+            <?php 
+                $saldo = ($mutasiBulan['total_masuk'] ?? 0) - ($mutasiBulan['total_keluar'] ?? 0);
+                $saldoColor = $saldo >= 0 ? '#16a34a' : '#dc2626';
+            ?>
+            <div style="font-size:26px;font-weight:900;color:<?= $saldoColor ?>;line-height:1;"><?= $saldo >= 0 ? '+' : '' ?><?= number_format($saldo) ?></div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:3px;">selisih barang masuk dikurangi barang keluar</div>
+        </div>
     </div>
 </div>
 
+<!-- Pesanan Menunggu (Superadmin juga lihat) -->
+<?php if (!empty($pesananProses)): ?>
+<div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;margin-top:14px;">
+    <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:12px;font-weight:700;color:#1e293b;">Pesanan Menunggu Proses</div>
+        <a href="admin/pesanan.php" style="font-size:11px;color:#1a75d2;text-decoration:none;font-weight:600;">Kelola Semua →</a>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+            <tr style="background:#f8fafc;">
+                <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">NO. INVOICE</th>
+                <th style="padding:7px 8px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">PELANGGAN</th>
+                <th style="padding:7px 8px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">KANAL</th>
+                <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">STATUS</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($pesananProses as $p):
+            $sc = ['Menunggu Pembayaran'=>'background:#fef3c7;color:#92400e','Diproses'=>'background:#dbeafe;color:#1e40af'];
+            $bgStyle = $sc[$p['status_pesanan']] ?? 'background:#f1f5f9;color:#334155';
+        ?>
+        <tr style="border-top:1px solid #f1f5f9;">
+            <td style="padding:8px 16px;font-weight:600;color:#1e293b;font-family:monospace;"><?= htmlspecialchars($p['no_invoice']) ?></td>
+            <td style="padding:8px;color:#334155;"><?= htmlspecialchars($p['nama_pelanggan'] ?? 'Walk-in') ?></td>
+            <td style="padding:8px;color:#64748b;"><?= strtoupper($p['tipe_transaksi']) ?></td>
+            <td style="padding:8px 16px;"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;<?= $bgStyle ?>"><?= $p['status_pesanan'] ?></span></td>
+        </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+<?php endif; ?>
+
+<!-- Script untuk Chart.js (Hanya Superadmin) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-function filterInv() {
-    const q = document.getElementById('inv_search').value.toLowerCase();
-    document.querySelectorAll('#inv_table tbody tr').forEach(r => {
-        r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none';
-    });
-}
+document.addEventListener("DOMContentLoaded", function() {
+    const ctx = document.getElementById('salesChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: <?= json_encode($chartLabels) ?>,
+                datasets: [
+                    {
+                        label: 'Luring (POS)',
+                        data: <?= json_encode($chartDataPos) ?>,
+                        backgroundColor: '#1a75d2',
+                        borderRadius: 4,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.8
+                    },
+                    {
+                        label: 'Daring (E-Commerce)',
+                        data: <?= json_encode($chartDataOnline) ?>,
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 4,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.8
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { boxWidth: 12, usePointStyle: true, font: { size: 11, family: "'Inter', sans-serif" } }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y + ' Unit';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, font: { size: 10, family: "'Inter', sans-serif" } },
+                        grid: { color: '#f1f5f9' },
+                        title: { display: true, text: 'Kuantitas (Unit)', font: { size: 10, family: "'Inter', sans-serif" } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10, family: "'Inter', sans-serif" } }
+                    }
+                }
+            }
+        });
+    }
+});
 </script>
 
-<?php layoutEnd(); ?>
+<?php else: ?>
+<!-- ============================================================ -->
+<!-- ADMIN DASHBOARD                                               -->
+<!-- ============================================================ -->
+
+<!-- Row 1: Metrics Admin -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+    <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">TOTAL STOK FISIK</div>
+        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokFisik) ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Unit tersedia</div>
+    </div>
+    <a href="laporan/ketersediaan_stok.php" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $stokKritisCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STOK MENIPIS</div>
+        <div style="font-size:30px;font-weight:900;color:<?= $stokKritisCount>0?'#dc2626':'#1e293b' ?>;line-height:1;"><?= number_format($stokKritisCount) ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $stokKritisCount==0?'Semua stok aman ✓':'SKU < 5 unit' ?></div>
+    </a>
+    <a href="laporan/logistik_medis.php" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $expWarningCount>0?'#fde68a':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">HAMPIR KEDALUWARSA</div>
+        <div style="font-size:30px;font-weight:900;color:<?= $expWarningCount>0?'#d97706':'#1e293b' ?>;line-height:1;"><?= number_format($expWarningCount) ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Batch ≤ 30 hari</div>
+    </a>
+    <a href="admin/pesanan.php" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $pesananMenunggu>0?'#bfdbfe':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">PESANAN BARU</div>
+        <div style="font-size:30px;font-weight:900;color:<?= $pesananMenunggu>0?'#2563eb':'#1e293b' ?>;line-height:1;"><?= number_format($pesananMenunggu) ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Status: Menunggu</div>
+    </a>
+</div>
+
+<!-- Quick Actions Admin -->
+<div style="display:flex;gap:10px;margin-bottom:20px;">
+    <a href="pos/pos.php" style="background:#1a75d2;color:#fff;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;display:flex;align-items:center;gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h0M2 9.5h20"/></svg>
+        Buka Terminal POS
+    </a>
+    <a href="inventori/tambah_stok.php" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">+ Terima Stok Baru</a>
+    <a href="admin/pesanan.php" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Kelola Pesanan</a>
+    <a href="zencare_store.php" target="_blank" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Buka Store</a>
+</div>
+
+<!-- Row 2: Stok Menipis + Audit Kartu Stok -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <!-- Stok Menipis (Admin) -->
+    <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
+        <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:700;color:#1e293b;">Stok Menipis (&lt;5 Unit)</div>
+            <span style="font-size:10px;color:#94a3b8;">Pusat (Muharto)</span>
+        </div>
+        <?php
+        $stokMenipis2 = $pdo->query("
+            SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sc.stok, pv.satuan_kecil
+            FROM stok_toko sc JOIN produk_variasi pv ON sc.id_variasi=pv.id
+            JOIN produk_induk pi ON pv.id_produk_induk=pi.id
+            WHERE sc.stok < 5 AND pv.is_active=1 ORDER BY sc.stok ASC LIMIT 8
+        ")->fetchAll();
+        ?>
+        <?php if (empty($stokMenipis2)): ?>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Semua item stok aman (≥ 5 unit) ✓</div>
+        <?php else: ?>
+        <?php foreach ($stokMenipis2 as $s): ?>
+        <div style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:#334155;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($s['nama']) ?></span>
+            <span style="font-size:12px;font-weight:700;color:<?= $s['stok']==0?'#dc2626':'#f59e0b' ?>;margin-left:12px;"><?= $s['stok'] ?> <?= htmlspecialchars($s['satuan_kecil']) ?></span>
+        </div>
+        <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
+
+    <!-- Audit Kartu Stok -->
+    <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
+        <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:700;color:#1e293b;">Audit Kartu Stok Terbaru</div>
+            <a href="laporan/kartu_stok.php" style="font-size:11px;color:#1a75d2;text-decoration:none;font-weight:600;">Lihat Semua →</a>
+        </div>
+        <?php if (empty($kartuTerbaru)): ?>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Belum ada aktivitas stok.</div>
+        <?php else: ?>
+        <?php foreach ($kartuTerbaru as $k): ?>
+        <div style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($k['nama_produk']) ?></div>
+                <div style="font-size:10px;color:#94a3b8;margin-top:1px;"><?= date('d/m H:i', strtotime($k['tanggal'])) ?></div>
+            </div>
+            <span style="font-size:12px;font-weight:700;color:<?= $k['jenis_mutasi']==='Masuk'?'#16a34a':'#dc2626' ?>;margin-left:12px;white-space:nowrap;">
+                <?= $k['jenis_mutasi']==='Masuk'?'+':'-' ?><?= number_format($k['qty']) ?>
+            </span>
+        </div>
+        <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
+</div>
+
+<?php endif; ?>
+
+<!-- SHARED PANELS (Superadmin & Admin) -->
+<div style="margin-top:14px;">
+    <!-- Panel: Pesanan Siap Diambil / Menunggu Pengambilan -->
+    <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;margin-bottom:20px;">
+        <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:700;color:#1e293b;">Pesanan Siap Diambil / Menunggu Pengambilan</div>
+            <a href="admin/pesanan.php" style="font-size:11px;color:#1a75d2;text-decoration:none;font-weight:600;">Kelola Semua →</a>
+        </div>
+        <?php if (empty($pesananPickup)): ?>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Tidak ada pesanan Pick-up yang menunggu diambil ✓</div>
+        <?php else: ?>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">NO. INVOICE</th>
+                    <th style="padding:7px 8px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">PELANGGAN</th>
+                    <th style="padding:7px 8px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">MULAI RESERVASI</th>
+                    <th style="padding:7px 16px;text-align:right;font-size:10px;color:#64748b;font-weight:600;">LAMA MENUNGGU</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($pesananPickup as $pk): ?>
+            <tr style="border-top:1px solid #f1f5f9;">
+                <td style="padding:8px 16px;font-weight:600;color:#1e293b;font-family:monospace;"><?= htmlspecialchars($pk['no_invoice']) ?></td>
+                <td style="padding:8px;color:#334155;"><?= htmlspecialchars($pk['nama_pelanggan'] ?? 'Pelanggan') ?></td>
+                <td style="padding:8px;color:#64748b;"><?= date('d/m/Y H:i', strtotime($pk['paid_at'] ?? $pk['created_at'])) ?></td>
+                <td style="padding:8px 16px;text-align:right;">
+                    <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;<?= $pk['hari_tunggu'] > 3 ? 'background:#fee2e2;color:#991b1b' : 'background:#f1f5f9;color:#334155' ?>">
+                        <?= $pk['hari_tunggu'] ?> Hari
+                    </span>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+        <?php endif; ?>
+    </div>
+</div>
+
+<?php layoutFooter(); ?>

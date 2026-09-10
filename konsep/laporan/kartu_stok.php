@@ -21,8 +21,8 @@ $stok_awal = 0;
 $namaVariasi = '';
 
 if ($id_variasi && $id_cabang) {
-    // Stok awal = stok fisik saat ini di stok_cabang
-    $stmtAwal = $pdo->prepare("SELECT COALESCE(stok,0) FROM stok_cabang WHERE id_variasi=? AND id_cabang=?");
+    // Stok awal = stok fisik saat ini di stok_toko
+    $stmtAwal = $pdo->prepare("SELECT COALESCE(stok,0) FROM stok_toko WHERE id_variasi=? AND 1=1");
     $stmtAwal->execute([$id_variasi, $id_cabang]);
     $stok_awal_fisik = intval($stmtAwal->fetchColumn());
 
@@ -30,7 +30,7 @@ if ($id_variasi && $id_cabang) {
     $stmt = $pdo->prepare("
         SELECT ks.*
         FROM kartu_stok ks
-        WHERE ks.id_variasi=? AND ks.id_cabang=? AND DATE(ks.tanggal) BETWEEN ? AND ?
+        WHERE ks.id_variasi=? AND ks.1=1 AND DATE(ks.tanggal) BETWEEN ? AND ?
         ORDER BY ks.tanggal ASC
     ");
     $stmt->execute([$id_variasi, $id_cabang, $dari, $sampai]);

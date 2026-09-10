@@ -40,7 +40,7 @@ try {
     $itemDetails = [];
     $totalHargaBarang = 0;
 
-    // 1. Validasi Stok dari stok_cabang
+    // 1. Validasi Stok dari stok_toko
     foreach ($cart as $cartItem) {
         $idVariasi = intval($cartItem['id']);
         $qty = intval($cartItem['qty']);
@@ -50,7 +50,7 @@ try {
         $stmt = $pdo->prepare("SELECT pv.id, pv.nama_variasi, pv.harga_jual_besar, pv.rasio_konversi, pv.satuan_besar, pv.satuan_kecil, pi.nama_produk, sc.stok 
                                FROM produk_variasi pv 
                                JOIN produk_induk pi ON pv.id_produk_induk = pi.id 
-                               LEFT JOIN stok_cabang sc ON sc.id_variasi = pv.id AND sc.id_cabang = ?
+                               LEFT JOIN stok_toko sc ON sc.id_variasi = pv.id 
                                WHERE pv.id = ? FOR UPDATE");
         $stmt->execute([$idCabang, $idVariasi]);
         $produk = $stmt->fetch();
