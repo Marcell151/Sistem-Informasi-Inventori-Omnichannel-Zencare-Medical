@@ -1,68 +1,83 @@
 <?php
-// File: api/webhook.php
-// Skenario 2: Webhook Sinkronisasi Stok dari Midtrans (Online to Offline)
+// File: api/sync_payment.php
+// Endpoint manual untuk sinkronisasi status pembayaran dari Midtrans ke Database lokal
+// Sangat berguna untuk environment localhost di mana Webhook Midtrans tidak bisa masuk.
 
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config/config.php';
 
-$rawInput = file_get_contents('php://input');
-$input = json_decode($rawInput, true);
-
-if (!$input) {
-    echo json_encode(['status' => 'error', 'message' => 'Empty request body']);
+$orderId = $_GET['order_id'] ?? '';
+if (empty($orderId)) {
+    echo json_encode(['status' => 'error', 'message' => 'Order ID is required']);
     exit;
-}
-
-$orderId       = $input['order_id'] ?? '';
-$statusCode    = $input['status_code'] ?? '';
-$grossAmount   = $input['gross_amount'] ?? '';
-$serverKeySignature = $input['signature_key'] ?? '';
-
-// Verifikasi Signature
-$localSignature = hash("sha512", $orderId . $statusCode . $grossAmount . MIDTRANS_SERVER_KEY);
-if ($localSignature !== $serverKeySignature) {
-    http_response_code(403);
-    echo json_encode(['status' => 'error', 'message' => 'Invalid signature key']);
-    exit;
-}
-
-$transactionStatus = $input['transaction_status'] ?? '';
-
-// Map to system status: ENUM('Menunggu Pembayaran', 'Diproses', 'Dikirim', 'Siap Diambil', 'Selesai', 'Dibatalkan')
-$newStatus = 'Menunggu Pembayaran';
-if (in_array($transactionStatus, ['settlement', 'capture'])) {
-    $newStatus = 'Diproses';
-} elseif (in_array($transactionStatus, ['cancel', 'deny', 'expire'])) {
-    $newStatus = 'Dibatalkan';
 }
 
 try {
     $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // 1. Ambil status dari Midtrans API
+    $ch = curl_init(MIDTRANS_API_URL . '/v2/' . $orderId . '/status');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Accept: application/json',
+        'Authorization: Basic ' . base64_encode(MIDTRANS_SERVER_KEY . ':')
+    ]);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
     
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode !== 200 || !$response) {
+        throw new Exception("Gagal mendapatkan status dari Midtrans (HTTP $httpCode).");
+    }
+
+    $midtransData = json_decode($response, true);
+    $transactionStatus = $midtransData['transaction_status'] ?? '';
+
+    // Map status
+    $newStatus = 'Menunggu Pembayaran';
+    if (in_array($transactionStatus, ['settlement', 'capture'])) {
+        $newStatus = 'Diproses';
+    } elseif (in_array($transactionStatus, ['cancel', 'deny', 'expire'])) {
+        $newStatus = 'Dibatalkan';
+    }
+
+    if ($newStatus === 'Menunggu Pembayaran') {
+        echo json_encode(['status' => 'success', 'message' => 'Masih Menunggu Pembayaran']);
+        exit;
+    }
+
+    // 2. Update Database (Logika sama dengan webhook)
     $pdo->beginTransaction();
 
-    // Cek status saat ini
     $stmtSelect = $pdo->prepare("SELECT status_pesanan FROM penjualan WHERE no_invoice = ? FOR UPDATE");
     $stmtSelect->execute([$orderId]);
     $order = $stmtSelect->fetch(PDO::FETCH_ASSOC);
 
     if (!$order) {
-        throw new Exception("Order ID $orderId tidak ditemukan di database.");
+        throw new Exception("Order ID tidak ditemukan di database.");
     }
 
     $oldStatus = $order['status_pesanan'];
 
-    // Update status penjualan
+    if ($oldStatus === $newStatus) {
+        // Sudah terupdate
+        $pdo->rollBack();
+        echo json_encode(['status' => 'success', 'message' => 'Status sudah tersinkronisasi']);
+        exit;
+    }
+
     $stmtUpdate = $pdo->prepare("UPDATE penjualan SET status_pesanan = ? WHERE no_invoice = ?");
     $stmtUpdate->execute([$newStatus, $orderId]);
 
-    // Ambil detail item dan rasio konversi
+    // Ambil detail item
     $stmtItems = $pdo->prepare("SELECT d.id_variasi, d.qty, v.rasio_konversi, v.satuan_besar FROM detail_penjualan d JOIN produk_variasi v ON d.id_variasi = v.id WHERE d.id_penjualan = (SELECT id FROM penjualan WHERE no_invoice = ?)");
     $stmtItems->execute([$orderId]);
     $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
 
-    // Pengurangan Stok (TIDAK DILAKUKAN LAGI KARENA SUDAH DIPOTONG SAAT CHECKOUT)
     // Pengembalian Stok (Jika dibatalkan)
     if ($oldStatus !== 'Dibatalkan' && $newStatus === 'Dibatalkan') {
         foreach ($items as $item) {
@@ -89,7 +104,6 @@ try {
 
 } catch (Exception $e) {
     if (isset($pdo)) $pdo->rollBack();
-    http_response_code(500);
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
 ?>

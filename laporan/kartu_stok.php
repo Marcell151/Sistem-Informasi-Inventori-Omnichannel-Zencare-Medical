@@ -169,4 +169,30 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
 </style>
 <?php endif; ?>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let dari = document.querySelector('input[name="dari"]');
+    let sampai = document.querySelector('input[name="sampai"]');
+    
+    if (dari && sampai) {
+        function validateDates() {
+            sampai.min = dari.value;
+            dari.max = sampai.value;
+        }
+
+        dari.addEventListener('change', function() {
+            if (sampai.value && sampai.value < dari.value) sampai.value = dari.value;
+            validateDates();
+        });
+        
+        sampai.addEventListener('change', function() {
+            if (dari.value && sampai.value < dari.value) dari.value = sampai.value;
+            validateDates();
+        });
+        
+        validateDates();
+    }
+});
+</script>
+
 <?php layoutFooter(); ?>

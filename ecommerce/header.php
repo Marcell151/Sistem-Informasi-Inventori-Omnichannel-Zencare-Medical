@@ -1,6 +1,8 @@
 <?php
 // File: ecommerce/header.php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 
@@ -35,6 +37,24 @@ $namaPelanggan = $isLoggedIn ? $_SESSION['nama_lengkap'] : '';
     <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ZenCare Medical' : 'ZenCare Medical' ?></title>
     <!-- Tailwind CSS (via CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Inter', 'sans-serif'] },
+            colors: {
+              zc:    '#1a75d2',
+              zcHv:  '#1562b3',
+              zcLt:  '#e8f2ff',
+              zcEm:  '#059669',
+              zcBrd: '#e4e9f0',
+              zcTxt: '#1e293b',
+              zcMut: '#64748b',
+            }
+          }
+        }
+      }
+    </script>
     <style>
         /* Custom Font */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');

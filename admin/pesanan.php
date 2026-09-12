@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
     $idPesanan  = intval($_POST['id_penjualan'] ?? 0);
     $newStatus  = $_POST['status_pesanan'] ?? '';
     
-    if ($idPesanan && in_array($newStatus, ['Menunggu', 'Diproses', 'Dikirim', 'Selesai', 'Dibatalkan'])) {
+    if ($idPesanan && in_array($newStatus, ['Menunggu Pembayaran', 'Diproses', 'Dikirim', 'Siap Diambil', 'Selesai', 'Dibatalkan'])) {
         $pdo->prepare("UPDATE penjualan SET status_pesanan = ? WHERE id = ?")->execute([$newStatus, $idPesanan]);
         $msg = "Status pesanan ID #$idPesanan berhasil diubah menjadi '$newStatus'.";
         $msgType = 'success';
@@ -125,12 +125,20 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                     <form method="POST" class="inline flex items-center gap-1">
                                         <input type="hidden" name="aksi" value="update_status">
                                         <input type="hidden" name="id_penjualan" value="<?= $o['id'] ?>">
-                                        <select name="status_pesanan" onchange="this.form.submit()" class="text-[11px] border border-zcBrd rounded-lg px-2 py-1 bg-white font-medium focus:outline-none focus:border-zc">
-                                            <option value="Menunggu" <?= $o['status_pesanan'] === 'Menunggu' ? 'selected' : '' ?>>Menunggu</option>
-                                            <option value="Diproses" <?= $o['status_pesanan'] === 'Diproses' ? 'selected' : '' ?>>Diproses</option>
-                                            <option value="Dikirim" <?= $o['status_pesanan'] === 'Dikirim' ? 'selected' : '' ?>>Dikirim</option>
-                                            <option value="Selesai" <?= $o['status_pesanan'] === 'Selesai' ? 'selected' : '' ?>>Selesai</option>
-                                            <option value="Dibatalkan" <?= $o['status_pesanan'] === 'Dibatalkan' ? 'selected' : '' ?>>Dibatalkan</option>
+                                        <select name="status_pesanan" onchange="if(confirm('Ubah status pesanan ini?')) this.form.submit(); else this.value='<?= $o['status_pesanan'] ?>';" class="text-[11px] border border-zcBrd rounded-lg px-2 py-1 bg-white font-medium focus:outline-none focus:border-zc">
+                                            <option value="<?= $o['status_pesanan'] ?>" selected><?= $o['status_pesanan'] ?></option>
+                                            
+                                            <?php if ($o['status_pesanan'] === 'Menunggu Pembayaran'): ?>
+                                                <option value="Dibatalkan">Dibatalkan</option>
+                                            <?php elseif ($o['status_pesanan'] === 'Diproses'): ?>
+                                                <?php if ($o['metode_pengambilan'] === 'Pick-up'): ?>
+                                                    <option value="Siap Diambil">Siap Diambil</option>
+                                                <?php else: ?>
+                                                    <option value="Dikirim">Dikirim</option>
+                                                <?php endif; ?>
+                                            <?php elseif (in_array($o['status_pesanan'], ['Dikirim', 'Siap Diambil'])): ?>
+                                                <option value="Selesai">Selesai (Force)</option>
+                                            <?php endif; ?>
                                         </select>
                                     </form>
                                     <a href="../pos/cetak_invoice.php?no_invoice=<?= $o['no_invoice'] ?>" target="_blank"

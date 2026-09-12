@@ -16,14 +16,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Tambah User
     if ($aksi === 'tambah_user') {
-        $uname  = trim($_POST['username'] ?? '');
-        $nama   = trim($_POST['nama_lengkap'] ?? '');
-        $role   = $_POST['role'] ?? 'karyawan';
-                $pass   = password_hash($_POST['password'] ?? '123456', PASSWORD_BCRYPT);
+        $uname   = trim($_POST['username'] ?? '');
+        $nama    = trim($_POST['nama_lengkap'] ?? '');
+        $role    = $_POST['role'] ?? 'admin';
+        $email   = trim($_POST['email'] ?? '');
+        $telepon = trim($_POST['telepon'] ?? '');
+        $pass    = password_hash($_POST['password'] ?? '123456', PASSWORD_BCRYPT);
         if ($uname && $nama) {
             try {
-                $pdo->prepare("INSERT INTO users (username,password,nama_lengkap,role,is_active) VALUES (?,?,?,?,?,1)")
-                    ->execute([$uname,$pass,$nama,$role]);
+                $pdo->prepare("INSERT INTO users (username,password,nama_lengkap,role,email,telepon,is_active) VALUES (?,?,?,?,?,?,1)")
+                    ->execute([$uname,$pass,$nama,$role,$email,$telepon]);
                 $msg = "User '$uname' ($role) berhasil ditambahkan."; $msgType = 'success';
             } catch (Exception $e) {
                 $msg = "Error: " . $e->getMessage(); $msgType = 'error';
@@ -51,11 +53,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Edit User
     if ($aksi === 'edit_user') {
-        $id    = intval($_POST['id_user'] ?? 0);
-        $nama  = trim($_POST['nama_lengkap'] ?? '');
-        $role  = $_POST['role'] ?? 'karyawan';
-                if ($id && $nama) {
-            $pdo->prepare("UPDATE users SET nama_lengkap=?,role=?,1=1 WHERE id=?")->execute([$nama,$role,$cabang,$id]);
+        $id      = intval($_POST['id_user'] ?? 0);
+        $nama    = trim($_POST['nama_lengkap'] ?? '');
+        $role    = $_POST['role'] ?? 'admin';
+        $email   = trim($_POST['email'] ?? '');
+        $telepon = trim($_POST['telepon'] ?? '');
+        if ($id && $nama) {
+            $pdo->prepare("UPDATE users SET nama_lengkap=?, role=?, email=?, telepon=? WHERE id=?")->execute([$nama, $role, $email, $telepon, $id]);
             $msg = "User diperbarui."; $msgType = 'success';
         }
     }
@@ -94,9 +98,8 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
                 <tr>
                     <th class="px-5 py-3 text-left">#</th>
                     <th class="px-5 py-3 text-left">Username</th>
-                    <th class="px-5 py-3 text-left">Nama Lengkap</th>
+                    <th class="px-5 py-3 text-left">Nama & Kontak</th>
                     <th class="px-5 py-3 text-center">Role</th>
-                    <th class="px-5 py-3 text-left">Cabang</th>
                     <th class="px-5 py-3 text-center">Status</th>
                     <th class="px-5 py-3 text-center">Aksi</th>
                 </tr>
@@ -114,13 +117,21 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
                     <tr class="hover:bg-slate-50/60 transition <?= !$u['is_active'] ? 'opacity-50' : '' ?>">
                         <td class="px-5 py-3.5 text-zcMut font-mono text-sm"><?= $u['id'] ?></td>
                         <td class="px-5 py-3.5 font-bold text-zcTxt text-sm"><?= htmlspecialchars($u['username']) ?></td>
-                        <td class="px-5 py-3.5 text-zcTxt text-sm"><?= htmlspecialchars($u['nama_lengkap']) ?></td>
+                        <td class="px-5 py-3.5 text-sm">
+                            <div class="font-bold text-zcTxt mb-0.5"><?= htmlspecialchars($u['nama_lengkap']) ?></div>
+                            <?php if(!empty($u['email']) || !empty($u['telepon'])): ?>
+                                <div class="text-[11px] text-slate-500 font-medium">
+                                    <?= !empty($u['email']) ? htmlspecialchars($u['email']) : '' ?>
+                                    <?= !empty($u['email']) && !empty($u['telepon']) ? ' • ' : '' ?>
+                                    <?= !empty($u['telepon']) ? htmlspecialchars($u['telepon']) : '' ?>
+                                </div>
+                            <?php endif; ?>
+                        </td>
                         <td class="px-5 py-3.5 text-center">
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border <?= $roleCls ?>">
                                 <?= ucfirst(str_replace('_', ' ', $u['role'])) ?>
                             </span>
                         </td>
-                        <td class="px-5 py-3.5 text-zcMut"><?= htmlspecialchars($u['nama_cabang'] ?? '-') ?></td>
                         <td class="px-5 py-3.5 text-center">
                             <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border <?= $u['is_active'] ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-rose-100 text-rose-700 border-rose-200' ?>">
                                 <?= $u['is_active'] ? '&check; Aktif' : '&times; Nonaktif' ?>
@@ -128,7 +139,7 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
                         </td>
                         <td class="px-5 py-3.5">
                             <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                                <button onclick="openEditUser(<?= $u['id'] ?>, '<?= addslashes($u['nama_lengkap']) ?>', '<?= $u['role'] ?>', <?= $u['id_cabang'] ?? 'null' ?>)"
+                                <button onclick="openEditUser(<?= $u['id'] ?>, '<?= addslashes($u['nama_lengkap']) ?>', '<?= $u['role'] ?>', '<?= addslashes($u['email'] ?? '') ?>', '<?= addslashes($u['telepon'] ?? '') ?>')"
                                     class="px-2.5 py-1 text-[11px] font-bold bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl transition">Edit</button>
                                 <?php if ($u['id'] !== 1): ?>
                                     <form method="POST" class="inline" onsubmit="return confirm('<?= $u['is_active'] ? 'Nonaktifkan' : 'Aktifkan' ?> user ini?')">
@@ -173,24 +184,25 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
                 <input type="text" name="nama_lengkap" required placeholder="Budi Santoso" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Alamat Email (Opsional)</label>
+                <input type="email" name="email" placeholder="email@contoh.com" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">No HP / WhatsApp (Opsional)</label>
+                <input type="text" name="telepon" placeholder="0812xxxxxx" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+            </div>
+            <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Password (default: 123456)</label>
                 <input type="password" name="password" placeholder="Kosongkan = 123456" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Role *</label>
-                <select name="role" id="add_role" onchange="toggleCabangField('add_cabang_row', this.value)"
+                <select name="role" id="add_role"
                     class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                     <option value="karyawan">Karyawan</option>
+                    <option value="admin">Admin</option>
                     <option value="superadmin">Superadmin</option>
                     <option value="pelanggan">Pelanggan</option>
-                </select>
-            </div>
-            <div id="add_cabang_row">
-                <label class="block text-xs font-bold text-zcTxt mb-1.5">Cabang (wajib untuk Karyawan)</label>
-                <select name="id_cabang" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
-                    <?php foreach ($cabangList as $c): ?>
-                        <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nama']) ?></option>
-                    <?php endforeach; ?>
                 </select>
             </div>
             <div class="flex justify-end gap-3 pt-2">
@@ -216,20 +228,21 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
                 <input type="text" name="nama_lengkap" id="eu_nama" required class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Alamat Email (Opsional)</label>
+                <input type="email" name="email" id="eu_email" placeholder="email@contoh.com" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">No HP / WhatsApp (Opsional)</label>
+                <input type="text" name="telepon" id="eu_telepon" placeholder="0812xxxxxx" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+            </div>
+            <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Role *</label>
-                <select name="role" id="eu_role" onchange="toggleCabangField('eu_cabang_row', this.value)"
+                <select name="role" id="eu_role"
                     class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                     <option value="karyawan">Karyawan</option>
+                    <option value="admin">Admin</option>
                     <option value="superadmin">Superadmin</option>
                     <option value="pelanggan">Pelanggan</option>
-                </select>
-            </div>
-            <div id="eu_cabang_row">
-                <label class="block text-xs font-bold text-zcTxt mb-1.5">Cabang</label>
-                <select name="id_cabang" id="eu_cabang" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
-                    <?php foreach ($cabangList as $c): ?>
-                        <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nama']) ?></option>
-                    <?php endforeach; ?>
                 </select>
             </div>
             <div class="flex justify-end gap-3 pt-2">
@@ -241,20 +254,18 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
 </div>
 
 <script>
-function openEditUser(id, nama, role, cabangId) {
+function openEditUser(id, nama, role, email, telepon) {
     document.getElementById('eu_id').value = id;
     document.getElementById('eu_nama').value = nama;
     document.getElementById('eu_role').value = role;
-    if (cabangId) document.getElementById('eu_cabang').value = cabangId;
-    toggleCabangField('eu_cabang_row', role);
+    document.getElementById('eu_email').value = email || '';
+    document.getElementById('eu_telepon').value = telepon || '';
     document.getElementById('modal_edit_user').classList.remove('hidden');
 }
-function toggleCabangField(rowId, roleVal) {
-    document.getElementById(rowId).style.display = (roleVal === 'karyawan') ? 'block' : 'none';
+
+function toggleCabangField(rowId, role) {
+    // Legacy function, kept so it doesn't break external scripts if any
 }
-// Initial hide cabang for non-kasir
-toggleCabangField('add_cabang_row', document.getElementById('add_role')?.value ?? 'karyawan');
 </script>
 
 <?php layoutEnd(); ?>
-

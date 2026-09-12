@@ -15,7 +15,7 @@ $kanal  = $_GET['kanal']   ?? 'semua';  // semua / pos / online
 
 $kanalWhere = '';
 if ($kanal === 'pos')    $kanalWhere = "AND pj.tipe_transaksi = 'pos'";
-if ($kanal === 'online') $kanalWhere = "AND pj.tipe_transaksi = 'online'";
+if ($kanal === 'ecommerce') $kanalWhere = "AND pj.tipe_transaksi = 'ecommerce'";
 
 // Summary stats
 $stmtSum = $pdo->prepare("
@@ -23,7 +23,7 @@ $stmtSum = $pdo->prepare("
         COUNT(DISTINCT pj.id) AS total_transaksi,
         COALESCE(SUM(dp.qty), 0) AS total_item_terjual,
         COALESCE(SUM(CASE WHEN pj.tipe_transaksi='pos' THEN dp.qty ELSE 0 END), 0) AS item_pos,
-        COALESCE(SUM(CASE WHEN pj.tipe_transaksi='online' THEN dp.qty ELSE 0 END), 0) AS item_online
+        COALESCE(SUM(CASE WHEN pj.tipe_transaksi='ecommerce' THEN dp.qty ELSE 0 END), 0) AS item_online
     FROM penjualan pj
     JOIN detail_penjualan dp ON pj.id = dp.id_penjualan
     WHERE DATE(pj.created_at) BETWEEN ? AND ?
@@ -39,7 +39,7 @@ try {
             pi.nama_produk, pv.nama_variasi, pi.kategori, pv.sku_variasi,
             SUM(dp.qty) as total_qty,
             SUM(CASE WHEN pj.tipe_transaksi='pos' THEN dp.qty ELSE 0 END) as qty_pos,
-            SUM(CASE WHEN pj.tipe_transaksi='online' THEN dp.qty ELSE 0 END) as qty_online
+            SUM(CASE WHEN pj.tipe_transaksi='ecommerce' THEN dp.qty ELSE 0 END) as qty_online
         FROM penjualan pj
         JOIN detail_penjualan dp ON pj.id = dp.id_penjualan
         JOIN produk_variasi pv ON dp.id_variasi = pv.id
@@ -80,7 +80,7 @@ layoutHeader('Laporan Penjualan Barang', 'Rekapitulasi kuantitas fisik barang ya
         <select name="kanal" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc min-w-[150px]">
             <option value="semua" <?= $kanal==='semua'?'selected':'' ?>>Semua Kanal</option>
             <option value="pos" <?= $kanal==='pos'?'selected':'' ?>>POS (Kasir Luring)</option>
-            <option value="online" <?= $kanal==='online'?'selected':'' ?>>Online (E-Commerce)</option>
+            <option value="ecommerce" <?= $kanal==='ecommerce'?'selected':'' ?>>Online (E-Commerce)</option>
         </select>
     </div>
     <div class="flex-1 flex justify-end gap-2">
@@ -147,5 +147,29 @@ layoutHeader('Laporan Penjualan Barang', 'Rekapitulasi kuantitas fisik barang ya
         </table>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let dari = document.querySelector('input[name="dari"]');
+    let sampai = document.querySelector('input[name="sampai"]');
+    
+    function validateDates() {
+        sampai.min = dari.value;
+        dari.max = sampai.value;
+    }
+
+    dari.addEventListener('change', function() {
+        if (sampai.value && sampai.value < dari.value) sampai.value = dari.value;
+        validateDates();
+    });
+    
+    sampai.addEventListener('change', function() {
+        if (dari.value && sampai.value < dari.value) dari.value = sampai.value;
+        validateDates();
+    });
+    
+    validateDates();
+});
+</script>
 
 <?php layoutFooter(); ?>

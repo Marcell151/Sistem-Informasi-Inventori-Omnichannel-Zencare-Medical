@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nama     = trim($_POST['nama_lengkap'] ?? '');
     $alamat   = trim($_POST['alamat'] ?? '');
     $telp     = trim($_POST['telp'] ?? '');
+    $email    = trim($_POST['email'] ?? '');
     
     if ($username && $password && $nama) {
         $stmtChk = $pdo->prepare("SELECT id FROM users WHERE username = ?");
@@ -28,8 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $hashed = password_hash($password, PASSWORD_BCRYPT);
             try {
                 // Because users table has 'role' enum which includes 'pelanggan'
-                $pdo->prepare("INSERT INTO users (username, password, nama_lengkap, role, is_active) VALUES (?, ?, ?, 'pelanggan', 1)")
-                    ->execute([$username, $hashed, $nama]);
+                $pdo->prepare("INSERT INTO users (username, password, nama_lengkap, role, is_active, email, telepon, alamat) VALUES (?, ?, ?, 'pelanggan', 1, ?, ?, ?)")
+                    ->execute([$username, $hashed, $nama, $email, $telp, $alamat]);
                 $success = "Pendaftaran berhasil! Silakan masuk menggunakan akun baru Anda.";
             } catch (Exception $e) {
                 $error = "Gagal mendaftar: " . $e->getMessage();
@@ -113,6 +114,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     
                     <div class="pt-3 border-t border-zcBrd">
+                        <label class="block text-sm font-bold text-zcMut uppercase tracking-wider mb-2">Alamat Email (Opsional)</label>
+                        <input type="email" name="email" placeholder="nama@email.com"
+                            class="w-full text-sm border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400">
+                    </div>
+                    
+                    <div>
                         <label class="block text-sm font-bold text-zcMut uppercase tracking-wider mb-2">Nomor WhatsApp (Opsional)</label>
                         <input type="text" name="telp" placeholder="0812xxxxxx"
                             class="w-full text-sm border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400">

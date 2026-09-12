@@ -38,14 +38,15 @@ $errorMsg   = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_profil') {
     $nama    = trim($_POST['nama_lengkap'] ?? '');
     $telepon = trim($_POST['telepon'] ?? '');
+    $email   = trim($_POST['email'] ?? '');
     $alamat  = trim($_POST['alamat'] ?? '');
 
     if (empty($nama)) {
         $errorMsg = "Nama lengkap tidak boleh kosong.";
     } else {
         try {
-            $stmtUpdate = $pdo->prepare("UPDATE users SET nama_lengkap = ?, telepon = ?, alamat = ? WHERE id = ?");
-            $stmtUpdate->execute([$nama, $telepon, $alamat, $userId]);
+            $stmtUpdate = $pdo->prepare("UPDATE users SET nama_lengkap = ?, telepon = ?, email = ?, alamat = ? WHERE id = ?");
+            $stmtUpdate->execute([$nama, $telepon, $email, $alamat, $userId]);
             
             $_SESSION['nama_lengkap'] = $nama;
             $userName = $nama;
@@ -53,6 +54,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         } catch (Exception $e) {
             $errorMsg = "Gagal memperbarui profil: " . $e->getMessage();
         }
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'cancel_order') {
+    $cancelInvoice = $_POST['no_invoice'];
+    try {
+        $pdo->beginTransaction();
+        
+        $stmtCek = $pdo->prepare("SELECT id, status_pesanan FROM penjualan WHERE no_invoice = ? AND id_user = ? FOR UPDATE");
+        $stmtCek->execute([$cancelInvoice, $userId]);
+        $orderToCancel = $stmtCek->fetch();
+
+        if (!$orderToCancel) {
+            throw new Exception("Pesanan tidak ditemukan.");
+        }
+        if ($orderToCancel['status_pesanan'] !== 'Menunggu Pembayaran') {
+            throw new Exception("Hanya pesanan berstatus Menunggu Pembayaran yang dapat dibatalkan.");
+        }
+
+        // Update status ke Dibatalkan
+        $pdo->prepare("UPDATE penjualan SET status_pesanan = 'Dibatalkan' WHERE no_invoice = ?")->execute([$cancelInvoice]);
+
+        // Kembalikan Stok
+        $stmtItems = $pdo->prepare("SELECT d.id_variasi, d.qty, v.rasio_konversi, v.satuan_besar FROM detail_penjualan d JOIN produk_variasi v ON d.id_variasi = v.id WHERE d.id_penjualan = ?");
+        $stmtItems->execute([$orderToCancel['id']]);
+        $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($items as $item) {
+            $idVar = $item['id_variasi'];
+            $qtyBox = intval($item['qty']);
+            $rasio = intval($item['rasio_konversi']) ?: 1;
+            $qtyPotong = $qtyBox * $rasio;
+            $satBesar = $item['satuan_besar'];
+
+            $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi = ?")->execute([$qtyPotong, $idVar]);
+            
+            $stmtSisa = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ?");
+            $stmtSisa->execute([$idVar]);
+            $sisaStok = $stmtSisa->fetchColumn();
+
+            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Masuk', 'E-Commerce', 'Retur Barang Rusak', ?, ?, ?, ?, ?)");
+            $stmtKartu->execute([$idVar, $cancelInvoice, $qtyPotong, $sisaStok, "Dibatalkan Pelanggan: Batal $qtyBox $satBesar", $userId]);
+        }
+
+        $pdo->commit();
+        $successMsg = "Pesanan $cancelInvoice berhasil dibatalkan dan stok telah dikembalikan.";
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        $errorMsg = "Gagal membatalkan pesanan: " . $e->getMessage();
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'selesai_order') {
+    $selesaiInvoice = $_POST['no_invoice'];
+    try {
+        $stmtCek = $pdo->prepare("SELECT id, status_pesanan FROM penjualan WHERE no_invoice = ? AND id_user = ?");
+        $stmtCek->execute([$selesaiInvoice, $userId]);
+        $orderToSelesai = $stmtCek->fetch();
+
+        if ($orderToSelesai && in_array($orderToSelesai['status_pesanan'], ['Dikirim', 'Siap Diambil'])) {
+            $pdo->prepare("UPDATE penjualan SET status_pesanan = 'Selesai' WHERE no_invoice = ?")->execute([$selesaiInvoice]);
+            $successMsg = "Terima kasih! Pesanan $selesaiInvoice telah diselesaikan.";
+        } else {
+            $errorMsg = "Gagal menyelesaikan pesanan.";
+        }
+    } catch (Exception $e) {
+        $errorMsg = "Terjadi kesalahan: " . $e->getMessage();
     }
 }
 
@@ -140,6 +204,12 @@ if (!empty($orderIds)) {
                 </div>
 
                 <div>
+                    <label class="block font-bold text-zcTxt mb-1.5">Alamat Email</label>
+                    <input type="email" name="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>" placeholder="nama@email.com"
+                           class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:border-zc transition">
+                </div>
+
+                <div>
                     <label class="block font-bold text-zcTxt mb-1.5">Nomor Telepon / WhatsApp</label>
                     <input type="text" name="telepon" value="<?= htmlspecialchars($user['telepon'] ?? '') ?>" placeholder="08123456789"
                            class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:border-zc transition">
@@ -202,11 +272,37 @@ if (!empty($orderIds)) {
                                 <span class="px-2.5 py-0.5 rounded-md border text-[10px] font-bold <?= $badgeClass ?>">
                                     <?= htmlspecialchars($status) ?>
                                 </span>
-                                <a href="../pos/cetak_invoice.php?no_invoice=<?= urlencode($ord['no_invoice']) ?>" target="_blank"
-                                   class="px-2 py-0.5 bg-white border border-slate-200 hover:border-zc text-zc text-[10px] font-bold rounded-md shadow-2xs transition flex items-center gap-1">
-                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                                    Struk
-                                </a>
+                                
+                                <?php if ($status === 'Menunggu Pembayaran'): ?>
+                                    <button onclick="lanjutkanPembayaran('<?= htmlspecialchars($ord['snap_token']) ?>', '<?= htmlspecialchars($ord['no_invoice']) ?>')" class="px-2 py-0.5 bg-zc border border-zc hover:bg-zcHv text-white text-[10px] font-bold rounded-md shadow-2xs transition flex items-center gap-1">
+                                        Bayar
+                                    </button>
+                                    <form method="POST" class="m-0 p-0" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini?');">
+                                        <input type="hidden" name="action" value="cancel_order">
+                                        <input type="hidden" name="no_invoice" value="<?= htmlspecialchars($ord['no_invoice']) ?>">
+                                        <button type="submit" class="px-2 py-0.5 bg-white border border-rose-200 hover:border-rose-500 text-rose-500 text-[10px] font-bold rounded-md shadow-2xs transition flex items-center gap-1">
+                                            Batal
+                                        </button>
+                                    </form>
+                                <?php elseif (in_array($status, ['Dikirim', 'Siap Diambil'])): ?>
+                                    <form method="POST" class="m-0 p-0" onsubmit="return confirm('Apakah Anda yakin telah menerima pesanan ini dengan baik?');">
+                                        <input type="hidden" name="action" value="selesai_order">
+                                        <input type="hidden" name="no_invoice" value="<?= htmlspecialchars($ord['no_invoice']) ?>">
+                                        <button type="submit" class="px-2 py-0.5 bg-emerald-500 hover:bg-emerald-600 border border-emerald-600 text-white text-[10px] font-bold rounded-md shadow-2xs transition flex items-center gap-1">
+                                            Pesanan Diterima
+                                        </button>
+                                    </form>
+                                    <a href="../pos/cetak_invoice.php?no_invoice=<?= urlencode($ord['no_invoice']) ?>" target="_blank"
+                                       class="px-2 py-0.5 bg-white border border-slate-200 hover:border-zc text-zc text-[10px] font-bold rounded-md shadow-2xs transition flex items-center gap-1">
+                                        Struk
+                                    </a>
+                                <?php else: ?>
+                                    <a href="../pos/cetak_invoice.php?no_invoice=<?= urlencode($ord['no_invoice']) ?>" target="_blank"
+                                       class="px-2 py-0.5 bg-white border border-slate-200 hover:border-zc text-zc text-[10px] font-bold rounded-md shadow-2xs transition flex items-center gap-1">
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                        Struk
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </div>
 
@@ -260,5 +356,36 @@ if (!empty($orderIds)) {
     </div>
 
 </main>
+
+<!-- Midtrans Snap Sandbox JS -->
+<script src="<?= MIDTRANS_SNAP_URL ?>" data-client-key="<?= MIDTRANS_CLIENT_KEY ?>"></script>
+<script>
+    function lanjutkanPembayaran(token, orderId) {
+        if (!token) {
+            alert("Token pembayaran tidak ditemukan. Silakan batalkan pesanan dan buat ulang.");
+            return;
+        }
+        snap.pay(token, {
+            onSuccess: function(result) {
+                // Sinkronisasi paksa dari frontend (karena localhost tidak bisa terima webhook)
+                fetch('../api/sync_payment.php?order_id=' + orderId)
+                    .then(res => res.json())
+                    .then(data => {
+                        alert('Pembayaran Berhasil! Pesanan akan segera diproses.');
+                        window.location.reload();
+                    }).catch(err => {
+                        alert('Pembayaran Berhasil, namun gagal sinkronisasi ke server lokal. Harap hubungi admin.');
+                        window.location.reload();
+                    });
+            },
+            onPending: function(result) {
+                alert('Menunggu Pembayaran.');
+            },
+            onError: function(result) {
+                alert('Transaksi Dibatalkan / Gagal.');
+            }
+        });
+    }
+</script>
 
 <?php require_once __DIR__ . '/footer.php'; ?>

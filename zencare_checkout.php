@@ -132,9 +132,6 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                             <span class="w-6 h-6 rounded-full bg-zcLt text-zc text-xs font-bold flex items-center justify-center">2</span>
                             Alamat &amp; Integrasi Kurir Pengiriman
                         </div>
-                        <?php if (!$rajaongkirEnabled): ?>
-                            <span class="text-[10px] font-semibold px-2.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full">API RajaOngkir OFF</span>
-                        <?php endif; ?>
                     </h2>
                     
                     <div class="space-y-4 text-xs">
@@ -160,12 +157,20 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                                 placeholder="Jalan, No. Rumah, RT/RW, Kecamatan"><?= htmlspecialchars($savedUser['alamat'] ?? '') ?></textarea>
                         </div>
 
-                        <div id="malang_notice" class="hidden p-3 bg-zcLt border border-zc/20 rounded-xl text-zc text-xs leading-relaxed">
-                            💡 <strong>Area Dalam Kota (Malang) Terdeteksi!</strong> Pengiriman menggunakan <strong>Kurir Internal ZenCare Direct</strong> (Lebih cepat &amp; hemat). Pilihan ekspedisi luar kota disembunyikan.
+                        <div id="malang_notice" class="hidden p-3.5 bg-zcLt border border-zc/20 rounded-xl flex gap-3 shadow-sm">
+                            <svg class="w-5 h-5 text-zc shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <div class="text-xs text-zcTxt leading-relaxed">
+                                <strong class="text-zc block mb-0.5">Area Dalam Kota (Malang) Terdeteksi</strong> 
+                                Pengiriman dapat menggunakan Kurir Internal ZenCare Direct atau opsi Ambil di Toko.
+                            </div>
                         </div>
 
-                        <div id="luar_kota_notice" class="hidden p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs leading-relaxed">
-                            📦 <strong>Area Luar Kota Terdeteksi!</strong> Pengiriman menggunakan <strong>Ekspedisi Nasional (JNE / POS Indonesia)</strong> via API RajaOngkir. Kurir internal disembunyikan &amp; peta bergeser ke lokasi tujuan.
+                        <div id="luar_kota_notice" class="hidden p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex gap-3 shadow-sm">
+                            <svg class="w-5 h-5 text-slate-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                            <div class="text-xs text-slate-600 leading-relaxed">
+                                <strong class="text-slate-800 block mb-0.5">Area Luar Kota Terdeteksi</strong> 
+                                Pengiriman dialihkan menggunakan Ekspedisi Nasional (JNE / POS Indonesia). Peta akan bergeser ke lokasi tujuan.
+                            </div>
                         </div>
 
                         <div>
@@ -241,9 +246,14 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                         </div>
                     </div>
 
-                    <button onclick="prosesCheckoutMidtrans()" id="btn_checkout" class="w-full mt-6 bg-zc hover:bg-zcHv text-white font-semibold text-xs py-3.5 px-4 rounded-xl transition shadow-sm">
-                        Bayar Sekarang (Midtrans Snap Sandbox)
-                    </button>
+                    <div class="flex flex-col sm:flex-row gap-3 mt-6">
+                        <button onclick="prosesCheckout(false)" id="btn_checkout_nanti" class="w-full sm:w-1/2 bg-white hover:bg-slate-50 text-zcTxt border border-zcBrd font-semibold text-xs py-3.5 px-2 rounded-xl transition shadow-sm">
+                            Buat Pesanan (Bayar Nanti)
+                        </button>
+                        <button onclick="prosesCheckout(true)" id="btn_checkout_sekarang" class="w-full sm:w-1/2 bg-zc hover:bg-zcHv text-white font-semibold text-xs py-3.5 px-2 rounded-xl transition shadow-sm">
+                            Bayar Sekarang (Midtrans)
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -318,8 +328,8 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 let dist = calculateHaversineDistance(BRANCH_LAT, BRANCH_LNG, lat, lng);
                 document.getElementById('distance_info').innerText = 'Jarak: ~' + dist.toFixed(1) + ' km';
                 
-                let cart = JSON.parse(localStorage.getItem('zencare_cart') || '[]');
-                let totalWeight = cart.reduce((sum, item) => sum + ((parseInt(item.weight) || 100) * (parseInt(item.qty) || 1)), 0);
+                let cart = JSON.parse(localStorage.getItem('zc_cart') || '[]');
+                let totalWeight = cart.reduce((sum, item) => sum + ((parseInt(item.berat) || 100) * (parseInt(item.qty) || 1)), 0);
 
                 let baseFare = 10000;
                 let distFare = dist > 2 ? Math.round((dist - 2) * 3000) : 0;
@@ -418,11 +428,14 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             let isMalang = cityName.toLowerCase().includes('malang');
 
             if (isMalang) {
-                // Dalam Kota Malang: Hanya Kurir Internal ZenCare Direct
                 document.getElementById('malang_notice').classList.remove('hidden');
                 document.getElementById('luar_kota_notice').classList.add('hidden');
+                document.getElementById('map_panel').classList.remove('hidden');
                 
-                courierSelect.innerHTML = '<option value="internal">Kurir Internal ZenCare Direct (Khusus Malang)</option>';
+                courierSelect.innerHTML = `
+                    <option value="internal">Kurir Internal ZenCare Direct (Khusus Malang)</option>
+                    <option value="pickup">Ambil Sendiri di Toko (Gratis)</option>
+                `;
                 courierSelect.value = 'internal';
 
                 if (SAVED_LAT === null) {
@@ -434,13 +447,14 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                     marker.setLatLng([selectedLat, selectedLng]);
                 }
             } else {
-                // Luar Kota: Sembunyikan Kurir Internal, Tampilkan JNE & POS
                 document.getElementById('malang_notice').classList.add('hidden');
                 document.getElementById('luar_kota_notice').classList.remove('hidden');
+                document.getElementById('map_panel').classList.remove('hidden');
 
                 courierSelect.innerHTML = `
                     <option value="jne">Ekspedisi JNE Express</option>
                     <option value="pos">Ekspedisi POS Indonesia</option>
+                    <option value="pickup">Ambil Sendiri di Toko (Gratis)</option>
                 `;
                 courierSelect.value = 'jne';
 
@@ -464,16 +478,28 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             let courier = document.getElementById('courier_select').value;
             let destCityId = document.getElementById('kota_select').value || '391';
             let serviceContainer = document.getElementById('service_container');
+            let mapPanel = document.getElementById('map_panel');
 
             if (courier === 'internal') {
                 serviceContainer.classList.add('hidden');
+                mapPanel.classList.remove('hidden');
                 onMarkerMove(selectedLat, selectedLng);
+                return;
+            }
+            
+            if (courier === 'pickup') {
+                serviceContainer.classList.add('hidden');
+                mapPanel.classList.add('hidden');
+                currentOngkir = 0;
+                selectedServiceLabel = 'Ambil Sendiri di Toko';
+                updateTotalsDisplay();
                 return;
             }
 
             serviceContainer.classList.remove('hidden');
-            let cart = JSON.parse(localStorage.getItem('zencare_cart') || '[]');
-            let totalWeight = cart.reduce((sum, item) => sum + ((parseInt(item.weight) || 100) * (parseInt(item.qty) || 1)), 0);
+            mapPanel.classList.remove('hidden');
+            let cart = JSON.parse(localStorage.getItem('zc_cart') || '[]');
+            let totalWeight = cart.reduce((sum, item) => sum + ((parseInt(item.berat) || 100) * (parseInt(item.qty) || 1)), 0);
             if (totalWeight <= 0) totalWeight = 1000;
 
             let serviceSelect = document.getElementById('service_select');
@@ -545,9 +571,9 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
         }
 
         function updateTotalsDisplay() {
-            let cart = JSON.parse(localStorage.getItem('zencare_cart') || '[]');
-            let subtotal = cart.reduce((sum, i) => sum + ((parseFloat(i.price) || 0) * (parseInt(i.qty) || 1)), 0);
-            let totalWeight = cart.reduce((sum, i) => sum + ((parseInt(i.weight) || 100) * (parseInt(i.qty) || 1)), 0);
+            let cart = JSON.parse(localStorage.getItem('zc_cart') || '[]');
+            let subtotal = cart.reduce((sum, i) => sum + ((parseFloat(i.harga) || 0) * (parseInt(i.qty) || 1)), 0);
+            let totalWeight = cart.reduce((sum, i) => sum + ((parseInt(i.berat) || 100) * (parseInt(i.qty) || 1)), 0);
             let grandTotal = subtotal + currentOngkir;
 
             document.getElementById('disp_total_weight').innerText = totalWeight + ' Gram';
@@ -558,7 +584,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
 
         // Cart Management Functions (Edit Qty / Delete Item)
         function updateItemQty(id, delta) {
-            let cart = JSON.parse(localStorage.getItem('zencare_cart') || '[]');
+            let cart = JSON.parse(localStorage.getItem('zc_cart') || '[]');
             let item = cart.find(i => (i.cartId || i.id) == id);
             if (item) {
                 let newQty = (parseInt(item.qty) || 1) + delta;
@@ -569,15 +595,15 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                     return;
                 }
                 
-                // Validate maximum against stok - use maxStokBox if stored, else no limit from here
-                let maxStok = item.maxStokBox || item.stokBox || 9999;
+                // Validate maximum against stok
+                let maxStok = item.max || item.maxStokBox || item.stokBox || 9999;
                 if (delta > 0 && newQty > maxStok) {
-                    alert('Stok ' + (item.satuan_besar || item.satuan_label || 'unit') + ' hanya tersisa ' + maxStok + ' ' + (item.satuan_besar || '') + '. Tidak bisa menambah lagi!');
+                    alert('Stok ' + (item.satuan || item.satuan_besar || item.satuan_label || 'unit') + ' hanya tersisa ' + maxStok + '. Tidak bisa menambah lagi!');
                     return;
                 }
                 
                 item.qty = newQty;
-                localStorage.setItem('zencare_cart', JSON.stringify(cart));
+                localStorage.setItem('zc_cart', JSON.stringify(cart));
                 renderCartItems();
                 calculateShippingCost();
             }
@@ -585,15 +611,15 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
 
 
         function removeCartItem(id) {
-            let cart = JSON.parse(localStorage.getItem('zencare_cart') || '[]');
+            let cart = JSON.parse(localStorage.getItem('zc_cart') || '[]');
             cart = cart.filter(i => (i.cartId || i.id) != id);
-            localStorage.setItem('zencare_cart', JSON.stringify(cart));
+            localStorage.setItem('zc_cart', JSON.stringify(cart));
             renderCartItems();
             calculateShippingCost();
         }
 
         function renderCartItems() {
-            let cart = JSON.parse(localStorage.getItem('zencare_cart') || '[]');
+            let cart = JSON.parse(localStorage.getItem('zc_cart') || '[]');
             let container = document.getElementById('cart_summary_list');
 
             if (!Array.isArray(cart) || cart.length === 0) {
@@ -603,23 +629,25 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                         <a href="ecommerce/index.php" class="inline-block text-xs font-semibold px-4 py-2 bg-zc text-white rounded-xl">Lihat Produk</a>
                     </div>
                 `;
-                document.getElementById('btn_checkout').disabled = true;
-                document.getElementById('btn_checkout').className = "w-full mt-6 bg-slate-200 text-slate-400 font-semibold text-xs py-3.5 px-4 rounded-xl cursor-not-allowed";
+                document.getElementById('btn_checkout_nanti').disabled = true;
+                document.getElementById('btn_checkout_sekarang').disabled = true;
+                document.getElementById('btn_checkout_sekarang').className = "w-full sm:w-1/2 bg-slate-200 text-slate-400 font-semibold text-xs py-3.5 px-2 rounded-xl cursor-not-allowed";
                 return;
             }
 
             let html = '';
             cart.forEach(item => {
-                let price = parseFloat(item.price) || 0;
+                let price = parseFloat(item.harga) || 0;
                 let qty = parseInt(item.qty) || 1;
-                let weight = parseInt(item.weight) || 100;
+                let weight = parseInt(item.berat) || 100;
                 let sub = price * qty;
-                let satLabel = item.satuan_label || item.satuan_besar || 'Pcs';
+                let satLabel = item.satuan || item.satuan_label || item.satuan_besar || 'Pcs';
+                let itemName = item.nama || item.name || 'Produk';
 
                 html += `
                     <div class="flex items-center justify-between text-xs border-b border-zcBrd/60 pb-2.5">
                         <div class="pr-2 min-w-0 flex-1">
-                            <span class="font-bold text-zcTxt block truncate leading-snug">${item.name}</span>
+                            <span class="font-bold text-zcTxt block truncate leading-snug">${itemName}</span>
                             <span class="text-zcMut text-[11px]">Rp ${price.toLocaleString('id-ID')} / ${satLabel} (${weight}g)</span>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
@@ -638,7 +666,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             updateTotalsDisplay();
         }
 
-        function prosesCheckoutMidtrans() {
+        function prosesCheckout(isPayNow) {
             let nama = document.getElementById('nama_pembeli').value.trim();
             let phone = document.getElementById('phone').value.trim();
             let alamat = document.getElementById('alamat_lengkap').value.trim();
@@ -646,7 +674,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             let citySelect = document.getElementById('kota_select');
             let courier = document.getElementById('courier_select').value;
             let saveAddress = document.getElementById('save_profile_address')?.checked ?? false;
-            let cart = JSON.parse(localStorage.getItem('zencare_cart') || '[]');
+            let cart = JSON.parse(localStorage.getItem('zc_cart') || '[]');
 
             if (!nama || !phone || !alamat) {
                 alert('Harap lengkapi nama penerima, nomor telepon, dan alamat pengiriman!');
@@ -658,9 +686,16 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 return;
             }
 
-            let btn = document.getElementById('btn_checkout');
-            btn.disabled = true;
-            btn.innerText = 'Meminta Midtrans Snap Token...';
+            let btnNanti = document.getElementById('btn_checkout_nanti');
+            let btnSekarang = document.getElementById('btn_checkout_sekarang');
+            btnNanti.disabled = true;
+            btnSekarang.disabled = true;
+            
+            if (isPayNow) {
+                btnSekarang.innerText = 'Meminta Token...';
+            } else {
+                btnNanti.innerText = 'Memproses...';
+            }
 
             let payload = {
                 nama_pembeli: nama,
@@ -686,32 +721,59 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             })
             .then(res => res.json())
             .then(data => {
-                btn.disabled = false;
-                btn.innerText = 'Bayar Sekarang (Midtrans Snap Sandbox)';
+                btnNanti.disabled = false;
+                btnSekarang.disabled = false;
+                btnNanti.innerText = 'Buat Pesanan (Bayar Nanti)';
+                btnSekarang.innerText = 'Bayar Sekarang (Midtrans)';
 
                 if (data.status === 'success' && data.token) {
-                    snap.pay(data.token, {
+                    if (isPayNow) {
+                        snap.pay(data.token, {
                         onSuccess: function(result) {
-                            alert('Pembayaran Berhasil! Order ID: ' + data.order_id);
-                            localStorage.removeItem('zencare_cart');
-                            window.location.href = 'ecommerce/index.php';
+                            // Sinkronisasi paksa dari frontend (karena localhost tidak bisa terima webhook)
+                            fetch('api/sync_payment.php?order_id=' + data.order_id)
+                                .then(res => res.json())
+                                .then(syncData => {
+                                    alert('Pembayaran Berhasil! Order ID: ' + data.order_id);
+                                    localStorage.removeItem('zc_cart');
+                                    window.location.href = 'ecommerce/profil.php';
+                                }).catch(err => {
+                                    alert('Pembayaran Berhasil, namun gagal sinkronisasi ke server lokal. Harap hubungi admin.');
+                                    localStorage.removeItem('zc_cart');
+                                    window.location.href = 'ecommerce/profil.php';
+                                });
                         },
                         onPending: function(result) {
                             alert('Menunggu Pembayaran. Order ID: ' + data.order_id);
-                            localStorage.removeItem('zencare_cart');
-                            window.location.href = 'ecommerce/index.php';
+                            localStorage.removeItem('zc_cart');
+                            window.location.href = 'ecommerce/profil.php';
                         },
                         onError: function(result) {
                             alert('Transaksi Dibatalkan / Gagal.');
+                            localStorage.removeItem('zc_cart');
+                            window.location.href = 'ecommerce/profil.php';
+                        },
+                        onClose: function() {
+                            alert('Anda menutup halaman pembayaran. Pesanan Anda tersimpan dan dapat dibayar nanti melalui menu Riwayat Pesanan.');
+                            localStorage.removeItem('zc_cart');
+                            window.location.href = 'ecommerce/profil.php';
                         }
                     });
+                    } else {
+                        // isPayNow === false
+                        alert('Pesanan berhasil dibuat! Anda dapat membayarnya nanti melalui Profil Anda.');
+                        localStorage.removeItem('zc_cart');
+                        window.location.href = 'ecommerce/profil.php';
+                    }
                 } else {
                     alert('Gagal Checkout: ' + (data.message || 'Error tidak diketahui'));
                 }
             })
             .catch(err => {
-                btn.disabled = false;
-                btn.innerText = 'Bayar Sekarang (Midtrans Snap Sandbox)';
+                btnNanti.disabled = false;
+                btnSekarang.disabled = false;
+                btnNanti.innerText = 'Buat Pesanan (Bayar Nanti)';
+                btnSekarang.innerText = 'Bayar Sekarang (Midtrans)';
                 alert('Terjadi kesalahan jaringan: ' + err);
             });
         }

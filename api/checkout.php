@@ -52,7 +52,7 @@ try {
                                JOIN produk_induk pi ON pv.id_produk_induk = pi.id 
                                LEFT JOIN stok_toko sc ON sc.id_variasi = pv.id 
                                WHERE pv.id = ? FOR UPDATE");
-        $stmt->execute([$idCabang, $idVariasi]);
+        $stmt->execute([$idVariasi]);
         $produk = $stmt->fetch();
 
         if (!$produk) {
@@ -103,16 +103,19 @@ try {
 
     if ($idUser && !empty($input['save_profile'])) {
         $kotaId = intval($input['kota_id'] ?? 0);
-        $pdo->prepare("UPDATE users SET telepon=?, alamat=?, kota_id=?, lat=?, lng=? WHERE id=?")
-            ->execute([$phone, $alamatLengkap, $kotaId ?: null, $lat, $lng, $idUser]);
+        $pdo->prepare("UPDATE users SET telepon=?, alamat=?, kota_id=? WHERE id=?")
+            ->execute([$phone, $alamatLengkap, $kotaId ?: null, $idUser]);
     }
 
+    $metodePengambilan = ($kurir === 'pickup') ? 'Pick-up' : 'Kurir';
+    $statusPesanan = 'Menunggu Pembayaran';
+
     $stmtOrder = $pdo->prepare("INSERT INTO penjualan 
-        (no_invoice, id_cabang, id_user, tipe_transaksi, status_pesanan, total_harga, ongkir, nama_penerima, telepon, alamat_lengkap, kurir, layanan) 
-        VALUES (?, ?, ?, 'ecommerce', 'Menunggu', ?, ?, ?, ?, ?, ?, ?)");
+        (no_invoice, id_user, tipe_transaksi, metode_pengambilan, status_pesanan, total_harga, ongkir, nama_penerima, telepon_penerima, alamat_lengkap, kota_tujuan, kurir, layanan) 
+        VALUES (?, ?, 'ecommerce', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     
     $stmtOrder->execute([
-        $orderId, $idCabang, $idUser, $grandTotal, $ongkir, $namaPembeli, $phone, $alamatLengkap, $kurir, $layanan
+        $orderId, $idUser, $metodePengambilan, $statusPesanan, $grandTotal, $ongkir, $namaPembeli, $phone, $alamatLengkap, $kota, $kurir, $layanan
     ]);
     $idPenjualan = $pdo->lastInsertId();
 
@@ -139,16 +142,16 @@ try {
         
         // FEFO Logic untuk Obat
         if ($kategori === 'Obat') {
-            $stmtBatch = $pdo->prepare("SELECT id, stok FROM stok_batch WHERE id_variasi = ? AND 1=1 AND stok > 0 AND is_active = 1 ORDER BY tgl_exp ASC FOR UPDATE");
-            $stmtBatch->execute([$idVariasi, $idCabang]);
+            $stmtBatch = $pdo->prepare("SELECT id, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC FOR UPDATE");
+            $stmtBatch->execute([$idVariasi]);
             $batches = $stmtBatch->fetchAll();
             
             $sisaPotong = $qtyPotong;
             foreach ($batches as $b) {
                 if ($sisaPotong <= 0) break;
                 
-                $potongBatch = min($b['stok'], $sisaPotong);
-                $pdo->prepare("UPDATE stok_batch SET stok = stok - ? WHERE id = ?")->execute([$potongBatch, $b['id']]);
+                $potongBatch = min($b['stok_sisa'], $sisaPotong);
+                $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$potongBatch, $b['id']]);
                 
                 $sisaPotong -= $potongBatch;
             }
@@ -157,17 +160,17 @@ try {
             }
         }
 
-        $pdo->prepare("UPDATE stok_toko SET stok = stok - ? WHERE id_variasi = ? AND 1=1")
-            ->execute([$qtyPotong, $idVariasi, $idCabang]);
+        $pdo->prepare("UPDATE stok_toko SET stok = stok - ? WHERE id_variasi = ?")
+            ->execute([$qtyPotong, $idVariasi]);
 
         // Saldo akhir fisik
-        $sisaQ = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ? AND 1=1");
-        $sisaQ->execute([$idVariasi, $idCabang]);
+        $sisaQ = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ?");
+        $sisaQ->execute([$idVariasi]);
         $sisa = $sisaQ->fetchColumn();
 
         // Catat ke kartu_stok dengan referensi nomor invoice WEB-
-        $pdo->prepare("INSERT INTO kartu_stok (id_cabang, id_variasi, jenis_mutasi, qty, sisa_stok, keterangan) VALUES (?, ?, 'Keluar', ?, ?, ?)")
-            ->execute([$idCabang, $idVariasi, $qtyPotong, $sisa, $orderId]);
+        $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
+            ->execute([$idVariasi, $orderId, $qtyPotong, $sisa, 'Penjualan Checkout Web', $idUser]);
     }
 
     // 4. Request Midtrans Snap
