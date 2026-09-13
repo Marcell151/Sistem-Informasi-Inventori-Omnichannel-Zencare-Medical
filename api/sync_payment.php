@@ -53,7 +53,7 @@ try {
     // 2. Update Database (Logika sama dengan webhook)
     $pdo->beginTransaction();
 
-    $stmtSelect = $pdo->prepare("SELECT status_pesanan FROM penjualan WHERE no_invoice = ? FOR UPDATE");
+    $stmtSelect = $pdo->prepare("SELECT status_pesanan, metode_pengambilan FROM penjualan WHERE no_invoice = ? FOR UPDATE");
     $stmtSelect->execute([$orderId]);
     $order = $stmtSelect->fetch(PDO::FETCH_ASSOC);
 
@@ -62,6 +62,7 @@ try {
     }
 
     $oldStatus = $order['status_pesanan'];
+    $metodePengambilan = $order['metode_pengambilan'];
 
     if ($oldStatus === $newStatus) {
         // Sudah terupdate
@@ -90,12 +91,14 @@ try {
             $stmtStok = $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi = ?");
             $stmtStok->execute([$qtyPotong, $idVar]);
 
-            $stmtSisa = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ?");
-            $stmtSisa->execute([$idVar]);
-            $sisaStok = $stmtSisa->fetchColumn();
+            if ($metodePengambilan === 'Kurir') {
+                $stmtSisa = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ?");
+                $stmtSisa->execute([$idVar]);
+                $sisaStok = $stmtSisa->fetchColumn();
 
-            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan) VALUES (?, 'Masuk', 'E-Commerce', 'Retur Barang Rusak', ?, ?, ?, ?)");
-            $stmtKartu->execute([$idVar, $orderId, $qtyPotong, $sisaStok, "Refund/Cancel Midtrans: Batal $qtyBox $satBesar"]);
+                $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan) VALUES (?, 'Masuk', 'E-Commerce', 'Retur Barang Rusak', ?, ?, ?, ?)");
+                $stmtKartu->execute([$idVar, $orderId, $qtyPotong, $sisaStok, "Refund/Cancel Midtrans: Batal $qtyBox $satBesar"]);
+            }
         }
     }
 

@@ -20,9 +20,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
     $newStatus  = $_POST['status_pesanan'] ?? '';
     
     if ($idPesanan && in_array($newStatus, ['Menunggu Pembayaran', 'Diproses', 'Dikirim', 'Siap Diambil', 'Selesai', 'Dibatalkan'])) {
-        $pdo->prepare("UPDATE penjualan SET status_pesanan = ? WHERE id = ?")->execute([$newStatus, $idPesanan]);
-        $msg = "Status pesanan ID #$idPesanan berhasil diubah menjadi '$newStatus'.";
-        $msgType = 'success';
+        $pdo->beginTransaction();
+        try {
+            // Ambil status lama dan invoice
+            $stmtCek = $pdo->prepare("SELECT status_pesanan, no_invoice, metode_pengambilan FROM penjualan WHERE id = ? FOR UPDATE");
+            $stmtCek->execute([$idPesanan]);
+            $orderLama = $stmtCek->fetch();
+
+            if ($orderLama) {
+                $oldStatus = $orderLama['status_pesanan'];
+                $noInvoice = $orderLama['no_invoice'];
+                $metodePengambilan = $orderLama['metode_pengambilan'];
+
+                // Update Status
+                $pdo->prepare("UPDATE penjualan SET status_pesanan = ? WHERE id = ?")->execute([$newStatus, $idPesanan]);
+
+                // Jika status diubah menjadi Selesai dan metode Pick-up, catat sebagai Keluar di Kartu Stok
+                if ($oldStatus !== 'Selesai' && $newStatus === 'Selesai' && $metodePengambilan === 'Pick-up') {
+                    $stmtItems = $pdo->prepare("
+                        SELECT d.id_variasi, d.qty, v.rasio_konversi, v.satuan_besar 
+                        FROM detail_penjualan d 
+                        JOIN produk_variasi v ON d.id_variasi = v.id 
+                        WHERE d.id_penjualan = ?
+                    ");
+                    $stmtItems->execute([$idPesanan]);
+                    $items = $stmtItems->fetchAll();
+
+                    foreach ($items as $item) {
+                        $idVar = $item['id_variasi'];
+                        $qtyBox = intval($item['qty']);
+                        $rasio = intval($item['rasio_konversi']) ?: 1;
+                        $qtyPotong = $qtyBox * $rasio;
+
+                        $sisaStok = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVar")->fetchColumn();
+
+                        $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
+                            ->execute([$idVar, $noInvoice, $qtyPotong, $sisaStok, 'Konfirmasi Pengambilan di Toko (Pick-up)', $_SESSION['id_user'] ?? 1]);
+                    }
+                }
+
+                // Jika status diubah menjadi Dibatalkan (dan sebelumnya bukan Dibatalkan), kembalikan stok
+                if ($oldStatus !== 'Dibatalkan' && $newStatus === 'Dibatalkan') {
+                    $stmtItems = $pdo->prepare("
+                        SELECT d.id_variasi, d.qty, v.rasio_konversi, v.satuan_besar 
+                        FROM detail_penjualan d 
+                        JOIN produk_variasi v ON d.id_variasi = v.id 
+                        WHERE d.id_penjualan = ?
+                    ");
+                    $stmtItems->execute([$idPesanan]);
+                    $items = $stmtItems->fetchAll();
+
+                    foreach ($items as $item) {
+                        $idVar = $item['id_variasi'];
+                        $qtyBox = intval($item['qty']);
+                        $rasio = intval($item['rasio_konversi']) ?: 1;
+                        $qtyPotong = $qtyBox * $rasio;
+                        $satBesar = $item['satuan_besar'];
+
+                        $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi = ?")->execute([$qtyPotong, $idVar]);
+
+                        if ($metodePengambilan === 'Kurir') {
+                            $sisaStok = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVar")->fetchColumn();
+                            $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Masuk', 'E-Commerce', 'Retur Barang Rusak', ?, ?, ?, ?, ?)")
+                                ->execute([$idVar, $noInvoice, $qtyPotong, $sisaStok, "Dibatalkan Admin: Batal $qtyBox $satBesar", $_SESSION['id_user'] ?? 1]);
+                        }
+                    }
+                }
+                
+                $pdo->commit();
+                $msg = "Status pesanan ID #$idPesanan berhasil diubah menjadi '$newStatus'.";
+                $msgType = 'success';
+            }
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            $msg = "Gagal mengubah status: " . $e->getMessage();
+            $msgType = 'error';
+        }
     }
 }
 
@@ -50,10 +123,16 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
     </div>
 <?php endif; ?>
 
-<div class="flex items-center justify-between mb-5">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-4">
     <div>
         <h2 class="text-base font-bold text-zcTxt">Daftar Transaksi Pesanan</h2>
-        <p class="text-xs text-zcMut mt-0.5">Total: <?= count($orders) ?> pesanan terbaru</p>
+        <p class="text-xs text-zcMut mt-0.5">Total: <span id="lbl_count"><?= count($orders) ?></span> pesanan terbaru</p>
+    </div>
+    
+    <div class="bg-white border border-zcBrd p-1 rounded-xl flex shadow-sm inline-flex">
+        <button onclick="filterType('semua', this)" class="tab-btn px-4 py-2 text-xs font-bold rounded-lg transition bg-slate-800 text-white shadow-md shadow-slate-800/20" data-target="semua">Semua</button>
+        <button onclick="filterType('ecommerce', this)" class="tab-btn px-4 py-2 text-xs font-bold rounded-lg transition text-slate-500 hover:text-zcTxt hover:bg-slate-50" data-target="ecommerce">E-Commerce</button>
+        <button onclick="filterType('pos', this)" class="tab-btn px-4 py-2 text-xs font-bold rounded-lg transition text-slate-500 hover:text-zcTxt hover:bg-slate-50" data-target="pos">Kasir POS</button>
     </div>
 </div>
 
@@ -91,7 +170,7 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                             default     => 'bg-slate-100 text-slate-700 border-slate-200'
                         };
                         ?>
-                        <tr class="hover:bg-slate-50/60 transition">
+                        <tr class="order-row hover:bg-slate-50/60 transition" data-tipe="<?= htmlspecialchars($o['tipe_transaksi']) ?>">
                             <td class="px-4 py-3.5">
                                 <span class="font-bold text-zcTxt font-mono block"><?= htmlspecialchars($o['no_invoice']) ?></span>
                                 <span class="text-[10px] text-zcMut"><?= date('d/m/Y H:i', strtotime($o['created_at'])) ?></span>
@@ -136,6 +215,7 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                                 <?php else: ?>
                                                     <option value="Dikirim">Dikirim</option>
                                                 <?php endif; ?>
+                                                <option value="Dibatalkan">Dibatalkan (Refund)</option>
                                             <?php elseif (in_array($o['status_pesanan'], ['Dikirim', 'Siap Diambil'])): ?>
                                                 <option value="Selesai">Selesai (Force)</option>
                                             <?php endif; ?>
@@ -152,5 +232,32 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
         </table>
     </div>
 </div>
+
+<script>
+function filterType(type, btn) {
+    // Update styling tab
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(t => {
+        t.className = 'tab-btn px-4 py-2 text-xs font-bold rounded-lg transition text-slate-500 hover:text-zcTxt hover:bg-slate-50';
+    });
+    btn.className = 'tab-btn px-4 py-2 text-xs font-bold rounded-lg transition bg-slate-800 text-white shadow-md shadow-slate-800/20';
+    
+    // Filter rows
+    const rows = document.querySelectorAll('.order-row');
+    let count = 0;
+    
+    rows.forEach(r => {
+        const rType = r.getAttribute('data-tipe');
+        if (type === 'semua' || rType === type) {
+            r.style.display = '';
+            count++;
+        } else {
+            r.style.display = 'none';
+        }
+    });
+    
+    document.getElementById('lbl_count').innerText = count;
+}
+</script>
 
 <?php layoutEnd(); ?>

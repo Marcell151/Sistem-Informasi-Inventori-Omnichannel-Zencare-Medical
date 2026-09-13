@@ -125,7 +125,7 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
     if ($isStaff) {
         echo '<p class="sidebar-section">Transaksi</p>';
         $link('/inventory_zencare/pos/pos.php', 'pos', 'Kasir (POS)', 'pos');
-        $link('/inventory_zencare/admin/pesanan.php', 'orders', 'Pesanan Daring', 'pesanan');
+        $link('/inventory_zencare/admin/pesanan.php', 'orders', 'Transaksi', 'pesanan');
 
         // ── MASTER DATA ───────────────────────────────────────────────────
         echo '<p class="sidebar-section">Master Data</p>';

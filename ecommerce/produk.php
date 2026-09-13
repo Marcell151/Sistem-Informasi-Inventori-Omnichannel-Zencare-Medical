@@ -105,18 +105,30 @@ $related = $stmtRelated->fetchAll();
             
             <!-- LEFT: Product Image Zone (5 cols) -->
             <div class="lg:col-span-5 flex flex-col items-center">
+                <?php 
+                $rawGambar = $p['gambar'] ?? '';
+                $arrGambar = $rawGambar ? array_map('trim', explode(',', $rawGambar)) : [];
+                $mainGambar = !empty($arrGambar) ? $arrGambar[0] : '';
+                
+                function getProductImageSrc($gbr) {
+                    if (empty($gbr)) return '../assets/img/no-image.png';
+                    if (str_starts_with($gbr, 'http')) return $gbr;
+                    if (str_contains($gbr, '/')) return '../' . $gbr;
+                    return '../assets/img/produk/' . $gbr;
+                }
+                ?>
                 <div class="relative w-full aspect-square rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/25 to-slate-100 border border-slate-100 flex items-center justify-center p-8 overflow-hidden shadow-xs">
-                    <?php if (!empty($p['gambar'])): ?>
-                        <img src="../<?= htmlspecialchars($p['gambar']) ?>"
+                    <?php if ($mainGambar): ?>
+                        <img id="main_product_image" src="<?= htmlspecialchars(getProductImageSrc($mainGambar)) ?>"
                              alt="<?= htmlspecialchars($p['nama_lengkap']) ?>"
-                             class="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
-                             onerror="this.onerror=null; this.src='<?= htmlspecialchars($p['gambar']) ?>';">
+                             class="w-full h-full object-contain transition-transform duration-300 hover:scale-105 mix-blend-multiply"
+                             onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
                     <?php else: ?>
                         <div class="flex flex-col items-center text-slate-300 gap-3">
                             <div class="w-20 h-20 rounded-2xl bg-white shadow-xs flex items-center justify-center">
                                 <svg class="w-10 h-10 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                             </div>
-                            <span class="text-xs font-semibold text-slate-400">ZenCare Medical Product</span>
+                            <span class="text-xs font-semibold text-slate-400">Belum Ada Gambar</span>
                         </div>
                     <?php endif; ?>
 
@@ -130,12 +142,42 @@ $related = $stmtRelated->fetchAll();
                     <!-- SKU Top Right -->
                     <?php if ($p['sku_variasi']): ?>
                     <div class="absolute top-3.5 right-3.5">
-                        <span class="px-2.5 py-1 bg-slate-900/80 text-white text-[10px] font-mono rounded-lg tracking-wider">
+                        <span class="px-2.5 py-1 bg-slate-900/80 text-white text-[10px] font-mono rounded-lg tracking-wider shadow-xs">
                             SKU: <?= htmlspecialchars($p['sku_variasi']) ?>
                         </span>
                     </div>
                     <?php endif; ?>
                 </div>
+
+                <!-- Thumbnail Gallery Carousel -->
+                <?php if (count($arrGambar) > 1): ?>
+                <div class="w-full flex gap-3 mt-4 overflow-x-auto pb-2 scrollbar-hide snap-x">
+                    <?php foreach ($arrGambar as $idx => $gbr): 
+                        $thumbSrc = getProductImageSrc($gbr);
+                    ?>
+                        <div class="shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 <?= $idx === 0 ? 'border-zc' : 'border-slate-200' ?> cursor-pointer overflow-hidden bg-white snap-center thumbnail-img hover:border-zc transition p-1"
+                             onclick="changeMainImage(this, '<?= htmlspecialchars($thumbSrc) ?>')">
+                            <img src="<?= htmlspecialchars($thumbSrc) ?>" alt="thumb" class="w-full h-full object-contain mix-blend-multiply" onerror="this.src='../assets/img/no-image.png'">
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <script>
+                    function changeMainImage(el, src) {
+                        document.getElementById('main_product_image').src = src;
+                        document.querySelectorAll('.thumbnail-img').forEach(t => {
+                            t.classList.remove('border-zc');
+                            t.classList.add('border-slate-200');
+                        });
+                        el.classList.remove('border-slate-200');
+                        el.classList.add('border-zc');
+                    }
+                </script>
+                <style>
+                    /* Hides scrollbar for clean carousel */
+                    .scrollbar-hide::-webkit-scrollbar { display: none; }
+                    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+                </style>
+                <?php endif; ?>
 
                 <!-- Quality Seals -->
                 <div class="w-full grid grid-cols-3 gap-2 mt-4 text-center">

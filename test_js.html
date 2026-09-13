@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<body>
+<select id="uom_2">
+    <option value="kecil">Strip</option>
+</select>
+<button type="button" id="btn"
+    data-id="2"
+    data-nama="Amoxicillin Kapsul 500mg – Kapsul 500mg per Strip"
+    data-hk="7500"
+    data-hb="70000"
+    data-stok="60"
+    data-rasio="10"
+    onclick="addToPos(this)">
+    + Pilih
+</button>
+<script>
+    let cart = [];
+
+    function addToPos(btnElement) {
+        try {
+            let id = parseInt(btnElement.getAttribute('data-id'));
+            let name = btnElement.getAttribute('data-nama');
+            let hargaKecil = parseFloat(btnElement.getAttribute('data-hk'));
+            let hargaBesar = parseFloat(btnElement.getAttribute('data-hb'));
+            let maxStockPcs = parseInt(btnElement.getAttribute('data-stok'));
+            let rasio = parseInt(btnElement.getAttribute('data-rasio'));
+
+            let sel = document.getElementById('uom_' + id);
+            let uomType = sel.value; // 'kecil' or 'besar'
+            let uomLabel = sel.options[sel.selectedIndex].text;
+            
+            let price = (uomType === 'besar') ? hargaBesar : hargaKecil;
+            let qtyMultiplier = (uomType === 'besar') ? rasio : 1;
+            let cartId = id + '_' + uomType;
+
+            let found = cart.find(i => i.cartId === cartId);
+            if (found) {
+                if ((found.qty + 1) * found.rasio > found.maxPcs) { alert('Stok terbatas!'); return; }
+                found.qty++;
+            } else { 
+                if (qtyMultiplier > maxStockPcs) { alert('Stok tidak cukup untuk satuan ini!'); return; }
+                cart.push({
+                    id: id, cartId: cartId, nama: name, harga: price, qty: 1, 
+                    satuan_tipe: uomType, satuan_label: uomLabel, maxPcs: maxStockPcs, rasio: qtyMultiplier
+                }); 
+            }
+            console.log(cart);
+        } catch(e) {
+            console.error(e);
+        }
+    }
+    
+    addToPos(document.getElementById('btn'));
+</script>
+</body>
+</html>

@@ -1,0 +1,562 @@
+
+Notice: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\inventory_zencare\pos\pos.php on line 3
+
+Warning: Undefined array key "REQUEST_METHOD" in C:\xampp\htdocs\inventory_zencare\pos\pos.php on line 14
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal POS Karyawan – ZenCare Medical</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['"Inter"', 'sans-serif'] },
+            colors: { zc:'#1a75d2', zcHv:'#1562b3', zcLt:'#e8f2ff', zcEm:'#059669', zcBrd:'#e4e9f0', zcMut:'#64748b', zcTxt:'#1e293b' }
+          }
+        }
+      }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:99px; }
+        body { animation: fadeIn .15s ease; } @keyframes fadeIn { from{opacity:.7;} to{opacity:1;} }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans antialiased text-zcTxt">
+
+    <!-- Topbar -->
+    <header class="bg-white border-b border-zcBrd px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-zc to-zcHv text-white flex items-center justify-center shadow-lg shadow-zc/30">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-black text-zcTxt tracking-tight">POS ZenCare Medical</h1>
+                <div class="flex items-center gap-3 mt-1 text-xs text-zcMut font-medium">
+                    <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-zc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Kasir</span>
+                    <span class="text-slate-300">•</span>
+                    <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-zc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Pusat</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="../index.php" class="text-sm font-semibold bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl transition flex items-center gap-2"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Dashboard Utama</a>
+            <a href="../ecommerce/index.php" class="text-sm font-semibold bg-zc hover:bg-zcHv text-white px-4 py-2.5 rounded-xl shadow-md shadow-zc/20 transition">Toko Online</a>
+            <a href="../logout.php" class="text-sm font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 border border-rose-200 px-4 py-2.5 rounded-xl transition">Keluar</a>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 py-5">
+
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+            <!-- Katalog Produk -->
+            <div class="lg:col-span-7 bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden">
+                <div class="flex items-center justify-between px-5 py-4 border-b border-zcBrd">
+                    <h2 class="text-sm font-bold text-zcTxt">Katalog Stok Cabang</h2>
+                    <input type="text" id="pos_search" onkeyup="filterPos()" placeholder="Cari SKU / nama..."
+                        class="text-xs border border-zcBrd rounded-xl px-3 py-2 w-52 focus:outline-none focus:border-zc bg-slate-50">
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 max-h-[520px] overflow-y-auto" id="product_grid">
+                                                                    <div class="product-card bg-slate-50 border border-zcBrd rounded-2xl p-3.5 hover:border-zc transition flex flex-col"
+                             data-search="amoxicillin kapsul 500mg – kapsul 500mg per strip obt-002-500mg">
+                            <div class="flex gap-3 mb-3 flex-1 min-w-0">
+                                <div class="w-12 h-12 flex-shrink-0 bg-white rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center p-1">
+                                    <img src="../assets/img/no-image.png" alt="img" class="max-w-full max-h-full object-contain mix-blend-multiply" onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <span class="text-[9px] font-mono text-zcMut block">OBT-002-500MG</span>
+                                    <span class="text-xs font-bold text-zcTxt block leading-snug mt-0.5 line-clamp-2">Amoxicillin Kapsul 500mg – Kapsul 500mg per Strip</span>
+                                </div>
+                            </div>
+                            <div class="pt-2.5 border-t border-zcBrd flex items-end justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-zcTxt block">Rp 7.500 <span class="font-normal text-[10px] text-zcMut">/ Strip</span></span>
+                                    <span class="text-[9px] font-semibold text-zcEm block">Grosir: Rp 70.000 / Box (10 Strip)</span>
+                                    <span class="text-[10px] text-emerald-600 font-semibold">Stok: 60 Strip</span>
+                                </div>
+                                <div class="flex flex-col gap-1 items-end">
+                                    <select id="uom_2" class="text-[10px] border border-zcBrd rounded px-1 py-0.5 bg-white focus:outline-none focus:border-zc w-full" >
+                                        <option value="kecil">Strip</option>
+                                        <option value="besar" >Box (10 Strip)</option>
+                                    </select>
+                                    <button type="button" 
+                                        data-id="2"
+                                        data-nama="Amoxicillin Kapsul 500mg – Kapsul 500mg per Strip"
+                                        data-hk="7500"
+                                        data-hb="70000"
+                                        data-stok="60"
+                                        data-rasio="10"
+                                        onclick="addToPos(this)"
+                                                                                class="w-full text-[11px] font-bold px-2 py-1 rounded border transition bg-zc hover:bg-zcHv text-white border-zc shadow-xs">
+                                        + Pilih
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                                                                    <div class="product-card bg-slate-50 border border-zcBrd rounded-2xl p-3.5 hover:border-zc transition flex flex-col"
+                             data-search="paracetamol sirup anak 60ml – sirup 60ml per botol obt-001-60ml">
+                            <div class="flex gap-3 mb-3 flex-1 min-w-0">
+                                <div class="w-12 h-12 flex-shrink-0 bg-white rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center p-1">
+                                    <img src="../assets/img/no-image.png" alt="img" class="max-w-full max-h-full object-contain mix-blend-multiply" onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <span class="text-[9px] font-mono text-zcMut block">OBT-001-60ML</span>
+                                    <span class="text-xs font-bold text-zcTxt block leading-snug mt-0.5 line-clamp-2">Paracetamol Sirup Anak 60ml – Sirup 60ml per Botol</span>
+                                </div>
+                            </div>
+                            <div class="pt-2.5 border-t border-zcBrd flex items-end justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-zcTxt block">Rp 18.500 <span class="font-normal text-[10px] text-zcMut">/ Botol</span></span>
+                                    <span class="text-[9px] font-semibold text-zcEm block">Grosir: Rp 875.000 / Karton (50 Botol)</span>
+                                    <span class="text-[10px] text-emerald-600 font-semibold">Stok: 100 Botol</span>
+                                </div>
+                                <div class="flex flex-col gap-1 items-end">
+                                    <select id="uom_1" class="text-[10px] border border-zcBrd rounded px-1 py-0.5 bg-white focus:outline-none focus:border-zc w-full" >
+                                        <option value="kecil">Botol</option>
+                                        <option value="besar" >Karton (50 Botol)</option>
+                                    </select>
+                                    <button type="button" 
+                                        data-id="1"
+                                        data-nama="Paracetamol Sirup Anak 60ml – Sirup 60ml per Botol"
+                                        data-hk="18500"
+                                        data-hb="875000"
+                                        data-stok="100"
+                                        data-rasio="50"
+                                        onclick="addToPos(this)"
+                                                                                class="w-full text-[11px] font-bold px-2 py-1 rounded border transition bg-zc hover:bg-zcHv text-white border-zc shadow-xs">
+                                        + Pilih
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                                                                    <div class="product-card bg-slate-50 border border-zcBrd rounded-2xl p-3.5 hover:border-zc transition flex flex-col"
+                             data-search="tensimeter digital omron hem-7120 – set lengkap omron hem-7120 alk-001-hem7120">
+                            <div class="flex gap-3 mb-3 flex-1 min-w-0">
+                                <div class="w-12 h-12 flex-shrink-0 bg-white rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center p-1">
+                                    <img src="../assets/img/no-image.png" alt="img" class="max-w-full max-h-full object-contain mix-blend-multiply" onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <span class="text-[9px] font-mono text-zcMut block">ALK-001-HEM7120</span>
+                                    <span class="text-xs font-bold text-zcTxt block leading-snug mt-0.5 line-clamp-2">Tensimeter Digital Omron HEM-7120 – Set Lengkap Omron HEM-7120</span>
+                                </div>
+                            </div>
+                            <div class="pt-2.5 border-t border-zcBrd flex items-end justify-between">
+                                <div>
+                                    <span class="text-xs font-bold text-zcTxt block">Rp 495.000 <span class="font-normal text-[10px] text-zcMut">/ Unit</span></span>
+                                    <span class="text-[9px] font-semibold text-zcEm block">Grosir: Rp 495.000 / Unit</span>
+                                    <span class="text-[10px] text-emerald-600 font-semibold">Stok: 4 Unit</span>
+                                </div>
+                                <div class="flex flex-col gap-1 items-end">
+                                    <select id="uom_3" class="text-[10px] border border-zcBrd rounded px-1 py-0.5 bg-white focus:outline-none focus:border-zc w-full" >
+                                        <option value="kecil">Unit</option>
+                                        <option value="besar" >Unit</option>
+                                    </select>
+                                    <button type="button" 
+                                        data-id="3"
+                                        data-nama="Tensimeter Digital Omron HEM-7120 – Set Lengkap Omron HEM-7120"
+                                        data-hk="495000"
+                                        data-hb="495000"
+                                        data-stok="4"
+                                        data-rasio="1"
+                                        onclick="addToPos(this)"
+                                                                                class="w-full text-[11px] font-bold px-2 py-1 rounded border transition bg-zc hover:bg-zcHv text-white border-zc shadow-xs">
+                                        + Pilih
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                                    </div>
+            </div>
+
+            <!-- Billing POS -->
+            <div class="lg:col-span-5 bg-white border border-zcBrd rounded-2xl shadow-sm flex flex-col">
+                <div class="px-5 py-4 border-b border-zcBrd flex items-center gap-2">
+                    <h2 class="text-sm font-bold text-zcTxt">Billing Transaksi Karyawan</h2>
+                </div>
+
+                <div class="flex-1 overflow-y-auto">
+                    <table class="w-full text-xs" id="pos_cart_table">
+                        <thead class="bg-slate-50 border-b border-zcBrd text-zcMut font-bold uppercase">
+                            <tr>
+                                <th class="px-4 py-2.5 text-left">Item</th>
+                                <th class="px-4 py-2.5 text-center">Qty</th>
+                                <th class="px-4 py-2.5 text-right">Subtotal</th>
+                                <th class="px-4 py-2.5"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="pos_cart_body" class="divide-y divide-zcBorder/60">
+                            <tr><td colspan="4" class="px-4 py-10 text-center text-zcMut italic">Pilih barang dari katalog...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="p-5 border-t border-zcBrd space-y-3">
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-xs font-bold text-zcMut uppercase tracking-wider">Total Pembayaran</span>
+                        <span id="pos_total" class="text-2xl font-bold text-zcEm">Rp 0</span>
+                    </div>
+                    <form method="POST" id="form_pos">
+                        <input type="hidden" name="aksi" value="bayar_pos">
+                        <input type="hidden" name="metode_pembayaran" id="form_metode_pembayaran" value="Tunai">
+                        <button type="button" id="btn_pay" disabled onclick="openPaymentModal()"
+                            class="w-full py-3.5 rounded-xl text-xs font-bold transition shadow-sm bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed">
+                            Proses Pembayaran
+                        </button>
+                    </form>
+                    <button onclick="clearCart()" class="w-full py-2 rounded-xl text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg> Kosongkan Keranjang
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Pembayaran POS -->
+    <div id="payment_modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden transform transition-all scale-95 opacity-0 duration-200" id="modal_content">
+            <div class="bg-zc px-5 py-4 flex items-center justify-between">
+                <h3 class="text-white font-bold text-sm tracking-wide">PROSES PEMBAYARAN</h3>
+                <button onclick="closePaymentModal()" class="text-zcLt hover:text-white transition">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-5">
+                <div class="text-center p-4 bg-slate-50 rounded-xl border border-zcBrd shadow-inner">
+                    <p class="text-xs font-bold text-zcMut uppercase tracking-wider mb-1">Total Tagihan</p>
+                    <p class="text-4xl font-black text-zcTxt" id="modal_total_tagihan">Rp 0</p>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-zcTxt mb-2">Metode Pembayaran</label>
+                    <select id="modal_metode" onchange="toggleNominalInput()" class="w-full text-sm font-bold border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-zc focus:ring-4 focus:ring-zcLt transition appearance-none bg-white mb-4">
+                        <option value="Tunai">Uang Tunai</option>
+                        <option value="QRIS">QRIS / E-Wallet</option>
+                        <option value="Transfer Bank">Transfer Bank</option>
+                        <option value="Kartu Debit/Kredit">Kartu Debit/Kredit</option>
+                    </select>
+                </div>
+                
+                <div id="nominal_section">
+                    <label class="block text-xs font-bold text-zcTxt mb-2">Nominal Uang Diberikan (Rp)</label>
+                    <input type="text" id="modal_nominal" onkeyup="calcKembalian()" placeholder="0" class="w-full text-2xl font-bold border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-zc focus:ring-4 focus:ring-zcLt transition text-right">
+                    <div class="flex gap-2 mt-3">
+                        <button type="button" onclick="setNominal(50000)" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold py-2.5 rounded-lg border border-slate-200 transition shadow-sm">50.000</button>
+                        <button type="button" onclick="setNominal(100000)" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold py-2.5 rounded-lg border border-slate-200 transition shadow-sm">100.000</button>
+                        <button type="button" onclick="setNominalUangPas()" class="flex-1 bg-zcLt hover:bg-blue-100 text-zc text-sm font-bold py-2.5 rounded-lg border border-blue-200 transition shadow-sm">Uang Pas</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-4 rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors" id="box_kembalian">
+                    <span class="text-sm font-bold text-zcMut" id="lbl_kembalian">Menunggu Pembayaran</span>
+                    <span class="text-2xl font-bold text-zcTxt" id="val_kembalian">-</span>
+                </div>
+                
+                <div id="non_tunai_info" class="hidden p-4 rounded-xl border border-blue-200 bg-blue-50 text-blue-800 text-xs text-center font-medium">
+                    Pastikan pembayaran melalui EDC/Transfer/QRIS telah berhasil masuk sebelum menyelesaikan transaksi.
+                </div>
+            </div>
+            <div class="p-5 border-t border-zcBrd bg-slate-50 flex gap-3">
+                <button onclick="closePaymentModal()" class="flex-1 py-3.5 rounded-xl text-sm font-bold bg-white text-slate-600 border border-slate-300 hover:bg-slate-100 transition shadow-sm">Batal</button>
+                <button id="btn_submit_pay" onclick="submitPayment()" disabled class="flex-[2] py-3.5 rounded-xl text-sm font-bold bg-slate-300 text-slate-500 cursor-not-allowed transition">Selesaikan Transaksi</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let cart = [];
+
+    function addToPos(btnElement) {
+        let id = parseInt(btnElement.getAttribute('data-id'));
+        let name = btnElement.getAttribute('data-nama');
+        let hargaKecil = parseFloat(btnElement.getAttribute('data-hk'));
+        let hargaBesar = parseFloat(btnElement.getAttribute('data-hb'));
+        let maxStockPcs = parseInt(btnElement.getAttribute('data-stok'));
+        let rasio = parseInt(btnElement.getAttribute('data-rasio'));
+
+        let sel = document.getElementById('uom_' + id);
+        let uomType = sel.value; // 'kecil' or 'besar'
+        let uomLabel = sel.options[sel.selectedIndex].text;
+        
+        let price = (uomType === 'besar') ? hargaBesar : hargaKecil;
+        let qtyMultiplier = (uomType === 'besar') ? rasio : 1;
+        let cartId = id + '_' + uomType;
+
+        let found = cart.find(i => i.cartId === cartId);
+        if (found) {
+            if ((found.qty + 1) * found.rasio > found.maxPcs) { alert('Stok terbatas!'); return; }
+            found.qty++;
+        } else { 
+            if (qtyMultiplier > maxStockPcs) { alert('Stok tidak cukup untuk satuan ini!'); return; }
+            cart.push({
+                id: id, cartId: cartId, nama: name, harga: price, qty: 1, 
+                satuan_tipe: uomType, satuan_label: uomLabel, maxPcs: maxStockPcs, rasio: qtyMultiplier
+            }); 
+        }
+        renderCart();
+    }
+
+    function changeQty(cartId, d) {
+        let item = cart.find(i => i.cartId === cartId);
+        if (!item) return;
+        if (d > 0 && (item.qty + d) * item.rasio > item.maxPcs) { alert('Stok terbatas!'); return; }
+        item.qty += d;
+        if (item.qty <= 0) cart = cart.filter(i => i.cartId !== cartId);
+        renderCart();
+    }
+
+    function removeItem(cartId) { cart = cart.filter(i => i.cartId !== cartId); renderCart(); }
+    function clearCart() { cart = []; renderCart(); }
+
+    function renderCart() {
+        const tbody = document.getElementById('pos_cart_body');
+        const totalEl = document.getElementById('pos_total');
+        const btn = document.getElementById('btn_pay');
+        const inp = document.getElementById('cart_input');
+
+        if (cart.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-10 text-center text-zcMut italic">Pilih barang dari katalog...</td></tr>';
+            totalEl.innerText = 'Rp 0';
+            btn.disabled = true;
+            btn.className = 'w-full py-3.5 rounded-xl text-xs font-bold bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed';
+            inp.value = '[]'; return;
+        }
+
+        let total = 0, html = '';
+        cart.forEach(i => {
+            const sub = i.harga * i.qty; total += sub;
+            html += `<tr class="hover:bg-slate-50/60">
+                <td class="px-4 py-3 font-semibold text-zcTxt text-xs">
+                    ${i.nama}
+                    <span class="block text-[9px] text-zcEm mt-0.5">${i.satuan_label} (Rp ${i.harga.toLocaleString('id-ID')})</span>
+                </td>
+                <td class="px-4 py-3 text-center">
+                    <div class="flex items-center justify-center gap-1.5">
+                        <button type="button" onclick="changeQty('${i.cartId}',-1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition">-</button>
+                        <span class="font-bold text-xs w-5 text-center">${i.qty}</span>
+                        <button type="button" onclick="changeQty('${i.cartId}',1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition">+</button>
+                    </div>
+                </td>
+                <td class="px-4 py-3 text-right font-bold text-xs">Rp ${sub.toLocaleString('id-ID')}</td>
+                <td class="px-4 py-3 text-center"><button type="button" onclick="removeItem('${i.cartId}')" class="text-rose-500 hover:text-rose-700 text-xs font-bold transition">✕</button></td>
+            </tr>`;
+        });
+
+        tbody.innerHTML = html;
+        totalEl.innerText = 'Rp ' + total.toLocaleString('id-ID');
+        btn.disabled = false;
+        btn.className = 'w-full py-3.5 rounded-xl text-xs font-bold bg-zc hover:bg-zcHv text-white transition shadow-sm cursor-pointer';
+        inp.value = JSON.stringify(cart);
+    }
+
+    // --- Payment UI Logic ---
+    let currentTotal = 0;
+    let modalInput = document.getElementById('modal_nominal');
+    
+    function formatRupiah(angka) {
+        return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    function openPaymentModal() {
+        if (!cart.length) return;
+        currentTotal = 0;
+        cart.forEach(i => currentTotal += i.harga * i.qty);
+        
+        document.getElementById('modal_total_tagihan').innerText = 'Rp ' + formatRupiah(currentTotal);
+        modalInput.value = '';
+        calcKembalian();
+        
+        let modal = document.getElementById('payment_modal');
+        let content = document.getElementById('modal_content');
+        modal.classList.remove('hidden');
+        
+        // Animasi masuk
+        setTimeout(() => {
+            content.classList.remove('scale-95', 'opacity-0');
+            content.classList.add('scale-100', 'opacity-100');
+            modalInput.focus();
+        }, 10);
+    }
+
+    function closePaymentModal() {
+        let modal = document.getElementById('payment_modal');
+        let content = document.getElementById('modal_content');
+        
+        // Animasi keluar
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 200);
+    }
+
+    function setNominal(val) {
+        modalInput.value = formatRupiah(val);
+        calcKembalian();
+    }
+    
+    function setNominalUangPas() {
+        modalInput.value = formatRupiah(currentTotal);
+        calcKembalian();
+    }
+
+    function calcKembalian() {
+        let metode = document.getElementById('modal_metode').value;
+        let box = document.getElementById('box_kembalian');
+        let lbl = document.getElementById('lbl_kembalian');
+        let val = document.getElementById('val_kembalian');
+        let btn = document.getElementById('btn_submit_pay');
+
+        if (metode !== 'Tunai') {
+            box.classList.add('hidden');
+            btn.disabled = false;
+            btn.className = 'flex-[2] py-3.5 rounded-xl text-sm font-bold bg-zc hover:bg-zcHv text-white transition shadow-sm cursor-pointer shadow-zc/30';
+            return;
+        }
+        
+        box.classList.remove('hidden');
+
+        let raw = modalInput.value.replace(/[^0-9]/g, '');
+        if(raw) modalInput.value = formatRupiah(raw);
+        let nom = parseInt(raw) || 0;
+        
+        let box = document.getElementById('box_kembalian');
+        let lbl = document.getElementById('lbl_kembalian');
+        let val = document.getElementById('val_kembalian');
+        let btn = document.getElementById('btn_submit_pay');
+        
+        if (nom === 0) {
+            box.className = "flex items-center justify-between p-4 rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors";
+            lbl.className = "text-sm font-bold text-zcMut";
+            lbl.innerText = "Menunggu Nominal";
+            val.className = "text-2xl font-bold text-zcMut";
+            val.innerText = "-";
+            btn.disabled = true;
+            btn.className = "flex-[2] py-3.5 rounded-xl text-sm font-bold bg-slate-300 text-slate-500 cursor-not-allowed transition";
+        } else if (nom < currentTotal) {
+            box.className = "flex items-center justify-between p-4 rounded-xl border-2 border-rose-300 bg-rose-50 transition-colors";
+            lbl.className = "text-sm font-bold text-rose-600";
+            lbl.innerText = "Kekurangan Bayar";
+            val.className = "text-2xl font-black text-rose-600";
+            val.innerText = "Rp " + formatRupiah(currentTotal - nom);
+            btn.disabled = true;
+            btn.className = "flex-[2] py-3.5 rounded-xl text-sm font-bold bg-slate-300 text-slate-500 cursor-not-allowed transition";
+        } else {
+            box.className = "flex items-center justify-between p-4 rounded-xl border-2 border-emerald-300 bg-emerald-50 transition-colors";
+            lbl.className = "text-sm font-bold text-emerald-600";
+            lbl.innerText = "Uang Kembalian";
+            val.className = "text-2xl font-black text-emerald-600";
+            val.innerText = "Rp " + formatRupiah(nom - currentTotal);
+            btn.disabled = false;
+            btn.className = "flex-[2] py-3.5 rounded-xl text-sm font-bold bg-zc hover:bg-zcHv text-white shadow-lg shadow-zc/30 transition cursor-pointer";
+        }
+    }
+
+    function toggleNominalInput() {
+        let metode = document.getElementById('modal_metode').value;
+        let nominalSec = document.getElementById('nominal_section');
+        let infoSec = document.getElementById('non_tunai_info');
+        
+        if (metode === 'Tunai') {
+            nominalSec.classList.remove('hidden');
+            infoSec.classList.add('hidden');
+        } else {
+            nominalSec.classList.add('hidden');
+            infoSec.classList.remove('hidden');
+        }
+        calcKembalian();
+    }
+
+    function submitPayment() {
+        document.getElementById('form_metode_pembayaran').value = document.getElementById('modal_metode').value;
+        document.getElementById('btn_submit_pay').innerText = 'Memproses...';
+        document.getElementById('form_pos').submit();
+    }
+
+    // --- Barcode Scanner Listener ---
+    let barcodeString = '';
+    let barcodeTimer = null;
+    
+    document.addEventListener('keydown', function(e) {
+        // Jangan tangkap ketikan jika sedang mengisi input pencarian atau modal nominal
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        
+        if (e.key === 'Enter') {
+            if (barcodeString.length > 2) {
+                processBarcode(barcodeString);
+            }
+            barcodeString = '';
+            clearTimeout(barcodeTimer);
+            return;
+        }
+        
+        if (e.key.length === 1) { 
+            barcodeString += e.key;
+            clearTimeout(barcodeTimer);
+            barcodeTimer = setTimeout(() => {
+                // Kecepatan mengetik manusia dibatalkan (asumsi scanner barcode mengetik dengan sangat cepat < 50ms)
+                barcodeString = ''; 
+            }, 60); 
+        }
+    });
+
+    function processBarcode(sku) {
+        sku = sku.trim().toLowerCase();
+        let found = false;
+        let cards = document.querySelectorAll('.product-card');
+        
+        for (let c of cards) {
+            // Kita cari elemen yang mengandung SKU ini
+            let skuSpan = c.querySelector('span.font-mono');
+            if (skuSpan && skuSpan.innerText.toLowerCase() === sku) {
+                let btn = c.querySelector('button');
+                if (btn && !btn.disabled) {
+                    btn.click();
+                    found = true;
+                    // Beri efek highlight sejenak pada card
+                    c.classList.add('bg-zcLt', 'border-zc');
+                    setTimeout(() => c.classList.remove('bg-zcLt', 'border-zc'), 300);
+                    
+                    // Suara Beep Opsional (AudioContext API)
+                    try {
+                        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        let oscillator = audioCtx.createOscillator();
+                        oscillator.type = 'sine';
+                        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Frekuensi 800Hz
+                        oscillator.connect(audioCtx.destination);
+                        oscillator.start();
+                        oscillator.stop(audioCtx.currentTime + 0.1);
+                    } catch(err) {}
+                    
+                    break;
+                }
+            }
+        }
+        
+        if (!found) {
+            alert('SKU Barcode tidak ditemukan atau stok kosong: ' + sku.toUpperCase());
+        }
+    }
+
+    function filterPos() {
+        const q = document.getElementById('pos_search').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.product-card');
+        
+        cards.forEach(c => {
+            const matchStr = c.getAttribute('data-search') || '';
+            if (matchStr.includes(q)) {
+                c.classList.remove('hidden');
+                c.classList.add('flex');
+            } else {
+                c.classList.add('hidden');
+                c.classList.remove('flex');
+            }
+        });
+    }
+    </script>
+</body>
+</html>
+

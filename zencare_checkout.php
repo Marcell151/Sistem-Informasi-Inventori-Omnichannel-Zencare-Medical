@@ -251,7 +251,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                             Buat Pesanan (Bayar Nanti)
                         </button>
                         <button onclick="prosesCheckout(true)" id="btn_checkout_sekarang" class="w-full sm:w-1/2 bg-zc hover:bg-zcHv text-white font-semibold text-xs py-3.5 px-2 rounded-xl transition shadow-sm">
-                            Bayar Sekarang (Midtrans)
+                            Bayar Sekarang
                         </button>
                     </div>
                 </div>
@@ -724,7 +724,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 btnNanti.disabled = false;
                 btnSekarang.disabled = false;
                 btnNanti.innerText = 'Buat Pesanan (Bayar Nanti)';
-                btnSekarang.innerText = 'Bayar Sekarang (Midtrans)';
+                btnSekarang.innerText = 'Bayar Sekarang';
 
                 if (data.status === 'success' && data.token) {
                     if (isPayNow) {
@@ -773,7 +773,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 btnNanti.disabled = false;
                 btnSekarang.disabled = false;
                 btnNanti.innerText = 'Buat Pesanan (Bayar Nanti)';
-                btnSekarang.innerText = 'Bayar Sekarang (Midtrans)';
+                btnSekarang.innerText = 'Bayar Sekarang';
                 alert('Terjadi kesalahan jaringan: ' + err);
             });
         }

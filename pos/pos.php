@@ -20,8 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
         try {
             $totalHarga = 0;
             $invoiceNo  = "POS-" . date('Ymd') . "-" . rand(1000, 9999);
-            $pdo->prepare("INSERT INTO penjualan (no_invoice,id_user,tipe_transaksi,status_pesanan,total_harga,created_at) VALUES (?,?,?,'pos','Selesai',0,NOW())")
-                ->execute([$invoiceNo, $_SESSION['user_id'] ?? 2]);
+            $metodeBayar = $_POST['metode_pembayaran'] ?? 'Tunai';
+            $pdo->prepare("INSERT INTO penjualan (no_invoice,id_user,tipe_transaksi,status_pesanan,total_harga,metode_pembayaran,created_at) VALUES (?,?,'pos','Selesai',0,?,NOW())")
+                ->execute([$invoiceNo, $_SESSION['user_id'] ?? 2, $metodeBayar]);
             $idPenjualan = $pdo->lastInsertId();
 
             foreach ($cartItems as $item) {
@@ -47,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
 
                 // FEFO Logic untuk Obat
                 if ($kategori === 'Obat') {
-                    $stmtBatch = $pdo->prepare("SELECT id, stok FROM stok_batch WHERE id_variasi = ? AND 1=1 AND stok > 0 AND is_active = 1 ORDER BY tgl_exp ASC FOR UPDATE");
+                    $stmtBatch = $pdo->prepare("SELECT id, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC FOR UPDATE");
                     $stmtBatch->execute([$idVar]);
                     $batches = $stmtBatch->fetchAll();
                     
@@ -55,8 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                     foreach ($batches as $b) {
                         if ($sisaPotong <= 0) break;
                         
-                        $potongBatch = min($b['stok'], $sisaPotong);
-                        $pdo->prepare("UPDATE stok_batch SET stok = stok - ? WHERE id = ?")->execute([$potongBatch, $b['id']]);
+                        $potongBatch = min($b['stok_sisa'], $sisaPotong);
+                        $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$potongBatch, $b['id']]);
                         
                         $sisaPotong -= $potongBatch;
                     }
@@ -67,10 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
 
                 // SN Auto-Pick untuk Alkes (jika tidak dipilih di UI)
                 if ($kategori === 'Alat Kesehatan') {
-                    $stmtSn = $pdo->prepare("SELECT serial_number FROM unit_serial WHERE id_variasi = ? AND 1=1 AND status = 'Tersedia' LIMIT ? FOR UPDATE");
+                    $stmtSn = $pdo->prepare("SELECT serial_number FROM unit_serial WHERE id_variasi = ? AND status = 'Tersedia' LIMIT ? FOR UPDATE");
                     $stmtSn->bindValue(1, $idVar, PDO::PARAM_INT);
-                    $stmtSn->bindValue(2, $idCabangKaryawan, PDO::PARAM_INT);
-                    $stmtSn->bindValue(3, $qtyPotong, PDO::PARAM_INT);
+                    $stmtSn->bindValue(2, $qtyPotong, PDO::PARAM_INT);
                     $stmtSn->execute();
                     $snList = $stmtSn->fetchAll(PDO::FETCH_COLUMN);
 
@@ -86,11 +86,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
 
                 $pdo->prepare("UPDATE stok_toko SET stok=stok-? WHERE id_variasi=?")->execute([$qtyPotong,$idVar]);
 
-                $sisaQ = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi=? AND 1=1");
-                $sisaQ->execute([$idVar,$idCabangKaryawan]);
+                $sisaQ = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi=?");
+                $sisaQ->execute([$idVar]);
                 $sisa = $sisaQ->fetchColumn();
                 $satLable = ($satuanTipe === 'besar') ? $varData['satuan_besar'] : $varData['satuan_kecil'];
-                $pdo->prepare("INSERT INTO kartu_stok (id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,?,'Keluar',?,?,?)")
+                $pdo->prepare("INSERT INTO kartu_stok (id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,?,?,?,?)")
                     ->execute([$idVar,'Keluar',$qtyPotong,$sisa,"Penjualan Luring $invoiceNo"]);
                 $totalHarga += $effPrice * $qtyInput;
             }
@@ -125,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
 
 $katalog = $pdo->prepare("
     SELECT v.id, v.sku_variasi, CONCAT(i.nama_produk,' – ',v.nama_variasi) AS nama,
-           v.satuan_kecil, v.satuan_besar, v.rasio_konversi, v.harga_jual_kecil, v.harga_jual_besar, COALESCE(sc.stok,0) AS stok, i.kategori
+           v.satuan_kecil, v.satuan_besar, v.rasio_konversi, v.harga_jual_kecil, v.harga_jual_besar, COALESCE(sc.stok,0) AS stok, i.kategori, v.gambar
     FROM produk_variasi v JOIN produk_induk i ON v.id_produk_induk=i.id
     LEFT JOIN stok_toko sc ON sc.id_variasi=v.id 
     WHERE v.is_active=1 AND i.is_active=1 ORDER BY i.nama_produk ASC");
@@ -139,6 +139,9 @@ $shopeeOn = false;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Terminal POS Karyawan – ZenCare Medical</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -160,24 +163,24 @@ $shopeeOn = false;
 <body class="bg-slate-50 font-sans antialiased text-zcTxt">
 
     <!-- Topbar -->
-    <header class="bg-white border-b border-zcBrd px-6 py-3.5 flex items-center justify-between sticky top-0 z-30">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-zc text-white flex items-center justify-center">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    <header class="bg-white border-b border-zcBrd px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-zc to-zcHv text-white flex items-center justify-center shadow-lg shadow-zc/30">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
             </div>
             <div>
-                <h1 class="text-sm font-bold text-zcTxt leading-tight">TERMINAL POS KASIR OFFLINE</h1>
-                <p class="text-[10px] text-zcMut">
-                    <strong><?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Karyawan') ?></strong> &bull;
-                    Cabang: <strong class="text-zc"><?= htmlspecialchars($cabangKaryawan['nama'] ?? '–') ?></strong> &bull;
-                    Shopee: <span class="font-bold <?= $shopeeOn ? 'text-emerald-600' : 'text-slate-400' ?>"><?= $shopeeOn ? '● ON' : '● OFF' ?></span>
-                </p>
+                <h1 class="text-xl font-black text-zcTxt tracking-tight">POS ZenCare Medical</h1>
+                <div class="flex items-center gap-3 mt-1 text-xs text-zcMut font-medium">
+                    <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-zc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Kasir') ?></span>
+                    <span class="text-slate-300">•</span>
+                    <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-zc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> <?= htmlspecialchars($cabangKaryawan['nama'] ?? 'Pusat') ?></span>
+                </div>
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <a href="../index.php" class="text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 border border-zcBrd px-3.5 py-2 rounded-lg transition">← Dashboard</a>
-            <a href="../ecommerce/index.php" class="text-xs font-medium bg-zc hover:bg-zcHv text-white px-3.5 py-2 rounded-lg transition">Toko Online</a>
-            <a href="../logout.php" class="text-xs font-medium text-rose-600 hover:text-rose-800 bg-rose-50 border border-rose-200 px-3.5 py-2 rounded-lg transition">Keluar</a>
+            <a href="../index.php" class="text-sm font-semibold bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl transition flex items-center gap-2"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Dashboard Utama</a>
+            <a href="../ecommerce/index.php" class="text-sm font-semibold bg-zc hover:bg-zcHv text-white px-4 py-2.5 rounded-xl shadow-md shadow-zc/20 transition">Toko Online</a>
+            <a href="../logout.php" class="text-sm font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 border border-rose-200 px-4 py-2.5 rounded-xl transition">Keluar</a>
         </div>
     </header>
 
@@ -200,12 +203,29 @@ $shopeeOn = false;
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 max-h-[520px] overflow-y-auto" id="product_grid">
                     <?php foreach ($katalog as $item): ?>
-                        <?php $stok = intval($item['stok']); ?>
+                        <?php 
+                        $rawGambar = $item['gambar'] ?? '';
+                        $arrGambar = $rawGambar ? array_map('trim', explode(',', $rawGambar)) : [];
+                        $mainGambar = !empty($arrGambar) ? $arrGambar[0] : '';
+                        
+                        $imgSrc = '../assets/img/no-image.png';
+                        if ($mainGambar) {
+                            if (str_starts_with($mainGambar, 'http')) $imgSrc = $mainGambar;
+                            else if (str_contains($mainGambar, '/')) $imgSrc = '../' . $mainGambar;
+                            else $imgSrc = '../assets/img/produk/' . $mainGambar;
+                        }
+                        $stok = intval($item['stok']); 
+                        ?>
                         <div class="product-card bg-slate-50 border border-zcBrd rounded-2xl p-3.5 hover:border-zc transition flex flex-col"
                              data-search="<?= strtolower($item['nama'] . ' ' . $item['sku_variasi']) ?>">
-                            <div class="min-w-0 flex-1 mb-3">
-                                <span class="text-[9px] font-mono text-zcMut block"><?= htmlspecialchars($item['sku_variasi']) ?></span>
-                                <span class="text-xs font-bold text-zcTxt block leading-snug mt-0.5 line-clamp-2"><?= htmlspecialchars($item['nama']) ?></span>
+                            <div class="flex gap-3 mb-3 flex-1 min-w-0">
+                                <div class="w-12 h-12 flex-shrink-0 bg-white rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center p-1">
+                                    <img src="<?= htmlspecialchars($imgSrc) ?>" alt="img" class="max-w-full max-h-full object-contain mix-blend-multiply" onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <span class="text-[9px] font-mono text-zcMut block"><?= htmlspecialchars($item['sku_variasi']) ?></span>
+                                    <span class="text-xs font-bold text-zcTxt block leading-snug mt-0.5 line-clamp-2"><?= htmlspecialchars($item['nama']) ?></span>
+                                </div>
                             </div>
                             <div class="pt-2.5 border-t border-zcBrd flex items-end justify-between">
                                 <div>
@@ -218,7 +238,14 @@ $shopeeOn = false;
                                         <option value="kecil"><?= htmlspecialchars($item['satuan_kecil']) ?></option>
                                         <option value="besar" <?= $stok < $item['rasio_konversi'] ? 'disabled' : '' ?>><?= htmlspecialchars($item['satuan_besar']) ?></option>
                                     </select>
-                                    <button onclick="addToPos(<?= $item['id'] ?>, '<?= addslashes($item['nama']) ?>', <?= $item['harga_jual_kecil'] ?>, <?= $item['harga_jual_besar'] ?>, <?= $stok ?>, <?= $item['rasio_konversi'] ?>)"
+                                    <button type="button" 
+                                        data-id="<?= intval($item['id']) ?>"
+                                        data-nama="<?= htmlspecialchars($item['nama'], ENT_QUOTES, 'UTF-8') ?>"
+                                        data-hk="<?= floatval($item['harga_jual_kecil']) ?>"
+                                        data-hb="<?= floatval($item['harga_jual_besar']) ?>"
+                                        data-stok="<?= intval($stok) ?>"
+                                        data-rasio="<?= intval($item['rasio_konversi']) ?: 1 ?>"
+                                        onclick="addToPos(this)"
                                         <?= $stok <= 0 ? 'disabled' : '' ?>
                                         class="w-full text-[11px] font-bold px-2 py-1 rounded border transition <?= $stok > 0 ? 'bg-zc hover:bg-zcHv text-white border-zc shadow-xs' : 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed' ?>">
                                         + Pilih
@@ -257,12 +284,13 @@ $shopeeOn = false;
                         <span class="text-xs font-bold text-zcMut uppercase tracking-wider">Total Pembayaran</span>
                         <span id="pos_total" class="text-2xl font-bold text-zcEm">Rp 0</span>
                     </div>
-                    <form method="POST" onsubmit="return validatePay()">
+                    <form method="POST" id="form_pos">
                         <input type="hidden" name="aksi" value="bayar_pos">
                         <input type="hidden" name="cart_data" id="cart_input">
-                        <button type="submit" id="btn_pay" disabled
+                        <input type="hidden" name="metode_pembayaran" id="form_metode_pembayaran" value="Tunai">
+                        <button type="button" id="btn_pay" disabled onclick="openPaymentModal()"
                             class="w-full py-3.5 rounded-xl text-xs font-bold transition shadow-sm bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed">
-                            Proses Pembayaran Karyawan
+                            Proses Pembayaran
                         </button>
                     </form>
                     <button onclick="clearCart()" class="w-full py-2 rounded-xl text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition flex items-center justify-center gap-2">
@@ -274,49 +302,118 @@ $shopeeOn = false;
         </div>
     </div>
 
+    <!-- Modal Pembayaran POS -->
+    <div id="payment_modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden transform transition-all scale-95 opacity-0 duration-200" id="modal_content">
+            <div class="bg-zc px-5 py-4 flex items-center justify-between">
+                <h3 class="text-white font-bold text-sm tracking-wide">PROSES PEMBAYARAN</h3>
+                <button onclick="closePaymentModal()" class="text-zcLt hover:text-white transition">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-5">
+                <div class="text-center p-4 bg-slate-50 rounded-xl border border-zcBrd shadow-inner">
+                    <p class="text-xs font-bold text-zcMut uppercase tracking-wider mb-1">Total Tagihan</p>
+                    <p class="text-4xl font-black text-zcTxt" id="modal_total_tagihan">Rp 0</p>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-zcTxt mb-2">Metode Pembayaran</label>
+                    <select id="modal_metode" onchange="toggleNominalInput()" class="w-full text-sm font-bold border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-zc focus:ring-4 focus:ring-zcLt transition appearance-none bg-white mb-4">
+                        <option value="Tunai">Uang Tunai</option>
+                        <option value="QRIS">QRIS / E-Wallet</option>
+                        <option value="Transfer Bank">Transfer Bank</option>
+                        <option value="Kartu Debit/Kredit">Kartu Debit/Kredit</option>
+                    </select>
+                </div>
+                
+                <div id="nominal_section">
+                    <label class="block text-xs font-bold text-zcTxt mb-2">Nominal Uang Diberikan (Rp)</label>
+                    <input type="text" id="modal_nominal" onkeyup="calcKembalian()" placeholder="0" class="w-full text-2xl font-bold border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-zc focus:ring-4 focus:ring-zcLt transition text-right">
+                    <div class="flex gap-2 mt-3">
+                        <button type="button" onclick="setNominal(50000)" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold py-2.5 rounded-lg border border-slate-200 transition shadow-sm">50.000</button>
+                        <button type="button" onclick="setNominal(100000)" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold py-2.5 rounded-lg border border-slate-200 transition shadow-sm">100.000</button>
+                        <button type="button" onclick="setNominalUangPas()" class="flex-1 bg-zcLt hover:bg-blue-100 text-zc text-sm font-bold py-2.5 rounded-lg border border-blue-200 transition shadow-sm">Uang Pas</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-4 rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors" id="box_kembalian">
+                    <span class="text-sm font-bold text-zcMut" id="lbl_kembalian">Menunggu Pembayaran</span>
+                    <span class="text-2xl font-bold text-zcTxt" id="val_kembalian">-</span>
+                </div>
+                
+                <div id="non_tunai_info" class="hidden p-4 rounded-xl border border-blue-200 bg-blue-50 text-blue-800 text-xs text-center font-medium">
+                    Pastikan pembayaran melalui EDC/Transfer/QRIS telah berhasil masuk sebelum menyelesaikan transaksi.
+                </div>
+            </div>
+            <div class="p-5 border-t border-zcBrd bg-slate-50 flex gap-3">
+                <button onclick="closePaymentModal()" class="flex-1 py-3.5 rounded-xl text-sm font-bold bg-white text-slate-600 border border-slate-300 hover:bg-slate-100 transition shadow-sm">Batal</button>
+                <button id="btn_submit_pay" onclick="submitPayment()" disabled class="flex-[2] py-3.5 rounded-xl text-sm font-bold bg-slate-300 text-slate-500 cursor-not-allowed transition">Selesaikan Transaksi</button>
+            </div>
+        </div>
+    </div>
+
     <script>
     let cart = [];
 
-    function addToPos(id, name, hargaKecil, hargaBesar, maxStockPcs, rasio) {
-        let sel = document.getElementById('uom_' + id);
-        let uomType = sel.value; // 'kecil' or 'besar'
-        let uomLabel = sel.options[sel.selectedIndex].text;
-        
-        let price = (uomType === 'besar') ? hargaBesar : hargaKecil;
-        let qtyMultiplier = (uomType === 'besar') ? rasio : 1;
-        let cartId = id + '_' + uomType;
+    function addToPos(btnElement) {
+        try {
+            var id = parseInt(btnElement.getAttribute('data-id'));
+            var name = btnElement.getAttribute('data-nama');
+            var hargaKecil = parseFloat(btnElement.getAttribute('data-hk'));
+            var hargaBesar = parseFloat(btnElement.getAttribute('data-hb'));
+            var maxStockPcs = parseInt(btnElement.getAttribute('data-stok'));
+            var rasio = parseInt(btnElement.getAttribute('data-rasio'));
 
-        let found = cart.find(i => i.cartId === cartId);
-        if (found) {
-            if ((found.qty + 1) * found.rasio > found.maxPcs) { alert('Stok terbatas!'); return; }
-            found.qty++;
-        } else { 
-            if (qtyMultiplier > maxStockPcs) { alert('Stok tidak cukup untuk satuan ini!'); return; }
-            cart.push({
-                id: id, cartId: cartId, nama: name, harga: price, qty: 1, 
-                satuan_tipe: uomType, satuan_label: uomLabel, maxPcs: maxStockPcs, rasio: qtyMultiplier
-            }); 
+            var sel = document.getElementById('uom_' + id);
+            var uomType = sel.value; // 'kecil' or 'besar'
+            var uomLabel = sel.options[sel.selectedIndex].text;
+            
+            var price = (uomType === 'besar') ? hargaBesar : hargaKecil;
+            var qtyMultiplier = (uomType === 'besar') ? rasio : 1;
+            var cartId = id + '_' + uomType;
+
+            var found = null;
+            for (var i = 0; i < cart.length; i++) {
+                if (cart[i].cartId === cartId) { found = cart[i]; break; }
+            }
+
+            if (found) {
+                if ((found.qty + 1) * found.rasio > found.maxPcs) { alert('Stok terbatas!'); return; }
+                found.qty++;
+            } else { 
+                if (qtyMultiplier > maxStockPcs) { alert('Stok tidak cukup untuk satuan ini!'); return; }
+                cart.push({
+                    id: id, cartId: cartId, nama: name, harga: price, qty: 1, 
+                    satuan_tipe: uomType, satuan_label: uomLabel, maxPcs: maxStockPcs, rasio: qtyMultiplier
+                }); 
+            }
+            renderCart();
+        } catch(e) {
+            alert("Terjadi Error Javascript di addToPos: " + e.message);
         }
-        renderCart();
     }
 
     function changeQty(cartId, d) {
-        let item = cart.find(i => i.cartId === cartId);
+        var item = null;
+        for (var i = 0; i < cart.length; i++) {
+            if (cart[i].cartId === cartId) { item = cart[i]; break; }
+        }
         if (!item) return;
         if (d > 0 && (item.qty + d) * item.rasio > item.maxPcs) { alert('Stok terbatas!'); return; }
         item.qty += d;
-        if (item.qty <= 0) cart = cart.filter(i => i.cartId !== cartId);
+        if (item.qty <= 0) cart = cart.filter(function(i) { return i.cartId !== cartId; });
         renderCart();
     }
 
-    function removeItem(cartId) { cart = cart.filter(i => i.cartId !== cartId); renderCart(); }
+    function removeItem(cartId) { cart = cart.filter(function(i) { return i.cartId !== cartId; }); renderCart(); }
     function clearCart() { cart = []; renderCart(); }
 
     function renderCart() {
-        const tbody = document.getElementById('pos_cart_body');
-        const totalEl = document.getElementById('pos_total');
-        const btn = document.getElementById('btn_pay');
-        const inp = document.getElementById('cart_input');
+        var tbody = document.getElementById('pos_cart_body');
+        var totalEl = document.getElementById('pos_total');
+        var btn = document.getElementById('btn_pay');
+        var inp = document.getElementById('cart_input');
 
         if (cart.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-10 text-center text-zcMut italic">Pilih barang dari katalog...</td></tr>';
@@ -326,24 +423,24 @@ $shopeeOn = false;
             inp.value = '[]'; return;
         }
 
-        let total = 0, html = '';
-        cart.forEach(i => {
-            const sub = i.harga * i.qty; total += sub;
-            html += `<tr class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 font-semibold text-zcTxt text-xs">
-                    ${i.nama}
-                    <span class="block text-[9px] text-zcEm mt-0.5">${i.satuan_label} (Rp ${i.harga.toLocaleString('id-ID')})</span>
-                </td>
-                <td class="px-4 py-3 text-center">
-                    <div class="flex items-center justify-center gap-1.5">
-                        <button type="button" onclick="changeQty('${i.cartId}',-1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition">-</button>
-                        <span class="font-bold text-xs w-5 text-center">${i.qty}</span>
-                        <button type="button" onclick="changeQty('${i.cartId}',1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition">+</button>
-                    </div>
-                </td>
-                <td class="px-4 py-3 text-right font-bold text-xs">Rp ${sub.toLocaleString('id-ID')}</td>
-                <td class="px-4 py-3 text-center"><button type="button" onclick="removeItem('${i.cartId}')" class="text-rose-500 hover:text-rose-700 text-xs font-bold transition">✕</button></td>
-            </tr>`;
+        var total = 0, html = '';
+        cart.forEach(function(i) {
+            var sub = i.harga * i.qty; total += sub;
+            html += '<tr class="hover:bg-slate-50/60">' +
+                '<td class="px-4 py-3 font-semibold text-zcTxt text-xs">' +
+                    i.nama +
+                    '<span class="block text-[9px] text-zcEm mt-0.5">' + i.satuan_label + ' (Rp ' + i.harga.toLocaleString('id-ID') + ')</span>' +
+                '</td>' +
+                '<td class="px-4 py-3 text-center">' +
+                    '<div class="flex items-center justify-center gap-1.5">' +
+                        '<button type="button" onclick="changeQty(\'' + i.cartId + '\',-1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition">-</button>' +
+                        '<span class="font-bold text-xs w-5 text-center">' + i.qty + '</span>' +
+                        '<button type="button" onclick="changeQty(\'' + i.cartId + '\',1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition">+</button>' +
+                    '</div>' +
+                '</td>' +
+                '<td class="px-4 py-3 text-right font-bold text-xs">Rp ' + sub.toLocaleString('id-ID') + '</td>' +
+                '<td class="px-4 py-3 text-center"><button type="button" onclick="removeItem(\'' + i.cartId + '\')" class="text-rose-500 hover:text-rose-700 text-xs font-bold transition">✕</button></td>' +
+            '</tr>';
         });
 
         tbody.innerHTML = html;
@@ -353,16 +450,199 @@ $shopeeOn = false;
         inp.value = JSON.stringify(cart);
     }
 
-    function validatePay() {
-        if (!cart.length) { alert('Keranjang kosong!'); return false; }
-        return confirm('Konfirmasi transaksi POS kasir?\nTotal: ' + document.getElementById('pos_total').innerText);
+    // --- Payment UI Logic ---
+    var currentTotal = 0;
+    var modalInput = document.getElementById('modal_nominal');
+    
+    function formatRupiah(angka) {
+        return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    function openPaymentModal() {
+        if (!cart.length) return;
+        currentTotal = 0;
+        cart.forEach(function(i) { currentTotal += i.harga * i.qty; });
+        
+        document.getElementById('modal_total_tagihan').innerText = 'Rp ' + formatRupiah(currentTotal);
+        modalInput.value = '';
+        calcKembalian();
+        
+        var modal = document.getElementById('payment_modal');
+        var content = document.getElementById('modal_content');
+        modal.classList.remove('hidden');
+        
+        setTimeout(function() {
+            content.classList.remove('scale-95', 'opacity-0');
+            content.classList.add('scale-100', 'opacity-100');
+            modalInput.focus();
+        }, 10);
+    }
+
+    function closePaymentModal() {
+        var modal = document.getElementById('payment_modal');
+        var content = document.getElementById('modal_content');
+        
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
+        setTimeout(function() { modal.classList.add('hidden'); }, 200);
+    }
+
+    function setNominal(val) {
+        modalInput.value = formatRupiah(val);
+        calcKembalian();
+    }
+    
+    function setNominalUangPas() {
+        modalInput.value = formatRupiah(currentTotal);
+        calcKembalian();
+    }
+
+    function calcKembalian() {
+        var metode = document.getElementById('modal_metode').value;
+        var box = document.getElementById('box_kembalian');
+        var lbl = document.getElementById('lbl_kembalian');
+        var val = document.getElementById('val_kembalian');
+        var btn = document.getElementById('btn_submit_pay');
+
+        if (metode !== 'Tunai') {
+            box.classList.add('hidden');
+            btn.disabled = false;
+            btn.className = 'flex-[2] py-3.5 rounded-xl text-sm font-bold bg-zc hover:bg-zcHv text-white transition shadow-sm cursor-pointer shadow-zc/30';
+            return;
+        }
+        
+        box.classList.remove('hidden');
+
+        var raw = modalInput.value.replace(/[^0-9]/g, '');
+        if(raw) modalInput.value = formatRupiah(raw);
+        var nom = parseInt(raw) || 0;
+        
+        if (nom === 0) {
+            box.className = "flex items-center justify-between p-4 rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors";
+            lbl.className = "text-sm font-bold text-zcMut";
+            lbl.innerText = "Menunggu Nominal";
+            val.className = "text-2xl font-bold text-zcMut";
+            val.innerText = "-";
+            btn.disabled = true;
+            btn.className = "flex-[2] py-3.5 rounded-xl text-sm font-bold bg-slate-300 text-slate-500 cursor-not-allowed transition";
+        } else if (nom < currentTotal) {
+            box.className = "flex items-center justify-between p-4 rounded-xl border-2 border-rose-300 bg-rose-50 transition-colors";
+            lbl.className = "text-sm font-bold text-rose-600";
+            lbl.innerText = "Kekurangan Bayar";
+            val.className = "text-2xl font-black text-rose-600";
+            val.innerText = "Rp " + formatRupiah(currentTotal - nom);
+            btn.disabled = true;
+            btn.className = "flex-[2] py-3.5 rounded-xl text-sm font-bold bg-slate-300 text-slate-500 cursor-not-allowed transition";
+        } else {
+            box.className = "flex items-center justify-between p-4 rounded-xl border-2 border-emerald-300 bg-emerald-50 transition-colors";
+            lbl.className = "text-sm font-bold text-emerald-600";
+            lbl.innerText = "Uang Kembalian";
+            val.className = "text-2xl font-black text-emerald-600";
+            val.innerText = "Rp " + formatRupiah(nom - currentTotal);
+            btn.disabled = false;
+            btn.className = "flex-[2] py-3.5 rounded-xl text-sm font-bold bg-zc hover:bg-zcHv text-white shadow-lg shadow-zc/30 transition cursor-pointer";
+        }
+    }
+
+    function toggleNominalInput() {
+        var metode = document.getElementById('modal_metode').value;
+        var nominalSec = document.getElementById('nominal_section');
+        var infoSec = document.getElementById('non_tunai_info');
+        
+        if (metode === 'Tunai') {
+            nominalSec.classList.remove('hidden');
+            infoSec.classList.add('hidden');
+        } else {
+            nominalSec.classList.add('hidden');
+            infoSec.classList.remove('hidden');
+        }
+        calcKembalian();
+    }
+
+    function submitPayment() {
+        document.getElementById('form_metode_pembayaran').value = document.getElementById('modal_metode').value;
+        document.getElementById('btn_submit_pay').innerText = 'Memproses...';
+        document.getElementById('form_pos').submit();
+    }
+
+    // --- Barcode Scanner Listener ---
+    var barcodeString = '';
+    var barcodeTimer = null;
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        
+        if (e.key === 'Enter') {
+            if (barcodeString.length > 2) {
+                processBarcode(barcodeString);
+            }
+            barcodeString = '';
+            clearTimeout(barcodeTimer);
+            return;
+        }
+        
+        if (e.key.length === 1) { 
+            barcodeString += e.key;
+            clearTimeout(barcodeTimer);
+            barcodeTimer = setTimeout(function() {
+                barcodeString = ''; 
+            }, 60); 
+        }
+    });
+
+    function processBarcode(sku) {
+        try {
+            sku = sku.trim().toLowerCase();
+            var found = false;
+            var cards = document.getElementsByClassName('product-card');
+            
+            for (var i = 0; i < cards.length; i++) {
+                var c = cards[i];
+                var skuSpan = c.querySelector('span.font-mono');
+                if (skuSpan && skuSpan.innerText.toLowerCase() === sku) {
+                    var btn = c.querySelector('button');
+                    if (btn && !btn.disabled) {
+                        btn.click();
+                        found = true;
+                        c.classList.add('bg-zcLt', 'border-zc');
+                        setTimeout(function() { c.classList.remove('bg-zcLt', 'border-zc'); }, 300);
+                        
+                        try {
+                            var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                            var oscillator = audioCtx.createOscillator();
+                            oscillator.type = 'sine';
+                            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+                            oscillator.connect(audioCtx.destination);
+                            oscillator.start();
+                            oscillator.stop(audioCtx.currentTime + 0.1);
+                        } catch(err) {}
+                        
+                        break;
+                    }
+                }
+            }
+            if (!found) {
+                alert('SKU Barcode tidak ditemukan atau stok kosong: ' + sku.toUpperCase());
+            }
+        } catch(e) { alert("Error JS di Barcode: " + e.message); }
     }
 
     function filterPos() {
-        const q = document.getElementById('pos_search').value.toLowerCase();
-        document.querySelectorAll('.product-card').forEach(c => {
-            c.style.display = c.dataset.search.includes(q) ? '' : 'none';
-        });
+        try {
+            var q = document.getElementById('pos_search').value.toLowerCase().trim();
+            var cards = document.getElementsByClassName('product-card');
+            for (var i = 0; i < cards.length; i++) {
+                var c = cards[i];
+                var matchStr = c.getAttribute('data-search') || '';
+                if (matchStr.indexOf(q) !== -1) {
+                    c.style.display = '';
+                } else {
+                    c.style.display = 'none';
+                }
+            }
+        } catch(e) {
+            alert("Error JS di filterPos: " + e.message);
+        }
     }
     </script>
 </body>

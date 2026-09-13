@@ -64,7 +64,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hrgBesar = floatval($_POST['harga_jual_besar'] ?? 0);
 
         $berat    = intval($_POST['berat'] ?? 100);
-        $gambar   = trim($_POST['gambar'] ?? '');
+        
+        // --- MULTIPLE IMAGE HANDLING ---
+        $gambarText = trim($_POST['gambar'] ?? '');
+        $uploadedFiles = [];
+        if (!empty($_FILES['gambar_file']['name'][0])) {
+            $targetDir = __DIR__ . '/../assets/img/produk/';
+            if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
+            foreach ($_FILES['gambar_file']['tmp_name'] as $key => $tmpName) {
+                if ($_FILES['gambar_file']['error'][$key] === UPLOAD_ERR_OK) {
+                    $ext = strtolower(pathinfo($_FILES['gambar_file']['name'][$key], PATHINFO_EXTENSION));
+                    $newName = 'var_' . time() . '_' . rand(100,999) . '.' . $ext;
+                    if (move_uploaded_file($tmpName, $targetDir . $newName)) {
+                        $uploadedFiles[] = $newName;
+                    }
+                }
+            }
+        }
+        $arrGambar = $gambarText ? array_map('trim', explode(',', $gambarText)) : [];
+        if (!empty($uploadedFiles)) $arrGambar = array_merge($arrGambar, $uploadedFiles);
+        $gambar = implode(',', array_filter($arrGambar));
+        // -------------------------------
+        
         $tampil   = isset($_POST['tampil_di_online']) ? 1 : 0;
 
         if ($idInduk && $sku && $namaVar && $hrgKecil > 0) {
@@ -93,7 +114,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hrgBesar = floatval($_POST['harga_jual_besar'] ?? 0);
 
         $berat = intval($_POST['berat'] ?? 100);
-        $gambar = trim($_POST['gambar'] ?? '');
+        
+        // --- MULTIPLE IMAGE HANDLING ---
+        $gambarText = trim($_POST['gambar'] ?? '');
+        $uploadedFiles = [];
+        if (!empty($_FILES['gambar_file']['name'][0])) {
+            $targetDir = __DIR__ . '/../assets/img/produk/';
+            if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
+            foreach ($_FILES['gambar_file']['tmp_name'] as $key => $tmpName) {
+                if ($_FILES['gambar_file']['error'][$key] === UPLOAD_ERR_OK) {
+                    $ext = strtolower(pathinfo($_FILES['gambar_file']['name'][$key], PATHINFO_EXTENSION));
+                    $newName = 'var_' . time() . '_' . rand(100,999) . '.' . $ext;
+                    if (move_uploaded_file($tmpName, $targetDir . $newName)) {
+                        $uploadedFiles[] = $newName;
+                    }
+                }
+            }
+        }
+        $arrGambar = $gambarText ? array_map('trim', explode(',', $gambarText)) : [];
+        if (!empty($uploadedFiles)) $arrGambar = array_merge($arrGambar, $uploadedFiles);
+        $gambar = implode(',', array_filter($arrGambar));
+        // -------------------------------
+        
         $tampil = isset($_POST['tampil_di_online']) ? 1 : 0;
 
         if ($idVal && $sku && $nama && $hrgKecil > 0) {
@@ -461,7 +503,7 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
             <h3 class="text-sm font-bold text-zcTxt">Tambah Variasi - <span id="var_parent_name" class="text-zcNavy"></span></h3>
             <button onclick="document.getElementById('modal_tambah_variasi').classList.add('hidden')" class="text-zcMut hover:text-zcTxt text-lg">&times;</button>
         </div>
-        <form method="POST" class="p-6 space-y-4">
+        <form method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
             <input type="hidden" name="aksi" value="tambah_variasi">
             <input type="hidden" name="id_produk_induk" id="var_id_induk">
             
@@ -516,9 +558,16 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-bold text-zcTxt mb-1.5">URL Gambar Produk</label>
-                <input type="text" name="gambar" placeholder="https://..." class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Teks URL/Nama Gambar</label>
+                    <input type="text" name="gambar" placeholder="contoh1.jpg, contoh2.png" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                    <span class="text-[9px] text-zcMut mt-1 block">Pisahkan dengan koma jika multi-gambar</span>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Atau Upload File (Bisa pilih banyak)</label>
+                    <input type="file" name="gambar_file[]" multiple accept="image/*" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2 focus:outline-none bg-slate-50 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-zc file:text-white hover:file:bg-zcHv">
+                </div>
             </div>
 
             <div class="flex justify-end gap-3 pt-2">
@@ -536,7 +585,7 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
             <h3 class="text-sm font-bold text-zcTxt">Edit Variasi</h3>
             <button onclick="document.getElementById('modal_edit_variasi').classList.add('hidden')" class="text-zcMut hover:text-zcTxt text-lg">&times;</button>
         </div>
-        <form method="POST" class="p-6 space-y-4">
+        <form method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
             <input type="hidden" name="aksi" value="edit_variasi">
             <input type="hidden" name="id_variasi" id="edit_id_variasi">
             
@@ -591,9 +640,16 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-bold text-zcTxt mb-1.5">URL Gambar Produk</label>
-                <input type="text" name="gambar" id="edit_gambar_variasi" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Teks URL/Nama Gambar</label>
+                    <input type="text" name="gambar" id="edit_gambar_variasi" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                    <span class="text-[9px] text-zcMut mt-1 block">Pisahkan dengan koma jika multi-gambar</span>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Atau Upload File Tambahan</label>
+                    <input type="file" name="gambar_file[]" multiple accept="image/*" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2 focus:outline-none bg-slate-50 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-zc file:text-white hover:file:bg-zcHv">
+                </div>
             </div>
 
             <div class="flex justify-end gap-3 pt-2">

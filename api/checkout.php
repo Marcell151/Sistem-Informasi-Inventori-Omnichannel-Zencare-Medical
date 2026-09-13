@@ -168,9 +168,11 @@ try {
         $sisaQ->execute([$idVariasi]);
         $sisa = $sisaQ->fetchColumn();
 
-        // Catat ke kartu_stok dengan referensi nomor invoice WEB-
-        $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
-            ->execute([$idVariasi, $orderId, $qtyPotong, $sisa, 'Penjualan Checkout Web', $idUser]);
+        // Catat ke kartu_stok dengan referensi nomor invoice WEB- (Hanya untuk Kurir)
+        if ($metodePengambilan === 'Kurir') {
+            $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
+                ->execute([$idVariasi, $orderId, $qtyPotong, $sisa, 'Penjualan Checkout Web (Kurir)', $idUser]);
+        }
     }
 
     // 4. Request Midtrans Snap

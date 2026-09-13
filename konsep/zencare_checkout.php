@@ -248,7 +248,7 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
                     </div>
 
                     <button onclick="pslatesCheckoutMidtrans()" id="btn_checkout" class="w-full mt-6 bg-zc hover:bg-zcHv text-white font-semibold text-xs py-3.5 px-4 rounded-xl transition shadow-sm">
-                        Bayar Sekarang (Midtrans Snap Sandbox)
+                        Bayar Sekarang
                     </button>
                 </div>
             </div>
@@ -691,7 +691,7 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
             .then(res => res.json())
             .then(data => {
                 btn.disabled = false;
-                btn.innerText = 'Bayar Sekarang (Midtrans Snap Sandbox)';
+                btn.innerText = 'Bayar Sekarang';
 
                 if (data.status === 'success' && data.token) {
                     snap.pay(data.token, {
@@ -715,7 +715,7 @@ $rajaongkirEnabled = ($apiRow === false) ? true : (bool)$apiRow;
             })
             .catch(err => {
                 btn.disabled = false;
-                btn.innerText = 'Bayar Sekarang (Midtrans Snap Sandbox)';
+                btn.innerText = 'Bayar Sekarang';
                 alert('Terjadi kesalahan jaringan: ' + err);
             });
         }

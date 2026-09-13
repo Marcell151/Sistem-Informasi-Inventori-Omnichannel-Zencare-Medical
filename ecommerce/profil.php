@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     try {
         $pdo->beginTransaction();
         
-        $stmtCek = $pdo->prepare("SELECT id, status_pesanan FROM penjualan WHERE no_invoice = ? AND id_user = ? FOR UPDATE");
+        $stmtCek = $pdo->prepare("SELECT id, status_pesanan, metode_pengambilan FROM penjualan WHERE no_invoice = ? AND id_user = ? FOR UPDATE");
         $stmtCek->execute([$cancelInvoice, $userId]);
         $orderToCancel = $stmtCek->fetch();
 
@@ -88,12 +88,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
             $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi = ?")->execute([$qtyPotong, $idVar]);
             
-            $stmtSisa = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ?");
-            $stmtSisa->execute([$idVar]);
-            $sisaStok = $stmtSisa->fetchColumn();
+            if ($orderToCancel['metode_pengambilan'] === 'Kurir') {
+                $stmtSisa = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ?");
+                $stmtSisa->execute([$idVar]);
+                $sisaStok = $stmtSisa->fetchColumn();
 
-            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Masuk', 'E-Commerce', 'Retur Barang Rusak', ?, ?, ?, ?, ?)");
-            $stmtKartu->execute([$idVar, $cancelInvoice, $qtyPotong, $sisaStok, "Dibatalkan Pelanggan: Batal $qtyBox $satBesar", $userId]);
+                $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Masuk', 'E-Commerce', 'Retur Barang Rusak', ?, ?, ?, ?, ?)");
+                $stmtKartu->execute([$idVar, $cancelInvoice, $qtyPotong, $sisaStok, "Dibatalkan Pelanggan: Batal $qtyBox $satBesar", $userId]);
+            }
         }
 
         $pdo->commit();
@@ -105,12 +107,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'selesai_order') {
     $selesaiInvoice = $_POST['no_invoice'];
     try {
-        $stmtCek = $pdo->prepare("SELECT id, status_pesanan FROM penjualan WHERE no_invoice = ? AND id_user = ?");
+        $stmtCek = $pdo->prepare("SELECT id, status_pesanan, metode_pengambilan FROM penjualan WHERE no_invoice = ? AND id_user = ?");
         $stmtCek->execute([$selesaiInvoice, $userId]);
         $orderToSelesai = $stmtCek->fetch();
 
         if ($orderToSelesai && in_array($orderToSelesai['status_pesanan'], ['Dikirim', 'Siap Diambil'])) {
             $pdo->prepare("UPDATE penjualan SET status_pesanan = 'Selesai' WHERE no_invoice = ?")->execute([$selesaiInvoice]);
+            
+            if ($orderToSelesai['metode_pengambilan'] === 'Pick-up') {
+                $stmtItems = $pdo->prepare("SELECT d.id_variasi, d.qty, v.rasio_konversi, v.satuan_besar FROM detail_penjualan d JOIN produk_variasi v ON d.id_variasi = v.id WHERE d.id_penjualan = ?");
+                $stmtItems->execute([$orderToSelesai['id']]);
+                $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+
+                foreach ($items as $item) {
+                    $idVar = $item['id_variasi'];
+                    $qtyBox = intval($item['qty']);
+                    $rasio = intval($item['rasio_konversi']) ?: 1;
+                    $qtyPotong = $qtyBox * $rasio;
+                    
+                    $stmtSisa = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ?");
+                    $stmtSisa->execute([$idVar]);
+                    $sisaStok = $stmtSisa->fetchColumn();
+
+                    $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)");
+                    $stmtKartu->execute([$idVar, $selesaiInvoice, $qtyPotong, $sisaStok, "Konfirmasi Pengambilan di Toko (Pick-up)", $userId]);
+                }
+            }
+            
             $successMsg = "Terima kasih! Pesanan $selesaiInvoice telah diselesaikan.";
         } else {
             $errorMsg = "Gagal menyelesaikan pesanan.";

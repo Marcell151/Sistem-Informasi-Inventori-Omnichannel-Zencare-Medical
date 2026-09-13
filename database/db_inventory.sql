@@ -99,6 +99,7 @@ CREATE TABLE produk_variasi (
     harga_jual_besar DECIMAL(12,2) NOT NULL DEFAULT 0,
     stok_minimum INT NOT NULL DEFAULT 5,
     berat INT NOT NULL DEFAULT 100,
+    gambar VARCHAR(500) NULL,
     tampil_di_online BOOLEAN DEFAULT 1,
     is_active BOOLEAN DEFAULT 1,
     FOREIGN KEY (id_produk_induk) REFERENCES produk_induk(id) ON DELETE SET NULL
@@ -193,6 +194,7 @@ CREATE TABLE penjualan (
     no_resi VARCHAR(100) NULL,
     snap_token VARCHAR(255) NULL,
     payment_method VARCHAR(50) NULL,
+    metode_pembayaran VARCHAR(50) DEFAULT 'Tunai',
     paid_at TIMESTAMP NULL,
     kode_pickup VARCHAR(20) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -157,7 +157,81 @@ layoutHeader(
     $isSuperadmin ? 'Monitoring fisik persediaan & kinerja operasional — Pusat (Muharto).' : 'Ringkasan operasional kasir & inventori hari ini.'
 );
 ?>
+<!-- ============================================================ -->
+<!-- ACTIONABLE ORDERS (Prioritas Utama) -->
+<!-- ============================================================ -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+    <!-- Pesanan Menunggu Proses -->
+    <div style="background:#fff;border:1px solid <?= !empty($pesananProses)?'#bfdbfe':'#e4e9f0' ?>;border-radius:10px;overflow:hidden;<?= !empty($pesananProses)?'box-shadow:0 4px 6px -1px rgba(59,130,246,0.1);':'' ?>">
+        <div style="padding:13px 16px;border-bottom:1px solid <?= !empty($pesananProses)?'#bfdbfe':'#f1f5f9' ?>;background:<?= !empty($pesananProses)?'#eff6ff':'#fff' ?>;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:700;color:<?= !empty($pesananProses)?'#1e3a8a':'#1e293b' ?>;">Pesanan Menunggu Proses</div>
+            <a href="admin/pesanan.php" style="font-size:11px;color:#1a75d2;text-decoration:none;font-weight:600;">Kelola Semua →</a>
+        </div>
+        <?php if (empty($pesananProses)): ?>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Antrean kosong ✓</div>
+        <?php else: ?>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">NO. INVOICE</th>
+                    <th style="padding:7px 8px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">PELANGGAN</th>
+                    <th style="padding:7px 8px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">KANAL</th>
+                    <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">STATUS</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($pesananProses as $p):
+                $sc = ['Menunggu Pembayaran'=>'background:#fef3c7;color:#92400e','Diproses'=>'background:#dbeafe;color:#1e40af'];
+                $bgStyle = $sc[$p['status_pesanan']] ?? 'background:#f1f5f9;color:#334155';
+            ?>
+            <tr style="border-top:1px solid #f1f5f9;">
+                <td style="padding:8px 16px;font-weight:600;color:#1e293b;font-family:monospace;"><?= htmlspecialchars($p['no_invoice']) ?></td>
+                <td style="padding:8px;color:#334155;"><?= htmlspecialchars($p['nama_pelanggan'] ?? 'Walk-in') ?></td>
+                <td style="padding:8px;color:#64748b;"><?= strtoupper($p['tipe_transaksi']) ?></td>
+                <td style="padding:8px 16px;"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;<?= $bgStyle ?>"><?= $p['status_pesanan'] ?></span></td>
+            </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+        <?php endif; ?>
+    </div>
 
+    <!-- Pesanan Siap Diambil -->
+    <div style="background:#fff;border:1px solid <?= !empty($pesananPickup)?'#fde047':'#e4e9f0' ?>;border-radius:10px;overflow:hidden;<?= !empty($pesananPickup)?'box-shadow:0 4px 6px -1px rgba(234,179,8,0.1);':'' ?>">
+        <div style="padding:13px 16px;border-bottom:1px solid <?= !empty($pesananPickup)?'#fde047':'#f1f5f9' ?>;background:<?= !empty($pesananPickup)?'#fefce8':'#fff' ?>;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:700;color:<?= !empty($pesananPickup)?'#854d0e':'#1e293b' ?>;">Menunggu Pengambilan (Pick-up)</div>
+            <a href="admin/pesanan.php" style="font-size:11px;color:#1a75d2;text-decoration:none;font-weight:600;">Kelola Semua →</a>
+        </div>
+        <?php if (empty($pesananPickup)): ?>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Tidak ada pesanan Pick-up yang menunggu diambil ✓</div>
+        <?php else: ?>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">NO. INVOICE</th>
+                    <th style="padding:7px 8px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">PELANGGAN</th>
+                    <th style="padding:7px 8px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">MULAI RESERVASI</th>
+                    <th style="padding:7px 16px;text-align:right;font-size:10px;color:#64748b;font-weight:600;">LAMA MENUNGGU</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($pesananPickup as $pk): ?>
+            <tr style="border-top:1px solid #f1f5f9;">
+                <td style="padding:8px 16px;font-weight:600;color:#1e293b;font-family:monospace;"><?= htmlspecialchars($pk['no_invoice']) ?></td>
+                <td style="padding:8px;color:#334155;"><?= htmlspecialchars($pk['nama_pelanggan'] ?? 'Pelanggan') ?></td>
+                <td style="padding:8px;color:#64748b;"><?= date('d/m/Y H:i', strtotime($pk['paid_at'] ?? $pk['created_at'])) ?></td>
+                <td style="padding:8px 16px;text-align:right;">
+                    <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;<?= $pk['hari_tunggu'] > 3 ? 'background:#fee2e2;color:#991b1b' : 'background:#f1f5f9;color:#334155' ?>">
+                        <?= $pk['hari_tunggu'] ?> Hari
+                    </span>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+        <?php endif; ?>
+    </div>
+</div>
 <?php if ($isSuperadmin): ?>
 <!-- ============================================================ -->
 <!-- SUPERADMIN DASHBOARD — Berbasis Kuantitas Fisik, tanpa Rupiah -->
@@ -373,38 +447,6 @@ layoutHeader(
     </div>
 </div>
 
-<!-- Pesanan Menunggu (Superadmin juga lihat) -->
-<?php if (!empty($pesananProses)): ?>
-<div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;margin-top:14px;">
-    <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
-        <div style="font-size:12px;font-weight:700;color:#1e293b;">Pesanan Menunggu Proses</div>
-        <a href="admin/pesanan.php" style="font-size:11px;color:#1a75d2;text-decoration:none;font-weight:600;">Kelola Semua →</a>
-    </div>
-    <table style="width:100%;border-collapse:collapse;font-size:12px;">
-        <thead>
-            <tr style="background:#f8fafc;">
-                <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">NO. INVOICE</th>
-                <th style="padding:7px 8px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">PELANGGAN</th>
-                <th style="padding:7px 8px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">KANAL</th>
-                <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">STATUS</th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php foreach ($pesananProses as $p):
-            $sc = ['Menunggu Pembayaran'=>'background:#fef3c7;color:#92400e','Diproses'=>'background:#dbeafe;color:#1e40af'];
-            $bgStyle = $sc[$p['status_pesanan']] ?? 'background:#f1f5f9;color:#334155';
-        ?>
-        <tr style="border-top:1px solid #f1f5f9;">
-            <td style="padding:8px 16px;font-weight:600;color:#1e293b;font-family:monospace;"><?= htmlspecialchars($p['no_invoice']) ?></td>
-            <td style="padding:8px;color:#334155;"><?= htmlspecialchars($p['nama_pelanggan'] ?? 'Walk-in') ?></td>
-            <td style="padding:8px;color:#64748b;"><?= strtoupper($p['tipe_transaksi']) ?></td>
-            <td style="padding:8px 16px;"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;<?= $bgStyle ?>"><?= $p['status_pesanan'] ?></span></td>
-        </tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table>
-</div>
-<?php endif; ?>
 
 <!-- Script untuk Chart.js (Hanya Superadmin) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -565,43 +607,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
 <?php endif; ?>
 
-<!-- SHARED PANELS (Superadmin & Admin) -->
-<div style="margin-top:14px;">
-    <!-- Panel: Pesanan Siap Diambil / Menunggu Pengambilan -->
-    <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;margin-bottom:20px;">
-        <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
-            <div style="font-size:12px;font-weight:700;color:#1e293b;">Pesanan Siap Diambil / Menunggu Pengambilan</div>
-            <a href="admin/pesanan.php" style="font-size:11px;color:#1a75d2;text-decoration:none;font-weight:600;">Kelola Semua →</a>
-        </div>
-        <?php if (empty($pesananPickup)): ?>
-        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Tidak ada pesanan Pick-up yang menunggu diambil ✓</div>
-        <?php else: ?>
-        <table style="width:100%;border-collapse:collapse;font-size:12px;">
-            <thead>
-                <tr style="background:#f8fafc;">
-                    <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">NO. INVOICE</th>
-                    <th style="padding:7px 8px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">PELANGGAN</th>
-                    <th style="padding:7px 8px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">MULAI RESERVASI</th>
-                    <th style="padding:7px 16px;text-align:right;font-size:10px;color:#64748b;font-weight:600;">LAMA MENUNGGU</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php foreach ($pesananPickup as $pk): ?>
-            <tr style="border-top:1px solid #f1f5f9;">
-                <td style="padding:8px 16px;font-weight:600;color:#1e293b;font-family:monospace;"><?= htmlspecialchars($pk['no_invoice']) ?></td>
-                <td style="padding:8px;color:#334155;"><?= htmlspecialchars($pk['nama_pelanggan'] ?? 'Pelanggan') ?></td>
-                <td style="padding:8px;color:#64748b;"><?= date('d/m/Y H:i', strtotime($pk['paid_at'] ?? $pk['created_at'])) ?></td>
-                <td style="padding:8px 16px;text-align:right;">
-                    <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;<?= $pk['hari_tunggu'] > 3 ? 'background:#fee2e2;color:#991b1b' : 'background:#f1f5f9;color:#334155' ?>">
-                        <?= $pk['hari_tunggu'] ?> Hari
-                    </span>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-        <?php endif; ?>
-    </div>
-</div>
+
 
 <?php layoutFooter(); ?>
