@@ -6,7 +6,7 @@ require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
-requireRole(['superadmin', 'admin']);
+requireRole(['superadmin']);
 $status_filter = $_GET['status'] ?? 'semua';
 
 $cabangList = [];

@@ -553,8 +553,8 @@ document.addEventListener("DOMContentLoaded", function() {
     <a href="zencare_store.php" target="_blank" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Buka Store</a>
 </div>
 
-<!-- Row 2: Stok Menipis + Audit Kartu Stok -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+<!-- Row 2: Stok Menipis + Obat Kedaluwarsa + Audit Kartu Stok -->
+<div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;">
     <!-- Stok Menipis (Admin) -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
         <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
@@ -576,6 +576,39 @@ document.addEventListener("DOMContentLoaded", function() {
         <div style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
             <span style="font-size:12px;color:#334155;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($s['nama']) ?></span>
             <span style="font-size:12px;font-weight:700;color:<?= $s['stok']==0?'#dc2626':'#f59e0b' ?>;margin-left:12px;"><?= $s['stok'] ?> <?= htmlspecialchars($s['satuan_kecil']) ?></span>
+        </div>
+        <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
+
+    <!-- Obat Hampir Kedaluwarsa (Admin) -->
+    <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
+        <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:700;color:#1e293b;">Obat Hampir Kedaluwarsa (≤ 30 Hari)</div>
+            <span style="font-size:10px;color:#94a3b8;">Batch Aktif</span>
+        </div>
+        <?php
+        $expList = $pdo->query("
+            SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sb.no_batch, sb.tgl_exp, sb.stok_sisa, pv.satuan_kecil
+            FROM stok_batch sb
+            JOIN produk_variasi pv ON sb.id_variasi = pv.id
+            JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+            WHERE sb.stok_sisa > 0 AND sb.tgl_exp <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+            ORDER BY sb.tgl_exp ASC LIMIT 8
+        ")->fetchAll();
+        ?>
+        <?php if (empty($expList)): ?>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Tidak ada obat yang mendekati masa kedaluwarsa.</div>
+        <?php else: ?>
+        <?php foreach ($expList as $e): ?>
+        <div style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($e['nama']) ?></div>
+                <div style="font-size:10px;color:#d97706;margin-top:1px;font-weight:600;">Batch: <?= htmlspecialchars($e['no_batch']) ?> (Exp: <?= date('d/m/Y', strtotime($e['tgl_exp'])) ?>)</div>
+            </div>
+            <span style="font-size:12px;font-weight:700;color:#dc2626;margin-left:12px;white-space:nowrap;">
+                <?= $e['stok_sisa'] ?> <?= htmlspecialchars($e['satuan_kecil']) ?>
+            </span>
         </div>
         <?php endforeach; ?>
         <?php endif; ?>

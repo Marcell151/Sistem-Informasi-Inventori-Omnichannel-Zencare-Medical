@@ -87,15 +87,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $satBesar = $item['satuan_besar'];
 
             $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi = ?")->execute([$qtyPotong, $idVar]);
-            
-            if ($orderToCancel['metode_pengambilan'] === 'Kurir') {
-                $stmtSisa = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ?");
-                $stmtSisa->execute([$idVar]);
-                $sisaStok = $stmtSisa->fetchColumn();
-
-                $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Masuk', 'E-Commerce', 'Retur Barang Rusak', ?, ?, ?, ?, ?)");
-                $stmtKartu->execute([$idVar, $cancelInvoice, $qtyPotong, $sisaStok, "Dibatalkan Pelanggan: Batal $qtyBox $satBesar", $userId]);
-            }
         }
 
         $pdo->commit();

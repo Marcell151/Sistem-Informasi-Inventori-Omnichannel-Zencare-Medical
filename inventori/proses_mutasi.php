@@ -25,7 +25,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo->beginTransaction();
             
-            // Update stok fisik produk
+            // Cek Kategori
+            $kategori = $pdo->query("SELECT pi.kategori FROM produk_variasi pv JOIN produk_induk pi ON pv.id_produk_induk = pi.id WHERE pv.id = $idVariasi")->fetchColumn();
+            
+            $detailLog = "";
+
+            if ($kategori === 'Obat') {
+                $noBatch = trim($_POST['no_batch'] ?? '');
+                if (!$noBatch) throw new Exception("Nomor Batch wajib diisi untuk kategori Obat.");
+                
+                if ($jenisMutasi === 'Pengurangan') {
+                    // Cek ketersediaan batch
+                    $cekBatch = $pdo->prepare("SELECT stok_sisa FROM stok_batch WHERE id_variasi = ? AND no_batch = ? FOR UPDATE");
+                    $cekBatch->execute([$idVariasi, $noBatch]);
+                    $stokBatch = $cekBatch->fetchColumn();
+                    
+                    if ($stokBatch === false || $stokBatch < $qty) {
+                        throw new Exception("Sisa stok Batch $noBatch tidak mencukupi (Sisa: " . intval($stokBatch) . ").");
+                    }
+                    
+                    $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id_variasi = ? AND no_batch = ?")->execute([$qty, $idVariasi, $noBatch]);
+                } else {
+                    // Penambahan Batch
+                    $tglExp = $_POST['tgl_exp'] ?? '';
+                    if (!$tglExp) throw new Exception("Tanggal Kedaluwarsa wajib diisi untuk penambahan Obat.");
+                    
+                    $pdo->prepare("INSERT INTO stok_batch (id_variasi, no_batch, tgl_exp, stok_sisa) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE stok_sisa = stok_sisa + ?")->execute([$idVariasi, $noBatch, $tglExp, $qty, $qty]);
+                }
+                $detailLog = " [Batch: $noBatch]";
+                
+            } else if ($kategori === 'Alat Kesehatan') {
+                $snStr = trim($_POST['serial_number'] ?? '');
+                if (!$snStr) throw new Exception("Serial Number wajib diisi untuk kategori Alat Kesehatan.");
+                
+                if ($jenisMutasi === 'Pengurangan') {
+                    if ($qty != 1) throw new Exception("Mutasi pengurangan Alkes hanya bisa 1 unit per proses.");
+                    $cekSn = $pdo->prepare("SELECT status FROM unit_serial WHERE id_variasi = ? AND serial_number = ? FOR UPDATE");
+                    $cekSn->execute([$idVariasi, $snStr]);
+                    $statusSn = $cekSn->fetchColumn();
+                    
+                    if ($statusSn !== 'Tersedia') {
+                        throw new Exception("Serial Number $snStr tidak tersedia atau sudah keluar.");
+                    }
+                    $pdo->prepare("UPDATE unit_serial SET status = 'Mutasi/Rusak' WHERE id_variasi = ? AND serial_number = ?")->execute([$idVariasi, $snStr]);
+                } else {
+                    // Penambahan SN (bisa comma separated)
+                    $snArr = array_filter(array_map('trim', explode(',', $snStr)));
+                    if (count($snArr) != $qty) throw new Exception("Jumlah Serial Number yang diinput (".count($snArr).") tidak sesuai dengan Qty Fisik ($qty).");
+                    
+                    $stmtInsSn = $pdo->prepare("INSERT INTO unit_serial (id_variasi, serial_number, status) VALUES (?, ?, 'Tersedia')");
+                    foreach ($snArr as $sn) {
+                        // Cek duplikasi
+                        $cek = $pdo->prepare("SELECT COUNT(*) FROM unit_serial WHERE serial_number = ?");
+                        $cek->execute([$sn]);
+                        if ($cek->fetchColumn() > 0) throw new Exception("Serial Number $sn sudah terdaftar di sistem.");
+                        
+                        $stmtInsSn->execute([$idVariasi, $sn]);
+                    }
+                }
+                $detailLog = " [SN: $snStr]";
+            }
+
+            // Update stok fisik produk (Global)
             $operator = $jenisMutasi === 'Penambahan' ? '+' : '-';
             $stmtStok = $pdo->prepare("UPDATE stok_toko SET stok = stok $operator ? WHERE id_variasi = ?");
             $stmtStok->execute([$qty, $idVariasi]);
@@ -34,12 +95,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sisaStok = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVariasi")->fetchColumn();
             
             $jMutasi = $jenisMutasi === 'Penambahan' ? 'Masuk' : 'Keluar';
+            $fullCatatan = $catatan . $detailLog;
             
-            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Manual', 'Koreksi Manual', ?, ?, ?, ?)");
-            $stmtKartu->execute([$idVariasi, $jMutasi, $qty, $sisaStok, $catatan, $userId]);
+            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Manual', ?, ?, ?, ?, ?)");
+            $stmtKartu->execute([$idVariasi, $jMutasi, $alasan, $qty, $sisaStok, $fullCatatan, $userId]);
 
             $pdo->commit();
-            $msg = "Berhasil mencatat $jenisMutasi sebanyak $qty unit.";
+            $msg = "Berhasil memproses $jenisMutasi sebanyak $qty unit$detailLog.";
             $msgType = 'success';
         } catch (Exception $e) {
             $pdo->rollBack();
@@ -105,7 +167,7 @@ layoutHeader('Mutasi Stok Manual', 'Penyesuaian stok gudang karena selisih, retu
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm font-semibold text-zcTxt mb-1.5">Arah Mutasi *</label>
-                        <select name="jenis_mutasi" required class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                        <select name="jenis_mutasi" id="jenis_mutasi" required class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                             <option value="">-- Arah --</option>
                             <option value="Penambahan">Tambah Stok (+)</option>
                             <option value="Pengurangan">Kurangi Stok (-)</option>
@@ -113,8 +175,16 @@ layoutHeader('Mutasi Stok Manual', 'Penyesuaian stok gudang karena selisih, retu
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-zcTxt mb-1.5">Qty Fisik *</label>
-                        <input type="number" name="qty" required min="1" placeholder="Contoh: 5"
+                        <input type="number" name="qty" id="qty_input" required min="1" placeholder="Contoh: 5"
                             class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                    </div>
+                </div>
+
+                <!-- Dynamic Container for Batch/SN -->
+                <div id="dynamic_identitas" class="hidden space-y-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider" id="dynamic_label">Identitas Logistik</p>
+                    <div id="dynamic_input_container">
+                        <!-- Injected via JS -->
                     </div>
                 </div>
                 <div>
@@ -197,5 +267,91 @@ layoutHeader('Mutasi Stok Manual', 'Penyesuaian stok gudang karena selisih, retu
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const selectProduk = document.querySelector('select[name="id_variasi"]');
+    const selectJenis = document.getElementById('jenis_mutasi');
+    const container = document.getElementById('dynamic_identitas');
+    const inputContainer = document.getElementById('dynamic_input_container');
+    const labelTitle = document.getElementById('dynamic_label');
+
+    function checkDynamicInputs() {
+        const idVar = selectProduk.value;
+        const jenis = selectJenis.value;
+
+        if (!idVar || !jenis) {
+            container.classList.add('hidden');
+            inputContainer.innerHTML = '';
+            return;
+        }
+
+        // Fetch API
+        fetch(`../api/get_batch_sn.php?id_variasi=${idVar}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) return;
+
+                const kat = data.kategori;
+                const items = data.items;
+                let html = '';
+
+                if (kat === 'Obat') {
+                    labelTitle.textContent = 'IDENTITAS BATCH (OBAT)';
+                    if (jenis === 'Pengurangan') {
+                        html += `<label class="block text-xs font-semibold text-zcTxt mb-1">Pilih Batch yang Dikurangi *</label>
+                                 <select name="no_batch" required class="w-full text-sm border border-zcBrd rounded-lg px-3 py-2 bg-white">
+                                     <option value="">-- Pilih Batch --</option>`;
+                        items.forEach(i => {
+                            html += `<option value="${i.no_batch}">Batch: ${i.no_batch} (Sisa: ${i.stok_sisa} | Exp: ${i.tgl_exp})</option>`;
+                        });
+                        html += `</select>`;
+                    } else {
+                        html += `<div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-zcTxt mb-1">Nomor Batch Baru *</label>
+                                        <input type="text" name="no_batch" required class="w-full text-sm border border-zcBrd rounded-lg px-3 py-2 bg-white" placeholder="Contoh: BT-001">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-zcTxt mb-1">Tgl Kedaluwarsa *</label>
+                                        <input type="date" name="tgl_exp" required class="w-full text-sm border border-zcBrd rounded-lg px-3 py-2 bg-white">
+                                    </div>
+                                 </div>`;
+                    }
+                    container.classList.remove('hidden');
+                    inputContainer.innerHTML = html;
+                } else if (kat === 'Alat Kesehatan') {
+                    labelTitle.textContent = 'IDENTITAS SERIAL NUMBER (ALKES)';
+                    if (jenis === 'Pengurangan') {
+                        html += `<label class="block text-xs font-semibold text-zcTxt mb-1">Pilih Serial Number yang Dikeluarkan *</label>
+                                 <select name="serial_number" required class="w-full text-sm border border-zcBrd rounded-lg px-3 py-2 bg-white">
+                                     <option value="">-- Pilih SN --</option>`;
+                        items.forEach(i => {
+                            html += `<option value="${i.serial_number}">${i.serial_number}</option>`;
+                        });
+                        html += `</select>
+                                 <p class="text-[10px] text-rose-500 mt-1 italic">*Mutasi SN hanya bisa dilakukan 1 unit per proses.</p>`;
+                        document.getElementById('qty_input').value = 1;
+                        document.getElementById('qty_input').setAttribute('readonly', 'true');
+                    } else {
+                        html += `<label class="block text-xs font-semibold text-zcTxt mb-1">Serial Number Baru (Pisahkan koma jika > 1) *</label>
+                                 <textarea name="serial_number" required rows="2" placeholder="Contoh: SN-1001, SN-1002" class="w-full text-sm border border-zcBrd rounded-lg px-3 py-2 bg-white"></textarea>`;
+                        document.getElementById('qty_input').removeAttribute('readonly');
+                    }
+                    container.classList.remove('hidden');
+                    inputContainer.innerHTML = html;
+                } else {
+                    // Non Obat / Alkes
+                    container.classList.add('hidden');
+                    inputContainer.innerHTML = '';
+                    document.getElementById('qty_input').removeAttribute('readonly');
+                }
+            });
+    }
+
+    selectProduk.addEventListener('change', checkDynamicInputs);
+    selectJenis.addEventListener('change', checkDynamicInputs);
+});
+</script>
 
 <?php layoutFooter(); ?>

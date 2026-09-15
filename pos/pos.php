@@ -46,9 +46,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                 $pdo->prepare("INSERT INTO detail_penjualan (id_penjualan,id_variasi,qty,harga_satuan) VALUES (?,?,?,?)")->execute([$idPenjualan,$idVar,$qtyInput,$effPrice]);
                 $idDetail = $pdo->lastInsertId();
 
+                $catatanLogistik = [];
+
                 // FEFO Logic untuk Obat
                 if ($kategori === 'Obat') {
-                    $stmtBatch = $pdo->prepare("SELECT id, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC FOR UPDATE");
+                    $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC FOR UPDATE");
                     $stmtBatch->execute([$idVar]);
                     $batches = $stmtBatch->fetchAll();
                     
@@ -59,6 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                         $potongBatch = min($b['stok_sisa'], $sisaPotong);
                         $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$potongBatch, $b['id']]);
                         
+                        $catatanLogistik[] = $b['no_batch'] . " ({$potongBatch}x)";
                         $sisaPotong -= $potongBatch;
                     }
                     if ($sisaPotong > 0) {
@@ -81,7 +84,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                     foreach ($snList as $snStr) {
                         $pdo->prepare("UPDATE unit_serial SET status = 'Terjual', id_penjualan = ? WHERE serial_number = ?")
                             ->execute([$idPenjualan, $snStr]);
+                        $catatanLogistik[] = $snStr;
                     }
+                }
+
+                if (!empty($catatanLogistik)) {
+                    $catatanStr = implode(', ', $catatanLogistik);
+                    $pdo->prepare("UPDATE detail_penjualan SET catatan_logistik = ? WHERE id = ?")->execute([$catatanStr, $idDetail]);
                 }
 
                 $pdo->prepare("UPDATE stok_toko SET stok=stok-? WHERE id_variasi=?")->execute([$qtyPotong,$idVar]);
@@ -125,7 +134,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
 
 $katalog = $pdo->prepare("
     SELECT v.id, v.sku_variasi, CONCAT(i.nama_produk,' – ',v.nama_variasi) AS nama,
-           v.satuan_kecil, v.satuan_besar, v.rasio_konversi, v.harga_jual_kecil, v.harga_jual_besar, COALESCE(sc.stok,0) AS stok, i.kategori, v.gambar
+           v.satuan_kecil, v.satuan_besar, v.rasio_konversi, v.harga_jual_kecil, v.harga_jual_besar, COALESCE(sc.stok,0) AS stok, i.kategori, v.gambar,
+           (SELECT GROUP_CONCAT(serial_number ORDER BY created_at ASC SEPARATOR ',') FROM unit_serial WHERE id_variasi = v.id AND status='Tersedia') AS sn_list,
+           (SELECT GROUP_CONCAT(no_batch ORDER BY tgl_exp ASC SEPARATOR ',') FROM stok_batch WHERE id_variasi = v.id AND stok_sisa > 0) AS batch_list
     FROM produk_variasi v JOIN produk_induk i ON v.id_produk_induk=i.id
     LEFT JOIN stok_toko sc ON sc.id_variasi=v.id 
     WHERE v.is_active=1 AND i.is_active=1 ORDER BY i.nama_produk ASC");
@@ -217,7 +228,9 @@ $shopeeOn = false;
                         $stok = intval($item['stok']); 
                         ?>
                         <div class="product-card bg-slate-50 border border-zcBrd rounded-2xl p-3.5 hover:border-zc transition flex flex-col"
-                             data-search="<?= strtolower($item['nama'] . ' ' . $item['sku_variasi']) ?>">
+                             data-search="<?= strtolower($item['nama'] . ' ' . $item['sku_variasi']) ?>"
+                             data-sn="<?= strtolower($item['sn_list'] ?? '') ?>"
+                             data-batch="<?= strtolower($item['batch_list'] ?? '') ?>">
                             <div class="flex gap-3 mb-3 flex-1 min-w-0">
                                 <div class="w-12 h-12 flex-shrink-0 bg-white rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center p-1">
                                     <img src="<?= htmlspecialchars($imgSrc) ?>" alt="img" class="max-w-full max-h-full object-contain mix-blend-multiply" onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
@@ -225,6 +238,28 @@ $shopeeOn = false;
                                 <div class="min-w-0 flex-1">
                                     <span class="text-[9px] font-mono text-zcMut block"><?= htmlspecialchars($item['sku_variasi']) ?></span>
                                     <span class="text-xs font-bold text-zcTxt block leading-snug mt-0.5 line-clamp-2"><?= htmlspecialchars($item['nama']) ?></span>
+                                    
+                                    <?php if (!empty($item['batch_list'])): ?>
+                                        <div class="mt-2 flex flex-wrap gap-1.5">
+                                            <?php foreach(array_slice(explode(',', $item['batch_list']), 0, 2) as $b): ?>
+                                                <span class="inline-block px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold shadow-sm">B: <?= htmlspecialchars($b) ?></span>
+                                            <?php endforeach; ?>
+                                            <?php if (count(explode(',', $item['batch_list'])) > 2): ?>
+                                                <span class="inline-block px-2 py-1 bg-slate-50 text-slate-500 border border-slate-200 rounded text-[10px] font-bold shadow-sm">...</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <?php if (!empty($item['sn_list'])): ?>
+                                        <div class="mt-2 flex flex-wrap gap-1.5">
+                                            <?php foreach(array_slice(explode(',', $item['sn_list']), 0, 2) as $sn): ?>
+                                                <span class="inline-block px-2 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded text-[10px] font-bold shadow-sm">SN: <?= htmlspecialchars($sn) ?></span>
+                                            <?php endforeach; ?>
+                                            <?php if (count(explode(',', $item['sn_list'])) > 2): ?>
+                                                <span class="inline-block px-2 py-1 bg-slate-50 text-slate-500 border border-slate-200 rounded text-[10px] font-bold shadow-sm">...</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <div class="pt-2.5 border-t border-zcBrd flex items-end justify-between">
@@ -358,6 +393,10 @@ $shopeeOn = false;
 
     function addToPos(btnElement) {
         try {
+            var card = btnElement.closest('.product-card');
+            var rawSn = card ? card.getAttribute('data-sn') : '';
+            var rawBatch = card ? card.getAttribute('data-batch') : '';
+            
             var id = parseInt(btnElement.getAttribute('data-id'));
             var name = btnElement.getAttribute('data-nama');
             var hargaKecil = parseFloat(btnElement.getAttribute('data-hk'));
@@ -385,7 +424,8 @@ $shopeeOn = false;
                 if (qtyMultiplier > maxStockPcs) { alert('Stok tidak cukup untuk satuan ini!'); return; }
                 cart.push({
                     id: id, cartId: cartId, nama: name, harga: price, qty: 1, 
-                    satuan_tipe: uomType, satuan_label: uomLabel, maxPcs: maxStockPcs, rasio: qtyMultiplier
+                    satuan_tipe: uomType, satuan_label: uomLabel, maxPcs: maxStockPcs, rasio: qtyMultiplier,
+                    sn_list: rawSn, batch_list: rawBatch
                 }); 
             }
             renderCart();
@@ -426,10 +466,22 @@ $shopeeOn = false;
         var total = 0, html = '';
         cart.forEach(function(i) {
             var sub = i.harga * i.qty; total += sub;
+            var fefoText = '';
+            if (i.batch_list) {
+                var batches = i.batch_list.split(',').slice(0, 2).join(', ');
+                var suffix = i.batch_list.split(',').length > 2 ? ' ...' : '';
+                fefoText = '<span class="block text-[9px] text-orange-600 font-bold mt-1 rounded bg-orange-50 px-1 py-0.5 inline-block">Ambil (FEFO): ' + batches + suffix + '</span>';
+            } else if (i.sn_list) {
+                var maxSns = Math.min(i.qty * i.rasio, 2);
+                var sns = i.sn_list.split(',').slice(0, maxSns).join(', ');
+                var suffix2 = (i.qty * i.rasio > 2) ? ' ...' : '';
+                fefoText = '<span class="block text-[9px] text-purple-600 font-bold mt-1 rounded bg-purple-50 px-1 py-0.5 inline-block">Ambil (FIFO): ' + sns + suffix2 + '</span>';
+            }
             html += '<tr class="hover:bg-slate-50/60">' +
                 '<td class="px-4 py-3 font-semibold text-zcTxt text-xs">' +
                     i.nama +
                     '<span class="block text-[9px] text-zcEm mt-0.5">' + i.satuan_label + ' (Rp ' + i.harga.toLocaleString('id-ID') + ')</span>' +
+                    fefoText +
                 '</td>' +
                 '<td class="px-4 py-3 text-center">' +
                     '<div class="flex items-center justify-center gap-1.5">' +
@@ -599,7 +651,15 @@ $shopeeOn = false;
             for (var i = 0; i < cards.length; i++) {
                 var c = cards[i];
                 var skuSpan = c.querySelector('span.font-mono');
-                if (skuSpan && skuSpan.innerText.toLowerCase() === sku) {
+                var dataSn = c.getAttribute('data-sn') || '';
+                var dataBatch = c.getAttribute('data-batch') || '';
+                
+                var isMatch = false;
+                if (skuSpan && skuSpan.innerText.toLowerCase() === sku) isMatch = true;
+                else if (dataSn.split(',').includes(sku)) isMatch = true;
+                else if (dataBatch.split(',').includes(sku)) isMatch = true;
+
+                if (isMatch) {
                     var btn = c.querySelector('button');
                     if (btn && !btn.disabled) {
                         btn.click();
@@ -633,7 +693,7 @@ $shopeeOn = false;
             var cards = document.getElementsByClassName('product-card');
             for (var i = 0; i < cards.length; i++) {
                 var c = cards[i];
-                var matchStr = c.getAttribute('data-search') || '';
+                var matchStr = c.getAttribute('data-search') + ' ' + (c.getAttribute('data-sn') || '') + ' ' + (c.getAttribute('data-batch') || '');
                 if (matchStr.indexOf(q) !== -1) {
                     c.style.display = '';
                 } else {

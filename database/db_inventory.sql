@@ -191,7 +191,6 @@ CREATE TABLE penjualan (
     kota_tujuan VARCHAR(100) NULL,
     kurir VARCHAR(50) NULL,
     layanan VARCHAR(50) NULL,
-    no_resi VARCHAR(100) NULL,
     snap_token VARCHAR(255) NULL,
     payment_method VARCHAR(50) NULL,
     metode_pembayaran VARCHAR(50) DEFAULT 'Tunai',

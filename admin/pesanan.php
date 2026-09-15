@@ -32,6 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
                 $noInvoice = $orderLama['no_invoice'];
                 $metodePengambilan = $orderLama['metode_pengambilan'];
 
+                // GUARD: Cegah pembatalan jika pesanan sudah Dikirim atau Selesai
+                if ($newStatus === 'Dibatalkan' && in_array($oldStatus, ['Dikirim', 'Selesai', 'Siap Diambil'])) {
+                    throw new Exception("Pesanan yang sudah pada tahap Pengiriman/Pengambilan tidak dapat dibatalkan.");
+                }
+
                 // Update Status
                 $pdo->prepare("UPDATE penjualan SET status_pesanan = ? WHERE id = ?")->execute([$newStatus, $idPesanan]);
 
@@ -59,8 +64,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
                     }
                 }
 
-                // Jika status diubah menjadi Dibatalkan (dan sebelumnya bukan Dibatalkan), kembalikan stok
-                if ($oldStatus !== 'Dibatalkan' && $newStatus === 'Dibatalkan') {
+                // Jika status diubah menjadi Dikirim dan metode Kurir, catat sebagai Keluar di Kartu Stok
+                if ($oldStatus !== 'Dikirim' && $newStatus === 'Dikirim' && $metodePengambilan === 'Kurir') {
                     $stmtItems = $pdo->prepare("
                         SELECT d.id_variasi, d.qty, v.rasio_konversi, v.satuan_besar 
                         FROM detail_penjualan d 
@@ -75,14 +80,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
                         $qtyBox = intval($item['qty']);
                         $rasio = intval($item['rasio_konversi']) ?: 1;
                         $qtyPotong = $qtyBox * $rasio;
+
+                        $sisaStok = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVar")->fetchColumn();
+
+                        $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
+                            ->execute([$idVar, $noInvoice, $qtyPotong, $sisaStok, 'Pengiriman via Ekspedisi (Kurir)', $_SESSION['id_user'] ?? 1]);
+                    }
+                }
+                // Jika status diubah menjadi Dibatalkan (dan sebelumnya bukan Dibatalkan), kembalikan stok
+                if ($oldStatus !== 'Dibatalkan' && $newStatus === 'Dibatalkan') {
+                    $stmtItems = $pdo->prepare("
+                        SELECT d.id_variasi, d.qty, d.catatan_logistik, v.rasio_konversi, v.satuan_besar, pi.kategori 
+                        FROM detail_penjualan d 
+                        JOIN produk_variasi v ON d.id_variasi = v.id 
+                        JOIN produk_induk pi ON v.id_produk_induk = pi.id
+                        WHERE d.id_penjualan = ?
+                    ");
+                    $stmtItems->execute([$idPesanan]);
+                    $items = $stmtItems->fetchAll();
+
+                    foreach ($items as $item) {
+                        $idVar = $item['id_variasi'];
+                        $qtyBox = intval($item['qty']);
+                        $rasio = intval($item['rasio_konversi']) ?: 1;
+                        $qtyPotong = $qtyBox * $rasio;
                         $satBesar = $item['satuan_besar'];
 
                         $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi = ?")->execute([$qtyPotong, $idVar]);
 
-                        if ($metodePengambilan === 'Kurir') {
-                            $sisaStok = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVar")->fetchColumn();
-                            $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Masuk', 'E-Commerce', 'Retur Barang Rusak', ?, ?, ?, ?, ?)")
-                                ->execute([$idVar, $noInvoice, $qtyPotong, $sisaStok, "Dibatalkan Admin: Batal $qtyBox $satBesar", $_SESSION['id_user'] ?? 1]);
+                        // Restorasi FEFO dan SN berdasarkan catatan_logistik
+                        $catatan = trim($item['catatan_logistik'] ?? '');
+                        if (!empty($catatan)) {
+                            if ($item['kategori'] === 'Obat') {
+                                preg_match_all('/(.+?)\s*\((\d+)x\)/', $catatan, $matches, PREG_SET_ORDER);
+                                foreach ($matches as $match) {
+                                    $batchNo = trim($match[1]);
+                                    $batchQty = intval($match[2]);
+                                    $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa + ? WHERE id_variasi = ? AND no_batch = ?")->execute([$batchQty, $idVar, $batchNo]);
+                                }
+                            } elseif ($item['kategori'] === 'Alat Kesehatan') {
+                                $sns = array_filter(array_map('trim', explode(',', $catatan)));
+                                foreach ($sns as $snStr) {
+                                    $pdo->prepare("UPDATE unit_serial SET status = 'Tersedia', id_penjualan = NULL WHERE id_variasi = ? AND serial_number = ?")->execute([$idVar, $snStr]);
+                                }
+                            }
                         }
                     }
                 }
@@ -108,6 +149,22 @@ $query = "
 $query .= " ORDER BY p.id DESC LIMIT 50";
 
 $orders = $pdo->query($query)->fetchAll();
+
+$orderIds = array_column($orders, 'id');
+$orderDetails = [];
+if (!empty($orderIds)) {
+    $inClause = implode(',', $orderIds);
+    $qDetails = $pdo->query("
+        SELECT dp.*, pv.nama_variasi, pi.nama_produk, pi.kategori
+        FROM detail_penjualan dp
+        JOIN produk_variasi pv ON dp.id_variasi = pv.id
+        JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+        WHERE dp.id_penjualan IN ($inClause)
+    ")->fetchAll();
+    foreach ($qDetails as $d) {
+        $orderDetails[$d['id_penjualan']][] = $d;
+    }
+}
 
 layoutHead('Manajemen Pesanan');
 layoutBodyOpen();
@@ -170,10 +227,15 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                             default     => 'bg-slate-100 text-slate-700 border-slate-200'
                         };
                         ?>
-                        <tr class="order-row hover:bg-slate-50/60 transition" data-tipe="<?= htmlspecialchars($o['tipe_transaksi']) ?>">
+                        <tr class="order-row hover:bg-slate-50/60 transition cursor-pointer" data-tipe="<?= htmlspecialchars($o['tipe_transaksi']) ?>" onclick="toggleDetail(<?= $o['id'] ?>)">
                             <td class="px-4 py-3.5">
-                                <span class="font-bold text-zcTxt font-mono block"><?= htmlspecialchars($o['no_invoice']) ?></span>
-                                <span class="text-[10px] text-zcMut"><?= date('d/m/Y H:i', strtotime($o['created_at'])) ?></span>
+                                <div class="flex items-center gap-2">
+                                    <svg id="icon-<?= $o['id'] ?>" class="w-4 h-4 text-zcMut transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                                    <div>
+                                        <span class="font-bold text-zcTxt font-mono block"><?= htmlspecialchars($o['no_invoice']) ?></span>
+                                        <span class="text-[10px] text-zcMut"><?= date('d/m/Y H:i', strtotime($o['created_at'])) ?></span>
+                                    </div>
+                                </div>
                             </td>
                             <td class="px-4 py-3.5">
                                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase <?= $typeCls ?>">
@@ -226,6 +288,30 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                 </div>
                             </td>
                         </tr>
+                        <tr id="detail-<?= $o['id'] ?>" class="hidden bg-slate-50/50">
+                            <td colspan="7" class="px-8 py-4 border-t border-zcBrd/40 shadow-inner">
+                                <div class="text-xs">
+                                    <h4 class="font-bold text-zcTxt mb-2 uppercase tracking-wide border-b border-zcBrd pb-1 inline-block">Detail Item Pesanan</h4>
+                                    <ul class="space-y-2 mt-2">
+                                        <?php $items = $orderDetails[$o['id']] ?? []; ?>
+                                        <?php foreach($items as $it): ?>
+                                            <li class="flex flex-col bg-white p-2.5 rounded-lg border border-zcBrd shadow-sm">
+                                                <div class="flex justify-between items-center">
+                                                    <span class="font-bold text-slate-700"><?= htmlspecialchars($it['nama_produk'] . ' - ' . $it['nama_variasi']) ?></span>
+                                                    <span class="font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">x<?= $it['qty'] ?></span>
+                                                </div>
+                                                <?php if(!empty($it['catatan_logistik'])): ?>
+                                                    <div class="mt-2 flex items-start gap-2 p-2 bg-rose-50 border border-rose-200 rounded-md">
+                                                        <svg class="w-4 h-4 text-rose-600 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                                        <span class="text-[13px] font-bold text-rose-700 uppercase tracking-tight">(INSTRUKSI AMBIL FISIK: <?= htmlspecialchars($it['catatan_logistik']) ?>)</span>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </tbody>
@@ -235,28 +321,36 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
 
 <script>
 function filterType(type, btn) {
-    // Update styling tab
-    const tabs = document.querySelectorAll('.tab-btn');
-    tabs.forEach(t => {
-        t.className = 'tab-btn px-4 py-2 text-xs font-bold rounded-lg transition text-slate-500 hover:text-zcTxt hover:bg-slate-50';
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.className = 'tab-btn px-4 py-2 text-xs font-bold rounded-lg transition text-slate-500 hover:text-zcTxt hover:bg-slate-50';
     });
     btn.className = 'tab-btn px-4 py-2 text-xs font-bold rounded-lg transition bg-slate-800 text-white shadow-md shadow-slate-800/20';
-    
-    // Filter rows
-    const rows = document.querySelectorAll('.order-row');
+
     let count = 0;
-    
-    rows.forEach(r => {
-        const rType = r.getAttribute('data-tipe');
-        if (type === 'semua' || rType === type) {
-            r.style.display = '';
+    document.querySelectorAll('.order-row').forEach(row => {
+        const id = row.getAttribute('onclick').match(/\d+/)[0];
+        const detailRow = document.getElementById('detail-' + id);
+        if (type === 'semua' || row.dataset.tipe === type) {
+            row.style.display = '';
             count++;
         } else {
-            r.style.display = 'none';
+            row.style.display = 'none';
+            if (detailRow) detailRow.classList.add('hidden');
         }
     });
-    
     document.getElementById('lbl_count').innerText = count;
+}
+
+function toggleDetail(id) {
+    const detailRow = document.getElementById('detail-' + id);
+    const icon = document.getElementById('icon-' + id);
+    if (detailRow.classList.contains('hidden')) {
+        detailRow.classList.remove('hidden');
+        icon.style.transform = 'rotate(90deg)';
+    } else {
+        detailRow.classList.add('hidden');
+        icon.style.transform = 'rotate(0deg)';
+    }
 }
 </script>
 

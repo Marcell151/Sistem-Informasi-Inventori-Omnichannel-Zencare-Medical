@@ -122,9 +122,17 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
 ?>
 
 <?php if ($msg): ?>
-<div class="mb-5 flex items-center gap-3 p-3.5 rounded-xl text-sm font-medium border <?= $msgType === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700' ?>">
-    <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
-    <span><?= htmlspecialchars($msg) ?></span>
+<div class="mb-5 flex items-center justify-between p-4 rounded-xl text-sm font-medium border <?= $msgType === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700' ?>">
+    <div class="flex items-center gap-3">
+        <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+        <span><?= htmlspecialchars($msg) ?></span>
+    </div>
+    <?php if ($msgType === 'success'): ?>
+    <a href="../laporan/logistik_medis.php" class="px-3 py-1.5 bg-white border border-emerald-300 text-emerald-700 rounded-lg shadow-sm hover:bg-emerald-100 transition flex items-center gap-1.5 text-xs font-bold">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Buka Laporan Logistik untuk Cetak Stiker
+    </a>
+    <?php endif; ?>
 </div>
 <?php endif; ?>
 

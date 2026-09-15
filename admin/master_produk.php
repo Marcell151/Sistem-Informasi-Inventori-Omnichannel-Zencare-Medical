@@ -7,6 +7,22 @@ require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
 
+// --- AJAX Handler for Cetak Barcode ---
+if (isset($_GET['ajax']) && $_GET['ajax'] === 'get_barcode_list') {
+    $idVariasi = intval($_GET['id_variasi'] ?? 0);
+    $batches = $pdo->prepare("SELECT id, no_batch, tgl_exp FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC");
+    $batches->execute([$idVariasi]);
+    $batchList = $batches->fetchAll(PDO::FETCH_ASSOC);
+    
+    $sns = $pdo->prepare("SELECT serial_number FROM unit_serial WHERE id_variasi = ? AND status = 'Tersedia'");
+    $sns->execute([$idVariasi]);
+    $snList = $sns->fetchAll(PDO::FETCH_ASSOC);
+    
+    header('Content-Type: application/json');
+    echo json_encode(['batch' => $batchList, 'sn' => $snList]);
+    exit;
+}
+
 requireRole(['superadmin', 'admin']);
 
 $msg = ''; $msgType = '';
@@ -373,6 +389,7 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                                                     class="text-[10px] font-bold px-2 py-1 bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 rounded-lg">
                                                 Edit
                                             </button>
+                                            <button type="button" onclick="openCetakModal(<?= $v['id'] ?>, '<?= htmlspecialchars($v['nama_variasi']) ?>')" class="text-[10px] font-bold px-2 py-1 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 rounded-lg transition">Cetak</button>
                                             <form method="POST" class="inline" onsubmit="return confirm('Toggle status variasi ini?')">
                                                 <input type="hidden" name="aksi" value="toggle_variasi">
                                                 <input type="hidden" name="id_variasi" value="<?= $v['id'] ?>">
@@ -391,6 +408,31 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
         </div>
     </div>
 <?php endforeach; ?>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: Cetak Barcode                                          -->
+<!-- ============================================================ -->
+<div id="modal_cetak_barcode" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[80vh]">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-zcBrd bg-slate-50">
+            <h3 class="text-sm font-bold text-zcTxt">Cetak Label Batch/SN</h3>
+            <button onclick="document.getElementById('modal_cetak_barcode').classList.add('hidden')" class="text-zcMut hover:text-zcTxt text-lg">&times;</button>
+        </div>
+        <div class="p-6 overflow-y-auto">
+            <h4 id="cetak_nama_produk" class="font-bold text-zcTxt mb-4 text-center"></h4>
+            
+            <div id="cetak_loading" class="text-center text-xs font-semibold text-zcMut">Memuat daftar Batch/SN aktif...</div>
+            <div id="cetak_empty" class="hidden text-center text-xs font-semibold text-rose-500 bg-rose-50 p-3 rounded-xl border border-rose-200">Tidak ada stok fisik aktif (Batch/SN) untuk produk ini.</div>
+            
+            <div id="cetak_list_container" class="space-y-3 hidden">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+        <div class="px-6 py-4 border-t border-zcBrd flex justify-end bg-slate-50">
+            <button type="button" onclick="document.getElementById('modal_cetak_barcode').classList.add('hidden')" class="px-4 py-2 text-xs font-semibold bg-white border border-zcBrd hover:bg-slate-100 text-slate-700 rounded-xl transition shadow-sm">Tutup</button>
+        </div>
+    </div>
 </div>
 
 <!-- ============================================================ -->
@@ -714,6 +756,66 @@ function openEditVariasi(id, sku, nama, satKecil, satBesar, rasio, hrgKecil, hrg
     document.getElementById('edit_gambar_variasi').value = gambar;
     document.getElementById('edit_tampil_di_online').checked = (tampil == 1);
     document.getElementById('modal_edit_variasi').classList.remove('hidden');
+}
+
+async function openCetakModal(id, nama) {
+    document.getElementById('cetak_nama_produk').innerText = nama;
+    document.getElementById('modal_cetak_barcode').classList.remove('hidden');
+    
+    const loading = document.getElementById('cetak_loading');
+    const empty = document.getElementById('cetak_empty');
+    const list = document.getElementById('cetak_list_container');
+    
+    loading.classList.remove('hidden');
+    empty.classList.add('hidden');
+    list.classList.add('hidden');
+    list.innerHTML = '';
+    
+    try {
+        const res = await fetch(`?ajax=get_barcode_list&id_variasi=${id}`);
+        const data = await res.json();
+        
+        loading.classList.add('hidden');
+        
+        if (data.batch.length === 0 && data.sn.length === 0) {
+            empty.classList.remove('hidden');
+            return;
+        }
+        
+        list.classList.remove('hidden');
+        
+        data.batch.forEach(b => {
+            const dateStr = new Date(b.tgl_exp).toLocaleDateString('id-ID');
+            list.innerHTML += `
+                <div class="flex items-center justify-between p-3 bg-white border border-zcBrd rounded-xl shadow-sm">
+                    <div>
+                        <div class="font-bold text-zcTxt font-mono text-xs">${b.no_batch}</div>
+                        <div class="text-[10px] text-zcMut">EXP: ${dateStr}</div>
+                    </div>
+                    <button type="button" onclick="window.open('../inventori/cetak_stiker.php?tipe=batch&id=${b.id}', '_blank')" class="px-3 py-1.5 bg-zc hover:bg-zcHv text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Cetak
+                    </button>
+                </div>
+            `;
+        });
+        
+        data.sn.forEach(sn => {
+            list.innerHTML += `
+                <div class="flex items-center justify-between p-3 bg-white border border-zcBrd rounded-xl shadow-sm">
+                    <div>
+                        <div class="font-bold text-purple-700 font-mono text-xs">${sn.serial_number}</div>
+                        <div class="text-[10px] text-purple-700/60 font-semibold uppercase">Serial Number</div>
+                    </div>
+                    <button type="button" onclick="window.open('../inventori/cetak_stiker.php?tipe=sn&id=${sn.serial_number}', '_blank')" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Cetak
+                    </button>
+                </div>
+            `;
+        });
+        
+    } catch (e) {
+        alert("Gagal mengambil data dari server.");
+    }
 }
 </script>
 

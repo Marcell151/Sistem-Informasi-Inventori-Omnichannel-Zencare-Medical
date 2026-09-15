@@ -120,7 +120,7 @@ try {
     $idPenjualan = $pdo->lastInsertId();
 
     // Simpan Detail & Potong Stok dengan pencatatan Kartu Stok
-    $stmtDetail = $pdo->prepare("INSERT INTO detail_penjualan (id_penjualan, id_variasi, qty, harga_satuan) VALUES (?, ?, ?, ?)");
+    $stmtDetail = $pdo->prepare("INSERT INTO detail_penjualan (id_penjualan, id_variasi, qty, harga_satuan, catatan_logistik) VALUES (?, ?, ?, ?, ?)");
     foreach ($cart as $cartItem) {
         $idVariasi = intval($cartItem['id']);
         $qty = intval($cartItem['qty']);
@@ -135,14 +135,13 @@ try {
         $rasio = max(1, intval($rowP['rasio_konversi'] ?: 1));
         $kategori = $rowP['kategori'] ?? '';
 
-        $stmtDetail->execute([$idPenjualan, $idVariasi, $qty, $harga]);
-
         // Potong stok fisik cabang (satuan kecil = qty Box * rasio)
         $qtyPotong = $qty * $rasio;
+        $catatanLogistik = [];
         
         // FEFO Logic untuk Obat
         if ($kategori === 'Obat') {
-            $stmtBatch = $pdo->prepare("SELECT id, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC FOR UPDATE");
+            $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC FOR UPDATE");
             $stmtBatch->execute([$idVariasi]);
             $batches = $stmtBatch->fetchAll();
             
@@ -153,6 +152,7 @@ try {
                 $potongBatch = min($b['stok_sisa'], $sisaPotong);
                 $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$potongBatch, $b['id']]);
                 
+                $catatanLogistik[] = $b['no_batch'] . " ({$potongBatch}x)";
                 $sisaPotong -= $potongBatch;
             }
             if ($sisaPotong > 0) {
@@ -160,19 +160,36 @@ try {
             }
         }
 
+        // SN Auto-Pick untuk Alkes
+        if ($kategori === 'Alat Kesehatan') {
+            $stmtSn = $pdo->prepare("SELECT serial_number FROM unit_serial WHERE id_variasi = ? AND status = 'Tersedia' LIMIT ? FOR UPDATE");
+            $stmtSn->bindValue(1, $idVariasi, PDO::PARAM_INT);
+            $stmtSn->bindValue(2, $qtyPotong, PDO::PARAM_INT);
+            $stmtSn->execute();
+            $snList = $stmtSn->fetchAll(PDO::FETCH_COLUMN);
+
+            if (count($snList) < $qtyPotong) {
+                throw new Exception("Jumlah Serial Number tersedia tidak mencukupi untuk Alkes ID $idVariasi.");
+            }
+
+            foreach ($snList as $snStr) {
+                $pdo->prepare("UPDATE unit_serial SET status = 'Terjual', id_penjualan = ? WHERE serial_number = ?")
+                    ->execute([$idPenjualan, $snStr]);
+                $catatanLogistik[] = $snStr;
+            }
+        }
+
         $pdo->prepare("UPDATE stok_toko SET stok = stok - ? WHERE id_variasi = ?")
             ->execute([$qtyPotong, $idVariasi]);
+
+        $catatanStr = !empty($catatanLogistik) ? implode(', ', $catatanLogistik) : null;
+        $stmtDetail->execute([$idPenjualan, $idVariasi, $qty, $harga, $catatanStr]);
 
         // Saldo akhir fisik
         $sisaQ = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ?");
         $sisaQ->execute([$idVariasi]);
         $sisa = $sisaQ->fetchColumn();
 
-        // Catat ke kartu_stok dengan referensi nomor invoice WEB- (Hanya untuk Kurir)
-        if ($metodePengambilan === 'Kurir') {
-            $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
-                ->execute([$idVariasi, $orderId, $qtyPotong, $sisa, 'Penjualan Checkout Web (Kurir)', $idUser]);
-        }
     }
 
     // 4. Request Midtrans Snap

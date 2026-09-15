@@ -57,8 +57,12 @@ try {
     $stmtUpdate = $pdo->prepare("UPDATE penjualan SET status_pesanan = ? WHERE no_invoice = ?");
     $stmtUpdate->execute([$newStatus, $orderId]);
 
-    // Ambil detail item dan rasio konversi
-    $stmtItems = $pdo->prepare("SELECT d.id_variasi, d.qty, v.rasio_konversi, v.satuan_besar FROM detail_penjualan d JOIN produk_variasi v ON d.id_variasi = v.id WHERE d.id_penjualan = (SELECT id FROM penjualan WHERE no_invoice = ?)");
+    // Ambil detail item dan rasio konversi beserta catatan logistik
+    $stmtItems = $pdo->prepare("SELECT d.id_variasi, d.qty, d.catatan_logistik, v.rasio_konversi, v.satuan_besar, pi.kategori 
+                                FROM detail_penjualan d 
+                                JOIN produk_variasi v ON d.id_variasi = v.id 
+                                JOIN produk_induk pi ON v.id_produk_induk = pi.id
+                                WHERE d.id_penjualan = (SELECT id FROM penjualan WHERE no_invoice = ?)");
     $stmtItems->execute([$orderId]);
     $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
 
@@ -75,12 +79,23 @@ try {
             $stmtStok = $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi = ?");
             $stmtStok->execute([$qtyPotong, $idVar]);
 
-            $stmtSisa = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ?");
-            $stmtSisa->execute([$idVar]);
-            $sisaStok = $stmtSisa->fetchColumn();
-
-            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan) VALUES (?, 'Masuk', 'E-Commerce', 'Retur Barang Rusak', ?, ?, ?, ?)");
-            $stmtKartu->execute([$idVar, $orderId, $qtyPotong, $sisaStok, "Refund/Cancel Midtrans: Batal $qtyBox $satBesar"]);
+            // Restorasi FEFO dan SN berdasarkan catatan_logistik
+            $catatan = trim($item['catatan_logistik'] ?? '');
+            if (!empty($catatan)) {
+                if ($item['kategori'] === 'Obat') {
+                    preg_match_all('/(.+?)\s*\((\d+)x\)/', $catatan, $matches, PREG_SET_ORDER);
+                    foreach ($matches as $match) {
+                        $batchNo = trim($match[1]);
+                        $batchQty = intval($match[2]);
+                        $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa + ? WHERE id_variasi = ? AND no_batch = ?")->execute([$batchQty, $idVar, $batchNo]);
+                    }
+                } elseif ($item['kategori'] === 'Alat Kesehatan') {
+                    $sns = array_filter(array_map('trim', explode(',', $catatan)));
+                    foreach ($sns as $snStr) {
+                        $pdo->prepare("UPDATE unit_serial SET status = 'Tersedia', id_penjualan = NULL WHERE id_variasi = ? AND serial_number = ?")->execute([$idVar, $snStr]);
+                    }
+                }
+            }
         }
     }
 

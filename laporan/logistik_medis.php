@@ -81,14 +81,30 @@ layoutSidebar('laporan_logistik');
 layoutHeader('Laporan Logistik Medis', 'Batch Obat Aktif & Jejak Serial Number Alat Kesehatan');
 ?>
 
-<!-- Tab Navigation -->
-<div class="flex gap-2 mb-6 bg-white border border-zcBrd rounded-2xl p-1.5 w-fit shadow-sm">
-    <a href="?tab=batch" class="px-5 py-2 rounded-xl text-xs font-bold transition <?= $activeTab === 'batch' ? 'bg-zc text-white shadow-sm shadow-blue-500/20' : 'text-zcMut hover:text-zcTxt hover:bg-slate-50' ?>">
-        💊 Batch Obat Aktif
-    </a>
-    <a href="?tab=sn" class="px-5 py-2 rounded-xl text-xs font-bold transition <?= $activeTab === 'sn' ? 'bg-zc text-white shadow-sm shadow-blue-500/20' : 'text-zcMut hover:text-zcTxt hover:bg-slate-50' ?>">
-        🏷️ Jejak Serial Number (SN)
-    </a>
+<style>
+@media print {
+    .print\:hidden { display: none !important; }
+    aside, header { display: none !important; }
+    body { background: white; color: black; }
+    .bg-white { box-shadow: none !important; border: none !important; }
+    @page { size: portrait; margin: 10mm; }
+}
+</style>
+
+<!-- Tab Navigation & Print -->
+<div class="flex justify-between items-center mb-6 print:hidden">
+    <div class="flex gap-2 bg-white border border-zcBrd rounded-2xl p-1.5 shadow-sm">
+        <a href="?tab=batch" class="px-5 py-2 rounded-xl text-xs font-bold transition <?= $activeTab === 'batch' ? 'bg-zc text-white shadow-sm shadow-blue-500/20' : 'text-zcMut hover:text-zcTxt hover:bg-slate-50' ?>">
+            💊 Batch Obat Aktif
+        </a>
+        <a href="?tab=sn" class="px-5 py-2 rounded-xl text-xs font-bold transition <?= $activeTab === 'sn' ? 'bg-zc text-white shadow-sm shadow-blue-500/20' : 'text-zcMut hover:text-zcTxt hover:bg-slate-50' ?>">
+            🏷️ Jejak Serial Number (SN)
+        </a>
+    </div>
+    <button type="button" onclick="window.print()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition border border-slate-300 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+        Cetak Laporan
+    </button>
 </div>
 
 <!-- TAB 1: BATCH OBAT -->
@@ -132,6 +148,7 @@ layoutHeader('Laporan Logistik Medis', 'Batch Obat Aktif & Jejak Serial Number A
                 <th class="text-left px-4 py-3 font-bold text-zcMut">Tgl Exp</th>
                 <th class="text-right px-4 py-3 font-bold text-zcMut">Stok Sisa</th>
                 <th class="text-center px-4 py-3 font-bold text-zcMut">Status</th>
+                <th class="text-center px-4 py-3 font-bold text-zcMut">Aksi</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-zcBrd">
@@ -150,10 +167,16 @@ layoutHeader('Laporan Logistik Medis', 'Batch Obat Aktif & Jejak Serial Number A
                 <td class="px-4 py-3 text-center">
                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold <?= $b['badge_cls'] ?>"><?= $b['status_exp'] ?></span>
                 </td>
+                <td class="px-4 py-3 text-center">
+                    <button type="button" onclick="window.open('../inventori/cetak_stiker.php?tipe=batch&id=<?= $b['id'] ?>', '_blank')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-lg text-[10px] font-bold transition flex items-center gap-1.5 mx-auto">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        Cetak
+                    </button>
+                </td>
             </tr>
         <?php endforeach; ?>
         <?php if (empty($batchList)): ?>
-            <tr><td colspan="5" class="px-4 py-10 text-center text-zcMut">Tidak ada data batch aktif.</td></tr>
+            <tr><td colspan="6" class="px-4 py-10 text-center text-zcMut">Tidak ada data batch aktif.</td></tr>
         <?php endif; ?>
         </tbody>
     </table>
@@ -213,6 +236,7 @@ layoutHeader('Laporan Logistik Medis', 'Batch Obat Aktif & Jejak Serial Number A
                 <th class="text-center px-4 py-3 font-bold text-zcMut">Status</th>
                 <th class="text-left px-4 py-3 font-bold text-zcMut">Transaksi Terkait</th>
                 <th class="text-left px-4 py-3 font-bold text-zcMut">Terdaftar</th>
+                <th class="text-center px-4 py-3 font-bold text-zcMut">Aksi</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-zcBrd">
@@ -244,10 +268,16 @@ layoutHeader('Laporan Logistik Medis', 'Batch Obat Aktif & Jejak Serial Number A
                     <?php endif; ?>
                 </td>
                 <td class="px-4 py-3 text-zcMut"><?= date('d M Y', strtotime($sn['created_at'])) ?></td>
+                <td class="px-4 py-3 text-center">
+                    <button type="button" onclick="window.open('../inventori/cetak_stiker.php?tipe=sn&id=<?= $sn['serial_number'] ?>', '_blank')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-lg text-[10px] font-bold transition flex items-center gap-1.5 mx-auto">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        Cetak
+                    </button>
+                </td>
             </tr>
         <?php endforeach; ?>
         <?php if (empty($snList)): ?>
-            <tr><td colspan="5" class="px-4 py-10 text="center text-zcMut">Tidak ada data serial number.</td></tr>
+            <tr><td colspan="7" class="px-4 py-10 text-center text-zcMut">Tidak ada jejak serial number.</td></tr>
         <?php endif; ?>
         </tbody>
     </table>
