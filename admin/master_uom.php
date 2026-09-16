@@ -22,6 +22,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rasio        = max(1, intval($_POST['rasio_konversi'] ?? 1));
         $hargaKecil   = floatval(str_replace(['.', ','], ['', '.'], $_POST['harga_jual_kecil'] ?? 0));
         $hargaBesar   = floatval(str_replace(['.', ','], ['', '.'], $_POST['harga_jual_besar'] ?? 0));
+        
+        if ($_SESSION['role'] !== 'superadmin') {
+            $existing = $pdo->prepare("SELECT rasio_konversi, harga_jual_kecil, harga_jual_besar FROM produk_variasi WHERE id = ?");
+            $existing->execute([$idVariasi]);
+            if ($ex = $existing->fetch()) {
+                $rasio = $ex['rasio_konversi'];
+                $hargaKecil = $ex['harga_jual_kecil'];
+                $hargaBesar = $ex['harga_jual_besar'];
+            }
+        }
+
         $stokMin      = max(0, intval($_POST['stok_minimum'] ?? 0));
         $berat        = max(0, intval($_POST['berat'] ?? 0));
 
@@ -165,21 +176,21 @@ layoutHeader('Master Satuan & UOM', 'Pengaturan Unit of Measure & Harga per Vari
                 </div>
             </div>
             <div>
-                <label class="block text-xs font-semibold text-zcTxt mb-1.5">Rasio Konversi (1 Besar = ? Kecil) *</label>
+                <label class="block text-xs font-semibold text-zcTxt mb-1.5 flex justify-between">Rasio Konversi (1 Besar = ? Kecil) * <?= $_SESSION['role'] !== 'superadmin' ? '<span class="text-[9px] text-rose-500 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Terkunci</span>' : '' ?></label>
                 <input type="number" name="rasio_konversi" id="edit_rasio" min="1" required
-                    class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
+                    <?= $_SESSION['role'] !== 'superadmin' ? 'readonly class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-100 text-slate-500 cursor-not-allowed focus:outline-none"' : 'class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc"' ?>>
                 <p class="text-[10px] text-zcMut mt-1">Obat: sesuai kemasan (mis. 10 = 1 Box isi 10 Strip). Alkes: wajib 1.</p>
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-semibold text-zcTxt mb-1.5">Harga Jual Kecil (POS) *</label>
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5 flex justify-between">Harga Jual Kecil (POS) * <?= $_SESSION['role'] !== 'superadmin' ? '<span class="text-[9px] text-rose-500 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Terkunci</span>' : '' ?></label>
                     <input type="number" name="harga_jual_kecil" id="edit_harga_kecil" min="0" step="100" required
-                        class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
+                        <?= $_SESSION['role'] !== 'superadmin' ? 'readonly class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-100 text-slate-500 cursor-not-allowed focus:outline-none"' : 'class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc"' ?>>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-zcTxt mb-1.5">Harga Jual Besar (E-Commerce) *</label>
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5 flex justify-between">Harga Jual Besar (E-Commerce) * <?= $_SESSION['role'] !== 'superadmin' ? '<span class="text-[9px] text-rose-500 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Terkunci</span>' : '' ?></label>
                     <input type="number" name="harga_jual_besar" id="edit_harga_besar" min="0" step="100" required
-                        class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
+                        <?= $_SESSION['role'] !== 'superadmin' ? 'readonly class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-100 text-slate-500 cursor-not-allowed focus:outline-none"' : 'class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc"' ?>>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-4">

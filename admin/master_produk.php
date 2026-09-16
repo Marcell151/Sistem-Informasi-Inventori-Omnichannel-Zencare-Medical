@@ -1,6 +1,6 @@
 <?php
 // File: admin/master_produk.php
-// Master Data Produk Induk & Variasi - Super Admin Only
+// Master Data Produk Induk & Variasi
 session_start();
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
@@ -126,8 +126,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rasio    = intval($_POST['rasio_konversi'] ?? 1) ?: 1;
         $hrgKecil = floatval($_POST['harga_jual_kecil'] ?? 0);
         $hrgBesar = floatval($_POST['harga_jual_besar'] ?? 0);
-
         $berat = intval($_POST['berat'] ?? 100);
+
+        if ($_SESSION['role'] !== 'superadmin') {
+            $existing = $pdo->prepare("SELECT rasio_konversi, harga_jual_kecil, harga_jual_besar FROM produk_variasi WHERE id = ?");
+            $existing->execute([$idVal]);
+            if ($ex = $existing->fetch()) {
+                $rasio = $ex['rasio_konversi'];
+                $hrgKecil = $ex['harga_jual_kecil'];
+                $hrgBesar = $ex['harga_jual_besar'];
+            }
+        }
         
         // --- MULTIPLE IMAGE HANDLING ---
         $gambarText = trim($_POST['gambar'] ?? '');
@@ -261,7 +270,7 @@ $produkInduk = $pdo->query("SELECT * FROM produk_induk ORDER BY id DESC")->fetch
 layoutHead('Master Produk');
 layoutBodyOpen();
 layoutSidebar('master_produk');
-layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi alkes/obat (Super Admin Only)');
+layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi alkes/obat');
 ?>
 
 <?php if ($msg): ?>
@@ -627,19 +636,22 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                     <input type="text" name="satuan_besar" id="edit_satuan_besar" required class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Rasio (1 Besar = ? Kecil)</label>
-                    <input type="number" name="rasio_konversi" id="edit_rasio_konversi" min="1" required class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                    <label class="block text-xs font-bold text-zcTxt mb-1.5 flex justify-between">Rasio (1 Besar = ? Kecil) <?= $_SESSION['role'] !== 'superadmin' ? '<span class="text-[9px] text-rose-500 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Terkunci</span>' : '' ?></label>
+                    <input type="number" name="rasio_konversi" id="edit_rasio_konversi" min="1" required 
+                        <?= $_SESSION['role'] !== 'superadmin' ? 'readonly class="w-full text-xs border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-100 text-slate-500 cursor-not-allowed focus:outline-none"' : 'class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50"' ?>>
                 </div>
             </div>
             
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Harga Jual Kecil (Ecer) *</label>
-                    <input type="number" name="harga_jual_kecil" id="edit_harga_jual_kecil" required min="0" step="500" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                    <label class="block text-xs font-bold text-zcTxt mb-1.5 flex justify-between">Harga Jual Kecil (Ecer) * <?= $_SESSION['role'] !== 'superadmin' ? '<span class="text-[9px] text-rose-500 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Terkunci</span>' : '' ?></label>
+                    <input type="number" name="harga_jual_kecil" id="edit_harga_jual_kecil" required min="0" step="500" 
+                        <?= $_SESSION['role'] !== 'superadmin' ? 'readonly class="w-full text-xs border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-100 text-slate-500 cursor-not-allowed focus:outline-none"' : 'class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50"' ?>>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Harga Jual Besar (Grosir) *</label>
-                    <input type="number" name="harga_jual_besar" id="edit_harga_jual_besar" required min="0" step="500" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                    <label class="block text-xs font-bold text-zcTxt mb-1.5 flex justify-between">Harga Jual Besar (Grosir) * <?= $_SESSION['role'] !== 'superadmin' ? '<span class="text-[9px] text-rose-500 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Terkunci</span>' : '' ?></label>
+                    <input type="number" name="harga_jual_besar" id="edit_harga_jual_besar" required min="0" step="500" 
+                        <?= $_SESSION['role'] !== 'superadmin' ? 'readonly class="w-full text-xs border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-100 text-slate-500 cursor-not-allowed focus:outline-none"' : 'class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50"' ?>>
                 </div>
             </div>
 
