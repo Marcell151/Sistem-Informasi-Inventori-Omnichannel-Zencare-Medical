@@ -122,7 +122,7 @@ $produkList = $pdo->query("
 
 // Ambil riwayat mutasi terbaru dari kartu_stok
 $mutasiLog = $pdo->query("
-    SELECT ks.tanggal AS created_at, ks.jenis_mutasi, ks.qty, ks.sisa_stok, ks.keterangan AS alasan,
+    SELECT ks.tanggal AS created_at, ks.jenis_mutasi, ks.qty, ks.sisa_stok, ks.alasan_mutasi AS alasan, ks.keterangan AS catatan,
            CONCAT(pi.nama_produk, ' — ', pv.nama_variasi) AS nama_item,
            u.nama_lengkap AS pembuat
     FROM kartu_stok ks

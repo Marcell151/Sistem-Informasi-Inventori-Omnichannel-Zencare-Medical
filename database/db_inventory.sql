@@ -77,11 +77,9 @@ CREATE TABLE produk_induk (
     spesifikasi TEXT NULL COMMENT 'Spesifikasi teknis medis',
     info_pengiriman TEXT NULL,
     kategori ENUM('Obat', 'Alat Kesehatan') NOT NULL,
-    id_supplier INT NULL,
     gambar VARCHAR(255) NULL,
     is_active BOOLEAN DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_supplier) REFERENCES supplier(id) ON DELETE SET NULL
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================================
@@ -192,8 +190,8 @@ CREATE TABLE penjualan (
     kurir VARCHAR(50) NULL,
     layanan VARCHAR(50) NULL,
     snap_token VARCHAR(255) NULL,
-    payment_method VARCHAR(50) NULL,
-    metode_pembayaran VARCHAR(50) DEFAULT 'Tunai',
+    payment_method_ecommerce VARCHAR(50) NULL,
+    metode_bayar_pos VARCHAR(50) DEFAULT 'Tunai',
     paid_at TIMESTAMP NULL,
     kode_pickup VARCHAR(20) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

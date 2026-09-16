@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
             $totalHarga = 0;
             $invoiceNo  = "POS-" . date('Ymd') . "-" . rand(1000, 9999);
             $metodeBayar = $_POST['metode_pembayaran'] ?? 'Tunai';
-            $pdo->prepare("INSERT INTO penjualan (no_invoice,id_user,tipe_transaksi,status_pesanan,total_harga,metode_pembayaran,created_at) VALUES (?,?,'pos','Selesai',0,?,NOW())")
+            $pdo->prepare("INSERT INTO penjualan (no_invoice,id_user,tipe_transaksi,status_pesanan,total_harga,metode_bayar_pos,created_at) VALUES (?,?,'pos','Selesai',0,?,NOW())")
                 ->execute([$invoiceNo, $_SESSION['user_id'] ?? 2, $metodeBayar]);
             $idPenjualan = $pdo->lastInsertId();
 

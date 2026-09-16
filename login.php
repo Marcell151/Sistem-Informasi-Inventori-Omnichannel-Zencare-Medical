@@ -81,8 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                 </svg>
             </div>
-            <h1 style="font-size:17px;font-weight:800;color:#1e293b;margin-bottom:3px;">ZenCare Admin &amp; Kasir</h1>
-            <p style="font-size:12px;color:#64748b;">Portal Internal Operasional Inventaris &amp; POS</p>
+            <h1 style="font-size:17px;font-weight:800;color:#1e293b;margin-bottom:3px;">ZenCare Medical Admin</h1>
+            <p style="font-size:12px;color:#64748b;">Portal Internal Operasional ZenCare Medical</p>
         </div>
 
         <div class="card" style="padding:24px;">
@@ -93,29 +93,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <?php endif; ?>
 
-            <!-- Quick Login -->
-            <div style="margin-bottom:18px;">
-                <p style="font-size:11px;color:#94a3b8;font-weight:600;margin-bottom:8px;">Quick Login (Akun Internal Staf)</p>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <form method="POST">
-                        <input type="hidden" name="username" value="superadmin">
-                        <input type="hidden" name="password" value="">
-                        <button type="submit" class="quick-btn">Super Admin</button>
-                    </form>
-                    <form method="POST">
-                        <input type="hidden" name="username" value="admin_toko">
-                        <input type="hidden" name="password" value="">
-                        <button type="submit" class="quick-btn">Admin Toko</button>
-                    </form>
-                </div>
-            </div>
+            <!-- Quick Login disembunyikan untuk keperluan screenshot laporan skripsi -->
 
-            <!-- Divider -->
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-                <div style="flex:1;height:1px;background:#e8ecf2;"></div>
-                <span style="font-size:11px;color:#94a3b8;white-space:nowrap;">atau login manual</span>
-                <div style="flex:1;height:1px;background:#e8ecf2;"></div>
-            </div>
 
             <!-- Form -->
             <form method="POST">

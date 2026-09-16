@@ -37,11 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nama = trim($_POST['nama_produk'] ?? '');
         $kat  = trim($_POST['kategori'] ?? '');
         $desc = trim($_POST['deskripsi'] ?? '');
-        $sup  = intval($_POST['id_supplier'] ?? 0) ?: null;
         if ($sku && $nama && $kat) {
             try {
-                $pdo->prepare("INSERT INTO produk_induk (sku_induk,nama_produk,deskripsi,kategori,id_supplier,is_active) VALUES (?,?,?,?,?,1)")
-                    ->execute([$sku,$nama,$desc,$kat,$sup]);
+                $pdo->prepare("INSERT INTO produk_induk (sku_induk,nama_produk,deskripsi,kategori,is_active) VALUES (?,?,?,?,1)")
+                    ->execute([$sku,$nama,$desc,$kat]);
                 $msg = "Produk induk '$nama' berhasil ditambahkan."; $msgType = 'success';
             } catch (Exception $e) { $msg = "Error: " . $e->getMessage(); $msgType = 'error'; }
         } else { $msg = "SKU, Nama Produk, dan Kategori wajib diisi!"; $msgType = 'error'; }
@@ -53,10 +52,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nama = trim($_POST['nama_produk'] ?? '');
         $kat  = trim($_POST['kategori'] ?? '');
         $desc = trim($_POST['deskripsi'] ?? '');
-        $sup  = intval($_POST['id_supplier'] ?? 0) ?: null;
         if ($id && $nama) {
-            $pdo->prepare("UPDATE produk_induk SET nama_produk=?,deskripsi=?,kategori=?,id_supplier=? WHERE id=?")
-                ->execute([$nama,$desc,$kat,$sup,$id]);
+            $pdo->prepare("UPDATE produk_induk SET nama_produk=?,deskripsi=?,kategori=? WHERE id=?")
+                ->execute([$nama,$desc,$kat,$id]);
             $msg = "Produk '$nama' diperbarui."; $msgType = 'success';
         }
     }
@@ -186,16 +184,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $namaInduk  = trim($data[1]);
                         $kategori   = trim($data[2]);
                         $deskripsi  = trim($data[3]);
-                        $idSupplier = intval($data[4]) ?: null;
-                        $skuVar     = trim($data[5]);
-                        $namaVar    = trim($data[6]);
-                        $satKecil   = trim($data[7]) ?: 'Pcs';
-                        $satBesar   = trim($data[8]) ?: 'Box';
-                        $rasio      = intval($data[9]) ?: 1;
-                        $hrgKecil   = floatval($data[10]);
-                        $hrgBesar   = floatval($data[11]);
-                        $berat      = intval($data[12]) ?: 100;
-                        $stokAwal   = intval($data[13]);
+                        $skuVar     = trim($data[4]);
+                        $namaVar    = trim($data[5]);
+                        $satKecil   = trim($data[6]) ?: 'Pcs';
+                        $satBesar   = trim($data[7]) ?: 'Box';
+                        $rasio      = intval($data[8]) ?: 1;
+                        $hrgKecil   = floatval($data[9]);
+                        $hrgBesar   = floatval($data[10]);
+                        $berat      = intval($data[11]) ?: 100;
+                        $stokAwal   = intval($data[12] ?? 0);
 
                         if (empty($skuInduk) || empty($skuVar)) continue;
 
@@ -204,7 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmtInduk->execute([$skuInduk]);
                         $idInduk = $stmtInduk->fetchColumn();
                         if (!$idInduk) {
-                            $pdo->prepare("INSERT INTO produk_induk (sku_induk,nama_produk,deskripsi,kategori,id_supplier,is_active) VALUES (?,?,?,?,?,1)")->execute([$skuInduk, $namaInduk, $deskripsi, $kategori, $idSupplier]);
+                            $pdo->prepare("INSERT INTO produk_induk (sku_induk,nama_produk,deskripsi,kategori,is_active) VALUES (?,?,?,?,1)")->execute([$skuInduk, $namaInduk, $deskripsi, $kategori]);
                             $idInduk = $pdo->lastInsertId();
                         }
 
@@ -259,8 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch data
-$produkInduk = $pdo->query("SELECT pi.*, s.nama AS nama_supplier FROM produk_induk pi LEFT JOIN supplier s ON pi.id_supplier=s.id ORDER BY pi.id DESC")->fetchAll();
-$supplierList = $pdo->query("SELECT id, nama FROM supplier WHERE is_active=1 ORDER BY nama ASC")->fetchAll();
+$produkInduk = $pdo->query("SELECT * FROM produk_induk ORDER BY id DESC")->fetchAll();
 
 layoutHead('Master Produk');
 layoutBodyOpen();
@@ -315,14 +311,13 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                     </div>
                     <div class="text-[11px] text-zcMut mt-0.5">
                         SKU: <code class="font-mono"><?= htmlspecialchars($pi['sku_induk']) ?></code>
-                        &bull; Supplier: <strong><?= htmlspecialchars($pi['nama_supplier'] ?? '–') ?></strong>
                         &bull; <?= count($variasiList) ?> Variasi
                     </div>
                 </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
                 <!-- Edit -->
-                <button onclick="event.stopPropagation(); openEditInduk(<?= $pi['id'] ?>, '<?= addslashes($pi['nama_produk']) ?>', '<?= addslashes($pi['kategori']) ?>', '<?= addslashes($pi['deskripsi'] ?? '') ?>', <?= $pi['id_supplier'] ?? 'null' ?>)"
+                <button onclick="event.stopPropagation(); openEditInduk(<?= $pi['id'] ?>, '<?= addslashes($pi['nama_produk']) ?>', '<?= addslashes($pi['kategori']) ?>', '<?= addslashes($pi['deskripsi'] ?? '') ?>')"
                     class="px-3 py-1.5 text-[11px] font-bold bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl transition">Edit</button>
                 <!-- Toggle -->
                 <form method="POST" onsubmit="return confirm('<?= $aktif ? 'Nonaktifkan' : 'Aktifkan' ?> produk ini?')" class="inline">
@@ -473,15 +468,6 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Deskripsi</label>
                 <textarea name="deskripsi" rows="2" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50" placeholder="Keterangan singkat produk..."></textarea>
             </div>
-            <div>
-                <label class="block text-xs font-bold text-zcTxt mb-1.5">Supplier</label>
-                <select name="id_supplier" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
-                    <option value="">-- Pilih Supplier (Opsional) --</option>
-                    <?php foreach ($supplierList as $s): ?>
-                        <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nama']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
             <div class="flex justify-end gap-3 pt-2">
                 <button type="button" onclick="document.getElementById('modal_tambah_induk').classList.add('hidden')" class="px-4 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition">Batal</button>
                 <button type="submit" class="px-5 py-2 text-xs font-bold bg-zc hover:bg-zcHv text-white rounded-xl transition shadow-sm">Simpan Produk</button>
@@ -504,27 +490,16 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Nama Produk *</label>
                 <input type="text" name="nama_produk" id="edit_nama_produk" required class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Kategori *</label>
-                    <select name="kategori" id="edit_kategori" required class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
-                        <option value="Obat-obatan">Obat-obatan</option>
-                        <option value="Alat Monitor">Alat Monitor</option>
-                        <option value="Alat Bantu Jalan">Alat Bantu Jalan</option>
-                        <option value="Perawatan Luka">Perawatan Luka</option>
-                        <option value="Suplemen">Suplemen</option>
-                        <option value="Alat Bedah">Alat Bedah</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Supplier</label>
-                    <select name="id_supplier" id="edit_supplier" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
-                        <option value="">- Tanpa Supplier -</option>
-                        <?php foreach ($supplierList as $s): ?>
-                            <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nama']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+            <div>
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Kategori *</label>
+                <select name="kategori" id="edit_kategori" required class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                    <option value="Obat-obatan">Obat-obatan</option>
+                    <option value="Alat Monitor">Alat Monitor</option>
+                    <option value="Alat Bantu Jalan">Alat Bantu Jalan</option>
+                    <option value="Perawatan Luka">Perawatan Luka</option>
+                    <option value="Suplemen">Suplemen</option>
+                    <option value="Alat Bedah">Alat Bedah</option>
+                </select>
             </div>
             <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Deskripsi</label>
@@ -709,7 +684,7 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
             <?= icon('download', 'w-5 h-5 text-emerald-600') ?> Import Produk & Variasi (CSV)
         </h3>
         <p class="text-xs text-zcMut mb-4">
-            Upload file CSV. Kolom format: <code>SKU_INDUK, NAMA_PRODUK, KATEGORI, DESKRIPSI, ID_SUPPLIER, SKU_VARIASI, NAMA_VARIASI, SATUAN_KECIL, SATUAN_BESAR, RASIO_KONVERSI, HARGA_JUAL_KECIL, HARGA_JUAL_BESAR, BERAT_GRAM, STOK_AWAL</code>.
+            Upload file CSV. Kolom format: <code>SKU_INDUK, NAMA_PRODUK, KATEGORI, DESKRIPSI, SKU_VARIASI, NAMA_VARIASI, SATUAN_KECIL, SATUAN_BESAR, RASIO_KONVERSI, HARGA_JUAL_KECIL, HARGA_JUAL_BESAR, BERAT_GRAM, STOK_AWAL</code>.
         </p>
         <form method="POST" enctype="multipart/form-data">
             <input type="hidden" name="aksi" value="import_csv">
@@ -730,12 +705,11 @@ function toggleAcc(id) {
     const el = document.getElementById(id);
     el.classList.toggle('hidden');
 }
-function openEditInduk(id, nama, kat, desc, supId) {
+function openEditInduk(id, nama, kat, desc) {
     document.getElementById('edit_id_induk').value = id;
     document.getElementById('edit_nama_produk').value = nama;
     document.getElementById('edit_deskripsi').value = desc;
     document.getElementById('edit_kategori').value = kat;
-    if (supId) document.getElementById('edit_supplier').value = supId;
     document.getElementById('modal_edit_induk').classList.remove('hidden');
 }
 function openTambahVariasi(idInduk, namaInduk) {

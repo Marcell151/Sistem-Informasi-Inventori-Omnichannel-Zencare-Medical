@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wireframe Murni – ZenCare Medical Omnichannel</title>
+    <style>
+        /* ── FONT & PALET WIREFRAME STRICT ── */
+        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&display=swap');
+
+        :root {
+            --bg: #ffffff;
+            --bg2: #ffffff;
+            --bg3: #ffffff;
+            --border: #000000;
+            --border2: #000000;
+            --text: #000000;
+            --text2: #000000;
+            --text3: #000000;
+            --accent: #000000;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            border-radius: 0 !important;
+            /* Paksa sudut tajam */
+            color: #000 !important;
+            /* Paksa teks hitam */
+        }
+
+        body {
+            font-family: 'DM Mono', monospace !important;
+            background: #f4f4f4 !important;
+            min-height: 100vh;
+            filter: grayscale(100%) contrast(120%);
+        }
+
+        /* ── SHELL & LAYOUT NAVIGASI ── */
+        .shell {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .nav-panel {
+            width: 240px;
+            flex-shrink: 0;
+            background: #fff !important;
+            border-right: 2px solid #000 !important;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-header {
+            padding: 16px 14px 10px;
+            border-bottom: 2px solid #000 !important;
+        }
+
+        .nav-header-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .04em;
+        }
+
+        .nav-header-sub {
+            font-size: 9px;
+            margin-top: 2px;
+        }
+
+        .nav-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .nav-section-label {
+            font-size: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            padding: 10px 14px 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 10px;
+            border: 1px solid transparent;
+        }
+
+        .nav-item.active {
+            background: #000 !important;
+            color: #fff !important;
+        }
+
+        .nav-num {
+            width: 16px;
+            height: 16px;
+            border: 1px solid #000 !important;
+            font-size: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: #fff !important;
+        }
+
+        .nav-item.active .nav-num {
+            background: #fff !important;
+            color: #000 !important;
+            font-weight: 600;
+            border-color: #fff !important;
+        }
+
+        /* ── MAIN AREA ── */
+        .main {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-topbar {
+            height: 44px;
+            background: #fff !important;
+            border-bottom: 2px solid #000 !important;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .main-topbar-title {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .main-topbar-sub {
+            font-size: 10px;
+        }
+
+        .page-badge,
+        .role-badge {
+            font-size: 9px;
+            background: #fff !important;
+            border: 1px solid #000 !important;
+            padding: 3px 10px;
+            font-weight: 600;
+        }
+
+        .page-badge {
+            margin-left: auto;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            background: #f4f4f4 !important;
+        }
+
+        /* ── WIREFRAME CONTAINERS (Brutalist style) ── */
+        .wf,
+        .card,
+        .sc,
+        .hero,
+        .login-bg {
+            background: #fff !important;
+            border: 1px solid #000 !important;
+            box-shadow: 3px 3px 0px #000 !important;
+            overflow: hidden;
+        }
+
+        .card {
+            padding: 12px;
+        }
+
+        .sc {
+            padding: 10px 12px;
+        }
+
+        .hero {
+            padding: 14px 18px;
+            margin-bottom: 12px;
+        }
+
+        /* ── UTILITIES ── */
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .col {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .flex1 {
+            flex: 1;
+        }
+
+        .g2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .g3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+
+        .g4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        /* ── CUSTOM APP LAYOUT (Sidebar dalam konten) ── */
+        .wf-topbar {
+            height: 36px;
+            background: #fff !important;
+            border-bottom: 1px solid #000 !important;
+            display: flex;
+            align-items: center;
+            padding: 0 14px;
+            gap: 8px;
+        }
+
+        .wf-sidebar {
+            width: 140px;
+            flex-shrink: 0;
+            padding: 10px 0;
+            border-right: 1px solid #000 !important;
+            background: #fff !important;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .wf-si {
+            height: 18px;
+            margin: 2px 8px;
+            border: 1px solid #000 !important;
+            background: #fff !important;
+            display: flex;
+            align-items: center;
+            padding: 0 5px;
+            font-size: 8px;
+            font-weight: bold;
+        }
+
+        .wf-si.on {
+            background: #000 !important;
+            color: #fff !important;
+        }
+
+        .wf-sl {
+            font-size: 7px;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            padding: 8px 10px 2px;
+            border-top: 1px dashed #000;
+            margin-top: 5px;
+        }
+
+        .wf-sl:first-child {
+            border-top: none;
+            margin-top: 0;
+        }
+
+        .content {
+            flex: 1;
+            padding: 14px;
+        }
+
+        .ph {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .psub {
+            font-size: 9px;
+            margin-top: 2px;
+        }
+
+        /* ── UI ELEMENTS ── */
+        .btn,
+        .btnp,
+        .badge {
+            border: 1px solid #000 !important;
+            background: #fff !important;
+            font-weight: 600 !important;
+            text-transform: uppercase;
+        }
+
+        .btn {
+            height: 24px;
+            padding: 0 10px;
+            display: inline-flex;
+            align-items: center;
+            font-size: 9px;
+            cursor: pointer;
+        }
+
+        .btnp {
+            background: #000 !important;
+            color: #fff !important;
+        }
+
+        .badge {
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            padding: 0 8px;
+            font-size: 8px;
+        }
+
+        .inp,
+        .sel,
+        .textarea {
+            height: 28px;
+            border: 1px solid #000 !important;
+            background: #fff !important;
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 9px;
+        }
+
+        .textarea {
+            height: 60px;
+        }
+
+        .tri {
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 5px solid #000 !important;
+        }
+
+        /* ── PLACEHOLDERS ── */
+        .blk,
+        .blk2,
+        .tc,
+        .tc.dk {
+            background: #e0e0e0 !important;
+            border: 1px solid #999 !important;
+        }
+
+        /* Image Cross Boxes */
+        .img-box,
+        .av,
+        .wf-logo,
+        .wf-user {
+            background: #fff !important;
+            border: 1px solid #000 !important;
+            position: relative;
+            color: transparent !important;
+        }
+
+        .img-box::before,
+        .av::before,
+        .wf-logo::before,
+        .wf-user::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom right, transparent calc(50% - 1px), #000 calc(50%), transparent calc(50% + 1px));
+        }
+
+        .img-box::after,
+        .av::after,
+        .wf-logo::after,
+        .wf-user::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to top right, transparent calc(50% - 1px), #000 calc(50%), transparent calc(50% + 1px));
+        }
+
+        .wf-logo {
+            width: 26px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+
+        .av {
+            width: 26px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+
+        /* ── TABLES ── */
+        .tbl {
+            border: 1px solid #000 !important;
+            background: #fff !important;
+            box-shadow: 2px 2px 0px #000 !important;
+            margin-bottom: 10px;
+        }
+
+        .tbl-h {
+            background: #fff !important;
+            border-bottom: 2px solid #000 !important;
+            padding: 7px 10px;
+            display: grid;
+            gap: 8px;
+            align-items: center;
+            font-size: 8px;
+            font-weight: bold;
+        }
+
+        .tbl-r {
+            padding: 8px 10px;
+            display: grid;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid #000 !important;
+            font-size: 9px;
+        }
+
+        .tbl-r:last-child {
+            border-bottom: none;
+        }
+
+        /* ── OTHERS ── */
+        .chk {
+            width: 12px;
+            height: 12px;
+            border: 1px solid #000 !important;
+            background: #fff !important;
+            flex-shrink: 0;
+        }
+
+        .login-bg {
+            min-height: 480px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #000 !important;
+            margin-bottom: 12px;
+        }
+
+        .tab {
+            padding: 7px 14px;
+            font-size: 9px;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .tab.on {
+            border-bottom: 3px solid #000 !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="shell">
+        <!-- LEFT NAV -->
+        <div class="nav-panel">
+            <div class="nav-header">
+                <div class="nav-header-title">ZENCARE MEDICAL</div>
+                <div class="nav-header-sub">Wireframe — 18 Halaman</div>
+            </div>
+            <div class="nav-list" id="navList"></div>
+        </div>
+
+        <!-- MAIN -->
+        <div class="main">
+            <div class="main-topbar">
+                <div class="col" style="gap:2px">
+                    <div class="main-topbar-title" id="topTitle">—</div>
+                    <div class="main-topbar-sub" id="topSub">—</div>
+                </div>
+                <div class="page-badge" id="topBadge">01 / 18</div>
+                <div class="role-badge" id="topRole"></div>
+            </div>
+            <div class="main-content" id="mainContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // ─── HELPERS ─────────────────────────────────────────────
+        function sysTopbar(title = 'ZenCare') {
+            return `<div class="wf-topbar"><div class="wf-logo"></div><div class="col" style="gap:2px"><div class="wf-title" style="font-weight:bold;font-size:10px;">${title}</div></div><div class="flex1"></div><div class="av" style="width:18px;height:18px;border-radius:50%;"></div></div>`;
+        }
+
+        function sysSidebar(active) {
+            const menu = [
+                ['UTAMA', ['Dashboard']],
+                ['TRANSAKSI', ['Kasir (POS)', 'Transaksi']],
+                ['MASTER DATA', ['Produk', 'Satuan & UOM', 'Supplier']],
+                ['LOGISTIK', ['Penerimaan Barang', 'Mutasi Stok', 'Kartu Stok']],
+                ['LAPORAN', ['Lap. Penjualan', 'Lap. Persediaan', 'Lap. Logistik Medis']],
+                ['SISTEM', ['Manajemen Pengguna']]
+            ];
+            let h = '<div class="wf-sidebar">';
+            for (const [sec, items] of menu) {
+                h += `<div class="wf-sl">${sec}</div>`;
+                for (const item of items) {
+                    h += `<div class="wf-si${item === active ? ' on' : ''}">${item}</div>`;
+                }
+            }
+            h += '</div>';
+            return h;
+        }
+
+        function sc4(ls) {
+            return `<div class="g4" style="margin-bottom:12px">${ls.map(l => `<div class="sc"><div class="blk" style="height:14px;width:30px;margin-bottom:5px;"></div><div style="font-size:14px;font-weight:bold;margin-bottom:2px;">999</div><div style="font-size:8px;">${l}</div></div>`).join('')}</div>`;
+        }
+
+        const pages = [
+            // ─── E-COMMERCE & LOGIN (PUBLIK/STAF) ───
+            {
+                title: 'Beranda & Katalog', sub: 'Tampilan depan E-Commerce untuk pelanggan', role: 'Pelanggan', html: () => `
+        <div class="wf" style="min-height:500px; display:flex; flex-direction:column;">
+            <div class="wf-topbar" style="height:50px;">
+                <div class="wf-logo"></div><div style="font-weight:bold;font-size:12px;">ZenCare Store</div>
+                <div class="inp" style="width:300px;margin-left:20px;"><div class="blk" style="height:8px;flex:1;"></div><div class="av" style="width:14px;height:14px;border:none;"></div></div>
+                <div class="flex1"></div>
+                <div class="btn">Masuk / Daftar</div><div class="btn btnp">🛒 (0)</div>
+            </div>
+            <div class="hero img-box" style="height:180px; display:flex; align-items:center; justify-content:center; flex-direction:column; background:#e0e0e0 !important; color:#000 !important;">
+                <div style="background:#fff; padding:10px; border:2px solid #000; font-weight:bold; z-index:10;">BANNER PROMOSI / HERO</div>
+            </div>
+            <div class="content">
+                <div class="g4">
+                    ${Array(4).fill().map((_, i) => `<div class="card" style="text-align:center;"><div style="font-size:10px;font-weight:bold;">Kategori ${i + 1}</div></div>`).join('')}
+                </div>
+                <div style="font-weight:bold; font-size:12px; margin:15px 0 10px;">Produk Unggulan</div>
+                <div class="g4">
+                    ${Array(4).fill().map(() => `
+                    <div class="card">
+                        <div class="img-box" style="height:100px; width:100%; margin-bottom:10px;"></div>
+                        <div class="tc dk" style="width:80%; height:10px; margin-bottom:5px;"></div>
+                        <div class="tc" style="width:50%; height:8px; margin-bottom:10px;"></div>
+                        <div style="font-weight:bold; font-size:12px; margin-bottom:10px;">Rp XX.XXX</div>
+                        <div class="btn btnp" style="width:100%; justify-content:center;">+ Keranjang</div>
+                    </div>`).join('')}
+                </div>
+            </div>
+        </div>`},
+
+            {
+                title: 'Login Pelanggan', sub: 'Autentikasi pelanggan daring', role: 'Pelanggan', html: () => `
+        <div class="login-bg">
+          <div class="card" style="width:320px;padding:30px 25px;">
+            <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:20px;">
+              <div class="wf-logo" style="margin-bottom:10px;"></div>
+              <div style="font-weight:bold; font-size:12px;">Selamat Datang</div>
+            </div>
+            <div style="font-size:8px;font-weight:bold;margin-bottom:5px;">USERNAME / EMAIL</div>
+            <div class="inp" style="margin-bottom:12px;"><div class="blk" style="height:8px;width:60%;"></div></div>
+            <div style="font-size:8px;font-weight:bold;margin-bottom:5px;">KATA SANDI</div>
+            <div class="inp" style="margin-bottom:15px;"><div class="blk" style="height:8px;width:40%;"></div></div>
+            <div class="btn btnp" style="width:100%; justify-content:center; height:30px; margin-bottom:15px;">MASUK</div>
+            <div style="text-align:center; font-size:9px;">Belum punya akun? <b>Daftar sekarang</b></div>
+          </div>
+        </div>`},
+
+            {
+                title: 'Checkout Pembayaran', sub: 'Proses pengisian alamat dan kurir E-Commerce', role: 'Pelanggan', html: () => `
+        <div class="wf" style="min-height:500px; display:flex; flex-direction:column;">
+            <div class="wf-topbar"><div class="wf-logo"></div><div style="font-weight:bold;font-size:12px;">Checkout Pesanan</div><div class="flex1"></div><div class="btn">Kembali</div></div>
+            <div class="content g2" style="grid-template-columns: 1.5fr 1fr;">
+                <div class="col" style="gap:15px;">
+                    <div class="card">
+                        <div style="font-weight:bold; font-size:10px; border-bottom:1px solid #000; padding-bottom:5px; margin-bottom:10px;">1. Identitas Penerima</div>
+                        <div class="g2">
+                            <div><div style="font-size:8px;margin-bottom:3px;">Nama Lengkap</div><div class="inp"></div></div>
+                            <div><div style="font-size:8px;margin-bottom:3px;">No HP / WA</div><div class="inp"></div></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div style="font-weight:bold; font-size:10px; border-bottom:1px solid #000; padding-bottom:5px; margin-bottom:10px;">2. Alamat & Kurir</div>
+                        <div class="g2" style="margin-bottom:10px;">
+                            <div><div style="font-size:8px;margin-bottom:3px;">Provinsi</div><div class="sel"><div class="flex1"></div><div class="tri"></div></div></div>
+                            <div><div style="font-size:8px;margin-bottom:3px;">Kota/Kabupaten</div><div class="sel"><div class="flex1"></div><div class="tri"></div></div></div>
+                        </div>
+                        <div style="font-size:8px;margin-bottom:3px;">Alamat Lengkap</div>
+                        <div class="textarea" style="margin-bottom:10px;"></div>
+                        <div style="font-size:8px;margin-bottom:3px;">Pilihan Ekspedisi</div>
+                        <div class="sel" style="margin-bottom:10px;"><div class="flex1"></div><div class="tri"></div></div>
+                        <div class="img-box" style="height:100px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; background:#e0e0e0 !important; color:#000 !important; z-index:1;"><span style="background:#fff; border:1px solid #000; padding:2px 5px; z-index:10;">PETA LOKASI (LEAFLET PIN)</span></div>
+                    </div>
+                </div>
+                <div class="card" style="align-self:start;">
+                    <div style="font-weight:bold; font-size:10px; border-bottom:1px solid #000; padding-bottom:5px; margin-bottom:10px;">3. Ringkasan Belanja</div>
+                    <div class="row" style="justify-content:space-between; margin-bottom:5px; font-size:9px;"><div>Obat Amoxicillin</div><div>1 x Rp 70.000</div></div>
+                    <div style="border-top:1px dashed #000; margin:10px 0;"></div>
+                    <div class="row" style="justify-content:space-between; margin-bottom:5px; font-size:9px;"><div>Subtotal Barang</div><div>Rp 70.000</div></div>
+                    <div class="row" style="justify-content:space-between; margin-bottom:10px; font-size:9px;"><div>Ongkos Kirim</div><div>Rp 10.000</div></div>
+                    <div class="row" style="justify-content:space-between; margin-bottom:15px; font-size:12px; font-weight:bold;"><div>Grand Total</div><div>Rp 80.000</div></div>
+                    <div class="btn btnp" style="width:100%; justify-content:center; height:30px;">BAYAR SEKARANG</div>
+                </div>
+            </div>
+        </div>`},
+
+            {
+                title: 'Login Staf', sub: 'Portal internal operasional', role: 'Admin', html: () => `
+        <div class="login-bg">
+          <div class="card" style="width:300px;padding:30px 25px;">
+            <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:20px;">
+              <div class="wf-logo" style="margin-bottom:10px;"></div>
+              <div style="font-weight:bold; font-size:14px;">ZenCare Admin</div>
+            </div>
+            <div style="font-size:8px;font-weight:bold;margin-bottom:5px;">USERNAME STAF</div>
+            <div class="inp" style="margin-bottom:12px;"><div class="blk" style="height:8px;width:60%;"></div></div>
+            <div style="font-size:8px;font-weight:bold;margin-bottom:5px;">PASSWORD</div>
+            <div class="inp" style="margin-bottom:15px;"><div class="blk" style="height:8px;width:40%;"></div></div>
+            <div class="btn btnp" style="width:100%; justify-content:center; height:30px;">MASUK KE DASHBOARD</div>
+          </div>
+        </div>`},
+
+            // ─── SUPERADMIN ───
+            {
+                title: 'Dashboard Superadmin', sub: 'Monitoring makro operasional (Pemilik)', role: 'Superadmin', html: () => `
+        <div class="wf">${sysTopbar('Dashboard Manajerial')}
+        <div style="display:flex;min-height:500px;">${sysSidebar('Dashboard')}
+        <div class="content">
+            <div class="g2" style="margin-bottom:12px;">
+                <div class="card row" style="justify-content:space-between;"><span style="font-size:9px;font-weight:bold;">Pesanan Menunggu</span> <span class="btn">Lihat</span></div>
+                <div class="card row" style="justify-content:space-between;"><span style="font-size:9px;font-weight:bold;">Menunggu Pick-up</span> <span class="btn">Lihat</span></div>
+            </div>
+            ${sc4(['Total Stok Fisik', 'Stok Menipis (<5)', 'Batch Hampir Exp', 'Pesanan Daring'])}
+            <div class="g2">
+                <div class="card" style="min-height:150px; display:flex; flex-direction:column;">
+                    <div style="font-size:10px;font-weight:bold;border-bottom:1px solid #000;padding-bottom:5px;margin-bottom:10px;">Kuantitas Penjualan (Luring vs Daring)</div>
+                    <div style="flex:1; border-bottom:2px solid #000; border-left:2px solid #000; display:flex; align-items:flex-end; justify-content:space-around; padding:10px;">
+                        <div class="img-box" style="width:20px; height:80px; background:#e0e0e0 !important;"></div>
+                        <div class="img-box" style="width:20px; height:40px; background:#e0e0e0 !important;"></div>
+                        <div class="img-box" style="width:20px; height:60px; background:#e0e0e0 !important;"></div>
+                    </div>
+                </div>
+                <div class="col" style="gap:10px;">
+                    <div class="card"><div style="font-size:8px;">VOLUME JUAL POS</div><div style="font-size:16px;font-weight:bold;">15 Unit</div></div>
+                    <div class="card"><div style="font-size:8px;">VOLUME JUAL E-COMMERCE</div><div style="font-size:16px;font-weight:bold;">42 Unit</div></div>
+                </div>
+            </div>
+        </div></div></div>`},
+
+            {
+                title: 'Laporan Penjualan Barang', sub: 'Rekapitulasi volume transaksi omnichannel', role: 'Superadmin', html: () => `
+        <div class="wf">${sysTopbar('Laporan Penjualan')}
+        <div style="display:flex;min-height:500px;">${sysSidebar('Lap. Penjualan')}
+        <div class="content">
+            <div class="card row" style="margin-bottom:15px; padding:10px;">
+                <div class="col"><div style="font-size:8px;">Dari Tanggal</div><div class="inp"></div></div>
+                <div class="col"><div style="font-size:8px;">Sampai Tanggal</div><div class="inp"></div></div>
+                <div class="col flex1"><div style="font-size:8px;">Kanal Penjualan</div><div class="sel"><div class="flex1"></div><div class="tri"></div></div></div>
+                <div class="btn btnp" style="margin-top:12px;">Tampilkan Data</div>
+                <div class="btn" style="margin-top:12px;">Cetak Laporan</div>
+            </div>
+            ${sc4(['Total Transaksi', 'Total Item Terjual', 'Item Terjual POS', 'Item Terjual Online'])}
+            <div class="card">
+                <div style="font-weight:bold;font-size:10px;margin-bottom:10px;">Rincian Volume per Produk</div>
+                <div class="tbl">
+                    <div class="tbl-h" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr;"><div>Produk</div><div>Kategori</div><div>Total Qty</div><div>Qty Luring</div><div>Qty Daring</div></div>
+                    ${Array(4).fill().map(() => `<div class="tbl-r" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr;"><div><div class="tc dk" style="width:80%;height:10px;margin-bottom:3px;"></div><div class="tc" style="width:50%;height:8px;"></div></div><div>Obat</div><div style="font-weight:bold;">15</div><div>5</div><div>10</div></div>`).join('')}
+                </div>
+            </div>
+        </div></div></div>`},
+
+            {
+                title: 'Laporan Persediaan', sub: 'Pemantauan kuantitas aset gudang', role: 'Superadmin', html: () => `
+        <div class="wf">${sysTopbar('Laporan Persediaan')}
+        <div style="display:flex;min-height:500px;">${sysSidebar('Lap. Persediaan')}
+        <div class="content">
+            <div class="row" style="margin-bottom:15px;">
+                <div class="sel" style="width:150px;"><div style="flex:1;">Semua Cabang</div><div class="tri"></div></div>
+                <div class="sel" style="width:150px;"><div style="flex:1;">Semua Status</div><div class="tri"></div></div>
+                <div class="btn btnp">Tampilkan</div><div class="btn">Cetak</div>
+            </div>
+            ${sc4(['Total Unit Fisik', 'Total Kemasan Grosir', 'Variasi Terdaftar', 'Item Kritis / Habis'])}
+            <div class="tbl">
+                <div class="tbl-h" style="grid-template-columns: 0.3fr 0.8fr 2fr 1fr 1.5fr 1fr 1fr 0.8fr;"><div>No</div><div>Kategori</div><div>Produk</div><div>SKU</div><div>Rasio Kemasan</div><div>Stok (Pcs)</div><div>Tersedia Grosir</div><div>Status</div></div>
+                ${Array(5).fill().map((_, i) => `<div class="tbl-r" style="grid-template-columns: 0.3fr 0.8fr 2fr 1fr 1.5fr 1fr 1fr 0.8fr;"><div>${i + 1}</div><div><div class="badge">Obat</div></div><div><div class="tc dk" style="height:10px;width:90%;"></div></div><div>OBT-00${i}</div><div>1 Box = 10 Strip</div><div style="font-weight:bold;">78 Strip</div><div>7 Box</div><div><div class="badge ${i % 3 == 0 ? '' : 'dk'}">${i % 3 == 0 ? 'Kritis' : 'Aman'}</div></div></div>`).join('')}
+            </div>
+        </div></div></div>`},
+
+            {
+                title: 'Laporan Logistik Medis', sub: 'Pemantauan Batch dan Serial Number', role: 'Superadmin', html: () => `
+        <div class="wf">${sysTopbar('Lap. Logistik Medis')}
+        <div style="display:flex;min-height:500px;">${sysSidebar('Lap. Logistik Medis')}
+        <div class="content">
+            <div class="row" style="margin-bottom:15px; border-bottom:1px solid #000;">
+                <div class="btn btnp" style="border-bottom:none; margin-bottom:-1px;">💊 Batch Obat Aktif</div>
+                <div class="btn" style="border-bottom:none; margin-bottom:-1px;">🏷️ Jejak Serial Number</div>
+                <div class="flex1"></div>
+                <div class="btn" style="margin-bottom:5px;">Cetak Laporan</div>
+            </div>
+            <div class="g2" style="margin-bottom:15px;">
+                <div class="card row"><div class="tc dk" style="width:20px;height:20px;"></div><div class="col"><div style="font-size:16px;font-weight:bold;">7</div><div style="font-size:8px;">Total Batch Aktif</div></div></div>
+                <div class="card row" style="border:2px solid #000;"><div class="tc dk" style="width:20px;height:20px;"></div><div class="col"><div style="font-size:16px;font-weight:bold;">3</div><div style="font-size:8px;">Batch Kritis/Exp</div></div></div>
+            </div>
+            <div class="tbl">
+                <div class="tbl-h" style="grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr 1fr;"><div>Produk Obat</div><div>No. Batch</div><div>Tgl Exp</div><div>Stok Sisa</div><div>Status</div><div>Aksi</div></div>
+                ${Array(4).fill().map((_, i) => `<div class="tbl-r" style="grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr 1fr;"><div><div class="tc dk" style="height:10px;width:90%;margin-bottom:3px;"></div><div class="tc" style="height:8px;width:50%;"></div></div><div style="font-weight:bold;">BATCH-A-EXP</div><div>18 Sep 2026<br><small>2 hari lagi</small></div><div style="font-weight:bold;">10 Strip</div><div><div class="badge ${i < 2 ? 'dk' : ''}">${i < 2 ? 'Kritis' : 'Normal'}</div></div><div><div class="btn">🖨️ Cetak</div></div></div>`).join('')}
+            </div>
+        </div></div></div>`},
+
+            {
+                title: 'Manajemen Pengguna', sub: 'Kelola akun kasir, admin, dan pelanggan', role: 'Superadmin', html: () => `
+        <div class="wf">${sysTopbar('Manajemen Pengguna')}
+        <div style="display:flex;min-height:500px;">${sysSidebar('Manajemen Pengguna')}
+        <div class="content">
+            <div class="row" style="justify-content:space-between; margin-bottom:15px;">
+                <div class="col"><div style="font-size:12px;font-weight:bold;">Daftar Akun User</div><div style="font-size:9px;">Total: 3 akun terdaftar</div></div>
+                <div class="btn btnp">+ Tambah User Baru</div>
+            </div>
+            <div class="tbl">
+                <div class="tbl-h" style="grid-template-columns: 0.5fr 1fr 2fr 1fr 1fr 1.5fr;"><div>#</div><div>Username</div><div>Nama & Kontak</div><div>Role</div><div>Status</div><div>Aksi</div></div>
+                <div class="tbl-r" style="grid-template-columns: 0.5fr 1fr 2fr 1fr 1fr 1.5fr;"><div>1</div><div style="font-weight:bold;">superadmin</div><div>SuperAdmin (Pemilik)<br><small>admin@zencare.id</small></div><div><div class="badge dk">Superadmin</div></div><div><div class="badge">Aktif</div></div><div><div class="btn">Edit</div></div></div>
+                <div class="tbl-r" style="grid-template-columns: 0.5fr 1fr 2fr 1fr 1fr 1.5fr;"><div>2</div><div style="font-weight:bold;">admin_toko</div><div>Admin (Staff Toko)<br><small>staff@zencare.id</small></div><div><div class="badge">Admin</div></div><div><div class="badge">Aktif</div></div><div><div class="row"><div class="btn">Edit</div><div class="btn" style="border:1px dashed #000;">Reset</div></div></div></div>
+                <div class="tbl-r" style="grid-template-columns: 0.5fr 1fr 2fr 1fr 1fr 1.5fr;"><div>3</div><div style="font-weight:bold;">pelanggan1</div><div>Budi Santoso<br><small>083333333</small></div><div><div class="badge">Pelanggan</div></div><div><div class="badge">Aktif</div></div><div><div class="row"><div class="btn">Edit</div><div class="btn" style="border:1px dashed #000;">Reset</div></div></div></div>
+            </div>
+        </div></div></div>`},
+
+            // ─── ADMIN ───
+            {
+                title: 'Dashboard Admin', sub: 'Ringkasan operasional kasir & inventori harian', role: 'Admin', html: () => `
+        <div class="wf">${sysTopbar('Dashboard Operasional')}
+        <div style="display:flex;min-height:500px;">${sysSidebar('Dashboard')}
+        <div class="content">
+            <div class="g2" style="margin-bottom:12px;">
+                <div class="card row" style="justify-content:space-between;"><span style="font-size:9px;font-weight:bold;">Pesanan Menunggu Proses</span> <span class="btn">Kelola</span></div>
+                <div class="card row" style="justify-content:space-between;"><span style="font-size:9px;font-weight:bold;">Menunggu Pengambilan</span> <span class="btn">Kelola</span></div>
+            </div>
+            ${sc4(['Total Stok Fisik', 'Stok Menipis (<5)', 'Hampir Kedaluwarsa', 'Pesanan Baru'])}
+            <div class="row" style="margin-bottom:15px;">
+                <div class="btn btnp">Buka Terminal POS</div><div class="btn">Terima Stok Baru</div><div class="btn">Kelola Pesanan</div>
+            </div>
+            <div class="g3">
+                <div class="card"><div style="font-weight:bold;font-size:10px;border-bottom:1px solid #000;padding-bottom:5px;margin-bottom:10px;">Stok Menipis</div>${Array(3).fill().map(() => `<div class="row" style="margin-bottom:8px;justify-content:space-between;font-size:8px;"><div><div class="tc dk" style="width:80px;height:8px;margin-bottom:2px;"></div><div class="tc" style="width:50px;height:6px;"></div></div><div style="font-weight:bold;">2 Unit</div></div>`).join('')}</div>
+                <div class="card"><div style="font-weight:bold;font-size:10px;border-bottom:1px solid #000;padding-bottom:5px;margin-bottom:10px;">Obat Hampir Exp</div>${Array(3).fill().map(() => `<div class="row" style="margin-bottom:8px;justify-content:space-between;font-size:8px;"><div><div class="tc dk" style="width:80px;height:8px;margin-bottom:2px;"></div><div class="tc" style="width:60px;height:6px;"></div></div><div style="font-weight:bold;">10 Strip</div></div>`).join('')}</div>
+                <div class="card"><div style="font-weight:bold;font-size:10px;border-bottom:1px solid #000;padding-bottom:5px;margin-bottom:10px;">Audit Kartu Stok</div>${Array(4).fill().map((_, i) => `<div class="row" style="margin-bottom:8px;justify-content:space-between;font-size:8px;"><div><div class="tc dk" style="width:80px;height:8px;margin-bottom:2px;"></div><div class="tc" style="width:40px;height:6px;"></div></div><div style="font-weight:bold;">${i % 2 == 0 ? '+15' : '-1'}</div></div>`).join('')}</div>
+            </div>
+        </div></div></div>`},
+
+            {
+                title: 'Kasir (POS)', sub: 'Sistem point of sale luring', role: 'Admin', html: () => `
+        <div class="wf" style="min-height:500px; display:flex; flex-direction:column;">
+            <div class="wf-topbar" style="background:#000 !important; color:#fff !important;"><div class="wf-logo" style="border-color:#fff !important; filter:invert(1);"></div><div style="font-weight:bold;font-size:12px;color:#fff !important;">POS ZenCare Medical</div><div class="flex1"></div><div class="btn">Dashboard Utama</div></div>
+            <div class="content g2" style="grid-template-columns: 1.5fr 1fr;">
+                <div class="card" style="display:flex; flex-direction:column;">
+                    <div class="row" style="margin-bottom:10px; justify-content:space-between;">
+                        <div style="font-weight:bold; font-size:10px;">Katalog Stok Cabang</div>
+                        <div class="inp" style="width:150px;"><div class="blk" style="height:8px;width:100%;"></div></div>
+                    </div>
+                    <div class="g2">
+                        ${Array(4).fill().map((_, i) => `
+                        <div class="card row" style="align-items:flex-start;">
+                            <div class="img-box" style="width:40px; height:40px;"></div>
+                            <div class="col flex1">
+                                <div style="font-size:8px;">OBT-00${i}</div>
+                                <div style="font-size:10px;font-weight:bold;">Nama Obat ${i}</div>
+                                <div class="badge" style="width:fit-content; margin:5px 0;">BATCH-XYZ</div>
+                                <div class="row" style="justify-content:space-between; margin-top:5px;">
+                                    <div class="col"><span style="font-weight:bold;font-size:10px;">Rp 7.500</span><span style="font-size:7px;">Stok: 78</span></div>
+                                    <div class="btn btnp">+ Pilih</div>
+                                </div>
+                            </div>
+                        </div>`).join('')}
+                    </div>
+                </div>
+                <div class="card" style="display:flex; flex-direction:column;">
+                    <div style="font-weight:bold; font-size:10px; border-bottom:1px solid #000; padding-bottom:5px; margin-bottom:10px;">Billing Transaksi</div>
+                    <div class="tbl" style="flex:1;">
+                        <div class="tbl-h" style="grid-template-columns: 2fr 0.5fr 1fr;"><div>Item</div><div>Qty</div><div>Subtotal</div></div>
+                        <div class="tbl-r" style="grid-template-columns: 2fr 0.5fr 1fr;"><div style="font-weight:bold;">Obat Amoxicillin</div><div>1</div><div>Rp 7.500</div></div>
+                    </div>
+                    <div class="row" style="justify-content:space-between; margin:10px 0; font-size:14px; font-weight:bold;">
+                        <div>TOTAL</div><div>Rp 7.500</div>
+                    </div>
+                    <div class="btn btnp" style="width:100%; justify-content:center; height:35px; margin-bottom:10px;">Proses Pembayaran</div>
+                    <div class="btn" style="width:100%; justify-content:center; height:25px; border-style:dashed !important;">Kosongkan Keranjang</div>
+                </div>
+            </div>
+        </div>`},
+
+            {
+                title: 'Transaksi Omnichannel', sub: 'Kelola pesanan daring dan riwayat POS', role: 'Admin', html: () => `
+        <div class="wf">${sysTopbar('Manajemen Pesanan')}
+        <div style="display:flex;min-height:500px;">${sysSidebar('Transaksi')}
+        <div class="content">
+            <div class="row" style="justify-content:space-between; margin-bottom:15px;">
+                <div style="font-weight:bold; font-size:12px;">Daftar Transaksi Pesanan</div>
+                <div class="row" style="border:1px solid #000;"><div class="btn btnp" style="border:none;">Semua</div><div class="btn" style="border:none;border-left:1px solid #000;border-right:1px solid #000;">E-Commerce</div><div class="btn" style="border:none;">POS</div></div>
+            </div>
+            <div class="tbl">
+                <div class="tbl-h" style="grid-template-columns: 1.5fr 1fr 2fr 1.5fr 1fr 1fr 1.5fr;"><div>Invoice</div><div>Tipe</div><div>Penerima</div><div>Kurir</div><div>Total</div><div>Status</div><div>Aksi</div></div>
+                ${Array(5).fill().map((_, i) => `<div class="tbl-r" style="grid-template-columns: 1.5fr 1fr 2fr 1.5fr 1fr 1fr 1.5fr;"><div style="font-weight:bold;">${i % 2 == 0 ? 'POS' : 'WEB'}-2026...</div><div><div class="badge ${i % 2 == 0 ? 'dk' : ''}">${i % 2 == 0 ? 'POS' : 'E-COMMERCE'}</div></div><div><div class="tc dk" style="height:10px;width:80%;margin-bottom:2px;"></div><div class="tc" style="height:8px;width:60%;"></div></div><div>${i % 2 == 0 ? 'Direct' : 'JNE / Pick-up'}</div><div style="font-weight:bold;">Rp 18.500</div><div><div class="badge ${i % 2 == 0 ? '' : 'dk'}">${i % 2 == 0 ? 'Selesai' : 'Diproses'}</div></div><div><div class="row"><div class="sel" style="width:60px;height:20px;"></div><div class="btn">Cetak</div></div></div></div>`).join('')}
+            </div>
+        </div></div></div>`},
+
+            {
+                title: 'Produk Induk', sub: 'Master katalog barang', role: 'Admin', html: () => `
+        <div class="wf">${sysTopbar('Master Produk')}
+        <div style="display:flex;min-height:500px;">${sysSidebar('Produk')}
+        <div class="content">
+            <div class="row" style="justify-content:space-between; margin-bottom:15px;">
+                <div style="font-weight:bold; font-size:12px;">Daftar Produk Induk</div>
+                <div class="row"><div class="btn">Import CSV</div><div class="btn btnp">+ Tambah Produk</div></div>
+            </div>
+            <div class="col" style="gap:10px;">
+                ${Array(4).fill().map((_, i) => `
+                <div class="card row" style="justify-content:space-between;">
+                    <div class="row">
+                        <div class="img-box" style="width:30px;height:30px;"></div>
+                        <div class="col">
+                            <div class="row"><div style="font-weight:bold;font-size:11px;">Nama Produk ${i + 1}</div><div class="badge">Kategori</div></div>
+                            <div style="font-size:8px;">SKU: PRD-00${i} • Supplier: PT Distributor • 1 Variasi</div>
+                        </div>
+                    </div>
+                    <div class="row"><div class="btn">Edit</div><div class="btn" style="border-style:dashed !important;">Nonaktifkan</div></div>
+                </div>`).join('')}
+            </div>
+        </div></div></div>`},
+
+            {
+                title: 'Satuan & UOM', sub: 'Master konversi satuan dan harga variasi', role: 'Admin', html: () => `
+        <div class="wf">${sysTopbar('Master UOM')}
+        <div style="display:flex;min-height:500px;">${sysSidebar('Satuan & UOM')}
+        <div class="content">
+            <div class="card" style="margin-bottom:15px; border-style:dashed !important;">
+                <div style="font-weight:bold; font-size:10px; margin-bottom:5px;">ℹ️ Aturan UOM:</div>
+                <ul style="font-size:9px; margin-left:15px;">
+                    <li><b>Obat:</b> Rasio konversi > 1 (misal 1 Box = 10 Strip). POS gunakan sat kecil, Web sat besar.</li>
+                    <li><b>Alkes:</b> Rasio konversi = 1 (Single-UOM). Harga kecil = Harga besar.</li>
+                </ul>
+            </div>
+            <div style="font-weight:bold; font-size:12px; margin-bottom:10px;">Kategori Obat</div>
+            <div class="tbl" style="margin-bottom:20px;">
+                <div class="tbl-h" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;"><div>Produk</div><div>SKU Var</div><div>Sat Kecil</div><div>Sat Besar</div><div>Rasio</div><div>Harga (POS)</div><div>Harga (Web)</div><div>Aksi</div></div>
+                <div class="tbl-r" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;"><div><div style="font-weight:bold;">Amoxicillin</div><small>Kapsul per Strip</small></div><div>OBT-002</div><div style="font-weight:bold;">Strip</div><div style="font-weight:bold;">Box</div><div>1:10</div><div>Rp 7.500</div><div>Rp 70.000</div><div><div class="btn">Edit</div></div></div>
+            </div>
+            <div style="font-weight:bold; font-size:12px; margin-bottom:10px;">Kategori Alat Kesehatan</div>
+            <div class="tbl">
+                <div class="tbl-h" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;"><div>Produk</div><div>SKU Var</div><div>Sat Kecil</div><div>Sat Besar</div><div>Rasio</div><div>Harga (POS)</div><div>Harga (Web)</div><div>Aksi</div></div>
+                <div class="tbl-r" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;"><div><div style="font-weight:bold;">Tensimeter</div><small>Set Lengkap</small></div><div>ALK-001</div><div style="font-weight:bold;">Unit</div><div style="font-weight:bold;">Unit</div><div>1:1</div><div>Rp 495.000</div><div>Rp 495.000</div><div><div class="btn">Edit</div></div></div>
+            </div>
+        </div></div></div>`},
+
+            {
+                title: 'Supplier', sub: 'Direktori distributor', role: 'Admin', html: () => `
+        <div class="wf">${sysTopbar('Master Supplier')}
+        <div style="display:flex;min-height:500px;">${sysSidebar('Supplier')}
+        <div class="content">
+            <div class="row" style="justify-content:space-between; margin-bottom:15px;">
+                <div style="font-weight:bold; font-size:12px;">Daftar Supplier</div>
+                <div class="btn btnp">+ Tambah Supplier</div>
+            </div>
+            <div class="tbl">
+                <div class="tbl-h" style="grid-template-columns: 0.5fr 2fr 1fr 2fr 1fr 1fr;"><div>#</div><div>Nama Supplier</div><div>Kontak</div><div>Alamat</div><div>Status</div><div>Aksi</div></div>
+                ${Array(3).fill().map((_, i) => `<div class="tbl-r" style="grid-template-columns: 0.5fr 2fr 1fr 2fr 1fr 1fr;"><div>${i + 1}</div><div style="font-weight:bold;">PT Distributor Medis ${i + 1}</div><div>0812345678</div><div><div class="tc dk" style="width:80%;height:10px;"></div></div><div><div class="badge">Aktif</div></div><div><div class="row"><div class="btn">Edit</div></div></div></div>`).join('')}
+            </div>
+        </div></div></div>`},
+
+            {
+                title: 'Penerimaan Barang', sub: 'Form input stok fisik inbound', role: 'Admin', html: () => `
+        <div class="wf">${sysTopbar('Penerimaan Logistik')}
+        <div style="display:flex;min-height:500px;">${sysSidebar('Penerimaan Barang')}
+        <div class="content">
+            <div class="card">
+                <div style="font-weight:bold; font-size:10px; margin-bottom:10px;">Informasi Dokumen Penerimaan</div>
+                <div class="g4" style="margin-bottom:15px;">
+                    <div><div style="font-size:8px;margin-bottom:3px;">Sumber *</div><div class="sel"><div class="flex1">PO</div><div class="tri"></div></div></div>
+                    <div><div style="font-size:8px;margin-bottom:3px;">No. Referensi *</div><div class="inp">INV/PO/...</div></div>
+                    <div><div style="font-size:8px;margin-bottom:3px;">Supplier</div><div class="sel"><div class="flex1">Pilih...</div><div class="tri"></div></div></div>
+                    <div><div style="font-size:8px;margin-bottom:3px;">Tanggal Terima *</div><div class="inp">dd/mm/yyyy</div></div>
+                </div>
+                <div style="font-weight:bold; font-size:10px; border-bottom:1px solid #000; padding-bottom:5px; margin-bottom:10px; display:flex; justify-content:space-between;"><span>Daftar Barang Masuk Fisik</span> <span class="btn">+ Tambah Baris</span></div>
+                <div class="tbl" style="margin-bottom:15px;">
+                    <div class="tbl-h" style="grid-template-columns: 2fr 1fr 1fr 1fr 2fr 0.5fr;"><div>Produk *</div><div>Qty Fisik *</div><div>No. Batch (Obat)</div><div>Tgl Exp (Obat)</div><div>Serial Number (Alkes)</div><div></div></div>
+                    <div class="tbl-r" style="grid-template-columns: 2fr 1fr 1fr 1fr 2fr 0.5fr;"><div><div class="sel"><div class="flex1">Pilih...</div><div class="tri"></div></div></div><div><div class="inp"></div></div><div><div class="inp"></div></div><div><div class="inp"></div></div><div><div class="inp"></div></div><div><div class="btn" style="border:none;">✖</div></div></div>
+                </div>
+                <div class="row" style="justify-content:space-between;">
+                    <div style="font-size:8px;">ℹ️ Pilih produk terlebih dahulu untuk mengaktifkan kolom Batch/Exp (khusus obat).</div>
+                    <div class="btn btnp" style="height:30px;">💾 Simpan & Update Stok</div>
+                </div>
+            </div>
+        </div></div></div>`},
+
+            {
+                title: 'Mutasi Stok Manual', sub: 'Penyesuaian (adjustment) stok gudang', role: 'Admin', html: () => `
+        <div class="wf">${sysTopbar('Mutasi Manual')}
+        <div style="display:flex;min-height:500px;">${sysSidebar('Mutasi Stok')}
+        <div class="content g2">
+            <div class="card">
+                <div style="font-weight:bold; font-size:12px; margin-bottom:15px;">Form Penyesuaian Stok</div>
+                <div style="font-size:8px;margin-bottom:3px;">Pilih Produk *</div>
+                <div class="sel" style="margin-bottom:10px;"><div class="flex1">-- Pilih Barang --</div><div class="tri"></div></div>
+                <div class="g2" style="margin-bottom:10px;">
+                    <div><div style="font-size:8px;margin-bottom:3px;">Arah Mutasi *</div><div class="sel"><div class="flex1">-- Arah --</div><div class="tri"></div></div></div>
+                    <div><div style="font-size:8px;margin-bottom:3px;">Qty Fisik *</div><div class="inp">Contoh: 5</div></div>
+                </div>
+                <div style="font-size:8px;margin-bottom:3px;">Alasan *</div>
+                <div class="sel" style="margin-bottom:10px;"><div class="flex1">-- Pilih Alasan --</div><div class="tri"></div></div>
+                <div style="font-size:8px;margin-bottom:3px;">Keterangan Opsional</div>
+                <div class="textarea" style="margin-bottom:20px;"></div>
+                <div class="btn btnp" style="width:100%; justify-content:center; height:35px;">Simpan Penyesuaian Stok</div>
+            </div>
+            <div class="card">
+                <div class="row" style="margin-bottom:15px;"><div class="tc dk" style="width:15px;height:15px;"></div><div class="col"><div style="font-weight:bold; font-size:10px;">Riwayat Penyesuaian</div><div style="font-size:8px;">20 aktivitas terakhir</div></div></div>
+                ${Array(4).fill().map((_, i) => `
+                <div class="row" style="border-bottom:1px solid #000; padding-bottom:10px; margin-bottom:10px; align-items:flex-start;">
+                    <div style="font-size:8px;width:50px;">15/09/26<br>14:38</div>
+                    <div class="col flex1"><div style="font-weight:bold;font-size:10px;">Produk Obat ${i}</div><div style="font-size:8px;">Penjualan POS-1234</div></div>
+                    <div class="badge ${i % 2 == 0 ? 'dk' : ''}">-1</div>
+                </div>`).join('')}
+            </div>
+        </div></div></div>`},
+
+            {
+                title: 'Kartu Stok', sub: 'Buku besar audit logistik', role: 'Admin', html: () => `
+        <div class="wf">${sysTopbar('Audit Kartu Stok')}
+        <div style="display:flex;min-height:500px;">${sysSidebar('Kartu Stok')}
+        <div class="content">
+            <div class="card row" style="margin-bottom:15px; padding:10px;">
+                <div class="col flex1"><div style="font-size:8px;">Pilih Barang *</div><div class="sel"><div class="flex1">Amoxicillin Kapsul 500mg...</div><div class="tri"></div></div></div>
+                <div class="col"><div style="font-size:8px;">Dari Tanggal</div><div class="inp"></div></div>
+                <div class="col"><div style="font-size:8px;">Sampai Tanggal</div><div class="inp"></div></div>
+                <div class="btn btnp" style="margin-top:12px;">Tampilkan</div>
+                <div class="btn" style="margin-top:12px;">Cetak Format Fisik</div>
+            </div>
+            <div class="card" style="padding:20px;">
+                <h2 style="text-align:center; margin-bottom:20px; font-size:18px;">Kartu Stok Barang</h2>
+                <div class="g2" style="font-size:10px; margin-bottom:15px;">
+                    <div class="col"><div><b>Nama Barang:</b> Amoxicillin</div><div><b>Kode:</b> OBT-002</div><div><b>Satuan:</b> Strip</div></div>
+                    <div class="col"><div><b>Min Stok:</b> 20</div><div><b>Stok Riil:</b> 78</div><div><b>Lokasi:</b> Pusat</div></div>
+                </div>
+                <div class="tbl">
+                    <div class="tbl-h" style="grid-template-columns: 1.5fr 3fr 1fr 1fr 1fr 1.5fr;" style="text-align:center;">
+                        <div style="grid-row: 1 / 3;">Tanggal</div><div style="grid-row: 1 / 3;">Deskripsi</div><div style="grid-column: 3 / 6; text-align:center; border-bottom:1px solid #000; padding-bottom:5px; margin-bottom:-5px;">Mutasi</div><div style="grid-row: 1 / 3;">Penanggung Jawab</div>
+                        <!-- Fake row for visual split -->
+                        <div style="display:none;"></div><div style="display:none;"></div>
+                        <div>Masuk</div><div>Keluar</div><div>Sisa</div>
+                        <div style="display:none;"></div>
+                    </div>
+                    ${Array(4).fill().map((_, i) => `<div class="tbl-r" style="grid-template-columns: 1.5fr 3fr 1fr 1fr 1fr 1.5fr;"><div>12/09/2026<br>18:45</div><div>${i % 2 == 0 ? 'Penjualan Checkout Web' : 'Penerimaan Barang PO'}</div><div style="font-weight:bold;">${i % 2 != 0 ? '20' : ''}</div><div style="font-weight:bold;">${i % 2 == 0 ? '10' : ''}</div><div style="font-weight:bold;">70</div><div>Budi / Admin</div></div>`).join('')}
+                </div>
+            </div>
+        </div></div></div>`}
+        ];
+
+        const navList = document.getElementById('navList');
+        const mainContent = document.getElementById('mainContent');
+
+        pages.forEach((page, i) => {
+            const item = document.createElement('div');
+            item.className = 'nav-item' + (i === 0 ? ' active' : '');
+            item.innerHTML = `<div class="nav-num">${String(i + 1).padStart(2, '0')}</div><span>${page.title}</span>`;
+            item.onclick = () => goPage(i);
+            item.id = `nav-${i}`;
+            navList.appendChild(item);
+        });
+
+        function goPage(i) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`nav-${i}`).classList.add('active');
+            document.getElementById('topTitle').textContent = pages[i].title;
+            document.getElementById('topSub').textContent = pages[i].sub;
+            document.getElementById('topBadge').textContent = `${String(i + 1).padStart(2, '0')} / 18`;
+            const rb = document.getElementById('topRole');
+            rb.textContent = 'Role: ' + pages[i].role;
+            mainContent.innerHTML = pages[i].html();
+        }
+
+        goPage(0);
+    </script>
+</body>
+
+</html>
