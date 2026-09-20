@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+
+<html lang="id">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Kumpulan Semua Workflow Clipart - ZenCare</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 30px;
+            color: #000;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .main-title {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            border-bottom: 4px solid #000;
+            padding-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 50px;
+            margin-bottom: 20px;
+            padding-bottom: 5px;
+            border-bottom: 2px dashed #000;
+        }
+
+        .workflow-box {
+            background: #fff;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+
+        .workflow-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 80px;
+            width: max-content;
+        }
+
+        .workflow-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .path-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            background: #e0e0e0;
+            padding: 5px 10px;
+            display: block;
+            width: max-content;
+        }
+
+        /* Node (Ikon + Label) */
+        .node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 75px;
+            min-width: 75px;
+            max-width: 75px;
+            flex-shrink: 0;
+        }
+
+        .clipart {
+            width: 45px;
+            height: 45px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .clipart svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .node-label {
+            font-size: 10px;
+            text-align: center;
+            font-weight: bold;
+            line-height: 1.2;
+            color: #000;
+        }
+
+        /* Panah Penghubung */
+        .arrow-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 85px;
+            min-width: 85px;
+            max-width: 85px;
+            flex-shrink: 0;
+            position: relative;
+            height: 60px;
+            margin: 0;
+        }
+
+        .arrow-text {
+            font-size: 9px;
+            text-align: center;
+            position: absolute;
+            top: 5px;
+            width: 140%;
+            line-height: 1.1;
+            color: #333;
+        }
+
+        .arrow-line {
+            width: 100%;
+            height: 2px;
+            background-color: #000;
+            position: relative;
+            top: 10px;
+        }
+
+        .arrow-line::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 10px solid #000;
+        }
+
+        .workflow-row-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: max-content;
+            margin-bottom: 80px;
+        }
+
+        .row-ltr {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+        }
+
+        .row-rtl {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: row-reverse;
+            width: 100%;
+        }
+
+        .row-rtl .arrow-line::after {
+            left: 0;
+            right: auto;
+            border-left: none;
+            border-right: 10px solid #000;
+        }
+
+        .row-rtl .arrow-text {
+            /* Keep text normal, it stays absolute at the top */
+        }
+
+        .turn-down {
+            display: flex;
+            width: 100%;
+            height: 40px;
+            position: relative;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+
+        .turn-down.right {
+            justify-content: flex-end;
+            padding-right: 36px;
+        }
+
+        .turn-down.left {
+            justify-content: flex-start;
+            padding-left: 36px;
+        }
+
+        .down-arrow {
+            width: 2px;
+            height: 100%;
+            background: #000;
+            position: relative;
+        }
+
+        .down-arrow::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: -4px;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 10px solid #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="main-title">Dokumentasi Workflow ZenCare Medical</div>
+        <!-- ============================================== -->
+        <!-- WORKFLOW 1: BARANG KELUAR (BERJALAN)           -->
+        <!-- ============================================== -->
+        <h2 class="section-title">1. Workflow Barang Keluar (Sistem Berjalan)</h2>
+        <div class="workflow-box">
+            <!-- Jalur Toko Fisik -->
+            <div class="path-title">Jalur Toko Fisik (Luring)</div>
+            <div class="workflow-row-group">
+                <div class="row-ltr">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#fff" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#fff" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Pelanggan</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Menyebutkan<br />produk</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#d3d3d3" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#d3d3d3" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Admin</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Mengambilkan<br />produk</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <polygon fill="#fff" points="50,15 85,30 85,75 50,90 15,75 15,30" stroke="#000"
+                                    stroke-width="3"></polygon>
+                                <polyline fill="none" points="15,30 50,45 85,30" stroke="#000" stroke-width="3">
+                                </polyline>
+                                <line stroke="#000" stroke-width="3" x1="50" x2="50" y1="45" y2="90"></line>
+                            </svg></div>
+                        <div class="node-label">Produk</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Menerima<br />pembayaran</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#d3d3d3" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#d3d3d3" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Admin</div>
+                    </div>
+                </div>
+                <div class="turn-down right">
+                    <div class="down-arrow"></div>
+                </div>
+                <div class="row-rtl">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <rect fill="#fff" height="45" rx="3" stroke="#000" stroke-width="4" width="70" x="15"
+                                    y="20"></rect>
+                                <rect fill="#000" height="35" width="60" x="20" y="25"></rect>
+                                <rect fill="#000" height="15" width="10" x="45" y="65"></rect>
+                                <rect fill="#000" height="6" width="40" x="30" y="80"></rect>
+                            </svg></div>
+                        <div class="node-label">Aplikasi Kasir<br />Pihak Ketiga</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Memotong stok<br />secara lokal</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <ellipse cx="50" cy="25" fill="#fff" rx="30" ry="10" stroke="#000" stroke-width="3">
+                                </ellipse>
+                                <path d="M 20 25 L 20 75 A 30 10 0 0 0 80 75 L 80 25" fill="#fff" stroke="#000"
+                                    stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Database<br />Lokal</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Barang diserahkan<br />ke pelanggan</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <polygon fill="#fff" points="50,15 85,30 85,75 50,90 15,75 15,30" stroke="#000"
+                                    stroke-width="3"></polygon>
+                                <polyline fill="none" points="15,30 50,45 85,30" stroke="#000" stroke-width="3">
+                                </polyline>
+                                <line stroke="#000" stroke-width="3" x1="50" x2="50" y1="45" y2="90"></line>
+                            </svg></div>
+                        <div class="node-label">Barang Keluar</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Jalur E-Commerce -->
+            <div class="path-title">Jalur E-Commerce (Daring)</div>
+            <div class="workflow-row-group">
+                <div class="row-ltr">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#fff" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#fff" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Pelanggan</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Memilih &amp; memesan<br />via platform</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <line stroke="#000" stroke-width="4" x1="10" x2="25" y1="20" y2="20"></line>
+                                <line stroke="#000" stroke-width="4" x1="25" x2="40" y1="20" y2="70"></line>
+                                <line stroke="#000" stroke-width="4" x1="40" x2="80" y1="70" y2="70"></line>
+                                <line stroke="#000" stroke-width="4" x1="30" x2="90" y1="40" y2="40"></line>
+                                <line stroke="#000" stroke-width="4" x1="80" x2="90" y1="70" y2="40"></line>
+                                <circle cx="50" cy="85" fill="#fff" r="6" stroke="#000" stroke-width="3"></circle>
+                                <circle cx="70" cy="85" fill="#fff" r="6" stroke="#000" stroke-width="3"></circle>
+                            </svg></div>
+                        <div class="node-label">Platform E-Commerce<br />Pihak Ketiga</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Memproses &amp;<br />mengemas produk</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#d3d3d3" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#d3d3d3" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Admin</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Menghitung konversi<br />satuan secara manual</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <rect fill="#fff" height="80" rx="3" stroke="#000" stroke-width="3" width="50" x="25"
+                                    y="10"></rect>
+                                <rect fill="#fff" height="15" stroke="#000" stroke-width="3" width="30" x="35" y="20">
+                                </rect>
+                                <rect fill="#fff" height="8" stroke="#000" stroke-width="2" width="8" x="33" y="45">
+                                </rect>
+                                <rect fill="#fff" height="8" stroke="#000" stroke-width="2" width="8" x="46" y="45">
+                                </rect>
+                                <rect fill="#fff" height="8" stroke="#000" stroke-width="2" width="8" x="59" y="45">
+                                </rect>
+                                <rect fill="#fff" height="8" stroke="#000" stroke-width="2" width="8" x="33" y="60">
+                                </rect>
+                                <rect fill="#fff" height="8" stroke="#000" stroke-width="2" width="8" x="46" y="60">
+                                </rect>
+                                <rect fill="#fff" height="8" stroke="#000" stroke-width="2" width="8" x="59" y="60">
+                                </rect>
+                            </svg></div>
+                        <div class="node-label">Kalkulator<br />(Manual)</div>
+                    </div>
+                </div>
+                <div class="turn-down right">
+                    <div class="down-arrow"></div>
+                </div>
+                <div class="row-rtl">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#d3d3d3" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#d3d3d3" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Admin</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Mengurangi sisa<br />persediaan manual</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <rect fill="#fff" height="45" rx="3" stroke="#000" stroke-width="4" width="70" x="15"
+                                    y="20"></rect>
+                                <rect fill="#000" height="35" width="60" x="20" y="25"></rect>
+                                <rect fill="#000" height="15" width="10" x="45" y="65"></rect>
+                                <rect fill="#000" height="6" width="40" x="30" y="80"></rect>
+                            </svg></div>
+                        <div class="node-label">Aplikasi Kasir<br />Pihak Ketiga</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Stok<br />berkurang</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <ellipse cx="50" cy="25" fill="#fff" rx="30" ry="10" stroke="#000" stroke-width="3">
+                                </ellipse>
+                                <path d="M 20 25 L 20 75 A 30 10 0 0 0 80 75 L 80 25" fill="#fff" stroke="#000"
+                                    stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Database<br />Lokal</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Pesanan dikirim &amp;<br />diterima pelanggan</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <polygon fill="#fff" points="50,15 85,30 85,75 50,90 15,75 15,30" stroke="#000"
+                                    stroke-width="3"></polygon>
+                                <polyline fill="none" points="15,30 50,45 85,30" stroke="#000" stroke-width="3">
+                                </polyline>
+                                <line stroke="#000" stroke-width="3" x1="50" x2="50" y1="45" y2="90"></line>
+                            </svg></div>
+                        <div class="node-label">Paket Keluar</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ============================================== -->
+        <!-- WORKFLOW 2: BARANG MASUK (BERJALAN)            -->
+        <!-- ============================================== -->
+        <h2 class="section-title">2. Workflow Barang Masuk (Sistem Berjalan)</h2>
+        <div class="workflow-box">
+            <div class="path-title">Jalur Pesan Distributor</div>
+            <div class="workflow-row-group">
+                <div class="row-ltr">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#d3d3d3" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#d3d3d3" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Admin</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Mengecek persediaan<br />menipis &amp; pesan</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#fff" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#fff" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Supplier /<br />Distributor</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Memproses &amp;<br />mengirimkan barang</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <polygon fill="#fff" points="50,15 85,30 85,75 50,90 15,75 15,30" stroke="#000"
+                                    stroke-width="3"></polygon>
+                                <polyline fill="none" points="15,30 50,45 85,30" stroke="#000" stroke-width="3">
+                                </polyline>
+                                <line stroke="#000" stroke-width="3" x1="50" x2="50" y1="45" y2="90"></line>
+                            </svg></div>
+                        <div class="node-label">Paket Pengiriman</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Menerima<br />paket barang</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#d3d3d3" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#d3d3d3" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Admin</div>
+                    </div>
+                </div>
+                <div class="turn-down right">
+                    <div class="down-arrow"></div>
+                </div>
+                <div class="row-rtl">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <rect fill="#fff" height="45" rx="3" stroke="#000" stroke-width="4" width="70" x="15"
+                                    y="20"></rect>
+                                <rect fill="#000" height="35" width="60" x="20" y="25"></rect>
+                                <rect fill="#000" height="15" width="10" x="45" y="65"></rect>
+                                <rect fill="#000" height="6" width="40" x="30" y="80"></rect>
+                            </svg></div>
+                        <div class="node-label">Aplikasi Kasir</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Menyimpan barang<br />ke dalam rak</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <ellipse cx="50" cy="25" fill="#fff" rx="30" ry="10" stroke="#000" stroke-width="3">
+                                </ellipse>
+                                <path d="M 20 25 L 20 75 A 30 10 0 0 0 80 75 L 80 25" fill="#fff" stroke="#000"
+                                    stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Rak Penyimpanan</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Jalur Pembelian Langsung -->
+            <div class="path-title">Jalur Pembelian Langsung</div>
+            <div class="workflow-row-group">
+                <div class="row-ltr">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#d3d3d3" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#d3d3d3" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Admin</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Melakukan pembelian<br />langsung</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <polygon fill="#fff" points="10,40 50,15 90,40" stroke="#000" stroke-width="3">
+                                </polygon>
+                                <rect fill="#fff" height="50" stroke="#000" stroke-width="3" width="70" x="15" y="40">
+                                </rect>
+                                <rect fill="#fff" height="30" stroke="#000" stroke-width="3" width="20" x="40" y="60">
+                                </rect>
+                            </svg></div>
+                        <div class="node-label">Grosir / Apotek</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Membawa<br />barang kembali</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <polygon fill="#fff" points="50,15 85,30 85,75 50,90 15,75 15,30" stroke="#000"
+                                    stroke-width="3"></polygon>
+                                <polyline fill="none" points="15,30 50,45 85,30" stroke="#000" stroke-width="3">
+                                </polyline>
+                                <line stroke="#000" stroke-width="3" x1="50" x2="50" y1="45" y2="90"></line>
+                            </svg></div>
+                        <div class="node-label">Paket Pengiriman</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Menerima<br />paket barang</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#d3d3d3" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#d3d3d3" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Admin</div>
+                    </div>
+                </div>
+                <div class="turn-down right">
+                    <div class="down-arrow"></div>
+                </div>
+                <div class="row-rtl">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <rect fill="#fff" height="45" rx="3" stroke="#000" stroke-width="4" width="70" x="15"
+                                    y="20"></rect>
+                                <rect fill="#000" height="35" width="60" x="20" y="25"></rect>
+                                <rect fill="#000" height="15" width="10" x="45" y="65"></rect>
+                                <rect fill="#000" height="6" width="40" x="30" y="80"></rect>
+                            </svg></div>
+                        <div class="node-label">Aplikasi Kasir</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Menyimpan barang<br />ke dalam rak</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <ellipse cx="50" cy="25" fill="#fff" rx="30" ry="10" stroke="#000" stroke-width="3">
+                                </ellipse>
+                                <path d="M 20 25 L 20 75 A 30 10 0 0 0 80 75 L 80 25" fill="#fff" stroke="#000"
+                                    stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Rak Penyimpanan</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ============================================== -->
+        <!-- WORKFLOW 3: BARANG KELUAR (SISTEM USULAN)      -->
+        <!-- ============================================== -->
+        <h2 class="section-title">3. Workflow Barang Keluar (Sistem Usulan Omnichannel)</h2>
+        <div class="workflow-box">
+            <!-- Jalur POS -->
+            <div class="path-title">1. Jalur Pembelian Toko Fisik (POS)</div>
+            <div class="workflow-row-group">
+                <div class="row-ltr">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#fff" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#fff" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Pelanggan</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Menyebutkan<br />produk</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#d3d3d3" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#d3d3d3" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Admin Kasir</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Input POS &amp;<br />Terima Bayar</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <rect fill="#fff" height="45" rx="3" stroke="#000" stroke-width="4" width="70" x="15"
+                                    y="20"></rect>
+                                <rect fill="#000" height="35" width="60" x="20" y="25"></rect>
+                                <rect fill="#000" height="15" width="10" x="45" y="65"></rect>
+                                <rect fill="#000" height="6" width="40" x="30" y="80"></rect>
+                            </svg></div>
+                        <div class="node-label">Sistem ZenCare</div>
+                    </div>
+                    <div class="arrow-container" style="width:140px;">
+                        <div class="arrow-text">Konversi Multi-UOM &amp;<br />Potong FEFO Otomatis</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <ellipse cx="50" cy="25" fill="#fff" rx="30" ry="10" stroke="#000" stroke-width="3">
+                                </ellipse>
+                                <path d="M 20 25 L 20 75 A 30 10 0 0 0 80 75 L 80 25" fill="#fff" stroke="#000"
+                                    stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Database<br />Terpusat</div>
+                    </div>
+                </div>
+                <div class="turn-down right">
+                    <div class="down-arrow"></div>
+                </div>
+                <div class="row-rtl">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <polygon fill="#fff" points="50,15 85,30 85,75 50,90 15,75 15,30" stroke="#000"
+                                    stroke-width="3"></polygon>
+                                <polyline fill="none" points="15,30 50,45 85,30" stroke="#000" stroke-width="3">
+                                </polyline>
+                                <line stroke="#000" stroke-width="3" x1="50" x2="50" y1="45" y2="90"></line>
+                            </svg></div>
+                        <div class="node-label">Barang Keluar</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Jalur Kurir (DENGAN PORTAL E-COMMERCE) -->
+            <div class="path-title">2. Jalur E-Commerce (Pengiriman Kurir)</div>
+            <div class="workflow-row-group">
+                <div class="row-ltr">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#fff" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#fff" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Pelanggan</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Pilih opsi kirim kurir<br />&amp; Checkout</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <line stroke="#000" stroke-width="4" x1="10" x2="25" y1="20" y2="20"></line>
+                                <line stroke="#000" stroke-width="4" x1="25" x2="40" y1="20" y2="70"></line>
+                                <line stroke="#000" stroke-width="4" x1="40" x2="80" y1="70" y2="70"></line>
+                                <line stroke="#000" stroke-width="4" x1="30" x2="90" y1="40" y2="40"></line>
+                                <line stroke="#000" stroke-width="4" x1="80" x2="90" y1="70" y2="40"></line>
+                                <circle cx="50" cy="85" fill="#fff" r="6" stroke="#000" stroke-width="3"></circle>
+                                <circle cx="70" cy="85" fill="#fff" r="6" stroke="#000" stroke-width="3"></circle>
+                            </svg></div>
+                        <div class="node-label">Portal<br />E-Commerce</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Bayar lunas<br />(Payment Gateway)</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <rect fill="#fff" height="45" rx="3" stroke="#000" stroke-width="4" width="70" x="15"
+                                    y="20"></rect>
+                                <rect fill="#000" height="35" width="60" x="20" y="25"></rect>
+                                <rect fill="#000" height="15" width="10" x="45" y="65"></rect>
+                                <rect fill="#000" height="6" width="40" x="30" y="80"></rect>
+                            </svg></div>
+                        <div class="node-label">Sistem ZenCare</div>
+                    </div>
+                    <div class="arrow-container" style="width:140px;">
+                        <div class="arrow-text">Hitung konversi otomatis &amp;<br />Mengunci stok sementara (Reserved)
+                        </div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <ellipse cx="50" cy="25" fill="#fff" rx="30" ry="10" stroke="#000" stroke-width="3">
+                                </ellipse>
+                                <path d="M 20 25 L 20 75 A 30 10 0 0 0 80 75 L 80 25" fill="#fff" stroke="#000"
+                                    stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Database<br />Terpusat</div>
+                    </div>
+                </div>
+                <div class="turn-down right">
+                    <div class="down-arrow"></div>
+                </div>
+                <div class="row-rtl">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#d3d3d3" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#d3d3d3" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Admin</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Memproses, mengemas, &amp;<br />mengirimkan produk</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <ellipse cx="50" cy="25" fill="#fff" rx="30" ry="10" stroke="#000" stroke-width="3">
+                                </ellipse>
+                                <path d="M 20 25 L 20 75 A 30 10 0 0 0 80 75 L 80 25" fill="#fff" stroke="#000"
+                                    stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Database (Ubah<br />status Terjual)</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Barang sampai<br />ke tujuan</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <polygon fill="#fff" points="50,15 85,30 85,75 50,90 15,75 15,30" stroke="#000"
+                                    stroke-width="3"></polygon>
+                                <polyline fill="none" points="15,30 50,45 85,30" stroke="#000" stroke-width="3">
+                                </polyline>
+                                <line stroke="#000" stroke-width="3" x1="50" x2="50" y1="45" y2="90"></line>
+                            </svg></div>
+                        <div class="node-label">Paket Keluar</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Jalur Pick-up (DENGAN PORTAL E-COMMERCE) -->
+            <div class="path-title">3. Jalur E-Commerce (Pick-up in Store)</div>
+            <div class="workflow-row-group">
+                <div class="row-ltr">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#fff" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#fff" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Pelanggan</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Pilih opsi Pick-up in Store<br />&amp; Checkout</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <line stroke="#000" stroke-width="4" x1="10" x2="25" y1="20" y2="20"></line>
+                                <line stroke="#000" stroke-width="4" x1="25" x2="40" y1="20" y2="70"></line>
+                                <line stroke="#000" stroke-width="4" x1="40" x2="80" y1="70" y2="70"></line>
+                                <line stroke="#000" stroke-width="4" x1="30" x2="90" y1="40" y2="40"></line>
+                                <line stroke="#000" stroke-width="4" x1="80" x2="90" y1="70" y2="40"></line>
+                                <circle cx="50" cy="85" fill="#fff" r="6" stroke="#000" stroke-width="3"></circle>
+                                <circle cx="70" cy="85" fill="#fff" r="6" stroke="#000" stroke-width="3"></circle>
+                            </svg></div>
+                        <div class="node-label">Portal<br />E-Commerce</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Bayar lunas<br />(Payment Gateway)</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <rect fill="#fff" height="45" rx="3" stroke="#000" stroke-width="4" width="70" x="15"
+                                    y="20"></rect>
+                                <rect fill="#000" height="35" width="60" x="20" y="25"></rect>
+                                <rect fill="#000" height="15" width="10" x="45" y="65"></rect>
+                                <rect fill="#000" height="6" width="40" x="30" y="80"></rect>
+                            </svg></div>
+                        <div class="node-label">Sistem ZenCare</div>
+                    </div>
+                    <div class="arrow-container" style="width:140px;">
+                        <div class="arrow-text">Hitung konversi otomatis &amp;<br />Mengunci stok sementara (Reserved)
+                        </div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <ellipse cx="50" cy="25" fill="#fff" rx="30" ry="10" stroke="#000" stroke-width="3">
+                                </ellipse>
+                                <path d="M 20 25 L 20 75 A 30 10 0 0 0 80 75 L 80 25" fill="#fff" stroke="#000"
+                                    stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Database<br />Terpusat</div>
+                    </div>
+                </div>
+                <div class="turn-down right">
+                    <div class="down-arrow"></div>
+                </div>
+                <div class="row-rtl">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#d3d3d3" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#d3d3d3" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Admin Toko</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Pelanggan mengambil<br />&amp; sistem update status</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <ellipse cx="50" cy="25" fill="#fff" rx="30" ry="10" stroke="#000" stroke-width="3">
+                                </ellipse>
+                                <path d="M 20 25 L 20 75 A 30 10 0 0 0 80 75 L 80 25" fill="#fff" stroke="#000"
+                                    stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Database<br />Terpusat</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Transaksi Selesai</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <polygon fill="#fff" points="50,15 85,30 85,75 50,90 15,75 15,30" stroke="#000"
+                                    stroke-width="3"></polygon>
+                                <polyline fill="none" points="15,30 50,45 85,30" stroke="#000" stroke-width="3">
+                                </polyline>
+                                <line stroke="#000" stroke-width="3" x1="50" x2="50" y1="45" y2="90"></line>
+                            </svg></div>
+                        <div class="node-label">Barang Keluar</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ============================================== -->
+        <!-- WORKFLOW 4: BARANG MASUK (SISTEM USULAN)       -->
+        <!-- ============================================== -->
+        <h2 class="section-title">4. Workflow Barang Masuk &amp; Logistik (Sistem Usulan)</h2>
+        <div class="workflow-box">
+            <!-- Jalur PO -->
+            <div class="path-title">1. Jalur Pemesanan Distributor</div>
+            <div class="workflow-row-group">
+                <div class="row-ltr">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#d3d3d3" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#d3d3d3" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Admin</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Cek persediaan stok<br />&amp; memesan barang (PO)</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#fff" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#fff" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Supplier /<br />Distributor</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Memproses &amp;<br />mengirimkan barang</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <polygon fill="#fff" points="50,15 85,30 85,75 50,90 15,75 15,30" stroke="#000"
+                                    stroke-width="3"></polygon>
+                                <polyline fill="none" points="15,30 50,45 85,30" stroke="#000" stroke-width="3">
+                                </polyline>
+                                <line stroke="#000" stroke-width="3" x1="50" x2="50" y1="45" y2="90"></line>
+                            </svg></div>
+                        <div class="node-label">Paket Pengiriman</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Menerima &amp; menghitung<br />fisik vs nota</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#d3d3d3" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#d3d3d3" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Admin</div>
+                    </div>
+                </div>
+                <div class="turn-down right">
+                    <div class="down-arrow"></div>
+                </div>
+                <div class="row-rtl">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <rect fill="#fff" height="45" rx="3" stroke="#000" stroke-width="4" width="70" x="15"
+                                    y="20"></rect>
+                                <rect fill="#000" height="35" width="60" x="20" y="25"></rect>
+                                <rect fill="#000" height="15" width="10" x="45" y="65"></rect>
+                                <rect fill="#000" height="6" width="40" x="30" y="80"></rect>
+                            </svg></div>
+                        <div class="node-label">Sistem ZenCare</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Validasi kelengkapan &amp;<br />Merekam Kartu Stok</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <ellipse cx="50" cy="25" fill="#fff" rx="30" ry="10" stroke="#000" stroke-width="3">
+                                </ellipse>
+                                <path d="M 20 25 L 20 75 A 30 10 0 0 0 80 75 L 80 25" fill="#fff" stroke="#000"
+                                    stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Database<br />Terpusat</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Menyusun fisik di rak<br />berdasarkan Batch</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <polygon fill="#fff" points="50,15 85,30 85,75 50,90 15,75 15,30" stroke="#000"
+                                    stroke-width="3"></polygon>
+                                <polyline fill="none" points="15,30 50,45 85,30" stroke="#000" stroke-width="3">
+                                </polyline>
+                                <line stroke="#000" stroke-width="3" x1="50" x2="50" y1="45" y2="90"></line>
+                            </svg></div>
+                        <div class="node-label">Rak Penyimpanan</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Jalur Pembelian Langsung -->
+            <div class="path-title">2. Jalur Pembelian Langsung (Grosir)</div>
+            <div class="workflow-row-group">
+                <div class="row-ltr">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#d3d3d3" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#d3d3d3" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Admin</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Melakukan pembelian<br />langsung ke luar</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <polygon fill="#fff" points="10,40 50,15 90,40" stroke="#000" stroke-width="3">
+                                </polygon>
+                                <rect fill="#fff" height="50" stroke="#000" stroke-width="3" width="70" x="15" y="40">
+                                </rect>
+                                <rect fill="#fff" height="30" stroke="#000" stroke-width="3" width="20" x="40" y="60">
+                                </rect>
+                            </svg></div>
+                        <div class="node-label">Grosir / Apotek</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Membawa<br />paket kembali</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <polygon fill="#fff" points="50,15 85,30 85,75 50,90 15,75 15,30" stroke="#000"
+                                    stroke-width="3"></polygon>
+                                <polyline fill="none" points="15,30 50,45 85,30" stroke="#000" stroke,=""></polyline>
+                                <line stroke="#000" stroke-width="3" x1="50" x2="50" y1="45" y2="90"></line>
+                            </svg></div>
+                        <div class="node-label">Paket Pengiriman</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Menerima &amp; menghitung<br />fisik vs nota</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <circle cx="50" cy="35" fill="#d3d3d3" r="20" stroke="#000" stroke-width="3"></circle>
+                                <path d="M 20 90 Q 50 60 80 90" fill="#d3d3d3" stroke="#000" stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Admin</div>
+                    </div>
+                </div>
+                <div class="turn-down right">
+                    <div class="down-arrow"></div>
+                </div>
+                <div class="row-rtl">
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <rect fill="#fff" height="45" rx="3" stroke="#000" stroke-width="4" width="70" x="15"
+                                    y="20"></rect>
+                                <rect fill="#000" height="35" width="60" x="20" y="25"></rect>
+                                <rect fill="#000" height="15" width="10" x="45" y="65"></rect>
+                                <rect fill="#000" height="6" width="40" x="30" y="80"></rect>
+                            </svg></div>
+                        <div class="node-label">Sistem ZenCare</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Validasi kelengkapan &amp;<br />Merekam Kartu Stok</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <ellipse cx="50" cy="25" fill="#fff" rx="30" ry="10" stroke="#000" stroke-width="3">
+                                </ellipse>
+                                <path d="M 20 25 L 20 75 A 30 10 0 0 0 80 75 L 80 25" fill="#fff" stroke="#000"
+                                    stroke-width="3"></path>
+                            </svg></div>
+                        <div class="node-label">Database<br />Terpusat</div>
+                    </div>
+                    <div class="arrow-container">
+                        <div class="arrow-text">Menyusun fisik di rak<br />berdasarkan Batch</div>
+                        <div class="arrow-line"></div>
+                    </div>
+                    <div class="node">
+                        <div class="clipart"><svg viewbox="0 0 100 100">
+                                <polygon fill="#fff" points="50,15 85,30 85,75 50,90 15,75 15,30" stroke="#000"
+                                    stroke-width="3"></polygon>
+                                <polyline fill="none" points="15,30 50,45 85,30" stroke="#000" stroke-width="3">
+                                </polyline>
+                                <line stroke="#000" stroke-width="3" x1="50" x2="50" y1="45" y2="90"></line>
+                            </svg></div>
+                        <div class="node-label">Rak Penyimpanan</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
