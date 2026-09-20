@@ -268,10 +268,10 @@ INSERT INTO supplier (id, nama, kontak, email, alamat) VALUES
 (2, 'PT Omron Healthcare Indonesia', '021-555222', 'info@omron-healthcare.co.id', 'Gedung Omron, Jakarta Pusat'),
 (3, 'PT Jayamas Medica Industri (OneMed)', '031-444333', 'sales@onemed.co.id', 'Kawasan Industri Rungkut, Surabaya');
 
-INSERT INTO produk_induk (id, sku_induk, nama_produk, deskripsi, spesifikasi, info_pengiriman, kategori, id_supplier) VALUES 
-(1, 'PRD-OBT-001', 'Paracetamol Sirup Anak 60ml', 'Obat penurun demam dan pereda nyeri', 'Komposisi: Paracetamol 160mg/5ml', 'Aman dikirim reguler', 'Obat', 1),
-(2, 'PRD-OBT-002', 'Amoxicillin Kapsul 500mg', 'Antibiotik golongan penisilin', 'Komposisi: Amoxicillin trihydrate 500mg', 'Simpan di tempat sejuk', 'Obat', 1),
-(3, 'PRD-ALK-001', 'Tensimeter Digital Omron HEM-7120', 'Alat pengukur tekanan darah digital otomatis', 'Akurasi tinggi, memori 60 data', 'Fragile, wajib bubble wrap', 'Alat Kesehatan', 2);
+INSERT INTO produk_induk (id, sku_induk, nama_produk, deskripsi, spesifikasi, info_pengiriman, kategori) VALUES 
+(1, 'PRD-OBT-001', 'Paracetamol Sirup Anak 60ml', 'Obat penurun demam dan pereda nyeri', 'Komposisi: Paracetamol 160mg/5ml', 'Aman dikirim reguler', 'Obat'),
+(2, 'PRD-OBT-002', 'Amoxicillin Kapsul 500mg', 'Antibiotik golongan penisilin', 'Komposisi: Amoxicillin trihydrate 500mg', 'Simpan di tempat sejuk', 'Obat'),
+(3, 'PRD-ALK-001', 'Tensimeter Digital Omron HEM-7120', 'Alat pengukur tekanan darah digital otomatis', 'Akurasi tinggi, memori 60 data', 'Fragile, wajib bubble wrap', 'Alat Kesehatan');
 
 INSERT INTO produk_variasi (id, id_produk_induk, sku_variasi, nama_variasi, satuan_kecil, satuan_besar, rasio_konversi, harga_jual_kecil, harga_jual_besar, stok_minimum, berat) VALUES
 (1, 1, 'OBT-001-60ML', 'Sirup 60ml per Botol', 'Botol', 'Karton (50 Botol)', 50, 18500, 875000, 10, 150),

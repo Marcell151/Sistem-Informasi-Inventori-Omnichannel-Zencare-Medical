@@ -66,9 +66,7 @@ try {
         nama_produk VARCHAR(150) NOT NULL,
         deskripsi TEXT,
         kategori VARCHAR(50),
-        id_supplier INT NULL,
-        is_active BOOLEAN DEFAULT 1,
-        FOREIGN KEY (id_supplier) REFERENCES supplier(id) ON DELETE SET NULL
+        is_active BOOLEAN DEFAULT 1
     ) ENGINE=InnoDB;
 
     CREATE TABLE produk_variasi (
@@ -198,7 +196,6 @@ try {
     
     // Supplier
     $pdo->exec("INSERT INTO supplier (nama, kontak) VALUES ('PT. Alkes Medika Nusantara', '08123456789')");
-    $id_supplier = $pdo->lastInsertId();
     
     // Dummy Products
     $dummyProducts = [
@@ -240,7 +237,7 @@ try {
         ]
     ];
 
-    $insInduk = $pdo->prepare("INSERT INTO produk_induk (sku_induk, nama_produk, deskripsi, kategori, id_supplier) VALUES (?, ?, ?, ?, ?)");
+    $insInduk = $pdo->prepare("INSERT INTO produk_induk (sku_induk, nama_produk, deskripsi, kategori) VALUES (?, ?, ?, ?)");
     $insVar = $pdo->prepare("INSERT INTO produk_variasi (id_produk_induk, sku_variasi, nama_variasi, harga, berat, gambar) VALUES (?, ?, ?, ?, ?, ?)");
     $insStok = $pdo->prepare("INSERT INTO stok_toko (id_variasi, id_cabang, stok) VALUES (?, ?, ?)");
     $insKartu = $pdo->prepare("INSERT INTO kartu_stok (id_cabang, id_variasi, jenis_mutasi, qty, sisa_stok, keterangan) VALUES (?, ?, 'Masuk', ?, ?, 'STOK AWAL (SETUP)')");
@@ -248,7 +245,7 @@ try {
     foreach ($dummyProducts as $prod) {
         // Induk
         $sku_induk = $prod['sku'] . '-IND';
-        $insInduk->execute([$sku_induk, $prod['nama'], $prod['deskripsi'], $prod['kat'], $id_supplier]);
+        $insInduk->execute([$sku_induk, $prod['nama'], $prod['deskripsi'], $prod['kat']]);
         $id_induk = $pdo->lastInsertId();
 
         // Variasi
