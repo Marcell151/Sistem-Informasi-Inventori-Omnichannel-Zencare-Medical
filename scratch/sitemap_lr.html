@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitemap ZenCare - Kiri ke Kanan</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 120px;
+        }
+
+        /* The tree container */
+        .tree {
+            display: flex;
+            align-items: center;
+        }
+
+        /* A node contains the box and its children */
+        .node {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        /* The actual visible box */
+        .box {
+            border: 1px solid black;
+            padding: 12px 20px;
+            background: white;
+            z-index: 2;
+            font-weight: bold;
+            font-size: 14px;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .box.root {
+            font-size: 16px;
+            padding: 20px 30px;
+        }
+
+        .box.sub {
+            font-weight: normal;
+            font-size: 13px;
+        }
+
+        .box.sub-sub {
+            font-weight: normal;
+            font-size: 12px;
+            background: #f9f9f9;
+        }
+
+        /* The container for children (arranged vertically) */
+        .children {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 20px; /* Vertical gap between sibling nodes */
+            padding-left: 40px; /* Horizontal gap between parent and children */
+            position: relative;
+        }
+
+        /* Horizontal line coming out of the right side of the parent box */
+        .node > .box + .children::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 40px; /* Connects parent to the vertical line */
+            height: 1px;
+            background-color: black;
+            transform: translateY(-50%);
+            /* We shift it left to touch the parent box */
+            left: -40px;
+        }
+
+        /* Horizontal line going into the left side of a child box */
+        .children > .node::before {
+            content: '';
+            position: absolute;
+            left: -40px;
+            top: 50%;
+            width: 40px;
+            height: 1px;
+            background-color: black;
+            transform: translateY(-50%);
+        }
+
+        /* Vertical line connecting all children */
+        /* It runs along the left edge of the .children container */
+        .children::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            background-color: black;
+            width: 1px;
+            /* The top and bottom will be set via JS to span exactly from the first to the last child */
+            z-index: 1;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- SITEMAP ADMIN -->
+    <div class="tree" id="sitemap-admin">
+        <div class="node">
+            <div class="box root">Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Admin)</div>
+            <div class="children">
+                
+                <div class="node">
+                    <div class="box">Autentikasi</div>
+                    <div class="children">
+                        <div class="node"><div class="box sub">Login</div></div>
+                    </div>
+                </div>
+
+                <div class="node">
+                    <div class="box">Dashboard</div>
+                    <div class="children">
+                        <div class="node"><div class="box sub">Ringkasan Stok Kritis</div></div>
+                        <div class="node"><div class="box sub">Peringatan Obat Mendekati Kedaluwarsa</div></div>
+                        <div class="node"><div class="box sub">Antrean Pesanan Daring Baru</div></div>
+                        <div class="node"><div class="box sub">Ringkasan Transaksi Hari Ini</div></div>
+                    </div>
+                </div>
+
+                <div class="node">
+                    <div class="box">Master Data</div>
+                    <div class="children">
+                        <div class="node"><div class="box sub">Data Produk</div></div>
+                        <div class="node"><div class="box sub">Data Satuan (Multi-UOM)</div></div>
+                        <div class="node"><div class="box sub">Data Supplier</div></div>
+                    </div>
+                </div>
+
+                <div class="node">
+                    <div class="box">Transaksi Keluar</div>
+                    <div class="children">
+                        <div class="node"><div class="box sub">Kasir (POS)</div></div>
+                        <div class="node"><div class="box sub">Pesanan Daring</div></div>
+                    </div>
+                </div>
+
+                <div class="node">
+                    <div class="box">Logistik & Inventori</div>
+                    <div class="children">
+                        <div class="node">
+                            <div class="box sub">Penerimaan Barang</div>
+                            <div class="children">
+                                <div class="node"><div class="box sub-sub">Pilih Sumber Barang</div></div>
+                                <div class="node"><div class="box sub-sub">Form Khusus Obat</div></div>
+                                <div class="node"><div class="box sub-sub">Form Khusus Alkes</div></div>
+                                <div class="node"><div class="box sub-sub">Cetak Label Batch</div></div>
+                            </div>
+                        </div>
+                        <div class="node">
+                            <div class="box sub">Mutasi Stok</div>
+                            <div class="children">
+                                <div class="node"><div class="box sub-sub">Tambah / Kurangi Stok</div></div>
+                                <div class="node"><div class="box sub-sub">Alasan Mutasi</div></div>
+                            </div>
+                        </div>
+                        <div class="node"><div class="box sub">Kartu Stok</div></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- SITEMAP PELANGGAN -->
+    <div class="tree" id="sitemap-pelanggan">
+        <div class="node">
+            <div class="box root">Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Pelanggan)</div>
+            <div class="children">
+                
+                <div class="node">
+                    <div class="box">Autentikasi</div>
+                    <div class="children">
+                        <div class="node"><div class="box sub">Daftar Akun Baru</div></div>
+                        <div class="node"><div class="box sub">Login</div></div>
+                        <div class="node"><div class="box sub">Lupa Kata Sandi</div></div>
+                    </div>
+                </div>
+
+                <div class="node">
+                    <div class="box">Beranda</div>
+                </div>
+
+                <div class="node">
+                    <div class="box">Katalog Produk</div>
+                    <div class="children">
+                        <div class="node"><div class="box sub">Detail Produk</div></div>
+                    </div>
+                </div>
+
+                <div class="node">
+                    <div class="box">Keranjang Belanja</div>
+                    <div class="children">
+                        <div class="node"><div class="box sub">Ubah Kuantitas Produk</div></div>
+                        <div class="node"><div class="box sub">Hapus Produk dari Keranjang</div></div>
+                        <div class="node"><div class="box sub">Ringkasan Subtotal</div></div>
+                    </div>
+                </div>
+
+                <div class="node">
+                    <div class="box">Checkout</div>
+                    <div class="children">
+                        <div class="node"><div class="box sub">Pilih Metode Pengambilan</div></div>
+                        <div class="node"><div class="box sub">Isi / Pilih Alamat Pengiriman</div></div>
+                        <div class="node"><div class="box sub">Ringkasan Pesanan & Total Bayar</div></div>
+                        <div class="node"><div class="box sub">Pembayaran</div></div>
+                    </div>
+                </div>
+
+                <div class="node">
+                    <div class="box">Akun Saya</div>
+                    <div class="children">
+                        <div class="node"><div class="box sub">Edit Profil</div></div>
+                        <div class="node"><div class="box sub">Kelola Alamat Pengiriman</div></div>
+                        <div class="node"><div class="box sub">Riwayat Pesanan</div></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- SITEMAP SUPERADMIN -->
+    <div class="tree" id="sitemap-superadmin">
+        <div class="node">
+            <div class="box root">Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Superadmin)</div>
+            <div class="children">
+                
+                <div class="node">
+                    <div class="box">Autentikasi</div>
+                    <div class="children">
+                        <div class="node"><div class="box sub">Login</div></div>
+                    </div>
+                </div>
+
+                <div class="node">
+                    <div class="box">Dashboard</div>
+                    <div class="children">
+                        <div class="node"><div class="box sub">Volume Produk Keluar Hari Ini</div></div>
+                        <div class="node"><div class="box sub">Ringkasan Pergerakan Inventaris</div></div>
+                        <div class="node"><div class="box sub">Log Audit Mutasi & Kartu Stok</div></div>
+                        <div class="node"><div class="box sub">Riwayat Pengadaan</div></div>
+                    </div>
+                </div>
+
+                <div class="node">
+                    <div class="box">Manajemen Pengguna</div>
+                    <div class="children">
+                        <div class="node"><div class="box sub">Kelola Akun</div></div>
+                        <div class="node"><div class="box sub">Reset Kata Sandi</div></div>
+                    </div>
+                </div>
+
+                <div class="node">
+                    <div class="box">Modul Operasional</div>
+                    <div class="children">
+                        <div class="node"><div class="box sub">Master Data (Produk, Satuan, Supplier)</div></div>
+                        <div class="node"><div class="box sub">Transaksi Keluar</div></div>
+                        <div class="node">
+                            <div class="box sub">Logistik & Inventori</div>
+                            <div class="children">
+                                <div class="node"><div class="box sub-sub">Penerimaan Barang</div></div>
+                                <div class="node"><div class="box sub-sub">Mutasi Stok</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="node">
+                    <div class="box">Laporan</div>
+                    <div class="children">
+                        <div class="node"><div class="box sub">Laporan Kartu Stok</div></div>
+                        <div class="node"><div class="box sub">Laporan Ketersediaan Persediaan</div></div>
+                        <div class="node"><div class="box sub">Laporan Logistik Medis</div></div>
+                        <div class="node"><div class="box sub">Laporan Penjualan Barang</div></div>
+                    </div>
+                </div>
+
+                <div class="node">
+                    <div class="box">Pengaturan Sistem</div>
+                    <div class="children">
+                        <div class="node"><div class="box sub">Pengaturan API</div></div>
+                        <div class="node"><div class="box sub">Pengaturan Web/Toko</div></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Script to draw the vertical connecting lines perfectly -->
+    <script>
+        function drawLines() {
+            document.querySelectorAll('.children').forEach((container, i) => {
+                const nodes = container.children;
+                if (nodes.length > 1) {
+                    const first = nodes[0];
+                    const last = nodes[nodes.length - 1];
+                    
+                    // Center of the first node's horizontal connection point
+                    const topOffset = first.offsetTop + (first.offsetHeight / 2);
+                    // Center of the last node's horizontal connection point
+                    const bottomOffset = last.offsetTop + (last.offsetHeight / 2);
+                    
+                    const uniqueClass = 'vert-bar-' + i;
+                    container.classList.add(uniqueClass);
+                    
+                    let style = document.getElementById('style-' + uniqueClass);
+                    if(!style) {
+                        style = document.createElement('style');
+                        style.id = 'style-' + uniqueClass;
+                        document.head.appendChild(style);
+                    }
+                    style.innerHTML = `
+                        .${uniqueClass}::after {
+                            top: ${topOffset}px;
+                            height: ${bottomOffset - topOffset}px;
+                        }
+                    `;
+                } else {
+                    const uniqueClass = 'vert-bar-' + i;
+                    container.classList.add(uniqueClass);
+                    const style = document.createElement('style');
+                    style.innerHTML = `.${uniqueClass}::after { display: none; }`;
+                    document.head.appendChild(style);
+                }
+            });
+        }
+        
+        window.onload = drawLines;
+        window.onresize = drawLines;
+    </script>
+</body>
+</html>

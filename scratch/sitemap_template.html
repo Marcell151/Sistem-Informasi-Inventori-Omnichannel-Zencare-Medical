@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitemap ZenCare</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            padding: 50px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .sitemap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Root Box */
+        .root-box {
+            border: 1px solid black;
+            padding: 10px 20px;
+            text-align: center;
+            background: white;
+            z-index: 2;
+            position: relative;
+        }
+
+        /* Horizontal Container for top level */
+        .level-1-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            position: relative;
+            gap: 20px;
+        }
+
+        /* Line connecting root to horizontal bar */
+        .root-line {
+            width: 1px;
+            height: 40px;
+            background-color: black;
+            position: absolute;
+            top: -40px;
+            left: 50%;
+        }
+
+        /* Horizontal bar connecting all children */
+        .level-1-container::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: black;
+        }
+
+        /* Column for each category */
+        .category-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            position: relative;
+            min-width: 150px;
+        }
+
+        /* Line down from horizontal bar to category root */
+        .category-col::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            width: 1px;
+            height: 20px;
+            background-color: black;
+        }
+
+        .cat-box {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+            background: white;
+            width: 100%;
+            box-sizing: border-box;
+            z-index: 2;
+        }
+
+        /* Sub-items container */
+        .sub-container {
+            display: flex;
+            flex-direction: column;
+            margin-top: 20px;
+            margin-left: 20px;
+            position: relative;
+            gap: 10px;
+            width: calc(100% - 20px);
+        }
+
+        /* Vertical line for sub-items */
+        .sub-container::before {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: -20px;
+            bottom: 20px;
+            width: 1px;
+            background-color: black;
+        }
+
+        .sub-box {
+            border: 1px solid black;
+            padding: 8px 10px;
+            background: white;
+            position: relative;
+            font-size: 14px;
+        }
+
+        /* Horizontal line connecting to sub-box */
+        .sub-box::before {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 50%;
+            width: 10px;
+            height: 1px;
+            background-color: black;
+        }
+        
+        /* Fix first and last line edges in horizontal bar */
+        .level-1-container.fix-edges::before {
+            left: calc(50% / var(--count));
+            right: calc(50% / var(--count));
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="sitemap-superadmin" class="sitemap" style="display:none;">
+        <div class="root-box">Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Superadmin)</div>
+        <div class="level-1-container">
+            <div class="root-line"></div>
+            
+            <div class="category-col">
+                <div class="cat-box">Dashboard</div>
+                <div class="sub-container">
+                    <div class="sub-box">Statistik & Metrik</div>
+                    <div class="sub-box">Grafik Penjualan</div>
+                    <div class="sub-box">Widget Kartu Stok</div>
+                    <div class="sub-box">Riwayat Pengadaan</div>
+                </div>
+            </div>
+
+            <div class="category-col">
+                <div class="cat-box">Master Data</div>
+                <div class="sub-container">
+                    <div class="sub-box">Kategori Produk</div>
+                    <div class="sub-box">Produk Induk</div>
+                    <div class="sub-box">Produk Variasi (SKU & Multi-UOM)</div>
+                </div>
+            </div>
+
+            <div class="category-col">
+                <div class="cat-box">Laporan & Audit</div>
+                <div class="sub-container">
+                    <div class="sub-box">Laporan Penjualan (POS & Online)</div>
+                    <div class="sub-box">Laporan Pergerakan Stok</div>
+                    <div class="sub-box">Ekspor PDF/Excel</div>
+                </div>
+            </div>
+
+            <div class="category-col">
+                <div class="cat-box">Manajemen Akses</div>
+                <div class="sub-container">
+                    <div class="sub-box">Kelola Pengguna (Admin/Kasir)</div>
+                    <div class="sub-box">Pengaturan Hak Akses (RBAC)</div>
+                </div>
+            </div>
+            
+            <div class="category-col">
+                <div class="cat-box">Integrasi Sistem</div>
+                <div class="sub-container">
+                    <div class="sub-box">Pengaturan API Midtrans (Sandbox)</div>
+                    <div class="sub-box">Pengaturan RajaOngkir</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script to adjust horizontal line bounds dynamically -->
+    <script>
+        document.querySelectorAll('.level-1-container').forEach(container => {
+            const cols = container.querySelectorAll('.category-col');
+            if(cols.length > 1) {
+                const first = cols[0];
+                const last = cols[cols.length-1];
+                const leftOffset = first.offsetLeft + (first.offsetWidth / 2);
+                const rightOffset = container.offsetWidth - (last.offsetLeft + (last.offsetWidth / 2));
+                container.style.setProperty('--left-bound', leftOffset + 'px');
+                container.style.setProperty('--right-bound', rightOffset + 'px');
+                
+                const style = document.createElement('style');
+                style.innerHTML = `
+                    #${container.parentElement.id} .level-1-container::before {
+                        left: ${leftOffset}px;
+                        right: ${rightOffset}px;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        });
+        
+        // Expose a function to switch views for the puppeteer script
+        window.showSitemap = function(id) {
+            document.querySelectorAll('.sitemap').forEach(el => el.style.display = 'none');
+            document.getElementById('sitemap-' + id).style.display = 'flex';
+        }
+    </script>
+</body>
+</html>

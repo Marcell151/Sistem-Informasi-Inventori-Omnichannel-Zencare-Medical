@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitemap ZenCare</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 100px;
+        }
+
+        .sitemap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: max-content;
+        }
+
+        /* Root Box */
+        .root-box {
+            border: 1px solid black;
+            padding: 15px 30px;
+            text-align: center;
+            background: white;
+            z-index: 2;
+            position: relative;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        /* Horizontal Container for top level */
+        .level-1-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            position: relative;
+            gap: 30px;
+        }
+
+        /* Line connecting root to horizontal bar */
+        .root-line {
+            width: 1px;
+            height: 40px;
+            background-color: black;
+            position: absolute;
+            top: -40px;
+            left: 50%;
+        }
+
+        /* Horizontal bar connecting all children */
+        .level-1-container::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            height: 1px;
+            background-color: black;
+        }
+
+        /* Column for each category */
+        .category-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            position: relative;
+            min-width: 160px;
+        }
+
+        /* Line down from horizontal bar to category root */
+        .category-col::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            width: 1px;
+            height: 20px;
+            background-color: black;
+        }
+
+        .cat-box {
+            border: 1px solid black;
+            padding: 12px;
+            text-align: center;
+            background: white;
+            width: 100%;
+            box-sizing: border-box;
+            z-index: 2;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* Sub-items container */
+        .sub-container {
+            display: flex;
+            flex-direction: column;
+            margin-top: 20px;
+            margin-left: 30px;
+            /* indent for hanging vertical list */
+            position: relative;
+            gap: 15px;
+            width: calc(100% - 30px);
+        }
+
+        /* Vertical line for sub-items */
+        .sub-container::before {
+            content: '';
+            position: absolute;
+            left: -15px;
+            top: -20px;
+            bottom: 20px;
+            width: 1px;
+            background-color: black;
+        }
+
+        .sub-box {
+            border: 1px solid black;
+            padding: 10px 12px;
+            background: white;
+            position: relative;
+            font-size: 13px;
+        }
+
+        .sub-box.child {
+            margin-left: 15px;
+            font-size: 12px;
+            background: #f9f9f9;
+        }
+
+        /* Horizontal line connecting to sub-box */
+        .sub-box::before {
+            content: '';
+            position: absolute;
+            left: -15px;
+            top: 50%;
+            width: 15px;
+            height: 1px;
+            background-color: black;
+        }
+        
+        .sub-box.child::before {
+            width: 30px;
+            left: -30px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <!-- SITEMAP ADMIN -->
+    <div id="sitemap-admin" class="sitemap">
+        <div class="root-box">Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Admin)</div>
+        <div class="level-1-container">
+            <div class="root-line"></div>
+
+            <div class="category-col">
+                <div class="cat-box">Autentikasi</div>
+                <div class="sub-container">
+                    <div class="sub-box">Login</div>
+                </div>
+            </div>
+
+            <div class="category-col">
+                <div class="cat-box">Dashboard</div>
+                <div class="sub-container">
+                    <div class="sub-box">Ringkasan Stok Kritis</div>
+                    <div class="sub-box">Peringatan Obat Mendekati Kedaluwarsa</div>
+                    <div class="sub-box">Antrean Pesanan Daring Baru</div>
+                    <div class="sub-box">Ringkasan Transaksi Hari Ini</div>
+                </div>
+            </div>
+
+            <div class="category-col">
+                <div class="cat-box">Master Data</div>
+                <div class="sub-container">
+                    <div class="sub-box">Data Produk</div>
+                    <div class="sub-box">Data Satuan (Multi-UOM)</div>
+                    <div class="sub-box">Data Supplier</div>
+                </div>
+            </div>
+
+            <div class="category-col">
+                <div class="cat-box">Transaksi Keluar</div>
+                <div class="sub-container">
+                    <div class="sub-box">Kasir (POS)</div>
+                    <div class="sub-box">Pesanan Daring</div>
+                </div>
+            </div>
+
+            <div class="category-col">
+                <div class="cat-box">Logistik & Inventori</div>
+                <div class="sub-container">
+                    <div class="sub-box">Penerimaan Barang</div>
+                    <div class="sub-box child">- Pilih Sumber Barang</div>
+                    <div class="sub-box child">- Form Khusus Obat</div>
+                    <div class="sub-box child">- Form Khusus Alkes</div>
+                    <div class="sub-box child">- Cetak Label Batch</div>
+                    <div class="sub-box">Mutasi Stok</div>
+                    <div class="sub-box child">- Tambah / Kurangi Stok</div>
+                    <div class="sub-box child">- Alasan Mutasi</div>
+                    <div class="sub-box">Kartu Stok</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SITEMAP PELANGGAN -->
+    <div id="sitemap-pelanggan" class="sitemap">
+        <div class="root-box">Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Pelanggan)</div>
+        <div class="level-1-container">
+            <div class="root-line"></div>
+
+            <div class="category-col">
+                <div class="cat-box">Autentikasi</div>
+                <div class="sub-container">
+                    <div class="sub-box">Daftar Akun Baru</div>
+                    <div class="sub-box">Login</div>
+                    <div class="sub-box">Lupa Kata Sandi</div>
+                </div>
+            </div>
+
+            <div class="category-col">
+                <div class="cat-box">Beranda</div>
+                <div class="sub-container">
+                </div>
+            </div>
+
+            <div class="category-col">
+                <div class="cat-box">Katalog Produk</div>
+                <div class="sub-container">
+                    <div class="sub-box">Detail Produk</div>
+                </div>
+            </div>
+
+            <div class="category-col">
+                <div class="cat-box">Keranjang Belanja</div>
+                <div class="sub-container">
+                    <div class="sub-box">Ubah Kuantitas Produk</div>
+                    <div class="sub-box">Hapus Produk dari Keranjang</div>
+                    <div class="sub-box">Ringkasan Subtotal</div>
+                </div>
+            </div>
+            
+            <div class="category-col">
+                <div class="cat-box">Checkout</div>
+                <div class="sub-container">
+                    <div class="sub-box">Pilih Metode Pengambilan</div>
+                    <div class="sub-box">Isi / Pilih Alamat Pengiriman</div>
+                    <div class="sub-box">Ringkasan Pesanan & Total Bayar</div>
+                    <div class="sub-box">Pembayaran</div>
+                </div>
+            </div>
+
+            <div class="category-col">
+                <div class="cat-box">Akun Saya</div>
+                <div class="sub-container">
+                    <div class="sub-box">Edit Profil</div>
+                    <div class="sub-box">Kelola Alamat Pengiriman</div>
+                    <div class="sub-box">Riwayat Pesanan</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SITEMAP SUPERADMIN -->
+    <div id="sitemap-superadmin" class="sitemap">
+        <div class="root-box">Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Superadmin)</div>
+        <div class="level-1-container">
+            <div class="root-line"></div>
+
+            <div class="category-col">
+                <div class="cat-box">Autentikasi</div>
+                <div class="sub-container">
+                    <div class="sub-box">Login</div>
+                </div>
+            </div>
+
+            <div class="category-col">
+                <div class="cat-box">Dashboard</div>
+                <div class="sub-container">
+                    <div class="sub-box">Volume Produk Keluar Hari Ini</div>
+                    <div class="sub-box">Ringkasan Pergerakan Inventaris</div>
+                    <div class="sub-box">Log Audit Mutasi & Kartu Stok</div>
+                    <div class="sub-box">Riwayat Pengadaan</div>
+                </div>
+            </div>
+
+            <div class="category-col">
+                <div class="cat-box">Manajemen Pengguna</div>
+                <div class="sub-container">
+                    <div class="sub-box">Kelola Akun</div>
+                    <div class="sub-box">Reset Kata Sandi</div>
+                </div>
+            </div>
+
+            <div class="category-col">
+                <div class="cat-box">Modul Operasional</div>
+                <div class="sub-container">
+                    <div class="sub-box">Master Data (Produk, Satuan, Supplier)</div>
+                    <div class="sub-box">Transaksi Keluar</div>
+                    <div class="sub-box">Logistik & Inventori</div>
+                    <div class="sub-box child">- Penerimaan Barang</div>
+                    <div class="sub-box child">- Mutasi Stok</div>
+                </div>
+            </div>
+            
+            <div class="category-col">
+                <div class="cat-box">Laporan</div>
+                <div class="sub-container">
+                    <div class="sub-box">Laporan Kartu Stok</div>
+                    <div class="sub-box">Laporan Ketersediaan Persediaan</div>
+                    <div class="sub-box">Laporan Logistik Medis</div>
+                    <div class="sub-box">Laporan Penjualan Barang</div>
+                </div>
+            </div>
+
+            <div class="category-col">
+                <div class="cat-box">Pengaturan Sistem</div>
+                <div class="sub-container">
+                    <div class="sub-box">Pengaturan API</div>
+                    <div class="sub-box">Pengaturan Web/Toko</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script to adjust horizontal line bounds dynamically -->
+    <script>
+        document.querySelectorAll('.level-1-container').forEach((container, i) => {
+            const cols = container.querySelectorAll('.category-col');
+            if (cols.length > 1) {
+                const first = cols[0];
+                const last = cols[cols.length - 1];
+                const leftOffset = first.offsetLeft + (first.offsetWidth / 2);
+                const rightOffset = container.offsetWidth - (last.offsetLeft + (last.offsetWidth / 2));
+
+                const style = document.createElement('style');
+                style.innerHTML = `
+                    #${container.parentElement.id} .level-1-container::before {
+                        left: ${leftOffset}px;
+                        right: ${rightOffset}px;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        });
+    </script>
+</body>
+
+</html>

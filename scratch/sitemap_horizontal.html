@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitemap ZenCare - Horizontal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 120px;
+        }
+
+        .sitemap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: max-content;
+        }
+
+        /* Root Box */
+        .root-box {
+            border: 1px solid black;
+            padding: 15px 30px;
+            text-align: center;
+            background: white;
+            z-index: 2;
+            position: relative;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        /* Container for children levels */
+        .children-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            position: relative;
+            gap: 20px;
+        }
+
+        /* Vertical line from parent to horizontal bar */
+        .parent-line {
+            width: 1px;
+            height: 20px;
+            background-color: black;
+            position: absolute;
+            top: -40px;
+            left: 50%;
+        }
+
+        /* Horizontal bar above children */
+        .children-container::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            height: 1px;
+            background-color: black;
+            /* width is calculated via JS */
+        }
+
+        /* Individual Column */
+        .node-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Vertical line from horizontal bar down to box */
+        .node-col::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            width: 1px;
+            height: 20px;
+            background-color: black;
+        }
+
+        /* Category Box (Level 2) */
+        .cat-box {
+            border: 1px solid black;
+            padding: 12px;
+            text-align: center;
+            background: white;
+            z-index: 2;
+            font-weight: bold;
+            font-size: 14px;
+            min-width: 120px;
+        }
+
+        /* Sub Box (Level 3) */
+        .sub-box {
+            border: 1px solid black;
+            padding: 8px 10px;
+            text-align: center;
+            background: white;
+            z-index: 2;
+            font-size: 12px;
+            min-width: 80px;
+            max-width: 130px;
+        }
+
+        .sub-box.child {
+            background: #f9f9f9;
+            font-size: 11px;
+        }
+
+        /* Level 3 children need a parent-line from Level 2 */
+        .level-2-col > .children-container > .parent-line {
+            top: -40px;
+            height: 40px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <!-- SITEMAP ADMIN -->
+    <div id="sitemap-admin" class="sitemap">
+        <div class="root-box">Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Admin)</div>
+        <div class="children-container level-1-container">
+            <div class="parent-line" style="height: 40px;"></div>
+
+            <div class="node-col level-2-col">
+                <div class="cat-box">Autentikasi</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    <div class="node-col"><div class="sub-box">Login</div></div>
+                </div>
+            </div>
+
+            <div class="node-col level-2-col">
+                <div class="cat-box">Dashboard</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    <div class="node-col"><div class="sub-box">Ringkasan Stok Kritis</div></div>
+                    <div class="node-col"><div class="sub-box">Peringatan Obat Mendekati Kedaluwarsa</div></div>
+                    <div class="node-col"><div class="sub-box">Antrean Pesanan Daring Baru</div></div>
+                    <div class="node-col"><div class="sub-box">Ringkasan Transaksi Hari Ini</div></div>
+                </div>
+            </div>
+
+            <div class="node-col level-2-col">
+                <div class="cat-box">Master Data</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    <div class="node-col"><div class="sub-box">Data Produk</div></div>
+                    <div class="node-col"><div class="sub-box">Data Satuan (Multi-UOM)</div></div>
+                    <div class="node-col"><div class="sub-box">Data Supplier</div></div>
+                </div>
+            </div>
+
+            <div class="node-col level-2-col">
+                <div class="cat-box">Transaksi Keluar</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    <div class="node-col"><div class="sub-box">Kasir (POS)</div></div>
+                    <div class="node-col"><div class="sub-box">Pesanan Daring</div></div>
+                </div>
+            </div>
+
+            <div class="node-col level-2-col">
+                <div class="cat-box">Logistik & Inventori</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    
+                    <div class="node-col">
+                        <div class="sub-box">Penerimaan Barang</div>
+                        <div class="children-container" style="flex-direction: column; gap: 5px; margin-top: 20px;">
+                            <div class="parent-line" style="height:20px; top:-20px;"></div>
+                            <!-- Remove horizontal bar for this sub-sub level to keep it compact -->
+                            <style>#penerimaan-sub::before { display: none; }</style>
+                            <div class="sub-box child">Pilih Sumber Barang</div>
+                            <div class="sub-box child">Form Khusus Obat</div>
+                            <div class="sub-box child">Form Khusus Alkes</div>
+                            <div class="sub-box child">Cetak Label Batch</div>
+                        </div>
+                    </div>
+                    
+                    <div class="node-col">
+                        <div class="sub-box">Mutasi Stok</div>
+                        <div class="children-container" style="flex-direction: column; gap: 5px; margin-top: 20px;">
+                            <div class="parent-line" style="height:20px; top:-20px;"></div>
+                            <div class="sub-box child">Tambah / Kurangi Stok</div>
+                            <div class="sub-box child">Alasan Mutasi</div>
+                        </div>
+                    </div>
+                    
+                    <div class="node-col"><div class="sub-box">Kartu Stok</div></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- SITEMAP PELANGGAN -->
+    <div id="sitemap-pelanggan" class="sitemap">
+        <div class="root-box">Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Pelanggan)</div>
+        <div class="children-container level-1-container">
+            <div class="parent-line" style="height: 40px;"></div>
+
+            <div class="node-col level-2-col">
+                <div class="cat-box">Autentikasi</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    <div class="node-col"><div class="sub-box">Daftar Akun Baru</div></div>
+                    <div class="node-col"><div class="sub-box">Login</div></div>
+                    <div class="node-col"><div class="sub-box">Lupa Kata Sandi</div></div>
+                </div>
+            </div>
+
+            <div class="node-col level-2-col">
+                <div class="cat-box">Beranda</div>
+                <!-- No children -->
+            </div>
+
+            <div class="node-col level-2-col">
+                <div class="cat-box">Katalog Produk</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    <div class="node-col"><div class="sub-box">Detail Produk</div></div>
+                </div>
+            </div>
+
+            <div class="node-col level-2-col">
+                <div class="cat-box">Keranjang Belanja</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    <div class="node-col"><div class="sub-box">Ubah Kuantitas Produk</div></div>
+                    <div class="node-col"><div class="sub-box">Hapus Produk dari Keranjang</div></div>
+                    <div class="node-col"><div class="sub-box">Ringkasan Subtotal</div></div>
+                </div>
+            </div>
+            
+            <div class="node-col level-2-col">
+                <div class="cat-box">Checkout</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    <div class="node-col"><div class="sub-box">Pilih Metode Pengambilan</div></div>
+                    <div class="node-col"><div class="sub-box">Isi / Pilih Alamat Pengiriman</div></div>
+                    <div class="node-col"><div class="sub-box">Ringkasan Pesanan & Total Bayar</div></div>
+                    <div class="node-col"><div class="sub-box">Pembayaran</div></div>
+                </div>
+            </div>
+
+            <div class="node-col level-2-col">
+                <div class="cat-box">Akun Saya</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    <div class="node-col"><div class="sub-box">Edit Profil</div></div>
+                    <div class="node-col"><div class="sub-box">Kelola Alamat Pengiriman</div></div>
+                    <div class="node-col"><div class="sub-box">Riwayat Pesanan</div></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- SITEMAP SUPERADMIN -->
+    <div id="sitemap-superadmin" class="sitemap">
+        <div class="root-box">Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Superadmin)</div>
+        <div class="children-container level-1-container">
+            <div class="parent-line" style="height: 40px;"></div>
+
+            <div class="node-col level-2-col">
+                <div class="cat-box">Autentikasi</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    <div class="node-col"><div class="sub-box">Login</div></div>
+                </div>
+            </div>
+
+            <div class="node-col level-2-col">
+                <div class="cat-box">Dashboard</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    <div class="node-col"><div class="sub-box">Volume Produk Keluar Hari Ini</div></div>
+                    <div class="node-col"><div class="sub-box">Ringkasan Pergerakan Inventaris</div></div>
+                    <div class="node-col"><div class="sub-box">Log Audit Mutasi & Kartu Stok</div></div>
+                    <div class="node-col"><div class="sub-box">Riwayat Pengadaan</div></div>
+                </div>
+            </div>
+
+            <div class="node-col level-2-col">
+                <div class="cat-box">Manajemen Pengguna</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    <div class="node-col"><div class="sub-box">Kelola Akun</div></div>
+                    <div class="node-col"><div class="sub-box">Reset Kata Sandi</div></div>
+                </div>
+            </div>
+
+            <div class="node-col level-2-col">
+                <div class="cat-box">Modul Operasional</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    <div class="node-col"><div class="sub-box">Master Data (Produk, Satuan, Supplier)</div></div>
+                    <div class="node-col"><div class="sub-box">Transaksi Keluar</div></div>
+                    <div class="node-col">
+                        <div class="sub-box">Logistik & Inventori</div>
+                        <div class="children-container" style="flex-direction: column; gap: 5px; margin-top: 20px;">
+                            <div class="parent-line" style="height:20px; top:-20px;"></div>
+                            <div class="sub-box child">Penerimaan Barang</div>
+                            <div class="sub-box child">Mutasi Stok</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="node-col level-2-col">
+                <div class="cat-box">Laporan</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    <div class="node-col"><div class="sub-box">Laporan Kartu Stok</div></div>
+                    <div class="node-col"><div class="sub-box">Laporan Ketersediaan Persediaan</div></div>
+                    <div class="node-col"><div class="sub-box">Laporan Logistik Medis</div></div>
+                    <div class="node-col"><div class="sub-box">Laporan Penjualan Barang</div></div>
+                </div>
+            </div>
+
+            <div class="node-col level-2-col">
+                <div class="cat-box">Pengaturan Sistem</div>
+                <div class="children-container">
+                    <div class="parent-line"></div>
+                    <div class="node-col"><div class="sub-box">Pengaturan API</div></div>
+                    <div class="node-col"><div class="sub-box">Pengaturan Web/Toko</div></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script to adjust horizontal line bounds dynamically -->
+    <script>
+        document.querySelectorAll('.children-container').forEach((container, i) => {
+            // Ignore containers configured as flex-column (for sub-sub-menus)
+            if(container.style.flexDirection === 'column') return;
+
+            const cols = container.children;
+            // Get all actual node-col children (ignoring the parent-line div)
+            const nodeCols = Array.from(cols).filter(c => c.classList.contains('node-col'));
+            
+            if (nodeCols.length > 1) {
+                const first = nodeCols[0];
+                const last = nodeCols[nodeCols.length - 1];
+                
+                // Calculate centers of the first and last child columns
+                const leftOffset = first.offsetLeft + (first.offsetWidth / 2);
+                const rightOffset = container.offsetWidth - (last.offsetLeft + (last.offsetWidth / 2));
+
+                const uniqueClass = 'horiz-bar-' + i;
+                container.classList.add(uniqueClass);
+
+                const style = document.createElement('style');
+                style.innerHTML = `
+                    .${uniqueClass}::before {
+                        left: ${leftOffset}px;
+                        right: ${rightOffset}px;
+                    }
+                `;
+                document.head.appendChild(style);
+            } else {
+                // If only 1 child or none, hide the horizontal bar
+                const uniqueClass = 'horiz-bar-' + i;
+                container.classList.add(uniqueClass);
+                const style = document.createElement('style');
+                style.innerHTML = `.${uniqueClass}::before { display: none; }`;
+                document.head.appendChild(style);
+            }
+        });
+    </script>
+</body>
+</html>
