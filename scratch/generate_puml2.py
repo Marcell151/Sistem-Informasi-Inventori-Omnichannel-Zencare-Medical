@@ -1,0 +1,101 @@
+import zlib
+import base64
+import urllib.request
+import os
+
+puml = '''@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FEFECE
+  BorderColor #A80036
+}
+skinparam actor {
+  BackgroundColor #FEFECE
+  BorderColor #A80036
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+}
+
+actor "Pelanggan" as P
+actor "Superadmin\n(Pemilik)" as SA
+actor "Admin\n(Staff)" as A
+
+package "Portal E-Commerce" {
+  usecase "Autentikasi & Kelola\nAkun Profil" as UC1
+  usecase "Eksplorasi Katalog\n& Keranjang" as UC2
+  usecase "Checkout Pesanan" as UC3
+  usecase "Kelola Riwayat\nPesanan" as UC4
+  usecase "Pembayaran\nGateway" as UCP
+}
+UC3 .> UCP : <<include>>
+
+package "Transaksi & Logistik" {
+  usecase "Kelola Pesanan\nDaring" as UC5
+  usecase "Batalkan Pesanan" as UC6
+  usecase "Kelola Transaksi\nKasir (POS)" as UC7
+  usecase "Kelola Penerimaan\nBarang" as UC8
+  usecase "Validasi Identitas\nLogistik (Batch/SN)" as UC9
+  usecase "Lakukan Mutasi\nStok" as UC10
+  usecase "Akses Kartu\nStok" as UC11
+}
+UC5 <. UC6 : <<extend>>
+UC8 <. UC9 : <<extend>>
+
+package "Master Data & Laporan" {
+  usecase "Kelola Master Data" as UC12
+  usecase "Master Produk" as UC13
+  usecase "Master Satuan" as UC14
+  usecase "Master Supplier" as UC15
+  usecase "Import Data Barang\n(Excel)" as UC16
+  
+  usecase "Dashboard Analitik" as UC17
+  usecase "Akses Laporan\nKuantitas & Logistik" as UC18
+  usecase "Kelola User Admin" as UC19
+  usecase "Pengaturan Sistem\n(API & Web)" as UC20
+}
+UC12 .> UC13 : <<include>>
+UC12 .> UC14 : <<include>>
+UC12 .> UC15 : <<include>>
+UC13 <. UC16 : <<extend>>
+
+P --> UC1
+P --> UC2
+P --> UC3
+P --> UC4
+
+SA --> UC7
+SA --> UC8
+SA --> UC10
+SA --> UC11
+SA --> UC12
+SA --> UC17
+SA --> UC18
+SA --> UC19
+SA --> UC20
+
+A --> UC5
+A --> UC7
+A --> UC8
+A --> UC10
+A --> UC11
+A --> UC12
+A --> UC17
+@enduml'''
+
+compressed = zlib.compress(puml.encode('utf-8'), 9)
+payload = base64.urlsafe_b64encode(compressed).decode('utf-8')
+
+url = f"https://kroki.io/plantuml/png/{payload}"
+out_path = r"C:\Users\Marcell\.gemini\antigravity-ide\brain\0e247ec0-4377-4850-a2fa-fe5f78de4d89\use_case_diagram.png"
+
+try:
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'})
+    with urllib.request.urlopen(req) as response, open(out_path, 'wb') as out_file:
+        data = response.read()
+        out_file.write(data)
+    print("SUCCESS: Image generated at", out_path)
+except Exception as e:
+    print("ERROR:", e)

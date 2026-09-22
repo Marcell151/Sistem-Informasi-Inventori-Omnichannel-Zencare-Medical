@@ -29,6 +29,10 @@ $msg = ''; $msgType = '';
 
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (($_SESSION['role'] ?? '') !== 'superadmin') {
+        die("Hanya Superadmin yang dapat mengubah data master produk dan harga.");
+    }
+
     $aksi = $_POST['aksi'] ?? '';
 
     // --- Tambah Produk Induk ---

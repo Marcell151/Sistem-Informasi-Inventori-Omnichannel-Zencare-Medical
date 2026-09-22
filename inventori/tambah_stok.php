@@ -44,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $idVariasis = $_POST['id_variasi'] ?? [];
     $qtys       = $_POST['qty'] ?? [];
+    $hargaBelis = $_POST['harga_beli'] ?? [];
     $batchNos   = $_POST['no_batch'] ?? [];
     $tglExps    = $_POST['tgl_exp'] ?? [];
     $snList     = $_POST['serial_number'] ?? [];
@@ -59,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmtHeader->execute([$noReferensi, $sumber, $idSupplier, $tglTerima, $catatan, $fileNotaName, $userId]);
             $idPenerimaan = $pdo->lastInsertId();
 
-            $stmtDetail = $pdo->prepare("INSERT INTO penerimaan_detail (id_penerimaan, id_variasi, qty_terima, no_batch, tgl_exp) VALUES (?, ?, ?, ?, ?)");
+            $stmtDetail = $pdo->prepare("INSERT INTO penerimaan_detail (id_penerimaan, id_variasi, qty_terima, harga_beli, no_batch, tgl_exp) VALUES (?, ?, ?, ?, ?, ?)");
             $stmtStok   = $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi = ? AND 1=1");
             $stmtBatch  = $pdo->prepare("INSERT INTO stok_batch (id_variasi, no_batch, tgl_exp, stok_sisa) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE stok_sisa = stok_sisa + ?");
             $stmtSN     = $pdo->prepare("INSERT INTO unit_serial (id_variasi, serial_number) VALUES (?, ?)");
@@ -70,9 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($idV && $qty > 0) {
                     $batch = trim($batchNos[$i] ?? '') ?: null;
                     $exp   = trim($tglExps[$i] ?? '') ?: null;
+                    $hargaBeli = floatval($hargaBelis[$i] ?? 0) ?: null;
                     
                     // Insert Detail
-                    $stmtDetail->execute([$idPenerimaan, $idV, $qty, $batch, $exp]);
+                    $stmtDetail->execute([$idPenerimaan, $idV, $qty, $hargaBeli, $batch, $exp]);
                     
                     // Update Stok Fisik
                     $stmtStok->execute([$qty, $idV]);
@@ -109,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $supplierList = $pdo->query("SELECT id, nama FROM supplier WHERE is_active = 1 ORDER BY nama")->fetchAll();
 $produkList   = $pdo->query("
-    SELECT pv.id, CONCAT(pi.nama_produk, ' — ', pv.nama_variasi) AS label, pi.kategori
+    SELECT pv.id, CONCAT(pi.nama_produk, ' — ', pv.nama_variasi) AS label, pi.kategori, pv.harga_jual_besar
     FROM produk_variasi pv 
     JOIN produk_induk pi ON pi.id = pv.id_produk_induk 
     WHERE pv.is_active = 1 ORDER BY pi.nama_produk
@@ -201,11 +203,12 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
                 <table class="w-full text-xs min-w-[800px]">
                     <thead class="bg-slate-50 border-b border-zcBrd">
                         <tr>
-                            <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[25%]">Produk *</th>
-                            <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[10%]">Qty Fisik *</th>
+                            <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[20%]">Produk *</th>
+                            <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[8%]">Qty *</th>
+                            <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[12%]">Harga Beli *</th>
                             <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[15%]">No. Batch (Obat)</th>
                             <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[15%]">Tgl Exp (Obat)</th>
-                            <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[30%]">Serial Number (Alkes)</th>
+                            <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[25%]">Serial Number (Alkes)</th>
                             <th class="px-2 py-2.5 w-[5%]"></th>
                         </tr>
                     </thead>
@@ -215,11 +218,14 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
                                 <select name="id_variasi[]" required onchange="checkProduk(this, 0)" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs">
                                     <option value="">-- Pilih --</option>
                                     <?php foreach ($produkList as $p): ?>
-                                    <option value="<?= $p['id'] ?>" data-kat="<?= htmlspecialchars($p['kategori']) ?>"><?= htmlspecialchars($p['label']) ?></option>
+                                    <option value="<?= $p['id'] ?>" data-kat="<?= htmlspecialchars($p['kategori']) ?>" data-hargajual="<?= $p['harga_jual_besar'] ?>"><?= htmlspecialchars($p['label']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </td>
                             <td class="px-2 py-2 align-top"><input type="number" name="qty[]" min="1" required class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs"></td>
+                            <td class="px-2 py-2 align-top">
+                                <input type="number" name="harga_beli[]" min="0" required class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs">
+                            </td>
                             <td class="px-2 py-2 align-top"><input type="text" name="no_batch[]" id="b-0" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly placeholder="Wajib untuk obat"></td>
                             <td class="px-2 py-2 align-top"><input type="date" name="tgl_exp[]" id="e-0" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly></td>
                             <td class="px-2 py-2 align-top"><textarea name="serial_number[]" id="s-0" rows="1" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly placeholder="SN dipisah koma (Alkes)"></textarea></td>
@@ -245,7 +251,7 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
 
 <script>
 let rC = 1;
-const optStr = `<?php foreach ($produkList as $p): ?><option value="<?= $p['id'] ?>" data-kat="<?= htmlspecialchars($p['kategori']) ?>"><?= htmlspecialchars(addslashes($p['label'])) ?></option><?php endforeach; ?>`;
+const optStr = `<?php foreach ($produkList as $p): ?><option value="<?= $p['id'] ?>" data-kat="<?= htmlspecialchars($p['kategori']) ?>" data-hargajual="<?= $p['harga_jual_besar'] ?>"><?= htmlspecialchars(addslashes($p['label'])) ?></option><?php endforeach; ?>`;
 
 document.getElementById('sumber_select').addEventListener('change', function() {
     const inp = document.getElementById('inp_referensi');
@@ -270,11 +276,14 @@ function addRow() {
     tr.className = 'border-b border-zcBrd/50';
     tr.innerHTML = `
         <td class="px-2 py-2 align-top">
-            <select name="id_variasi[]" required onchange="checkProduk(this, ${rC})" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs">
+            <select name="id_variasi[]" id="sel-${rC}" required onchange="checkProduk(this, ${rC})" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs">
                 <option value="">-- Pilih --</option>${optStr}
             </select>
         </td>
         <td class="px-2 py-2 align-top"><input type="number" name="qty[]" min="1" required class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs"></td>
+        <td class="px-2 py-2 align-top">
+            <input type="number" name="harga_beli[]" min="0" required class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs" placeholder="Wajib Diisi">
+        </td>
         <td class="px-2 py-2 align-top"><input type="text" name="no_batch[]" id="b-${rC}" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly></td>
         <td class="px-2 py-2 align-top"><input type="date" name="tgl_exp[]" id="e-${rC}" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly></td>
         <td class="px-2 py-2 align-top"><textarea name="serial_number[]" id="s-${rC}" rows="1" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly></textarea></td>
@@ -306,6 +315,7 @@ function checkProduk(sel, i) {
         s.readOnly = false; s.classList.remove('bg-slate-100'); s.required = true;
     }
 }
+
 </script>
 
 <?php layoutFooter(); ?>

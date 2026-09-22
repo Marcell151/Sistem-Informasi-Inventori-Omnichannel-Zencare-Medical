@@ -81,6 +81,19 @@ if ($isSuperadmin) {
         ORDER BY ks.id DESC LIMIT 10
     ")->fetchAll();
 
+    // Riwayat Pengadaan & Harga Beli
+    $riwayatPengadaan = $pdo->query("
+        SELECT ps.tanggal_terima, ps.no_referensi, ps.sumber, u.nama_lengkap AS penerima,
+               CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama_produk,
+               pd.qty_terima, pd.harga_beli, pd.no_batch, pi.kategori
+        FROM penerimaan_stok ps
+        JOIN penerimaan_detail pd ON ps.id = pd.id_penerimaan
+        JOIN produk_variasi pv ON pd.id_variasi = pv.id
+        JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+        LEFT JOIN users u ON ps.dibuat_oleh = u.id
+        ORDER BY ps.id DESC LIMIT 10
+    ")->fetchAll();
+
     // Data Grafik: Volume Penjualan 7 Hari Terakhir (POS vs E-Commerce)
     $grafikData = $pdo->query("
         SELECT 
@@ -376,12 +389,12 @@ layoutHeader(
 </div>
 
 <!-- ROW 4: Ringkasan Pergerakan Inventaris + Log Audit Mutasi -->
-<div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;">
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px;">
 
     <!-- Log Audit Mutasi & Kartu Stok Terbaru -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
         <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
-            <div style="font-size:12px;font-weight:700;color:#1e293b;">Log Audit Mutasi &amp; Kartu Stok Terbaru</div>
+            <div style="font-size:12px;font-weight:700;color:#1e293b;">Riwayat Kartu Stok Terakhir</div>
             <a href="laporan/kartu_stok.php" style="font-size:11px;color:#1a75d2;text-decoration:none;font-weight:600;">Lihat Semua →</a>
         </div>
         <?php if (empty($auditMutasi)): ?>
@@ -445,6 +458,67 @@ layoutHeader(
             <div style="font-size:11px;color:#94a3b8;margin-top:3px;">selisih barang masuk dikurangi barang keluar</div>
         </div>
     </div>
+</div>
+
+<!-- ROW 5: Riwayat Pengadaan & Harga Beli -->
+<div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;margin-bottom:20px;">
+    <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:12px;font-weight:700;color:#1e293b;">Riwayat Pengadaan & Harga Beli</div>
+    </div>
+    <?php if (empty($riwayatPengadaan)): ?>
+    <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Belum ada aktivitas pengadaan barang.</div>
+    <?php else: ?>
+    <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:700px;">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">TANGGAL TERIMA</th>
+                    <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">PRODUK</th>
+                    <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">SUMBER / REF</th>
+                    <th style="padding:7px 16px;text-align:right;font-size:10px;color:#64748b;font-weight:600;">QTY</th>
+                    <th style="padding:7px 16px;text-align:right;font-size:10px;color:#64748b;font-weight:600;">HARGA BELI</th>
+                    <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">IDENTITAS LOGISTIK</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($riwayatPengadaan as $rp): ?>
+            <tr style="border-top:1px solid #f1f5f9;hover:background:#f8fafc;">
+                <td style="padding:8px 16px;color:#64748b;font-size:11px;">
+                    <?= date('d/m/Y H:i', strtotime($rp['tanggal_terima'])) ?><br>
+                    <span style="font-size:9px;color:#94a3b8;">Oleh: <?= htmlspecialchars($rp['penerima'] ?? 'Sistem') ?></span>
+                </td>
+                <td style="padding:8px 16px;">
+                    <div style="font-weight:600;color:#334155;"><?= htmlspecialchars($rp['nama_produk']) ?></div>
+                </td>
+                <td style="padding:8px 16px;color:#64748b;">
+                    <?= htmlspecialchars($rp['sumber']) ?><br>
+                    <span style="font-size:10px;font-weight:600;color:#1e293b;">Ref: <?= htmlspecialchars($rp['no_referensi'] ?: '-') ?></span>
+                </td>
+                <td style="padding:8px 16px;text-align:right;font-weight:700;color:#1e293b;">
+                    <?= number_format($rp['qty_terima']) ?>
+                </td>
+                <td style="padding:8px 16px;text-align:right;">
+                    <?php if ($rp['harga_beli'] > 0): ?>
+                        <span style="font-weight:700;color:#dc2626;">Rp <?= number_format($rp['harga_beli'], 0, ',', '.') ?></span>
+                    <?php else: ?>
+                        <span style="font-size:10px;color:#94a3b8;font-style:italic;">Tidak diinput</span>
+                    <?php endif; ?>
+                </td>
+                <td style="padding:8px 16px;font-size:10px;color:#64748b;">
+                    <?php if ($rp['no_batch']): ?>
+                        <span style="background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:4px;font-weight:600;white-space:nowrap;">Batch: <?= htmlspecialchars($rp['no_batch']) ?></span>
+                    <?php elseif ($rp['kategori'] === 'Alat Kesehatan'): ?>
+                        <span style="background:#e0e7ff;color:#4338ca;padding:2px 6px;border-radius:4px;font-weight:600;display:inline-block;white-space:nowrap;">Ber-SN</span>
+                    <?php else: ?>
+                        -
+                    <?php endif; ?>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php endif; ?>
 </div>
 
 
