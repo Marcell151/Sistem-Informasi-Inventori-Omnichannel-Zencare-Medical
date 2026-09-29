@@ -211,6 +211,8 @@ document.addEventListener('DOMContentLoaded', () => {
         lblKecil.textContent = satKecil;
         inpQtyBox.value = '';
         outHasil.value = '';
+        inpQtyBox.removeAttribute('max');
+        inpQtyBox.placeholder = "Contoh: 1";
         
         // Fetch Batches
         batchContainer.classList.remove('hidden');
@@ -228,18 +230,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 let html = '<option value="">-- Pilih Batch Asal --</option>';
                 data.items.forEach(i => {
-                    // Hanya tampilkan batch utama atau jika stoknya cukup untuk dipecah (minimal rasio)
+                    // Hanya tampilkan batch utama (jangan tampilkan sub-batch berakhiran .A .B dll)
+                    if (i.no_batch && i.no_batch.includes('.')) return;
+                    
+                    // Hanya tampilkan jika stoknya cukup untuk dipecah (minimal 1 satuan besar)
                     if (i.stok_sisa >= currentRasio) {
                         const boxSisa = Math.floor(i.stok_sisa / currentRasio);
-                        html += `<option value="${i.no_batch}">Batch: ${i.no_batch} (Isi Tersedia: setara ${boxSisa} ${satBesar} / ${i.stok_sisa} ${satKecil}) | Exp: ${i.tgl_exp}</option>`;
+                        html += `<option value="${i.no_batch}" data-maxbox="${boxSisa}">Batch: ${i.no_batch} (Tersedia utuh: ${boxSisa} ${satBesar} / ${i.stok_sisa} ${satKecil}) | Exp: ${i.tgl_exp}</option>`;
                     }
                 });
                 selBatch.innerHTML = html;
             });
     });
+
+    selBatch.addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        if (opt && opt.value !== "") {
+            const maxBox = opt.getAttribute('data-maxbox');
+            if (maxBox) {
+                inpQtyBox.setAttribute('max', maxBox);
+                inpQtyBox.placeholder = `Maksimal: ${maxBox}`;
+            }
+        } else {
+            inpQtyBox.removeAttribute('max');
+            inpQtyBox.placeholder = "Contoh: 1";
+        }
+        inpQtyBox.value = '';
+        outHasil.value = '';
+    });
     
     inpQtyBox.addEventListener('input', function() {
-        const val = parseInt(this.value) || 0;
+        let val = parseInt(this.value) || 0;
+        const max = parseInt(this.getAttribute('max'));
+        
+        if (!isNaN(max) && val > max) {
+            val = max;
+            this.value = max;
+            alert(`Stok kardus utuh tidak cukup! Anda hanya bisa memecah maksimal ${max} ${lblBesar.textContent} dari batch ini.`);
+        }
+        
         outHasil.value = val * currentRasio;
     });
 });
