@@ -140,7 +140,7 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
             echo '<p class="sidebar-section">Logistik & Inventori</p>';
             $link('/inventory_zencare/inventori/tambah_stok.php', 'receive', 'Penerimaan Barang', 'tambah_stok');
             $link('/inventory_zencare/inventori/proses_mutasi.php', 'swap', 'Mutasi Stok Manual', 'mutasi');
-            $link('/inventory_zencare/inventori/mutasi_konversi.php', 'uom', 'Mutasi Konversi (UOM)', 'mutasi_konversi');
+            $link('/inventory_zencare/inventori/konversi_uom.php', 'uom', 'Konversi (UOM)', 'konversi_uom');
             $link('/inventory_zencare/laporan/kartu_stok.php', 'kartu', 'Kartu Stok', 'laporan_kartu_stok');
         }
     }

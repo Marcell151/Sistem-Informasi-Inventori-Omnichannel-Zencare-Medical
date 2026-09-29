@@ -1,5 +1,5 @@
 <?php
-// File: inventori/mutasi_konversi.php
+// File: inventori/konversi_uom.php
 // Modul Pemecahan Box ke Satuan Kecil (Multi-UOM) - ZenCare Medical
 session_start();
 require_once __DIR__ . '/../config/config.php';
@@ -107,10 +107,10 @@ $produkList = $pdo->query("
     ORDER BY pi.nama_produk ASC
 ")->fetchAll();
 
-layoutHead('Mutasi Konversi (Pemecahan Box)');
+layoutHead('Konversi UOM (Pemecahan Box)');
 layoutBodyOpen();
-layoutSidebar('mutasi_konversi');
-layoutHeader('Mutasi Konversi', 'Pemecahan Box Kardus Utuh ke Satuan Eceran (Sub-Batch)');
+layoutSidebar('konversi_uom');
+layoutHeader('Konversi UOM', 'Pemecahan Box Kardus Utuh ke Satuan Eceran (Sub-Batch)');
 ?>
 
 <?php if ($msg): ?>
@@ -131,7 +131,7 @@ layoutHeader('Mutasi Konversi', 'Pemecahan Box Kardus Utuh ke Satuan Eceran (Sub
 <div class="max-w-3xl mx-auto">
     <div class="bg-white border border-zcBrd rounded-2xl p-6 shadow-sm">
         <div class="mb-6 pb-4 border-b border-zcBrd">
-            <h3 class="text-lg font-extrabold text-zcTxt mb-1">Form Pemecahan Box (Mutasi Konversi)</h3>
+            <h3 class="text-lg font-extrabold text-zcTxt mb-1">Form Pemecahan Box (Konversi UOM)</h3>
             <p class="text-xs text-zcMut">Fitur ini digunakan saat Anda membuka segel kardus/box utuh (Batch Induk) untuk diecer menjadi satuan kecil (Sub-Batch) untuk di-display di etalase / apotek.</p>
         </div>
 
