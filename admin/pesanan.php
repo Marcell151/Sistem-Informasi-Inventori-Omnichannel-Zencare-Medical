@@ -132,14 +132,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
                 if (isset($_POST['anomali_log']) && is_array($_POST['anomali_log'])) {
                     foreach ($_POST['anomali_log'] as $anomaliStr) {
                         $parts = explode('|', $anomaliStr);
-                        if (count($parts) === 4) {
+                        if (count($parts) >= 4) {
                             $idVarA = intval($parts[0]);
                             $batchSeharusnya = trim($parts[1]);
                             $batchScan = trim($parts[2]);
                             $qtyAn = intval($parts[3]);
+                            $kategoriAn = isset($parts[4]) ? trim($parts[4]) : 'Obat';
                             
-                            $pdo->prepare("INSERT INTO log_anomali_fefo (id_penjualan, id_user, id_variasi, batch_diambil, batch_seharusnya, qty) VALUES (?, ?, ?, ?, ?, ?)")
-                                ->execute([$idPesanan, $_SESSION['id_user'] ?? 1, $idVarA, $batchScan, $batchSeharusnya, $qtyAn]);
+                            if ($kategoriAn === 'Alat Kesehatan') {
+                                $pdo->prepare("UPDATE unit_serial SET status = 'Tersedia', id_penjualan = NULL WHERE serial_number = ? AND id_variasi = ?")->execute([$batchSeharusnya, $idVarA]);
+                                $pdo->prepare("UPDATE unit_serial SET status = 'Terjual', id_penjualan = ? WHERE serial_number = ? AND id_variasi = ?")->execute([$idPesanan, $batchScan, $idVarA]);
+                                $pdo->prepare("UPDATE detail_penjualan SET catatan_logistik = ? WHERE id_penjualan = ? AND id_variasi = ?")->execute([$batchScan, $idPesanan, $idVarA]);
+                            } else {
+                                $pdo->prepare("INSERT INTO log_anomali_fefo (id_penjualan, id_user, id_variasi, batch_diambil, batch_seharusnya, qty) VALUES (?, ?, ?, ?, ?, ?)")->execute([$idPesanan, $_SESSION['id_user'] ?? 1, $idVarA, $batchScan, $batchSeharusnya, $qtyAn]);
+                            }
                         }
                     }
                 }
@@ -171,7 +177,11 @@ $orderDetails = [];
 if (!empty($orderIds)) {
     $inClause = implode(',', $orderIds);
     $qDetails = $pdo->query("
-        SELECT dp.*, pv.nama_variasi, pi.nama_produk, pi.kategori
+        SELECT dp.*, pv.nama_variasi, pi.nama_produk, pi.kategori,
+               CASE 
+                   WHEN pi.kategori = 'Obat' THEN (SELECT GROUP_CONCAT(DISTINCT no_batch SEPARATOR ',') FROM stok_batch WHERE id_variasi = dp.id_variasi AND no_batch NOT LIKE '%.%')
+                   WHEN pi.kategori = 'Alat Kesehatan' THEN (SELECT GROUP_CONCAT(serial_number SEPARATOR ',') FROM unit_serial WHERE id_variasi = dp.id_variasi)
+               END AS valid_batches
         FROM detail_penjualan dp
         JOIN produk_variasi pv ON dp.id_variasi = pv.id
         JOIN produk_induk pi ON pv.id_produk_induk = pi.id
@@ -313,7 +323,9 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                         <?php foreach($items as $it): ?>
                                             <li class="item-packing flex flex-col bg-white p-2.5 rounded-lg border border-zcBrd shadow-sm" 
                                                 data-id-variasi="<?= $it['id_variasi'] ?>" 
-                                                data-qty="<?= $it['qty'] ?>">
+                                                data-qty="<?= $it['qty'] ?>"
+                                                data-batches="<?= htmlspecialchars(strtolower($it['valid_batches'] ?? '')) ?>"
+                                                data-kategori="<?= htmlspecialchars($it['kategori']) ?>">
                                                 <div class="flex justify-between items-center">
                                                     <span class="font-bold text-slate-700"><?= htmlspecialchars($it['nama_produk'] . ' - ' . $it['nama_variasi']) ?></span>
                                                     <span class="font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">x<?= $it['qty'] ?></span>
@@ -406,7 +418,10 @@ function handleStatusChange(selectEl, orderId) {
                 qty: li.getAttribute('data-qty'),
                 nama: nama,
                 instruksi: instruksi,
-                verified: false
+                validBatches: (li.getAttribute('data-batches') || "").split(","),
+                kategori: li.getAttribute('data-kategori') || "",
+                verified: false,
+                scannedBatch: null
             });
         });
         
@@ -419,60 +434,108 @@ function handleStatusChange(selectEl, orderId) {
 }
 
 function showPackingModal(targetStatus) {
-    let html = `<div style="text-align:left; font-size: 13px;">`;
-    html += `<p class="mb-3 font-semibold text-gray-700">Silakan scan fisik barang yang akan dimasukkan ke paket:</p>`;
-    html += `<ul class="space-y-2 mb-4" style="max-height: 250px; overflow-y: auto;">`;
+    let html = `<div class="text-left">`;
+    html += `<div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-indigo-900">Validasi Fisik Paket</h4>
+                        <p class="text-xs text-indigo-700 mt-0.5">Wajib men-scan barcode yang tepat sebelum pesanan <b>${targetStatus}</b>.</p>
+                    </div>
+                </div>
+             </div>`;
+             
+    html += `<div class="space-y-3 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar mb-5">`;
+    
     pendingItems.forEach((it) => {
-        let badge = it.verified ? `<span class="text-emerald-600 font-bold">✅ Fisik Terverifikasi</span>` : `<span class="text-rose-600 font-bold">⚠️ Menunggu Scan Fisik</span>`;
-        let rec = it.instruksi ? `<span class="text-blue-700 bg-blue-50 px-1 rounded border border-blue-200">${it.instruksi}</span>` : '<i>Bebas/Non-Batch</i>';
-        
-        html += `<li style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-            <div style="font-weight:bold">${it.nama}</div>
-            <div style="font-size: 11px; margin-top:2px;">Target Batch/SN: ${rec}</div>
-            <div style="margin-top: 5px">${badge}</div>
-        </li>`;
+        let isVerified = it.verified;
+        let borderCls = isVerified ? "border-emerald-500 bg-emerald-50/30" : "border-slate-200 bg-white shadow-sm";
+        let iconHtml = isVerified 
+            ? `<div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></div>`
+            : `<div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0"><span class="text-slate-400 text-xs font-bold">?</span></div>`;
+            
+        // Pisahkan nama instruksi dan jumlah Qty
+        let cleanInstruksi = it.instruksi.replace(/\s*\(\d+x\)/gi, "").trim(); 
+        let qtyMatch = it.instruksi.match(/\((\d+)x\)/i);
+        let qtyText = qtyMatch ? `<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] ml-1 font-bold">ISI ${qtyMatch[1]} PCS/STRIP</span>` : "";
+            
+        let rec = cleanInstruksi ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 tracking-wide font-mono">${cleanInstruksi}</span> ${qtyText}` : "<span class=\"text-slate-400 text-xs italic\">Non-Batch</span>";
+
+        let scannedDisplay = "";
+        if (isVerified && it.scannedBatch) {
+            let isDiff = it.scannedBatch.toLowerCase() !== cleanInstruksi.toLowerCase();
+            let isAnomaly = isDiff && it.kategori !== 'Alat Kesehatan';
+            let badgeClass = isAnomaly ? "bg-rose-100 text-rose-800 border-rose-300" : "bg-emerald-100 text-emerald-800 border-emerald-300";
+            let warningIcon = isAnomaly ? `<svg class="w-3 h-3 text-rose-600 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>` : "";
+            let anomalyText = isAnomaly ? `<span class="text-[10px] text-rose-600 font-bold ml-1">(TIDAK SESUAI FEFO)</span>` : (isDiff ? `<span class="text-[10px] text-emerald-600 font-bold ml-1">(DITUKAR)</span>` : "");
+            
+            scannedDisplay = `<div class="mt-2 flex items-center gap-2">
+                <span class="text-[11px] text-slate-500 font-medium">Fisik Ter-scan:</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${badgeClass} border tracking-wide font-mono">${warningIcon}${it.scannedBatch}</span>
+                ${anomalyText}
+            </div>`;
+        }
+
+        html += `
+        <div class="flex items-start gap-3 p-3 rounded-xl border transition-all duration-300 ${borderCls}">
+            ${iconHtml}
+            <div class="flex-1 min-w-0">
+                <h4 class="text-[13px] font-bold text-slate-800 leading-tight truncate">${it.nama}</h4>
+                <div class="mt-1.5 flex items-center gap-2">
+                    <span class="text-[11px] text-slate-500 font-medium">Rekomendasi:</span>
+                    ${rec}
+                </div>
+                ${scannedDisplay}
+            </div>
+            <div class="shrink-0 text-right">
+                <span class="block text-xs font-bold ${isVerified ? "text-emerald-600" : "text-slate-400"}">${isVerified ? "SELESAI" : "MENUNGGU"}</span>
+            </div>
+        </div>`;
     });
-    html += `</ul>`;
-    html += `<input type="text" id="pack-scanner" class="swal2-input !mt-0 !text-sm" placeholder="Scan Barcode / SN di sini..." autocomplete="off">`;
     html += `</div>`;
-
+    
+    html += `<div class="relative mt-2">
+                <input type="text" id="pack-scanner" class="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-sm font-semibold focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors placeholder-slate-400" placeholder="Arahkan Scanner Barcode di sini..." autocomplete="off">
+             </div>`;
+             
+    html += `</div>`;
+    
     let allVerified = pendingItems.every(i => i.verified);
-
+    
     Swal.fire({
-        title: 'Verifikasi Picking & Packing',
         html: html,
-        width: 600,
+        width: 650,
         showCancelButton: true,
         showConfirmButton: allVerified,
-        confirmButtonText: 'Selesaikan Packing (' + targetStatus + ')',
-        cancelButtonText: 'Batal',
+        confirmButtonText: "Selesaikan Packing",
+        cancelButtonText: "Batal",
+        confirmButtonColor: "#10b981",
         allowOutsideClick: false,
         didOpen: () => {
-            let inp = document.getElementById('pack-scanner');
+            let inp = document.getElementById("pack-scanner");
             inp.focus();
-            inp.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
+            inp.addEventListener("keypress", function(e) {
+                if (e.key === "Enter") {
                     e.preventDefault();
                     let val = this.value.trim().toLowerCase();
-                    this.value = '';
+                    this.value = "";
                     if (val) handlePackScan(val, targetStatus);
                 }
             });
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            let sel = activeForm.querySelector('select[name="status_pesanan"]');
-            let opts = sel.options;
-            for(let i=0; i<opts.length; i++) {
-                if(opts[i].value === targetStatus) {
-                    sel.selectedIndex = i;
-                    break;
-                }
+            let selectEl = activeForm.querySelector('select[name="status_pesanan"]');
+            if (selectEl) {
+                selectEl.value = targetStatus;
             }
             activeForm.submit();
         }
     });
 }
+
 
 function handlePackScan(val, targetStatus) {
     let matchIdx = -1;
@@ -493,17 +556,22 @@ function handlePackScan(val, targetStatus) {
 
     for (let i=0; i<pendingItems.length; i++) {
         if (!pendingItems[i].verified) {
-            let instruksi = pendingItems[i].instruksi.toLowerCase();
+            let instruksiRaw = pendingItems[i].instruksi.toLowerCase();
+            let instruksi = instruksiRaw.replace(/\s*\(\d+x\)/g, "").trim();
             
-            if (instruksi.includes(val)) {
+            if (instruksi === val) { // KUNCI: Wajib Sama Persis (===), BUKAN includes!
                 matchIdx = i;
                 break;
             } else if (instruksi !== "") {
                 // Ekstrak kode prefix batch (contoh: "huf" dari "huf-2026-00")
                 let prefix = instruksi.split("-")[0];
                 if (val.startsWith(prefix)) {
-                    // Satu keluarga produk (Prefix sama) tapi beda batch = ANOMALI FEFO
-                    anomalyIdx = i;
+                    // Cek apakah batch anomali tersebut BENAR-BENAR TERDAFTAR di database
+                    if (pendingItems[i].validBatches.includes(val)) {
+                        anomalyIdx = i; // Valid batch, just wrong FEFO order
+                    } else {
+                        wrongProductIdx = i; // FIKTIF! Batch tidak terdaftar
+                    }
                 } else {
                     // Prefix sama sekali beda = SALAH PRODUK
                     wrongProductIdx = i;
@@ -514,11 +582,30 @@ function handlePackScan(val, targetStatus) {
 
     if (matchIdx !== -1) {
         pendingItems[matchIdx].verified = true;
+        pendingItems[matchIdx].scannedBatch = val.toUpperCase();
         showPackingModal(targetStatus);
     } else if (anomalyIdx !== -1) {
+        if (pendingItems[anomalyIdx].kategori === 'Alat Kesehatan') {
+            // SILENT ACCEPT FOR ALKES!
+            pendingItems[anomalyIdx].verified = true;
+            pendingItems[anomalyIdx].scannedBatch = val.toUpperCase();
+            
+            let h = document.createElement("input");
+            h.type = "hidden";
+            h.name = "anomali_log[]";
+            h.value = pendingItems[anomalyIdx].id_variasi + "|" + pendingItems[anomalyIdx].instruksi + "|" + val.toUpperCase() + "|" + pendingItems[anomalyIdx].qty + "|" + pendingItems[anomalyIdx].kategori;
+            activeForm.appendChild(h);
+
+            showPackingModal(targetStatus);
+            return;
+        }
+
+        let titleAnomali = "&#9888;&#65039; TIDAK SESUAI FEFO!";
+        let warnAnomali = "Apakah Anda yakin ingin MENGABAIKAN rekomendasi FEFO dan tetap mem-packing batch ini?";
+            
         Swal.fire({
-            title: "&#9888;&#65039; ANOMALI FEFO TERDETEKSI!",
-            html: `Anda men-scan fisik <b>${val.toUpperCase()}</b>.<br><br>Padahal sistem merekomendasikan: <b>${pendingItems[anomalyIdx].instruksi}</b>.<br><br>Apakah Anda yakin ingin MENGABAIKAN rekomendasi dan tetap mem-packing barang ini?`,
+            title: titleAnomali,
+            html: `Anda men-scan fisik <b>${val.toUpperCase()}</b>.<br><br>Padahal pesanan tercatat untuk: <b>${pendingItems[anomalyIdx].instruksi}</b>.<br><br>${warnAnomali}`,
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: "Tetap Lanjutkan (Abaikan)",
@@ -529,6 +616,7 @@ function handlePackScan(val, targetStatus) {
         }).then((res) => {
             if (res.isConfirmed) {
                 pendingItems[anomalyIdx].verified = true;
+                pendingItems[anomalyIdx].scannedBatch = val.toUpperCase();
                 
                 let h = document.createElement("input");
                 h.type = "hidden";
