@@ -139,9 +139,9 @@ try {
         $qtyPotong = $qty * $rasio;
         $catatanLogistik = [];
         
-        // FEFO Logic untuk Obat
+        // FEFO Logic untuk Obat (E-Commerce khusus Grosir/Box, jadi wajib Batch Induk, abaikan Sub-Batch eceran)
         if ($kategori === 'Obat') {
-            $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC FOR UPDATE");
+            $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 AND no_batch NOT LIKE '%.%' ORDER BY tgl_exp ASC FOR UPDATE");
             $stmtBatch->execute([$idVariasi]);
             $batches = $stmtBatch->fetchAll();
             

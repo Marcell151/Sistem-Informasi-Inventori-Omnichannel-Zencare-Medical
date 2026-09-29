@@ -52,8 +52,8 @@ if (!$kode) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cetak Stiker - <?= htmlspecialchars($kode) ?></title>
-    <!-- Include Libre Barcode 39 for actual barcode rendering -->
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+39+Text&display=swap" rel="stylesheet">
+    <!-- Include JsBarcode for reliable Code 128 rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <style>
         @page {
             size: 50mm 30mm;
@@ -93,12 +93,17 @@ if (!$kode) {
             overflow: hidden;
             width: 100%;
         }
-        .barcode {
-            font-family: 'Libre Barcode 39 Text', cursive;
-            font-size: 34px;
-            line-height: 0.9;
-            margin: 1px 0;
-            font-weight: normal;
+        .barcode-container {
+            margin: 2px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        /* Override SVG size to fit perfectly in thermal label */
+        .barcode-container svg {
+            max-width: 100%;
+            height: 15mm;
         }
         .footer {
             font-size: 7px;
@@ -114,16 +119,37 @@ if (!$kode) {
         }
     </style>
 </head>
-<body onload="setTimeout(function(){ window.print(); }, 500)">
+<body>
     <!-- Simulated 50x30 thermal sticker -->
     <div class="sticker-wrapper">
         <div class="title"><?= htmlspecialchars($nama_produk) ?></div>
-        <!-- Barcode 39 requires asterisks at start and end -->
-        <div class="barcode">*<?= htmlspecialchars($kode) ?>*</div>
+        
+        <!-- Barcode Code 128 Container -->
+        <div class="barcode-container">
+            <svg id="barcode"></svg>
+        </div>
+        
         <div class="footer">
             <span>Zencare Medical</span>
             <span><?= htmlspecialchars($tgl_exp) ?></span>
         </div>
     </div>
+
+    <script>
+        // Generate real Code 128 barcode
+        JsBarcode("#barcode", "<?= addslashes($kode) ?>", {
+            format: "CODE128",
+            lineColor: "#000",
+            width: 2,
+            height: 40,
+            displayValue: true,
+            fontSize: 16,
+            fontOptions: "bold",
+            textMargin: 2
+        });
+
+        // Tunggu barcode selesai digambar sebelum trigger print
+        setTimeout(function(){ window.print(); }, 800);
+    </script>
 </body>
 </html>

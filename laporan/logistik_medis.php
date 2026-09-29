@@ -19,18 +19,16 @@ $filterStatus = $_GET['status'] ?? '';
 
 // ─── DATA: BATCH OBAT (Tab 1) ────────────────────────────────────────────
 $sqlBatch = "
-    SELECT sb.*, pv.sku_variasi, pi.nama_produk, pv.nama_variasi, pv.satuan_kecil,
+    SELECT sb.*, pv.sku_variasi, pi.nama_produk, pv.nama_variasi, pv.satuan_kecil, pi.batas_hari_expired,
            DATEDIFF(sb.tgl_exp, CURDATE()) AS hari_sisa,
            CASE
                WHEN sb.tgl_exp < CURDATE() THEN 'Kedaluwarsa'
-               WHEN DATEDIFF(sb.tgl_exp, CURDATE()) <= 30 THEN 'Kritis (<30 hari)'
-               WHEN DATEDIFF(sb.tgl_exp, CURDATE()) <= 90 THEN 'Perhatian (<90 hari)'
-               ELSE 'Normal'
+               WHEN DATEDIFF(sb.tgl_exp, CURDATE()) <= COALESCE(pi.batas_hari_expired, 30) THEN CONCAT('Peringatan (≤ ', COALESCE(pi.batas_hari_expired, 30), ' hari)')
+               ELSE 'Aman'
            END AS status_exp,
            CASE
                WHEN sb.tgl_exp < CURDATE() THEN 'bg-red-100 text-red-700'
-               WHEN DATEDIFF(sb.tgl_exp, CURDATE()) <= 30 THEN 'bg-rose-100 text-rose-700'
-               WHEN DATEDIFF(sb.tgl_exp, CURDATE()) <= 90 THEN 'bg-amber-100 text-amber-700'
+               WHEN DATEDIFF(sb.tgl_exp, CURDATE()) <= COALESCE(pi.batas_hari_expired, 30) THEN 'bg-amber-100 text-amber-700'
                ELSE 'bg-emerald-100 text-emerald-700'
            END AS badge_cls
     FROM stok_batch sb
@@ -69,7 +67,7 @@ $produkAlkes = $pdo->query("SELECT pv.id, CONCAT(pi.nama_produk, ' — ', pv.nam
 
 // ─── SUMMARY STATS ───────────────────────────────────────────────────────
 $totalBatch    = count($batchList);
-$batchKritis   = count(array_filter($batchList, fn($b) => in_array($b['status_exp'], ['Kritis (<30 hari)', 'Kedaluwarsa'])));
+$batchKritis   = count(array_filter($batchList, fn($b) => str_contains($b['status_exp'], 'Kedaluwarsa') || str_contains($b['status_exp'], 'Peringatan')));
 $totalSN       = count($snList);
 $snTersedia    = count(array_filter($snList, fn($s) => $s['status'] === 'Tersedia'));
 $snTerjual     = count(array_filter($snList, fn($s) => $s['status'] === 'Terjual'));

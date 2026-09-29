@@ -128,6 +128,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
                     }
                 }
                 
+                // Process Anomalies Log
+                if (isset($_POST['anomali_log']) && is_array($_POST['anomali_log'])) {
+                    foreach ($_POST['anomali_log'] as $anomaliStr) {
+                        $parts = explode('|', $anomaliStr);
+                        if (count($parts) === 4) {
+                            $idVarA = intval($parts[0]);
+                            $batchSeharusnya = trim($parts[1]);
+                            $batchScan = trim($parts[2]);
+                            $qtyAn = intval($parts[3]);
+                            
+                            $pdo->prepare("INSERT INTO log_anomali_fefo (id_penjualan, id_user, id_variasi, batch_diambil, batch_seharusnya, qty) VALUES (?, ?, ?, ?, ?, ?)")
+                                ->execute([$idPesanan, $_SESSION['id_user'] ?? 1, $idVarA, $batchScan, $batchSeharusnya, $qtyAn]);
+                        }
+                    }
+                }
+
                 $pdo->commit();
                 $msg = "Status pesanan ID #$idPesanan berhasil diubah menjadi '$newStatus'.";
                 $msgType = 'success';
@@ -266,7 +282,7 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                     <form method="POST" class="inline flex items-center gap-1">
                                         <input type="hidden" name="aksi" value="update_status">
                                         <input type="hidden" name="id_penjualan" value="<?= $o['id'] ?>">
-                                        <select name="status_pesanan" onchange="if(confirm('Ubah status pesanan ini?')) this.form.submit(); else this.value='<?= $o['status_pesanan'] ?>';" class="text-[11px] border border-zcBrd rounded-lg px-2 py-1 bg-white font-medium focus:outline-none focus:border-zc">
+                                        <select name="status_pesanan" onchange="handleStatusChange(this, <?= $o['id'] ?>)" data-original="<?= $o['status_pesanan'] ?>" class="text-[11px] border border-zcBrd rounded-lg px-2 py-1 bg-white font-medium focus:outline-none focus:border-zc">
                                             <option value="<?= $o['status_pesanan'] ?>" selected><?= $o['status_pesanan'] ?></option>
                                             
                                             <?php if ($o['status_pesanan'] === 'Menunggu Pembayaran'): ?>
@@ -295,7 +311,9 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                     <ul class="space-y-2 mt-2">
                                         <?php $items = $orderDetails[$o['id']] ?? []; ?>
                                         <?php foreach($items as $it): ?>
-                                            <li class="flex flex-col bg-white p-2.5 rounded-lg border border-zcBrd shadow-sm">
+                                            <li class="item-packing flex flex-col bg-white p-2.5 rounded-lg border border-zcBrd shadow-sm" 
+                                                data-id-variasi="<?= $it['id_variasi'] ?>" 
+                                                data-qty="<?= $it['qty'] ?>">
                                                 <div class="flex justify-between items-center">
                                                     <span class="font-bold text-slate-700"><?= htmlspecialchars($it['nama_produk'] . ' - ' . $it['nama_variasi']) ?></span>
                                                     <span class="font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">x<?= $it['qty'] ?></span>
@@ -352,6 +370,197 @@ function toggleDetail(id) {
         icon.style.transform = 'rotate(0deg)';
     }
 }
+
+// LOGIKA PACKING & VERIFIKASI BARCODE E-COMMERCE
+let activeOrderId = null;
+let activeForm = null;
+let pendingItems = [];
+
+function handleStatusChange(selectEl, orderId) {
+    var newStatus = selectEl.value;
+    var origStatus = selectEl.getAttribute('data-original');
+    
+    if (newStatus === 'Dikirim' || newStatus === 'Siap Diambil') {
+        activeOrderId = orderId;
+        activeForm = selectEl.closest('form');
+        
+        pendingItems = [];
+        var ul = document.querySelector('#detail-' + orderId + ' ul');
+        if (!ul) {
+            alert('Detail item tidak ditemukan.');
+            selectEl.value = origStatus;
+            return;
+        }
+        
+        var lis = ul.querySelectorAll('li.item-packing');
+        lis.forEach(function(li) {
+            var nama = li.querySelector('span.font-bold.text-slate-700').innerText;
+            var instruksi = '';
+            var insSpan = li.querySelector('span.text-rose-700');
+            if (insSpan) {
+                instruksi = insSpan.innerText.replace('(INSTRUKSI AMBIL FISIK:', '').replace(')', '').trim();
+            }
+            
+            pendingItems.push({
+                id_variasi: li.getAttribute('data-id-variasi'),
+                qty: li.getAttribute('data-qty'),
+                nama: nama,
+                instruksi: instruksi,
+                verified: false
+            });
+        });
+        
+        showPackingModal(newStatus);
+        selectEl.value = origStatus; // reset sementara
+    } else {
+        if(confirm('Ubah status pesanan ini?')) selectEl.form.submit();
+        else selectEl.value = origStatus;
+    }
+}
+
+function showPackingModal(targetStatus) {
+    let html = `<div style="text-align:left; font-size: 13px;">`;
+    html += `<p class="mb-3 font-semibold text-gray-700">Silakan scan fisik barang yang akan dimasukkan ke paket:</p>`;
+    html += `<ul class="space-y-2 mb-4" style="max-height: 250px; overflow-y: auto;">`;
+    pendingItems.forEach((it) => {
+        let badge = it.verified ? `<span class="text-emerald-600 font-bold">✅ Fisik Terverifikasi</span>` : `<span class="text-rose-600 font-bold">⚠️ Menunggu Scan Fisik</span>`;
+        let rec = it.instruksi ? `<span class="text-blue-700 bg-blue-50 px-1 rounded border border-blue-200">${it.instruksi}</span>` : '<i>Bebas/Non-Batch</i>';
+        
+        html += `<li style="padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            <div style="font-weight:bold">${it.nama}</div>
+            <div style="font-size: 11px; margin-top:2px;">Target Batch/SN: ${rec}</div>
+            <div style="margin-top: 5px">${badge}</div>
+        </li>`;
+    });
+    html += `</ul>`;
+    html += `<input type="text" id="pack-scanner" class="swal2-input !mt-0 !text-sm" placeholder="Scan Barcode / SN di sini..." autocomplete="off">`;
+    html += `</div>`;
+
+    let allVerified = pendingItems.every(i => i.verified);
+
+    Swal.fire({
+        title: 'Verifikasi Picking & Packing',
+        html: html,
+        width: 600,
+        showCancelButton: true,
+        showConfirmButton: allVerified,
+        confirmButtonText: 'Selesaikan Packing (' + targetStatus + ')',
+        cancelButtonText: 'Batal',
+        allowOutsideClick: false,
+        didOpen: () => {
+            let inp = document.getElementById('pack-scanner');
+            inp.focus();
+            inp.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    let val = this.value.trim().toLowerCase();
+                    this.value = '';
+                    if (val) handlePackScan(val, targetStatus);
+                }
+            });
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            let sel = activeForm.querySelector('select[name="status_pesanan"]');
+            let opts = sel.options;
+            for(let i=0; i<opts.length; i++) {
+                if(opts[i].value === targetStatus) {
+                    sel.selectedIndex = i;
+                    break;
+                }
+            }
+            activeForm.submit();
+        }
+    });
+}
+
+function handlePackScan(val, targetStatus) {
+    let matchIdx = -1;
+    let anomalyIdx = -1;
+    let wrongProductIdx = -1;
+
+    // KUNCI GANDA 1: Blokir Eceran untuk Pesanan E-Commerce
+    if (val.includes(".")) {
+        Swal.fire({
+            title: "&#10060; BLOKIR FATAL!",
+            html: `Pesanan E-Commerce <b>HANYA</b> melayani <b>Grosir (Kardus/Box)</b>.<br><br>
+                   Anda men-scan barang <b>Eceran (Sub-batch .A)</b>.<br>
+                   <i>Dilarang keras mem-packing barang eceran untuk pembeli online!</i>`,
+            icon: "error"
+        }).then(() => { showPackingModal(targetStatus); });
+        return;
+    }
+
+    for (let i=0; i<pendingItems.length; i++) {
+        if (!pendingItems[i].verified) {
+            let instruksi = pendingItems[i].instruksi.toLowerCase();
+            
+            if (instruksi.includes(val)) {
+                matchIdx = i;
+                break;
+            } else if (instruksi !== "") {
+                // Ekstrak kode prefix batch (contoh: "huf" dari "huf-2026-00")
+                let prefix = instruksi.split("-")[0];
+                if (val.startsWith(prefix)) {
+                    // Satu keluarga produk (Prefix sama) tapi beda batch = ANOMALI FEFO
+                    anomalyIdx = i;
+                } else {
+                    // Prefix sama sekali beda = SALAH PRODUK
+                    wrongProductIdx = i;
+                }
+            }
+        }
+    }
+
+    if (matchIdx !== -1) {
+        pendingItems[matchIdx].verified = true;
+        showPackingModal(targetStatus);
+    } else if (anomalyIdx !== -1) {
+        Swal.fire({
+            title: "&#9888;&#65039; ANOMALI FEFO TERDETEKSI!",
+            html: `Anda men-scan fisik <b>${val.toUpperCase()}</b>.<br><br>Padahal sistem merekomendasikan: <b>${pendingItems[anomalyIdx].instruksi}</b>.<br><br>Apakah Anda yakin ingin MENGABAIKAN rekomendasi dan tetap mem-packing barang ini?`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Tetap Lanjutkan (Abaikan)",
+            cancelButtonText: "Batal",
+            confirmButtonColor: "#d33",
+            allowEnterKey: false,
+            focusCancel: true
+        }).then((res) => {
+            if (res.isConfirmed) {
+                pendingItems[anomalyIdx].verified = true;
+                
+                let h = document.createElement("input");
+                h.type = "hidden";
+                h.name = "anomali_log[]";
+                h.value = pendingItems[anomalyIdx].id_variasi + "|" + pendingItems[anomalyIdx].instruksi + "|" + val.toUpperCase() + "|" + pendingItems[anomalyIdx].qty;
+                activeForm.appendChild(h);
+
+                showPackingModal(targetStatus);
+            } else {
+                showPackingModal(targetStatus);
+            }
+        });
+    } else if (wrongProductIdx !== -1) {
+        // KUNCI GANDA 2: Blokir Salah Produk Ekstrem
+        Swal.fire({
+            title: "&#10060; SALAH PRODUK!",
+            html: `Anda men-scan barang yang <b>BERBEDA</b> dari daftar pesanan!<br><br>
+                   Pesanan yang harus di-packing: <b>${pendingItems[wrongProductIdx].nama}</b><br>
+                   Barcode yang di-scan: <b>${val.toUpperCase()}</b>`,
+            icon: "error"
+        }).then(() => { showPackingModal(targetStatus); });
+    } else {
+        Swal.fire({
+            icon: "error",
+            title: "Tidak Ditemukan",
+            text: "Barcode/SN tidak cocok dengan barang manapun yang belum di-scan."
+        }).then(() => {
+            showPackingModal(targetStatus);
+        });
+    }
+}
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <?php layoutEnd(); ?>

@@ -124,20 +124,25 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
     // ==============================================================================
     if ($isStaff) {
         echo '<p class="sidebar-section">Transaksi</p>';
-        $link('/inventory_zencare/pos/pos.php', 'pos', 'Kasir (POS)', 'pos');
+        if (in_array($role, ['superadmin', 'kasir'])) {
+            $link('/inventory_zencare/pos/pos.php', 'pos', 'Kasir (POS)', 'pos');
+        }
         $link('/inventory_zencare/admin/pesanan.php', 'orders', 'Transaksi', 'pesanan');
 
         // ── MASTER DATA ───────────────────────────────────────────────────
-        echo '<p class="sidebar-section">Master Data</p>';
-        $link('/inventory_zencare/admin/master_produk.php', 'pill', 'Produk', 'master_produk');
-        $link('/inventory_zencare/admin/master_uom.php', 'uom', 'Satuan & UOM', 'master_uom');
-        $link('/inventory_zencare/admin/master_supplier.php', 'truck', 'Supplier', 'master_supplier');
+        if (in_array($role, ['superadmin', 'admin'])) {
+            echo '<p class="sidebar-section">Master Data</p>';
+            $link('/inventory_zencare/admin/master_produk.php', 'pill', 'Produk', 'master_produk');
+            $link('/inventory_zencare/admin/master_uom.php', 'uom', 'Satuan & UOM', 'master_uom');
+            $link('/inventory_zencare/admin/master_supplier.php', 'truck', 'Supplier', 'master_supplier');
 
-        // ── LOGISTIK & INVENTORI ──────────────────────────────────────────
-        echo '<p class="sidebar-section">Logistik & Inventori</p>';
-        $link('/inventory_zencare/inventori/tambah_stok.php', 'receive', 'Penerimaan Barang', 'tambah_stok');
-        $link('/inventory_zencare/inventori/proses_mutasi.php', 'swap', 'Mutasi Stok', 'mutasi');
-        $link('/inventory_zencare/laporan/kartu_stok.php', 'kartu', 'Kartu Stok', 'laporan_kartu_stok');
+            // ── LOGISTIK & INVENTORI ──────────────────────────────────────────
+            echo '<p class="sidebar-section">Logistik & Inventori</p>';
+            $link('/inventory_zencare/inventori/tambah_stok.php', 'receive', 'Penerimaan Barang', 'tambah_stok');
+            $link('/inventory_zencare/inventori/proses_mutasi.php', 'swap', 'Mutasi Stok Manual', 'mutasi');
+            $link('/inventory_zencare/inventori/mutasi_konversi.php', 'uom', 'Mutasi Konversi (UOM)', 'mutasi_konversi');
+            $link('/inventory_zencare/laporan/kartu_stok.php', 'kartu', 'Kartu Stok', 'laporan_kartu_stok');
+        }
     }
 
     // ── LAPORAN — SUPERADMIN ONLY ────────────────────────────────────────

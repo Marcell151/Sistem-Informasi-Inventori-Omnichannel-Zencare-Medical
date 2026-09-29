@@ -177,23 +177,23 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
             <input type="hidden" name="aksi" value="tambah_user">
             <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Username * <span class="text-zcMut font-normal">(unik, tanpa spasi)</span></label>
-                <input type="text" name="username" required placeholder="kasir_baru" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                <input type="text" name="username" required placeholder="********" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Nama Lengkap *</label>
-                <input type="text" name="nama_lengkap" required placeholder="Budi Santoso" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                <input type="text" name="nama_lengkap" required placeholder="********" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Alamat Email (Opsional)</label>
-                <input type="email" name="email" placeholder="email@contoh.com" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                <input type="email" name="email" placeholder="********" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">No HP / WhatsApp (Opsional)</label>
-                <input type="text" name="telepon" placeholder="0812xxxxxx" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                <input type="text" name="telepon" placeholder="********" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Password (default: 123456)</label>
-                <input type="password" name="password" placeholder="Kosongkan = 123456" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                <input type="password" name="password" placeholder="********" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Role *</label>
@@ -229,11 +229,11 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
             </div>
             <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Alamat Email (Opsional)</label>
-                <input type="email" name="email" id="eu_email" placeholder="email@contoh.com" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                <input type="email" name="email" id="eu_email" placeholder="********" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">No HP / WhatsApp (Opsional)</label>
-                <input type="text" name="telepon" id="eu_telepon" placeholder="0812xxxxxx" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                <input type="text" name="telepon" id="eu_telepon" placeholder="********" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Role *</label>

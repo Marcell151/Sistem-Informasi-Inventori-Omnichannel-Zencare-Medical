@@ -5,7 +5,7 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 
-requireRole(['superadmin', 'admin']);
+requireRole(['superadmin', 'kasir']);
 
 $idCabangKaryawan = $_SESSION['id_cabang'] ?? 1;
 
@@ -46,45 +46,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                 $pdo->prepare("INSERT INTO detail_penjualan (id_penjualan,id_variasi,qty,harga_satuan) VALUES (?,?,?,?)")->execute([$idPenjualan,$idVar,$qtyInput,$effPrice]);
                 $idDetail = $pdo->lastInsertId();
 
-                $catatanLogistik = [];
+                $scannedCode = $item['scanned_code'] ?? null;
+                $isAnomaly = !empty($item['is_anomaly']);
+                $batchSeharusnya = $item['batch_seharusnya'] ?? null;
 
-                // FEFO Logic untuk Obat
+                // FEFO / Batch Logic untuk Obat
                 if ($kategori === 'Obat') {
-                    $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC FOR UPDATE");
-                    $stmtBatch->execute([$idVar]);
-                    $batches = $stmtBatch->fetchAll();
-                    
-                    $sisaPotong = $qtyPotong;
-                    foreach ($batches as $b) {
-                        if ($sisaPotong <= 0) break;
+                    if ($scannedCode) {
+                        // Pakai batch spesifik yang di-scan
+                        $stmtCheck = $pdo->prepare("SELECT id, stok_sisa FROM stok_batch WHERE id_variasi = ? AND no_batch = ? FOR UPDATE");
+                        $stmtCheck->execute([$idVar, $scannedCode]);
+                        $b = $stmtCheck->fetch();
+                        if (!$b || $b['stok_sisa'] < $qtyPotong) {
+                            throw new Exception("Stok Batch $scannedCode tidak mencukupi untuk Obat ID $idVar.");
+                        }
+                        $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$qtyPotong, $b['id']]);
                         
-                        $potongBatch = min($b['stok_sisa'], $sisaPotong);
-                        $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$potongBatch, $b['id']]);
+                        if ($isAnomaly && $batchSeharusnya) {
+                            $pdo->prepare("INSERT INTO log_anomali_fefo (id_penjualan, id_user, id_variasi, batch_diambil, batch_seharusnya, qty) VALUES (?, ?, ?, ?, ?, ?)")
+                                ->execute([$idPenjualan, $_SESSION['user_id'], $idVar, $scannedCode, $batchSeharusnya, $qtyPotong]);
+                        }
+
+                        $catatanLogistik[] = $scannedCode . " ({$qtyPotong}x)";
+                    } else {
+                        // Auto FEFO fallback
+                        $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC FOR UPDATE");
+                        $stmtBatch->execute([$idVar]);
+                        $batches = $stmtBatch->fetchAll();
                         
-                        $catatanLogistik[] = $b['no_batch'] . " ({$potongBatch}x)";
-                        $sisaPotong -= $potongBatch;
-                    }
-                    if ($sisaPotong > 0) {
-                        throw new Exception("Stok Batch Obat tidak mencukupi untuk dipotong FEFO secara berurutan.");
+                        $sisaPotong = $qtyPotong;
+                        foreach ($batches as $b) {
+                            if ($sisaPotong <= 0) break;
+                            $potongBatch = min($b['stok_sisa'], $sisaPotong);
+                            $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$potongBatch, $b['id']]);
+                            $catatanLogistik[] = $b['no_batch'] . " ({$potongBatch}x)";
+                            $sisaPotong -= $potongBatch;
+                        }
+                        if ($sisaPotong > 0) throw new Exception("Stok Batch Obat tidak mencukupi untuk dipotong FEFO.");
                     }
                 }
 
-                // SN Auto-Pick untuk Alkes (jika tidak dipilih di UI)
+                // SN Auto-Pick / Scan untuk Alkes
                 if ($kategori === 'Alat Kesehatan') {
-                    $stmtSn = $pdo->prepare("SELECT serial_number FROM unit_serial WHERE id_variasi = ? AND status = 'Tersedia' LIMIT ? FOR UPDATE");
-                    $stmtSn->bindValue(1, $idVar, PDO::PARAM_INT);
-                    $stmtSn->bindValue(2, $qtyPotong, PDO::PARAM_INT);
-                    $stmtSn->execute();
-                    $snList = $stmtSn->fetchAll(PDO::FETCH_COLUMN);
+                    if ($scannedCode) {
+                        $pdo->prepare("UPDATE unit_serial SET status = 'Terjual', id_penjualan = ? WHERE serial_number = ? AND id_variasi = ? AND status = 'Tersedia'")
+                            ->execute([$idPenjualan, $scannedCode, $idVar]);
+                        if ($pdo->rowCount() === 0) throw new Exception("SN $scannedCode tidak valid/tersedia.");
+                        $catatanLogistik[] = $scannedCode;
+                    } else {
+                        $stmtSn = $pdo->prepare("SELECT serial_number FROM unit_serial WHERE id_variasi = ? AND status = 'Tersedia' LIMIT ? FOR UPDATE");
+                        $stmtSn->bindValue(1, $idVar, PDO::PARAM_INT);
+                        $stmtSn->bindValue(2, $qtyPotong, PDO::PARAM_INT);
+                        $stmtSn->execute();
+                        $snList = $stmtSn->fetchAll(PDO::FETCH_COLUMN);
 
-                    if (count($snList) < $qtyPotong) {
-                        throw new Exception("Jumlah Serial Number tersedia tidak mencukupi untuk Alkes ID $idVar.");
-                    }
-
-                    foreach ($snList as $snStr) {
-                        $pdo->prepare("UPDATE unit_serial SET status = 'Terjual', id_penjualan = ? WHERE serial_number = ?")
-                            ->execute([$idPenjualan, $snStr]);
-                        $catatanLogistik[] = $snStr;
+                        if (count($snList) < $qtyPotong) throw new Exception("SN tersedia tidak cukup untuk Alkes ID $idVar.");
+                        foreach ($snList as $snStr) {
+                            $pdo->prepare("UPDATE unit_serial SET status = 'Terjual', id_penjualan = ? WHERE serial_number = ?")->execute([$idPenjualan, $snStr]);
+                            $catatanLogistik[] = $snStr;
+                        }
                     }
                 }
 
@@ -100,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                 $sisa = $sisaQ->fetchColumn();
                 $satLable = ($satuanTipe === 'besar') ? $varData['satuan_besar'] : $varData['satuan_kecil'];
                 $pdo->prepare("INSERT INTO kartu_stok (id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,?,?,?,?)")
-                    ->execute([$idVar,'Keluar',$qtyPotong,$sisa,"Penjualan Luring $invoiceNo"]);
+                    ->execute([$idVar,'Keluar',$qtyPotong,$sisa,"Penjualan Luring $invoiceNo"] );
                 $totalHarga += $effPrice * $qtyInput;
             }
 
@@ -133,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
 }
 
 $katalog = $pdo->prepare("
-    SELECT v.id, v.sku_variasi, CONCAT(i.nama_produk,' – ',v.nama_variasi) AS nama,
+    SELECT v.id, v.sku_variasi, CONCAT(i.nama_produk,' - ',v.nama_variasi) AS nama,
            v.satuan_kecil, v.satuan_besar, v.rasio_konversi, v.harga_jual_kecil, v.harga_jual_besar, COALESCE(sc.stok,0) AS stok, i.kategori, v.gambar,
            (SELECT GROUP_CONCAT(serial_number ORDER BY created_at ASC SEPARATOR ',') FROM unit_serial WHERE id_variasi = v.id AND status='Tersedia') AS sn_list,
            (SELECT GROUP_CONCAT(no_batch ORDER BY tgl_exp ASC SEPARATOR ',') FROM stok_batch WHERE id_variasi = v.id AND stok_sisa > 0) AS batch_list
@@ -166,6 +186,7 @@ $shopeeOn = false;
         }
       }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:99px; }
         body { animation: fadeIn .15s ease; } @keyframes fadeIn { from{opacity:.7;} to{opacity:1;} }
@@ -183,7 +204,7 @@ $shopeeOn = false;
                 <h1 class="text-xl font-black text-zcTxt tracking-tight">POS ZenCare Medical</h1>
                 <div class="flex items-center gap-3 mt-1 text-xs text-zcMut font-medium">
                     <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-zc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Kasir') ?></span>
-                    <span class="text-slate-300">•</span>
+                    <span class="text-slate-300">&#8226;</span>
                     <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-zc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> <?= htmlspecialchars($cabangKaryawan['nama'] ?? 'Pusat') ?></span>
                 </div>
             </div>
@@ -280,10 +301,11 @@ $shopeeOn = false;
                                         data-hb="<?= floatval($item['harga_jual_besar']) ?>"
                                         data-stok="<?= intval($stok) ?>"
                                         data-rasio="<?= intval($item['rasio_konversi']) ?: 1 ?>"
-                                        onclick="addToPos(this)"
+                                        data-kat="<?= htmlspecialchars($item['kategori'], ENT_QUOTES, 'UTF-8') ?>"
+                                        onclick="addToPos(this, null)"
                                         <?= $stok <= 0 ? 'disabled' : '' ?>
                                         class="w-full text-[11px] font-bold px-2 py-1 rounded border transition <?= $stok > 0 ? 'bg-zc hover:bg-zcHv text-white border-zc shadow-xs' : 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed' ?>">
-                                        + Pilih
+                                        + Pilih Manual
                                     </button>
                                 </div>
                             </div>
@@ -294,8 +316,9 @@ $shopeeOn = false;
 
             <!-- Billing POS -->
             <div class="lg:col-span-5 bg-white border border-zcBrd rounded-2xl shadow-sm flex flex-col">
-                <div class="px-5 py-4 border-b border-zcBrd flex items-center gap-2">
+                <div class="px-5 py-4 border-b border-zcBrd flex items-center justify-between gap-2">
                     <h2 class="text-sm font-bold text-zcTxt">Billing Transaksi Karyawan</h2>
+                    <input type="text" id="manual_barcode_input" placeholder="Scan / Ketik Barcode..." autocomplete="off" onkeypress="handleManualBarcode(event)" class="text-xs border border-zcBrd rounded-lg px-3 py-1.5 focus:outline-none focus:border-zc focus:ring-1 focus:ring-zc bg-slate-50 w-44 shadow-inner transition-colors">
                 </div>
 
                 <div class="flex-1 overflow-y-auto">
@@ -364,7 +387,7 @@ $shopeeOn = false;
                 
                 <div id="nominal_section">
                     <label class="block text-xs font-bold text-zcTxt mb-2">Nominal Uang Diberikan (Rp)</label>
-                    <input type="text" id="modal_nominal" onkeyup="calcKembalian()" placeholder="0" class="w-full text-2xl font-bold border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-zc focus:ring-4 focus:ring-zcLt transition text-right">
+                    <input type="text" id="modal_nominal" onkeyup="calcKembalian()" placeholder="Rp 0" class="w-full text-2xl font-bold border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-zc focus:ring-4 focus:ring-zcLt transition text-right">
                     <div class="flex gap-2 mt-3">
                         <button type="button" onclick="setNominal(50000)" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold py-2.5 rounded-lg border border-slate-200 transition shadow-sm">50.000</button>
                         <button type="button" onclick="setNominal(100000)" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold py-2.5 rounded-lg border border-slate-200 transition shadow-sm">100.000</button>
@@ -377,7 +400,7 @@ $shopeeOn = false;
                     <span class="text-2xl font-bold text-zcTxt" id="val_kembalian">-</span>
                 </div>
                 
-                <div id="non_tunai_info" class="hidden p-4 rounded-xl border border-blue-200 bg-blue-50 text-blue-800 text-xs text-center font-medium">
+                <div id="non_tunai_inf? class="hidden p-4 rounded-xl border border-blue-200 bg-blue-50 text-blue-800 text-xs text-center font-medium">
                     Pastikan pembayaran melalui EDC/Transfer/QRIS telah berhasil masuk sebelum menyelesaikan transaksi.
                 </div>
             </div>
@@ -391,7 +414,7 @@ $shopeeOn = false;
     <script>
     let cart = [];
 
-    function addToPos(btnElement) {
+    function addToPos(btnElement, scannedCode = null) {
         try {
             var card = btnElement.closest('.product-card');
             var rawSn = card ? card.getAttribute('data-sn') : '';
@@ -403,35 +426,181 @@ $shopeeOn = false;
             var hargaBesar = parseFloat(btnElement.getAttribute('data-hb'));
             var maxStockPcs = parseInt(btnElement.getAttribute('data-stok'));
             var rasio = parseInt(btnElement.getAttribute('data-rasio'));
-
-            var sel = document.getElementById('uom_' + id);
-            var uomType = sel.value; // 'kecil' or 'besar'
-            var uomLabel = sel.options[sel.selectedIndex].text;
+            var kat = btnElement.getAttribute('data-kat');
             
-            var price = (uomType === 'besar') ? hargaBesar : hargaKecil;
-            var qtyMultiplier = (uomType === 'besar') ? rasio : 1;
-            var cartId = id + '_' + uomType;
+            var needsVerification = (kat === 'Obat' || kat === 'Alat Kesehatan');
 
-            var found = null;
-            for (var i = 0; i < cart.length; i++) {
-                if (cart[i].cartId === cartId) { found = cart[i]; break; }
+            // === PENENTUAN UOM (SATUAN) ===
+            var sel = document.getElementById('uom_' + id);
+            var uomType = sel ? sel.value : 'kecil';
+            var isScannedSubBatch = scannedCode ? scannedCode.includes('.') : false;
+
+            if (scannedCode) {
+                // 1. Cek apakah ada keranjang yang menunggu verifikasi untuk produk ini
+                var unverifiedUom = null;
+                for (var i = 0; i < cart.length; i++) {
+                    if (parseInt(cart[i].id) === id && cart[i].needs_verification && !cart[i].scanned_code) {
+                        unverifiedUom = cart[i].satuan_tipe;
+                        break;
+                    }
+                }
+
+                // 2. Deteksi UOM dari fisik barcode (Hanya berlaku untuk barang ber-batch)
+                var detectedUom = uomType;
+                if (rawBatch) {
+                    detectedUom = isScannedSubBatch ? 'kecil' : 'besar';
+                }
+
+                if (unverifiedUom) {
+                    // JIKA VERIFIKASI: Barcode harus cocok dengan satuan di keranjang!
+                    if (unverifiedUom === 'kecil' && detectedUom === 'besar') {
+                        Swal.fire({title: '&#10060; Salah Barcode!', html: 'Keranjang menunggu verifikasi <b>ECERAN (Kecil)</b>, tetapi fisik yang di-scan adalah <b>GROSIR (Besar)</b>.', icon: 'error'});
+                        return;
+                    }
+                    if (unverifiedUom === 'besar' && detectedUom === 'kecil') {
+                        Swal.fire({title: '&#10060; Salah Barcode!', html: 'Keranjang menunggu verifikasi <b>GROSIR (Besar)</b>, tetapi fisik yang di-scan adalah <b>ECERAN (Kecil)</b>.', icon: 'error'});
+                        return;
+                    }
+                    uomType = unverifiedUom;
+                } else {
+                    // JIKA DIRECT SCAN: Percaya pada fisik barcode, abaikan dropdown katalog
+                    uomType = detectedUom;
+                    if (sel) sel.value = uomType; // Sinkronkan visual
+                }
+
+                // === FEFO ANOMALY CHECKER ===
+                if (kat === 'Obat' && rawBatch) {
+                    var allBatches = rawBatch.split(',');
+                    var batches = uomType === 'besar' ? allBatches.filter(b => !b.includes('.')) : allBatches.filter(b => b.includes('.'));
+                    
+                    if (batches.length > 0 && batches[0] !== scannedCode && batches.includes(scannedCode)) {
+                        Swal.fire({
+                            title: '&#9888;&#65039; ANOMALI FEFO TERDETEKSI!',
+                            html: `Anda men-scan Batch <b>${scannedCode.toUpperCase()}</b>.<br><br>
+                                   Terdapat Batch lain <b>(${batches[0].toUpperCase()})</b> yang akan kedaluwarsa lebih cepat.<br>
+                                   Sesuai sistem FEFO, Anda seharusnya mengeluarkan batch yang lebih cepat expired terlebih dahulu.`,
+                            icon: 'error',
+                            showCancelButton: true,
+                            confirmButtonText: 'Tetap Lanjutkan (Abaikan)',
+                            cancelButtonText: 'Batal',
+                            confirmButtonColor: '#d33',
+                            allowEnterKey: false,
+                            focusCancel: true
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                processAddToCart(id, name, hargaKecil, hargaBesar, maxStockPcs, rasio, scannedCode, rawSn, rawBatch, true, batches[0], needsVerification, uomType);
+                            }
+                        });
+                        return;
+                    }
+                }
             }
 
-            if (found) {
-                if ((found.qty + 1) * found.rasio > found.maxPcs) { alert('Stok terbatas!'); return; }
-                found.qty++;
-            } else { 
-                if (qtyMultiplier > maxStockPcs) { alert('Stok tidak cukup untuk satuan ini!'); return; }
-                cart.push({
-                    id: id, cartId: cartId, nama: name, harga: price, qty: 1, 
-                    satuan_tipe: uomType, satuan_label: uomLabel, maxPcs: maxStockPcs, rasio: qtyMultiplier,
-                    sn_list: rawSn, batch_list: rawBatch
-                }); 
-            }
-            renderCart();
+            // Lanjut ke pemrosesan normal
+            processAddToCart(id, name, hargaKecil, hargaBesar, maxStockPcs, rasio, scannedCode, rawSn, rawBatch, false, null, needsVerification, uomType);
+
         } catch(e) {
             alert("Terjadi Error Javascript di addToPos: " + e.message);
         }
+    }
+
+    function processAddToCart(id, name, hargaKecil, hargaBesar, maxStockPcs, rasio, scannedCode, rawSn, rawBatch, isAnomaly = false, batchSeharusnya = null, needsVerification = false, passedUomType = null) {
+        var sel = document.getElementById('uom_' + id);
+        var uomType = passedUomType ? passedUomType : (sel ? sel.value : 'kecil');
+        var uomLabel = sel ? sel.options[sel.selectedIndex].text : '';
+        
+        var price = (uomType === 'besar') ? hargaBesar : hargaKecil;
+        var qtyMultiplier = (uomType === 'besar') ? rasio : 1;
+        var cartId = id + '_' + uomType + (scannedCode ? '_' + scannedCode : '');
+
+        var found = null;
+
+        // Validasi Fisik: Jika scan dilakukan, cari item di keranjang yang MENUNGGU VERIFIKASI
+        if (scannedCode && needsVerification) {
+            var unverifiedIndex = -1;
+            for (var i = 0; i < cart.length; i++) {
+                if (parseInt(cart[i].id) === parseInt(id) && cart[i].needs_verification && !cart[i].scanned_code) {
+                    unverifiedIndex = i;
+                    break;
+                }
+            }
+
+            if (unverifiedIndex !== -1) {
+                var i = unverifiedIndex;
+                var existingVerified = null;
+                for (var j = 0; j < cart.length; j++) {
+                    if (j !== i && cart[j].cartId === cartId) {
+                        existingVerified = cart[j];
+                        break;
+                    }
+                }
+
+                if (existingVerified) {
+                    if ((existingVerified.qty + cart[i].qty) * existingVerified.rasio > existingVerified.maxPcs) { 
+                        alert('Stok terbatas!'); return; 
+                    }
+                    existingVerified.qty += cart[i].qty;
+                    cart.splice(i, 1);
+                } else {
+                    cart[i].scanned_code = scannedCode;
+                    cart[i].cartId = cartId; // ubah cartId menjadi yang sudah di-scan
+                    cart[i].is_anomaly = isAnomaly;
+                    cart[i].batch_seharusnya = batchSeharusnya;
+                    // Jaga qty tetap sama dengan unverified item sebelumnya
+                }
+                
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Tervalidasi: ' + scannedCode.toUpperCase(),
+                    showConfirmButton: false,
+                    timer: 1500,
+                    timerProgressBar: true
+                });
+
+                renderCart();
+                return; // PASTI RETURN, TIDAK AKAN NAMBAH BARU
+            }
+        }
+
+        // Jika tidak ada scan ATAU tidak ada item unverified yang bisa divalidasi, lakukan penambahan normal
+        for (var i = 0; i < cart.length; i++) {
+            if (cart[i].cartId === cartId) { found = cart[i]; break; }
+        }
+
+        if (found) {
+            if ((found.qty + 1) * found.rasio > found.maxPcs) { alert('Stok terbatas!'); return; }
+            found.qty++;
+            // Update anomaly status if it was re-added manually (override)
+            if (isAnomaly) {
+                found.is_anomaly = true;
+                found.batch_seharusnya = batchSeharusnya;
+            }
+        } else { 
+            if (qtyMultiplier > maxStockPcs) { alert('Stok tidak cukup untuk satuan ini!'); return; }
+            cart.push({
+                id: id, cartId: cartId, nama: name, harga: price, qty: 1, 
+                satuan_tipe: uomType, satuan_label: uomLabel, maxPcs: maxStockPcs, rasio: qtyMultiplier,
+                sn_list: rawSn, batch_list: rawBatch, scanned_code: scannedCode,
+                is_anomaly: isAnomaly, batch_seharusnya: batchSeharusnya,
+                needs_verification: needsVerification
+            }); 
+        }
+        
+        if (scannedCode) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Item Ditambahkan: ' + scannedCode.toUpperCase(),
+                showConfirmButton: false,
+                timer: 1500,
+                timerProgressBar: true
+            });
+        }
+        
+        renderCart();
     }
 
     function changeQty(cartId, d) {
@@ -467,16 +636,25 @@ $shopeeOn = false;
         cart.forEach(function(i) {
             var sub = i.harga * i.qty; total += sub;
             var fefoText = '';
-            if (i.batch_list) {
-                var batches = i.batch_list.split(',').slice(0, 2).join(', ');
-                var suffix = i.batch_list.split(',').length > 2 ? ' ...' : '';
-                fefoText = '<span class="block text-[9px] text-orange-600 font-bold mt-1 rounded bg-orange-50 px-1 py-0.5 inline-block">Ambil (FEFO): ' + batches + suffix + '</span>';
-            } else if (i.sn_list) {
-                var maxSns = Math.min(i.qty * i.rasio, 2);
-                var sns = i.sn_list.split(',').slice(0, maxSns).join(', ');
-                var suffix2 = (i.qty * i.rasio > 2) ? ' ...' : '';
-                fefoText = '<span class="block text-[9px] text-purple-600 font-bold mt-1 rounded bg-purple-50 px-1 py-0.5 inline-block">Ambil (FIFO): ' + sns + suffix2 + '</span>';
+            
+            if (i.scanned_code) {
+                fefoText = '<span class="block text-[9px] text-blue-600 font-bold mt-1 rounded bg-blue-50 px-1.5 py-0.5 inline-block border border-blue-200 shadow-sm">&#10004;&#65039; Fisik Tervalidasi: ' + i.scanned_code.toUpperCase() + '</span>';
+            } else if (i.needs_verification) {
+                if (i.batch_list) {
+                    let allBatches = i.batch_list.split(',');
+                      let targetBatches = [];
+                      if (i.satuan_tipe === 'besar') {
+                          targetBatches = allBatches.filter(b => !b.includes('.'));
+                      } else {
+                          targetBatches = allBatches.filter(b => b.includes('.'));
+                      }
+                      var batches = targetBatches.length > 0 ? targetBatches.slice(0, 1).join(', ') : (i.satuan_tipe === 'besar' ? '&#10060; Box Utuh Habis!' : '&#10060; Eceran Habis!');
+                    fefoText = '<span class="block text-[9px] text-rose-600 font-bold mt-1 rounded bg-rose-50 border border-rose-200 px-1.5 py-0.5 inline-block animate-pulse shadow-sm">&#9888;&#65039; Belum diverifikasi! (Ambil Batch: ' + batches + ')</span>';
+                } else if (i.sn_list) {
+                    fefoText = '<span class="block text-[9px] text-rose-600 font-bold mt-1 rounded bg-rose-50 border border-rose-200 px-1.5 py-0.5 inline-block animate-pulse shadow-sm">&#9888;&#65039; Belum diverifikasi! (Ambil SN Tersedia)</span>';
+                }
             }
+
             html += '<tr class="hover:bg-slate-50/60">' +
                 '<td class="px-4 py-3 font-semibold text-zcTxt text-xs">' +
                     i.nama +
@@ -491,7 +669,7 @@ $shopeeOn = false;
                     '</div>' +
                 '</td>' +
                 '<td class="px-4 py-3 text-right font-bold text-xs">Rp ' + sub.toLocaleString('id-ID') + '</td>' +
-                '<td class="px-4 py-3 text-center"><button type="button" onclick="removeItem(\'' + i.cartId + '\')" class="text-rose-500 hover:text-rose-700 text-xs font-bold transition">✕</button></td>' +
+                '<td class="px-4 py-3 text-center"><button type="button" onclick="removeItem(\'' + i.cartId + '\')" class="text-rose-500 hover:text-rose-700 text-xs font-bold transition">[X]</button></td>' +
             '</tr>';
         });
 
@@ -512,6 +690,23 @@ $shopeeOn = false;
 
     function openPaymentModal() {
         if (!cart.length) return;
+        
+        // Blokir jika ada item yang belum divalidasi fisik (di-scan)
+        var hasUnverified = false;
+        cart.forEach(function(i) {
+            if (i.needs_verification && !i.scanned_code) hasUnverified = true;
+        });
+
+        if (hasUnverified) {
+            Swal.fire({
+                title: 'Validasi Fisik Belum Selesai!',
+                text: 'Ada produk Obat/Alkes di keranjang yang belum diverifikasi. Harap ambil fisik barang di rak dan SCAN barcode-nya untuk mencocokkan sebelum memproses pembayaran!',
+                icon: 'warning',
+                confirmButtonText: 'Mengerti'
+            });
+            return;
+        }
+
         currentTotal = 0;
         cart.forEach(function(i) { currentTotal += i.harga * i.qty; });
         
@@ -625,6 +820,7 @@ $shopeeOn = false;
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
         
         if (e.key === 'Enter') {
+            e.preventDefault(); // Mencegah Enter dari scanner menekan tombol yang sedang fokus (ex: + Pilih Manual)
             if (barcodeString.length > 2) {
                 processBarcode(barcodeString);
             }
@@ -638,9 +834,20 @@ $shopeeOn = false;
             clearTimeout(barcodeTimer);
             barcodeTimer = setTimeout(function() {
                 barcodeString = ''; 
-            }, 60); 
+            }, 300); // Diperpanjang menjadi 300ms untuk mentoleransi delay WiFi dari aplikasi HP
         }
     });
+
+    function handleManualBarcode(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            var val = e.target.value.trim();
+            if (val.length > 0) {
+                processBarcode(val);
+                e.target.value = '';
+            }
+        }
+    }
 
     function processBarcode(sku) {
         try {
@@ -662,7 +869,10 @@ $shopeeOn = false;
                 if (isMatch) {
                     var btn = c.querySelector('button');
                     if (btn && !btn.disabled) {
-                        btn.click();
+                        // Pass the scanned code!
+                        // Ensure we pass the exact scanned code
+                        var matchedCode = sku;
+                        
                         found = true;
                         c.classList.add('bg-zcLt', 'border-zc');
                         setTimeout(function() { c.classList.remove('bg-zcLt', 'border-zc'); }, 300);
@@ -677,6 +887,14 @@ $shopeeOn = false;
                             oscillator.stop(audioCtx.currentTime + 0.1);
                         } catch(err) {}
                         
+                        // Execute addToPos with scannedCode
+                        if (skuSpan && skuSpan.innerText.toLowerCase() === sku) {
+                            // They scanned the general SKU, not the Batch/SN barcode.
+                            // We pass null to force them to scan the physical item if it's Obat/Alkes.
+                            addToPos(btn, null);
+                        } else {
+                            addToPos(btn, matchedCode);
+                        }
                         break;
                     }
                 }
@@ -707,4 +925,11 @@ $shopeeOn = false;
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
 

@@ -84,8 +84,8 @@ layoutHeader('Master Satuan & UOM', 'Pengaturan Unit of Measure & Harga per Vari
     <div class="text-xs text-blue-700">
         <p class="font-bold mb-1">Aturan UOM:</p>
         <ul class="space-y-0.5 text-blue-600">
-            <li>• <strong>Obat</strong>: Rasio konversi &gt; 1 (misal: 1 Box = 10 Strip). POS menggunakan satuan kecil, E-Commerce satuan besar.</li>
-            <li>• <strong>Alat Kesehatan</strong>: Rasio konversi = 1 (Single-UOM). Harga kecil = harga besar.</li>
+            <li>&#8226; <strong>Obat</strong>: Rasio konversi &gt; 1 (misal: 1 Box = 10 Strip). POS menggunakan satuan kecil, E-Commerce satuan besar.</li>
+            <li>&#8226; <strong>Alat Kesehatan</strong>: Rasio konversi = 1 (Single-UOM). Harga kecil = harga besar.</li>
         </ul>
     </div>
 </div>
@@ -166,12 +166,12 @@ layoutHeader('Master Satuan & UOM', 'Pengaturan Unit of Measure & Harga per Vari
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-semibold text-zcTxt mb-1.5">Satuan Kecil *</label>
-                    <input type="text" name="satuan_kecil" id="edit_satuan_kecil" required placeholder="Strip, Botol, Unit..."
+                    <input type="text" name="satuan_kecil" id="edit_satuan_kecil" required placeholder="********"
                         class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-zcTxt mb-1.5">Satuan Besar *</label>
-                    <input type="text" name="satuan_besar" id="edit_satuan_besar" required placeholder="Box, Karton, Unit..."
+                    <input type="text" name="satuan_besar" id="edit_satuan_besar" required placeholder="********"
                         class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
                 </div>
             </div>

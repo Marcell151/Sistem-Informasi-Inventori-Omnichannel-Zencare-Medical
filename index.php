@@ -13,8 +13,17 @@ $namaUser     = $_SESSION['nama_lengkap'] ?? 'Pengguna';
 
 // ─── WIDGET DATA BERSAMA (Admin & Superadmin) ─────────────────────────────
 $totalStokFisik   = (int)$pdo->query("SELECT COALESCE(SUM(stok),0) FROM stok_toko")->fetchColumn();
-$stokKritisCount  = (int)$pdo->query("SELECT COUNT(*) FROM stok_toko WHERE stok < 5")->fetchColumn();
-$expWarningCount  = (int)$pdo->query("SELECT COUNT(*) FROM stok_batch WHERE stok_sisa > 0 AND tgl_exp <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)")->fetchColumn();
+$stokKritisCount  = (int)$pdo->query("
+    SELECT COUNT(*) FROM stok_toko st
+    JOIN produk_variasi pv ON st.id_variasi = pv.id
+    WHERE st.stok <= pv.stok_minimum AND pv.is_active=1
+")->fetchColumn();
+$expWarningCount  = (int)$pdo->query("
+    SELECT COUNT(*) FROM stok_batch sb
+    JOIN produk_variasi pv ON sb.id_variasi = pv.id
+    JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+    WHERE sb.stok_sisa > 0 AND sb.tgl_exp <= DATE_ADD(CURDATE(), INTERVAL COALESCE(pi.batas_hari_expired, 30) DAY)
+")->fetchColumn();
 $pesananMenunggu  = (int)$pdo->query("SELECT COUNT(*) FROM penjualan WHERE status_pesanan IN ('Menunggu Pembayaran','Diproses')")->fetchColumn();
 $transaksiHariIni = (int)$pdo->query("SELECT COUNT(*) FROM penjualan WHERE DATE(created_at)=CURDATE() AND status_pesanan NOT IN ('Dibatalkan')")->fetchColumn();
 
@@ -48,12 +57,12 @@ if ($isSuperadmin) {
 
     // Stok menipis detail
     $stokMenipis = $pdo->query("
-        SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sc.stok, pv.satuan_kecil
+        SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sc.stok, pv.satuan_kecil, pv.stok_minimum
         FROM stok_toko sc
         JOIN produk_variasi pv ON sc.id_variasi=pv.id
         JOIN produk_induk pi ON pv.id_produk_induk=pi.id
-        WHERE sc.stok < 5 AND pv.is_active=1
-        ORDER BY sc.stok ASC LIMIT 10
+        WHERE sc.stok <= pv.stok_minimum AND pv.is_active=1
+        ORDER BY (sc.stok - pv.stok_minimum) ASC LIMIT 10
     ")->fetchAll();
 
     // Top 5 produk terlaris bulan ini (berdasarkan qty unit terjual)
@@ -265,16 +274,16 @@ layoutHeader(
 
     <!-- Stok Menipis -->
     <a href="laporan/ketersediaan_stok.php" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $stokKritisCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
-        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STOK MENIPIS (&lt; 5 UNIT)</div>
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STOK MENIPIS (ROP)</div>
         <div style="font-size:30px;font-weight:900;color:<?= $stokKritisCount>0?'#dc2626':'#1e293b' ?>;line-height:1;"><?= number_format($stokKritisCount) ?></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $stokKritisCount==0 ? 'Semua stok aman ✓' : 'SKU perlu restock' ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $stokKritisCount==0 ? 'Semua stok aman ✓' : 'SKU mencapai ROP' ?></div>
     </a>
 
     <!-- Hampir Kedaluwarsa -->
-    <a href="laporan/logistik_medis.php" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $expWarningCount>0?'#fde68a':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
-        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">BATCH HAMPIR EXP.</div>
-        <div style="font-size:30px;font-weight:900;color:<?= $expWarningCount>0?'#d97706':'#1e293b' ?>;line-height:1;"><?= number_format($expWarningCount) ?></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Batch ≤ 30 hari</div>
+    <a href="laporan/logistik_medis.php" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $expWarningCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">PERINGATAN EXP.</div>
+        <div style="font-size:30px;font-weight:900;color:<?= $expWarningCount>0?'#dc2626':'#1e293b' ?>;line-height:1;"><?= number_format($expWarningCount) ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Masuk batas peringatan hari</div>
     </a>
 
     <!-- Antrean Pesanan Daring -->
@@ -341,17 +350,20 @@ layoutHeader(
         <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
             <div style="font-size:12px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:6px;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="<?= $stokKritisCount>0?'#dc2626':'#64748b' ?>" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                Stok Menipis (&lt;5 Unit)
+                Peringatan Stok Menipis (ROP)
             </div>
             <span style="font-size:10px;color:#94a3b8;">Pusat (Muharto)</span>
         </div>
         <?php if (empty($stokMenipis)): ?>
-        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Semua item stok aman (≥ 5 unit) ✓</div>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Semua item stok aman (di atas batas minimum) ✓</div>
         <?php else: ?>
         <?php foreach ($stokMenipis as $s): ?>
         <div style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:12px;color:#334155;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($s['nama']) ?></span>
-            <span style="font-size:12px;font-weight:700;color:<?= $s['stok']==0?'#dc2626':'#f59e0b' ?>;margin-left:12px;white-space:nowrap;"><?= $s['stok'] ?> <span style="font-weight:400;color:#94a3b8;"><?= htmlspecialchars($s['satuan_kecil']) ?></span></span>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($s['nama']) ?></div>
+                <div style="font-size:10px;color:#94a3b8;margin-top:1px;">Batas Min: <?= $s['stok_minimum'] ?></div>
+            </div>
+            <span style="font-size:12px;font-weight:700;color:#dc2626;margin-left:12px;white-space:nowrap;"><?= $s['stok'] ?> <span style="font-weight:400;color:#94a3b8;"><?= htmlspecialchars($s['satuan_kecil']) ?></span></span>
         </div>
         <?php endforeach; ?>
         <?php endif; ?>
@@ -599,15 +611,15 @@ document.addEventListener("DOMContentLoaded", function() {
         <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokFisik) ?></div>
         <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Unit tersedia</div>
     </div>
-    <a href="laporan/ketersediaan_stok.php" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $stokKritisCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
-        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STOK MENIPIS</div>
+    <a href="#" onclick="Swal.fire({title:'Informasi', text:'Silakan scroll ke bawah untuk melihat detail pada tabel Peringatan Stok Menipis. Akses laporan penuh hanya untuk Superadmin.', icon:'info'}); return false;" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $stokKritisCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STOK MENIPIS (ROP)</div>
         <div style="font-size:30px;font-weight:900;color:<?= $stokKritisCount>0?'#dc2626':'#1e293b' ?>;line-height:1;"><?= number_format($stokKritisCount) ?></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $stokKritisCount==0?'Semua stok aman ✓':'SKU < 5 unit' ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $stokKritisCount==0?'Semua stok aman ✓':'SKU mencapai ROP' ?></div>
     </a>
-    <a href="laporan/logistik_medis.php" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $expWarningCount>0?'#fde68a':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
-        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">HAMPIR KEDALUWARSA</div>
-        <div style="font-size:30px;font-weight:900;color:<?= $expWarningCount>0?'#d97706':'#1e293b' ?>;line-height:1;"><?= number_format($expWarningCount) ?></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Batch ≤ 30 hari</div>
+    <a href="#" onclick="Swal.fire({title:'Informasi', text:'Silakan scroll ke bawah untuk melihat detail pada tabel Peringatan Kedaluwarsa. Akses laporan penuh hanya untuk Superadmin.', icon:'info'}); return false;" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $expWarningCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">PERINGATAN EXP.</div>
+        <div style="font-size:30px;font-weight:900;color:<?= $expWarningCount>0?'#dc2626':'#1e293b' ?>;line-height:1;"><?= number_format($expWarningCount) ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Masuk batas peringatan</div>
     </a>
     <a href="admin/pesanan.php" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $pesananMenunggu>0?'#bfdbfe':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">PESANAN BARU</div>
@@ -632,24 +644,27 @@ document.addEventListener("DOMContentLoaded", function() {
     <!-- Stok Menipis (Admin) -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
         <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
-            <div style="font-size:12px;font-weight:700;color:#1e293b;">Stok Menipis (&lt;5 Unit)</div>
+            <div style="font-size:12px;font-weight:700;color:#1e293b;">Peringatan Stok Menipis (ROP)</div>
             <span style="font-size:10px;color:#94a3b8;">Pusat (Muharto)</span>
         </div>
         <?php
         $stokMenipis2 = $pdo->query("
-            SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sc.stok, pv.satuan_kecil
+            SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sc.stok, pv.satuan_kecil, pv.stok_minimum
             FROM stok_toko sc JOIN produk_variasi pv ON sc.id_variasi=pv.id
             JOIN produk_induk pi ON pv.id_produk_induk=pi.id
-            WHERE sc.stok < 5 AND pv.is_active=1 ORDER BY sc.stok ASC LIMIT 8
+            WHERE sc.stok <= pv.stok_minimum AND pv.is_active=1 ORDER BY (sc.stok - pv.stok_minimum) ASC LIMIT 8
         ")->fetchAll();
         ?>
         <?php if (empty($stokMenipis2)): ?>
-        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Semua item stok aman (≥ 5 unit) ✓</div>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Semua item stok aman ✓</div>
         <?php else: ?>
         <?php foreach ($stokMenipis2 as $s): ?>
         <div style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:12px;color:#334155;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($s['nama']) ?></span>
-            <span style="font-size:12px;font-weight:700;color:<?= $s['stok']==0?'#dc2626':'#f59e0b' ?>;margin-left:12px;"><?= $s['stok'] ?> <?= htmlspecialchars($s['satuan_kecil']) ?></span>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($s['nama']) ?></div>
+                <div style="font-size:10px;color:#94a3b8;margin-top:1px;">Batas Min: <?= $s['stok_minimum'] ?></div>
+            </div>
+            <span style="font-size:12px;font-weight:700;color:#dc2626;margin-left:12px;"><?= $s['stok'] ?> <?= htmlspecialchars($s['satuan_kecil']) ?></span>
         </div>
         <?php endforeach; ?>
         <?php endif; ?>
@@ -658,29 +673,38 @@ document.addEventListener("DOMContentLoaded", function() {
     <!-- Obat Hampir Kedaluwarsa (Admin) -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
         <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
-            <div style="font-size:12px;font-weight:700;color:#1e293b;">Obat Hampir Kedaluwarsa (≤ 30 Hari)</div>
+            <div style="font-size:12px;font-weight:700;color:#1e293b;">Peringatan Kedaluwarsa</div>
             <span style="font-size:10px;color:#94a3b8;">Batch Aktif</span>
         </div>
         <?php
         $expList = $pdo->query("
-            SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sb.no_batch, sb.tgl_exp, sb.stok_sisa, pv.satuan_kecil
+            SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sb.no_batch, sb.tgl_exp, sb.stok_sisa, pv.satuan_kecil, pi.batas_hari_expired,
+                   DATEDIFF(sb.tgl_exp, CURDATE()) AS sisa_hari
             FROM stok_batch sb
             JOIN produk_variasi pv ON sb.id_variasi = pv.id
             JOIN produk_induk pi ON pv.id_produk_induk = pi.id
-            WHERE sb.stok_sisa > 0 AND sb.tgl_exp <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+            WHERE sb.stok_sisa > 0 AND sb.tgl_exp <= DATE_ADD(CURDATE(), INTERVAL COALESCE(pi.batas_hari_expired, 30) DAY)
             ORDER BY sb.tgl_exp ASC LIMIT 8
         ")->fetchAll();
         ?>
         <?php if (empty($expList)): ?>
         <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Tidak ada obat yang mendekati masa kedaluwarsa.</div>
         <?php else: ?>
-        <?php foreach ($expList as $e): ?>
+        <?php foreach ($expList as $e): 
+            $isExpired = $e['sisa_hari'] <= 0;
+            $color = $isExpired ? '#dc2626' : '#d97706';
+            $bg = $isExpired ? '#fee2e2' : '#fef3c7';
+            $label = $isExpired ? 'EXPIRED (Sisa: ' . $e['sisa_hari'] . ' Hari)' : 'Sisa: ' . $e['sisa_hari'] . ' Hari';
+        ?>
         <div style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
             <div style="flex:1;min-width:0;">
                 <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($e['nama']) ?></div>
-                <div style="font-size:10px;color:#d97706;margin-top:1px;font-weight:600;">Batch: <?= htmlspecialchars($e['no_batch']) ?> (Exp: <?= date('d/m/Y', strtotime($e['tgl_exp'])) ?>)</div>
+                <div style="font-size:10px;color:<?= $color ?>;margin-top:1px;font-weight:600;display:flex;align-items:center;gap:4px;">
+                    <span style="background:<?= $bg ?>;padding:1px 4px;border-radius:3px;font-size:9px;"><?= $label ?></span> 
+                    Batch: <?= htmlspecialchars($e['no_batch']) ?>
+                </div>
             </div>
-            <span style="font-size:12px;font-weight:700;color:#dc2626;margin-left:12px;white-space:nowrap;">
+            <span style="font-size:12px;font-weight:700;color:<?= $color ?>;margin-left:12px;white-space:nowrap;">
                 <?= $e['stok_sisa'] ?> <?= htmlspecialchars($e['satuan_kecil']) ?>
             </span>
         </div>
@@ -691,7 +715,7 @@ document.addEventListener("DOMContentLoaded", function() {
     <!-- Audit Kartu Stok -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
         <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
-            <div style="font-size:12px;font-weight:700;color:#1e293b;">Audit Kartu Stok Terbaru</div>
+            <div style="font-size:12px;font-weight:700;color:#1e293b;">Riwayat Mutasi Terbaru</div>
             <a href="laporan/kartu_stok.php" style="font-size:11px;color:#1a75d2;text-decoration:none;font-weight:600;">Lihat Semua →</a>
         </div>
         <?php if (empty($kartuTerbaru)): ?>

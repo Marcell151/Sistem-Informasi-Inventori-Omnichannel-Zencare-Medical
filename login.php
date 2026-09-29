@@ -30,8 +30,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['username']     = $user['username'];
                     $_SESSION['nama_lengkap'] = $user['nama_lengkap'];
                     $_SESSION['role']         = $user['role'];
-                    // Single-branch
-                    header('Location: index.php');
+                    
+                    if ($user['role'] === 'kasir') {
+                        header('Location: pos/pos.php');
+                    } else {
+                        header('Location: index.php');
+                    }
                     exit;
                 } else {
                     $error = 'Password salah. Silakan coba lagi.';
@@ -100,12 +104,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <form method="POST">
                 <div style="margin-bottom:12px;">
                     <label style="display:block;font-size:12px;font-weight:600;color:#334155;margin-bottom:5px;">Username Staf *</label>
-                    <input type="text" name="username" class="field" placeholder="superadmin / admin_toko"
+                    <input type="text" name="username" class="field" placeholder="********"
                            value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" required>
                 </div>
                 <div style="margin-bottom:16px;">
                     <label style="display:block;font-size:12px;font-weight:600;color:#334155;margin-bottom:5px;">Password *</label>
-                    <input type="password" name="password" class="field" placeholder="••••••">
+                    <input type="password" name="password" class="field" placeholder="********">
                     <p style="font-size:11px;color:#94a3b8;margin-top:4px;">Password demo: <code style="background:#f1f5f9;padding:1px 4px;border-radius:3px;">123456</code></p>
                 </div>
                 <button type="submit" class="btn-submit">Masuk ke Dashboard Operasional →</button>

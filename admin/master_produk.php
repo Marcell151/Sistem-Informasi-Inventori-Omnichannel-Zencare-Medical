@@ -41,10 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nama = trim($_POST['nama_produk'] ?? '');
         $kat  = trim($_POST['kategori'] ?? '');
         $desc = trim($_POST['deskripsi'] ?? '');
+        $bhe  = intval($_POST['batas_hari_expired'] ?? 0);
         if ($sku && $nama && $kat) {
             try {
-                $pdo->prepare("INSERT INTO produk_induk (sku_induk,nama_produk,deskripsi,kategori,is_active) VALUES (?,?,?,?,1)")
-                    ->execute([$sku,$nama,$desc,$kat]);
+                $pdo->prepare("INSERT INTO produk_induk (sku_induk,nama_produk,deskripsi,kategori,batas_hari_expired,is_active) VALUES (?,?,?,?,?,1)")
+                    ->execute([$sku,$nama,$desc,$kat,$bhe]);
                 $msg = "Produk induk '$nama' berhasil ditambahkan."; $msgType = 'success';
             } catch (Exception $e) { $msg = "Error: " . $e->getMessage(); $msgType = 'error'; }
         } else { $msg = "SKU, Nama Produk, dan Kategori wajib diisi!"; $msgType = 'error'; }
@@ -56,9 +57,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nama = trim($_POST['nama_produk'] ?? '');
         $kat  = trim($_POST['kategori'] ?? '');
         $desc = trim($_POST['deskripsi'] ?? '');
+        $bhe  = intval($_POST['batas_hari_expired'] ?? 0);
         if ($id && $nama) {
-            $pdo->prepare("UPDATE produk_induk SET nama_produk=?,deskripsi=?,kategori=? WHERE id=?")
-                ->execute([$nama,$desc,$kat,$id]);
+            $pdo->prepare("UPDATE produk_induk SET nama_produk=?,deskripsi=?,kategori=?,batas_hari_expired=? WHERE id=?")
+                ->execute([$nama,$desc,$kat,$bhe,$id]);
             $msg = "Produk '$nama' diperbarui."; $msgType = 'success';
         }
     }
@@ -82,6 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hrgBesar = floatval($_POST['harga_jual_besar'] ?? 0);
 
         $berat    = intval($_POST['berat'] ?? 100);
+        $minStok  = intval($_POST['stok_minimum'] ?? 0);
         
         // --- MULTIPLE IMAGE HANDLING ---
         $gambarText = trim($_POST['gambar'] ?? '');
@@ -108,8 +111,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($idInduk && $sku && $namaVar && $hrgKecil > 0) {
             try {
-                $pdo->prepare("INSERT INTO produk_variasi (id_produk_induk,sku_variasi,nama_variasi,satuan_kecil,satuan_besar,rasio_konversi,harga_jual_kecil,harga_jual_besar,berat,gambar,tampil_di_online,is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,1)")
-                    ->execute([$idInduk,$sku,$namaVar,$satKecil,$satBesar,$rasio,$hrgKecil,$hrgBesar,$berat,$gambar,$tampil]);
+                $pdo->prepare("INSERT INTO produk_variasi (id_produk_induk,sku_variasi,nama_variasi,satuan_kecil,satuan_besar,rasio_konversi,harga_jual_kecil,harga_jual_besar,berat,stok_minimum,gambar,tampil_di_online,is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)")
+                    ->execute([$idInduk,$sku,$namaVar,$satKecil,$satBesar,$rasio,$hrgKecil,$hrgBesar,$berat,$minStok,$gambar,$tampil]);
                 
                 // Auto-init stok 0
                 $newVarId  = $pdo->lastInsertId();
@@ -131,6 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hrgKecil = floatval($_POST['harga_jual_kecil'] ?? 0);
         $hrgBesar = floatval($_POST['harga_jual_besar'] ?? 0);
         $berat = intval($_POST['berat'] ?? 100);
+        $minStok  = intval($_POST['stok_minimum'] ?? 0);
 
         if ($_SESSION['role'] !== 'superadmin') {
             $existing = $pdo->prepare("SELECT rasio_konversi, harga_jual_kecil, harga_jual_besar FROM produk_variasi WHERE id = ?");
@@ -167,8 +171,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($idVal && $sku && $nama && $hrgKecil > 0) {
             try {
-                $pdo->prepare("UPDATE produk_variasi SET sku_variasi=?, nama_variasi=?, satuan_kecil=?, satuan_besar=?, rasio_konversi=?, harga_jual_kecil=?, harga_jual_besar=?, berat=?, gambar=?, tampil_di_online=? WHERE id=?")
-                    ->execute([$sku, $nama, $satKecil, $satBesar, $rasio, $hrgKecil, $hrgBesar, $berat, $gambar, $tampil, $idVal]);
+                $pdo->prepare("UPDATE produk_variasi SET sku_variasi=?, nama_variasi=?, satuan_kecil=?, satuan_besar=?, rasio_konversi=?, harga_jual_kecil=?, harga_jual_besar=?, berat=?, stok_minimum=?, gambar=?, tampil_di_online=? WHERE id=?")
+                    ->execute([$sku, $nama, $satKecil, $satBesar, $rasio, $hrgKecil, $hrgBesar, $berat, $minStok, $gambar, $tampil, $idVal]);
                 $msg = "Variasi '$nama' berhasil diperbarui."; $msgType = 'success';
             } catch (Exception $e) { $msg = "Error: " . $e->getMessage(); $msgType = 'error'; }
         } else { $msg = "Semua field variasi wajib diisi!"; $msgType = 'error'; }
@@ -330,7 +334,7 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
             </div>
             <div class="flex items-center gap-2 shrink-0">
                 <!-- Edit -->
-                <button onclick="event.stopPropagation(); openEditInduk(<?= $pi['id'] ?>, '<?= addslashes($pi['nama_produk']) ?>', '<?= addslashes($pi['kategori']) ?>', '<?= addslashes($pi['deskripsi'] ?? '') ?>')"
+                <button onclick="event.stopPropagation(); openEditInduk(<?= $pi['id'] ?>, '<?= addslashes($pi['nama_produk']) ?>', '<?= addslashes($pi['kategori']) ?>', '<?= addslashes($pi['deskripsi'] ?? '') ?>', <?= intval($pi['batas_hari_expired'] ?? 0) ?>)"
                     class="px-3 py-1.5 text-[11px] font-bold bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl transition">Edit</button>
                 <!-- Toggle -->
                 <form method="POST" onsubmit="return confirm('<?= $aktif ? 'Nonaktifkan' : 'Aktifkan' ?> produk ini?')" class="inline">
@@ -393,7 +397,7 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                                             </span>
                                         </td>
                                         <td class="py-2.5 px-3 text-center space-x-1">
-                                            <button onclick="openEditVariasi(<?= $v['id'] ?>, '<?= htmlspecialchars($v['sku_variasi']) ?>', '<?= htmlspecialchars($v['nama_variasi']) ?>', '<?= htmlspecialchars($v['satuan_kecil']) ?>', '<?= htmlspecialchars($v['satuan_besar']) ?>', <?= $v['rasio_konversi'] ?>, <?= $v['harga_jual_kecil'] ?>, <?= $v['harga_jual_besar'] ?>, <?= $v['berat'] ?>, '<?= htmlspecialchars($v['gambar'] ?? '') ?>', <?= $v['tampil_di_online'] ?>)" 
+                                            <button onclick="openEditVariasi(<?= $v['id'] ?>, '<?= htmlspecialchars($v['sku_variasi']) ?>', '<?= htmlspecialchars($v['nama_variasi']) ?>', '<?= htmlspecialchars($v['satuan_kecil']) ?>', '<?= htmlspecialchars($v['satuan_besar']) ?>', <?= $v['rasio_konversi'] ?>, <?= $v['harga_jual_kecil'] ?>, <?= $v['harga_jual_besar'] ?>, <?= $v['berat'] ?>, <?= intval($v['stok_minimum'] ?? 0) ?>, '<?= htmlspecialchars($v['gambar'] ?? '') ?>', <?= $v['tampil_di_online'] ?>)" 
                                                     class="text-[10px] font-bold px-2 py-1 bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 rounded-lg">
                                                 Edit
                                             </button>
@@ -463,19 +467,18 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                     <label class="block text-xs font-bold text-zcTxt mb-1.5">Kategori *</label>
                     <select name="kategori" required class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                         <option value="">-- Pilih --</option>
-                        <option value="Obat-obatan">Obat-obatan</option>
-                        <option value="Alat Monitor">Alat Monitor</option>
-                        <option value="Alat Bantu Jalan">Alat Bantu Jalan</option>
-                        <option value="Perawatan Luka">Perawatan Luka</option>
-                        <option value="Suplemen">Suplemen</option>
-                        <option value="Alat Bedah">Alat Bedah</option>
-                        <option value="Lainnya">Lainnya</option>
+                        <option value="Obat">Obat</option>
+                        <option value="Alat Kesehatan">Alat Kesehatan</option>
                     </select>
                 </div>
             </div>
             <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Nama Produk *</label>
                 <input type="text" name="nama_produk" required placeholder="Contoh: Masker N95 3M" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Batas Peringatan Expired (Hari) *</label>
+                <input type="number" name="batas_hari_expired" required min="0" placeholder="Contoh: 90" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Deskripsi</label>
@@ -506,13 +509,13 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
             <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Kategori *</label>
                 <select name="kategori" id="edit_kategori" required class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
-                    <option value="Obat-obatan">Obat-obatan</option>
-                    <option value="Alat Monitor">Alat Monitor</option>
-                    <option value="Alat Bantu Jalan">Alat Bantu Jalan</option>
-                    <option value="Perawatan Luka">Perawatan Luka</option>
-                    <option value="Suplemen">Suplemen</option>
-                    <option value="Alat Bedah">Alat Bedah</option>
+                    <option value="Obat">Obat</option>
+                    <option value="Alat Kesehatan">Alat Kesehatan</option>
                 </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Batas Peringatan Expired (Hari) *</label>
+                <input type="number" name="batas_hari_expired" id="edit_batas_hari_expired" required min="0" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
             </div>
             <div>
                 <label class="block text-xs font-bold text-zcTxt mb-1.5">Deskripsi</label>
@@ -580,15 +583,19 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                     <input type="number" name="berat" required min="1" placeholder="250" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                 </div>
                 <div>
+                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Batas Stok Minimum (ROP) *</label>
+                    <input type="number" name="stok_minimum" required min="0" placeholder="10" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
                     <label class="block text-xs font-bold text-zcTxt mb-1.5">Tampilkan di E-Commerce?</label>
                     <label class="inline-flex items-center mt-2.5">
                         <input type="checkbox" name="tampil_di_online" value="1" checked class="rounded border-slate-300 text-zc focus:ring-zc h-4 w-4">
                         <span class="ml-2 text-xs font-medium text-slate-700">Tampilkan Online</span>
                     </label>
                 </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-zcTxt mb-1.5">Teks URL/Nama Gambar</label>
                     <input type="text" name="gambar" placeholder="contoh1.jpg, contoh2.png" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
@@ -665,13 +672,19 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                     <input type="number" name="berat" id="edit_berat_variasi" required min="1" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                 </div>
                 <div>
+                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Batas Stok Min (ROP) *</label>
+                    <input type="number" name="stok_minimum" id="edit_stok_minimum_variasi" required min="0" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <div>
                     <label class="block text-xs font-bold text-zcTxt mb-1.5">Tampilkan di E-Commerce?</label>
                     <label class="inline-flex items-center mt-2.5">
                         <input type="checkbox" name="tampil_di_online" id="edit_tampil_di_online" value="1" class="rounded border-slate-300 text-zc focus:ring-zc h-4 w-4">
                         <span class="ml-2 text-xs font-medium text-slate-700">Tampilkan Online</span>
                     </label>
                 </div>
-            </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
@@ -721,11 +734,12 @@ function toggleAcc(id) {
     const el = document.getElementById(id);
     el.classList.toggle('hidden');
 }
-function openEditInduk(id, nama, kat, desc) {
+function openEditInduk(id, nama, kat, desc, bhe) {
     document.getElementById('edit_id_induk').value = id;
     document.getElementById('edit_nama_produk').value = nama;
     document.getElementById('edit_deskripsi').value = desc;
     document.getElementById('edit_kategori').value = kat;
+    document.getElementById('edit_batas_hari_expired').value = bhe;
     document.getElementById('modal_edit_induk').classList.remove('hidden');
 }
 function openTambahVariasi(idInduk, namaInduk) {
@@ -733,7 +747,7 @@ function openTambahVariasi(idInduk, namaInduk) {
     document.getElementById('var_parent_name').innerText = namaInduk;
     document.getElementById('modal_tambah_variasi').classList.remove('hidden');
 }
-function openEditVariasi(id, sku, nama, satKecil, satBesar, rasio, hrgKecil, hrgBesar, berat, gambar, tampil) {
+function openEditVariasi(id, sku, nama, satKecil, satBesar, rasio, hrgKecil, hrgBesar, berat, minStok, gambar, tampil) {
     document.getElementById('edit_id_variasi').value = id;
     document.getElementById('edit_sku_variasi').value = sku;
     document.getElementById('edit_nama_variasi').value = nama;
@@ -743,6 +757,7 @@ function openEditVariasi(id, sku, nama, satKecil, satBesar, rasio, hrgKecil, hrg
     document.getElementById('edit_harga_jual_kecil').value = hrgKecil;
     document.getElementById('edit_harga_jual_besar').value = hrgBesar;
     document.getElementById('edit_berat_variasi').value = berat;
+    document.getElementById('edit_stok_minimum_variasi').value = minStok;
     document.getElementById('edit_gambar_variasi').value = gambar;
     document.getElementById('edit_tampil_di_online').checked = (tampil == 1);
     document.getElementById('modal_edit_variasi').classList.remove('hidden');

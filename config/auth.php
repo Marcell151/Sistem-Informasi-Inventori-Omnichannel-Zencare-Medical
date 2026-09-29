@@ -17,11 +17,12 @@ function requireRole(array $roles) {
     $currentRole = $_SESSION['role'] ?? '';
     
     if (!in_array($currentRole, $roles)) {
-        // Jika pelanggan mencoba akses halaman staf, redirect ke toko
         if ($currentRole === 'pelanggan') {
             header('Location: ' . BASE_URL . '/ecommerce/index.php');
             exit;
         }
+
+        $homeLink = ($currentRole === 'kasir') ? BASE_URL . '/pos/pos.php' : BASE_URL . '/index.php';
 
         http_response_code(403);
         die('
@@ -35,8 +36,8 @@ function requireRole(array $roles) {
                 <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-bold mx-auto mb-4 border border-rose-100">🔒</div>
                 <h1 class="text-lg font-bold text-[#1e293b] mb-1">Akses Ditolak (403)</h1>
                 <p class="text-xs text-[#64748b] mb-6">Akun Anda (' . htmlspecialchars($currentRole) . ') tidak memiliki izin untuk mengakses halaman ini.</p>
-                <a href="' . BASE_URL . '/index.php" class="inline-block bg-[#1a75d2] hover:bg-[#1562b3] text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition">
-                    &larr; Kembali ke Dashboard
+                <a href="' . $homeLink . '" class="inline-block bg-[#1a75d2] hover:bg-[#1562b3] text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition">
+                    &larr; Kembali ke Halaman Utama Anda
                 </a>
             </div></body></html>
         ');
@@ -53,18 +54,25 @@ function isSuperadmin(): bool {
 }
 
 /**
- * Admin: staf operasional & kasir (sebelumnya "karyawan")
+ * Admin: staf operasional back-office (Master Data, Logistik, dll)
  */
 function isAdmin(): bool {
     return ($_SESSION['role'] ?? '') === 'admin';
 }
 
 /**
- * Staff: superadmin ATAU admin (akses operasional)
- * Digunakan untuk requireRole(['superadmin','admin'])
+ * Kasir: staf operasional front-office (POS)
+ */
+function isKasir(): bool {
+    return ($_SESSION['role'] ?? '') === 'kasir';
+}
+
+/**
+ * Staff: superadmin ATAU admin ATAU kasir (akses operasional)
+ * Digunakan untuk requireRole(['superadmin','admin','kasir'])
  */
 function isStaff(): bool {
-    return in_array($_SESSION['role'] ?? '', ['superadmin', 'admin']);
+    return in_array($_SESSION['role'] ?? '', ['superadmin', 'admin', 'kasir']);
 }
 
 /**
@@ -85,6 +93,7 @@ function roleLabel(): string {
     $map = [
         'superadmin' => 'Superadmin',
         'admin'      => 'Admin',
+        'kasir'      => 'Kasir',
         'pelanggan'  => 'Pelanggan',
     ];
     return $map[$_SESSION['role'] ?? ''] ?? 'Tamu';
