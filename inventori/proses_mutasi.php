@@ -303,9 +303,32 @@ document.addEventListener('DOMContentLoaded', () => {
                                  <select name="no_batch" required class="w-full text-sm border border-zcBrd rounded-lg px-3 py-2 bg-white">
                                      <option value="">-- Pilih Batch --</option>`;
                         items.forEach(i => {
-                            html += `<option value="${i.no_batch}">Batch: ${i.no_batch} (Sisa: ${i.stok_sisa} | Exp: ${i.tgl_exp})</option>`;
+                            html += `<option value="${i.no_batch}" data-max="${i.stok_sisa}">Batch: ${i.no_batch} (Sisa: ${i.stok_sisa} | Exp: ${i.tgl_exp})</option>`;
                         });
                         html += `</select>`;
+                        
+                        setTimeout(() => {
+                            const selBatch = document.querySelector('select[name="no_batch"]');
+                            if (selBatch) {
+                                selBatch.addEventListener('change', function() {
+                                    const qtyInput = document.getElementById('qty_input');
+                                    const opt = this.options[this.selectedIndex];
+                                    if (opt && opt.value !== "") {
+                                        const max = opt.getAttribute('data-max');
+                                        qtyInput.setAttribute('max', max);
+                                        qtyInput.placeholder = `Maks: ${max}`;
+                                        
+                                        // Auto reset if current value > max
+                                        if (parseInt(qtyInput.value) > max) {
+                                            qtyInput.value = max;
+                                        }
+                                    } else {
+                                        qtyInput.removeAttribute('max');
+                                        qtyInput.placeholder = "Contoh: 5";
+                                    }
+                                });
+                            }
+                        }, 50);
                     } else {
                         html += `<div class="grid grid-cols-2 gap-2">
                                     <div>
