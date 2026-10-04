@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 04 Okt 2026 pada 10.19
+-- Waktu pembuatan: 04 Okt 2026 pada 14.18
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -77,7 +77,10 @@ INSERT INTO `kartu_stok` (`id`, `id_variasi`, `jenis_mutasi`, `kanal`, `alasan_m
 (3, 6, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', 'WEB-20260929-282', 50, 412, 'Konfirmasi Pengambilan di Toko (Pick-up)', 3, '2026-09-29 13:17:45'),
 (4, 1, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', 'WEB-20260929-179', 10, 48, 'Pengiriman via Ekspedisi (Kurir)', 1, '2026-09-29 13:36:56'),
 (5, 6, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', 'WEB-20260929-179', 50, 412, 'Pengiriman via Ekspedisi (Kurir)', 1, '2026-09-29 13:36:56'),
-(6, 53, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', 'WEB-20260929-179', 1, 2, 'Pengiriman via Ekspedisi (Kurir)', 1, '2026-09-29 13:36:56');
+(6, 53, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', 'WEB-20260929-179', 1, 2, 'Pengiriman via Ekspedisi (Kurir)', 1, '2026-09-29 13:36:56'),
+(7, 1, 'Keluar', 'Manual', '', NULL, 8, 40, 'barang kadaluarsa [Batch: AMX-2025.A]', 2, '2026-10-04 12:10:34'),
+(8, 15, 'Keluar', 'Manual', '', NULL, 600, 1203, 'barang kadaluarsa [Batch: BCH-25-3]', 2, '2026-10-04 12:16:57'),
+(9, 15, 'Keluar', 'Manual', '', NULL, 3, 1200, 'barang kadaluarsa [Batch: BCH-25-3.A]', 2, '2026-10-04 12:17:16');
 
 -- --------------------------------------------------------
 
@@ -406,7 +409,7 @@ CREATE TABLE `stok_batch` (
 --
 
 INSERT INTO `stok_batch` (`id`, `id_variasi`, `no_batch`, `tgl_exp`, `stok_sisa`, `created_at`) VALUES
-(1, 1, 'AMX-2025.A', '2025-01-10', 8, '2026-09-29 10:43:04'),
+(1, 1, 'AMX-2025.A', '2025-01-10', 0, '2026-09-29 10:43:04'),
 (2, 1, 'AMX-2025.B', '2025-01-10', 10, '2026-09-29 10:43:04'),
 (3, 1, 'AMX-2026', '2026-12-15', 30, '2026-09-29 10:43:04'),
 (4, 2, 'SAN-001', '2026-08-01', 48, '2026-09-29 10:43:04'),
@@ -441,8 +444,8 @@ INSERT INTO `stok_batch` (`id`, `id_variasi`, `no_batch`, `tgl_exp`, `stok_sisa`
 (33, 14, 'BCH-25-2', '2025-08-01', 500, '2026-09-29 10:43:04'),
 (34, 14, 'BCH-25-2.A', '2025-08-01', 3, '2026-09-29 10:43:04'),
 (35, 14, 'BCH-26-2', '2026-10-15', 1000, '2026-09-29 10:43:04'),
-(36, 15, 'BCH-25-3', '2025-08-01', 600, '2026-09-29 10:43:04'),
-(37, 15, 'BCH-25-3.A', '2025-08-01', 3, '2026-09-29 10:43:04'),
+(36, 15, 'BCH-25-3', '2025-08-01', 0, '2026-09-29 10:43:04'),
+(37, 15, 'BCH-25-3.A', '2025-08-01', 0, '2026-09-29 10:43:04'),
 (38, 15, 'BCH-26-3', '2026-10-15', 1200, '2026-09-29 10:43:04'),
 (39, 16, 'BCH-25-4', '2025-08-01', 1200, '2026-09-29 10:43:04'),
 (40, 16, 'BCH-25-4.A', '2025-08-01', 3, '2026-09-29 10:43:04'),
@@ -564,7 +567,7 @@ CREATE TABLE `stok_toko` (
 --
 
 INSERT INTO `stok_toko` (`id`, `id_variasi`, `stok`) VALUES
-(1, 1, 48),
+(1, 1, 40),
 (2, 2, 183),
 (3, 3, 51),
 (4, 4, 5),
@@ -578,7 +581,7 @@ INSERT INTO `stok_toko` (`id`, `id_variasi`, `stok`) VALUES
 (12, 12, 155),
 (13, 13, 1803),
 (14, 14, 1503),
-(15, 15, 1803),
+(15, 15, 1200),
 (16, 16, 3603),
 (17, 17, 1803),
 (18, 18, 1803),
@@ -849,7 +852,7 @@ ALTER TABLE `detail_penjualan`
 -- AUTO_INCREMENT untuk tabel `kartu_stok`
 --
 ALTER TABLE `kartu_stok`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT untuk tabel `log_anomali_fefo`
