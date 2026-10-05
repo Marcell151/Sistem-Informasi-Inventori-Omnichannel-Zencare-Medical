@@ -630,10 +630,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
 <!-- Quick Actions Admin -->
 <div style="display:flex;gap:10px;margin-bottom:20px;">
-    <a href="pos/pos.php" style="background:#1a75d2;color:#fff;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;display:flex;align-items:center;gap:6px;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h0M2 9.5h20"/></svg>
-        Buka Terminal POS
-    </a>
     <a href="inventori/tambah_stok.php" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">+ Terima Stok Baru</a>
     <a href="admin/pesanan.php" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Kelola Pesanan</a>
     <a href="zencare_store.php" target="_blank" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Buka Store</a>
