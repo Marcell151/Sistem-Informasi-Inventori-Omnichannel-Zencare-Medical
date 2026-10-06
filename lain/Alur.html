@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alur Mutasi POS</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; padding: 20px; }
+  .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; }
+  .box { padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid; text-align: left; background: #fafafa; }
+  .box-blue { border-color: #3498db; }
+  .box-orange { border-color: #e67e22; background: #fffdfa; }
+  .box-green { border-color: #2ecc71; background: #f9fffb; }
+  .box-purple { border-color: #9b59b6; }
+  .arrow { font-size: 24px; margin: 5px 0; color: #7f8c8d; }
+  h2 { font-size: 18px; margin-bottom: 20px; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Alur Pop-Up Konversi POS & Akuntansi Kartu Stok</h2>
+  
+  <div class="box box-blue">
+    <strong>1. Input Kasir (Pelanggan Beli Eceran)</strong><br>
+    Pelanggan membeli 2 Sachet Tolak Angin. Sistem mendeteksi stok eceran di etalase = 0.
+  </div>
+  
+  <div class="arrow">⬇️</div>
+  
+  <div class="box box-orange">
+    <strong>2. Pop-Up Darurat di Layar POS</strong><br>
+    Sistem memunculkan alert (tanpa pindah halaman): <em>"Stok Eceran Kosong. Konversi 1 Dus (Isi 5) sekarang?"</em> Kasir klik <b>YA</b>.
+  </div>
+  
+  <div class="arrow">⬇️</div>
+  
+  <div class="box box-green">
+    <strong>3. Eksekusi Akuntansi Background (Database)</strong><br>
+    • <b>Kartu Stok DUS:</b> Mencatat KELUAR 1 Dus (Nilai Transaksi Rp0 - bukan penjualan).<br>
+    • <b>Kartu Stok SACHET:</b> Mencatat MASUK 5 Sachet (Lahir Sub-Batch baru).<br>
+    • <b>Tabel Histori Konversi:</b> Mencatat log "Kasir A membuka 1 Dus".
+  </div>
+  
+  <div class="arrow">⬇️️</div>
+  
+  <div class="box box-purple">
+    <strong>4. Transaksi Kasir Berlanjut (Checkout)</strong><br>
+    Sistem memotong 2 Sachet untuk dibayar pelanggan. Sisa stok sub-batch di etalase otomatis menjadi 3 Sachet.
+  </div>
+</div>
+</body>
+</html>

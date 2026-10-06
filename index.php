@@ -55,14 +55,20 @@ if ($isSuperadmin) {
     $totalProdukAktif = (int)$pdo->query("SELECT COUNT(*) FROM produk_variasi WHERE is_active=1")->fetchColumn();
     $totalSupplier    = (int)$pdo->query("SELECT COUNT(*) FROM supplier WHERE is_active=1")->fetchColumn();
 
-    // Stok menipis detail
+    // Stok menipis detail (ROP Logic Update: Pisahkan Eceran vs Dus via Batch)
     $stokMenipis = $pdo->query("
-        SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sc.stok, pv.satuan_kecil, pv.stok_minimum
-        FROM stok_toko sc
-        JOIN produk_variasi pv ON sc.id_variasi=pv.id
-        JOIN produk_induk pi ON pv.id_produk_induk=pi.id
-        WHERE sc.stok <= pv.stok_minimum AND pv.is_active=1
-        ORDER BY (sc.stok - pv.stok_minimum) ASC LIMIT 10
+        SELECT pv.id AS id_variasi, CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, 
+               pv.satuan_kecil, pv.satuan_besar, pv.stok_minimum, pv.rasio_konversi,
+               COALESCE(SUM(sb.stok_sisa), 0) AS stok_total,
+               COALESCE(SUM(CASE WHEN sb.no_batch NOT LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) AS stok_pcs_dus,
+               COALESCE(SUM(CASE WHEN sb.no_batch LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) AS stok_pcs_eceran
+        FROM produk_variasi pv
+        JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+        LEFT JOIN stok_batch sb ON sb.id_variasi = pv.id
+        WHERE pv.is_active = 1
+        GROUP BY pv.id
+        HAVING COALESCE(SUM(CASE WHEN sb.no_batch LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) <= pv.stok_minimum
+        ORDER BY (COALESCE(SUM(CASE WHEN sb.no_batch LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) - pv.stok_minimum) ASC LIMIT 10
     ")->fetchAll();
 
     // Top 5 produk terlaris bulan ini (berdasarkan qty unit terjual)
@@ -357,13 +363,29 @@ layoutHeader(
         <?php if (empty($stokMenipis)): ?>
         <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Semua item stok aman (di atas batas minimum) ✓</div>
         <?php else: ?>
-        <?php foreach ($stokMenipis as $s): ?>
-        <div style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
+        <?php foreach ($stokMenipis as $s): 
+            $stokDusFisik = floor($s['stok_pcs_dus'] / $s['rasio_konversi']);
+            $isBisaKonversi = $stokDusFisik > 0;
+        ?>
+        <div style="padding:10px 16px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
             <div style="flex:1;min-width:0;">
-                <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($s['nama']) ?></div>
-                <div style="font-size:10px;color:#94a3b8;margin-top:1px;">Batas Min: <?= $s['stok_minimum'] ?></div>
+                <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;"><?= htmlspecialchars($s['nama']) ?></div>
+                <div style="font-size:10px;margin-top:3px;display:flex;align-items:center;gap:6px;">
+                    <span style="color:#94a3b8;">Sisa Eceran: <span style="font-weight:700;color:#dc2626;"><?= $s['stok_pcs_eceran'] ?></span> / <?= $s['stok_minimum'] ?> <?= htmlspecialchars($s['satuan_kecil']) ?></span>
+                </div>
+                <?php if($isBisaKonversi): ?>
+                    <div style="margin-top:4px;font-size:10px;color:#ea580c;background:#fff7ed;border:1px solid #fed7aa;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
+                        ⚠ Stok Gudang Masih Ada <?= $stokDusFisik ?> <?= htmlspecialchars($s['satuan_besar']) ?>. Segera Konversi Buka Dus!
+                    </div>
+                <?php else: ?>
+                    <div style="margin-top:4px;font-size:10px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
+                        🚨 Habis Total! Segera Lakukan Pengadaan ke Supplier.
+                    </div>
+                <?php endif; ?>
             </div>
-            <span style="font-size:12px;font-weight:700;color:#dc2626;margin-left:12px;white-space:nowrap;"><?= $s['stok'] ?> <span style="font-weight:400;color:#94a3b8;"><?= htmlspecialchars($s['satuan_kecil']) ?></span></span>
+            <?php if($isBisaKonversi): ?>
+                <a href="inventori/konversi_uom.php" style="font-size:10px;font-weight:700;color:#ea580c;text-decoration:none;background:#ffedd5;padding:5px 10px;border-radius:5px;white-space:nowrap;margin-left:10px;border:1px solid #fed7aa;">Konversi</a>
+            <?php endif; ?>
         </div>
         <?php endforeach; ?>
         <?php endif; ?>

@@ -79,12 +79,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmtGetNew->execute([$idVariasi, $newBatchName]);
             $newBatchId = $stmtGetNew->fetchColumn();
             
-            // Catat di kartu stok
-            $sisaStok = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVariasi")->fetchColumn();
-            $catatan = "Pemecahan $qtyBox " . $var['satuan_besar'] . " menjadi $qtyPcs " . $var['satuan_kecil'] . " (Dari Batch $noBatchAsal menjadi Sub-Batch $newBatchName)";
+            // Catat di kartu stok secara terpisah (Keluar Dus, Masuk Pcs)
+            $sisaStokEceran = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVariasi")->fetchColumn();
+            $sisaStokDus = floor($sisaStokEceran / $rasio);
             
-            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Penyesuaian', 'Manual', 'Koreksi Manual', 0, ?, ?, ?)");
-            $stmtKartu->execute([$idVariasi, $sisaStok, $catatan, $userId]);
+            // 1. Kartu Stok DUS (Keluar)
+            $catatanKeluar = "Bongkar 1 " . $var['satuan_besar'] . " (Rp0 - Konversi)";
+            $stmtKartu1 = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Keluar', 'Manual', 'Bongkar Dus', ?, ?, ?, ?)");
+            $stmtKartu1->execute([$idVariasi, $qtyBox, $sisaStokDus, $catatanKeluar, $userId]);
+            
+            // 2. Kartu Stok ECERAN (Masuk)
+            $catatanMasuk = "Lahir Sub-Batch $newBatchName (Masuk $qtyPcs " . $var['satuan_kecil'] . ")";
+            $stmtKartu2 = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Masuk', 'Manual', 'Hasil Bongkar', ?, ?, ?, ?)");
+            $stmtKartu2->execute([$idVariasi, $qtyPcs, $sisaStokEceran, $catatanMasuk, $userId]);
+            
+            // 3. Catat ke Tabel Histori Konversi
+            $stmtHist = $pdo->prepare("INSERT INTO histori_konversi (id_variasi, batch_asal, batch_hasil, qty_box_buka, qty_pcs_hasil, dibuat_oleh) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmtHist->execute([$idVariasi, $noBatchAsal, $newBatchName, $qtyBox, $qtyPcs, $userId]);
             
             $pdo->commit();
             $msg = "Berhasil memecah box! Sub-Batch baru $newBatchName telah dibuat dengan stok $qtyPcs " . $var['satuan_kecil'] . ".";

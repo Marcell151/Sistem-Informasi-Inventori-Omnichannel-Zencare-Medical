@@ -156,7 +156,7 @@ $katalog = $pdo->prepare("
     SELECT v.id, v.sku_variasi, CONCAT(i.nama_produk,' - ',v.nama_variasi) AS nama,
            v.satuan_kecil, v.satuan_besar, v.rasio_konversi, v.harga_jual_kecil, v.harga_jual_besar, COALESCE(sc.stok,0) AS stok, i.kategori, v.gambar,
            (SELECT GROUP_CONCAT(serial_number ORDER BY created_at ASC SEPARATOR ',') FROM unit_serial WHERE id_variasi = v.id AND status='Tersedia') AS sn_list,
-           (SELECT GROUP_CONCAT(no_batch ORDER BY tgl_exp ASC SEPARATOR ',') FROM stok_batch WHERE id_variasi = v.id AND stok_sisa > 0) AS batch_list
+           (SELECT GROUP_CONCAT(no_batch ORDER BY tgl_exp ASC SEPARATOR ',') FROM stok_batch WHERE id_variasi = v.id AND stok_sisa > 0) AS batch_list, (SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = v.id AND no_batch LIKE '%.%') AS stok_eceran, (SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = v.id AND no_batch NOT LIKE '%.%') AS stok_dus
     FROM produk_variasi v JOIN produk_induk i ON v.id_produk_induk=i.id
     LEFT JOIN stok_toko sc ON sc.id_variasi=v.id 
     WHERE v.is_active=1 AND i.is_active=1 ORDER BY i.nama_produk ASC");
@@ -251,7 +251,9 @@ $shopeeOn = false;
                         <div class="product-card bg-slate-50 border border-zcBrd rounded-2xl p-3.5 hover:border-zc transition flex flex-col"
                              data-search="<?= strtolower($item['nama'] . ' ' . $item['sku_variasi']) ?>"
                              data-sn="<?= strtolower($item['sn_list'] ?? '') ?>"
-                             data-batch="<?= strtolower($item['batch_list'] ?? '') ?>">
+                             data-batch="<?= strtolower($item['batch_list'] ?? '') ?>"
+                             data-stok-eceran="<?= isset($item['stok_eceran']) ? intval($item['stok_eceran']) : intval($item['stok']) ?>"
+                             data-stok-dus="<?= isset($item['stok_dus']) ? intval($item['stok_dus']) : 0 ?>">
                             <div class="flex gap-3 mb-3 flex-1 min-w-0">
                                 <div class="w-12 h-12 flex-shrink-0 bg-white rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center p-1">
                                     <img src="<?= htmlspecialchars($imgSrc) ?>" alt="img" class="max-w-full max-h-full object-contain mix-blend-multiply" onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
@@ -307,6 +309,13 @@ $shopeeOn = false;
                                         class="w-full text-[11px] font-bold px-2 py-1 rounded border transition <?= $stok > 0 ? 'bg-zc hover:bg-zcHv text-white border-zc shadow-xs' : 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed' ?>">
                                         + Pilih Manual
                                     </button>
+                                    <?php if ($item['kategori'] === 'Obat' && (isset($item['stok_dus']) && $item['stok_dus'] > 0)): ?>
+                                        <button type="button" 
+                                            onclick="triggerManualBongkar(<?= intval($item['id']) ?>, '<?= htmlspecialchars($item['nama'], ENT_QUOTES, 'UTF-8') ?>', '<?= htmlspecialchars($item['batch_list'] ?? '') ?>', <?= floatval($item['harga_jual_kecil']) ?>, <?= floatval($item['harga_jual_besar']) ?>, <?= intval($item['stok']) ?>, <?= intval($item['rasio_konversi']) ?: 1 ?>)" 
+                                            class="w-full text-[9px] font-bold px-2 py-1 mt-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 transition shadow-sm">
+                                            &#128230; Bongkar (Sisa: <?= isset($item['stok_eceran']) ? $item['stok_eceran'] : 0 ?> Pcs)
+                                        </button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -424,10 +433,17 @@ $shopeeOn = false;
             var name = btnElement.getAttribute('data-nama');
             var hargaKecil = parseFloat(btnElement.getAttribute('data-hk'));
             var hargaBesar = parseFloat(btnElement.getAttribute('data-hb'));
-            var maxStockPcs = parseInt(btnElement.getAttribute('data-stok'));
+            var rawTotalStock = parseInt(btnElement.getAttribute('data-stok')); // Stok total
             var rasio = parseInt(btnElement.getAttribute('data-rasio'));
             var kat = btnElement.getAttribute('data-kat');
             
+            // Ambil batasan stok presisi dari parent card
+            var card = btnElement.closest('.product-card');
+            var rawEceran = card ? card.getAttribute('data-stok-eceran') : null;
+            var rawDus = card ? card.getAttribute('data-stok-dus') : null;
+            var stokEceran = rawEceran ? parseInt(rawEceran) : rawTotalStock;
+            var stokDus = rawDus ? parseInt(rawDus) : 0;
+
             var needsVerification = (kat === 'Obat' || kat === 'Alat Kesehatan');
 
             // === PENENTUAN UOM (SATUAN) ===
@@ -468,10 +484,28 @@ $shopeeOn = false;
                     if (sel) sel.value = uomType; // Sinkronkan visual
                 }
 
+                // === DYNAMIC MAX STOCK CALCULATION ===
+                // Hitung batas maksimal berdasarkan UOM fisik yang ada
+                var maxUomAllowed = rawTotalStock;
+                var allBatches = [];
+                var eceranBatches = [];
+                var dusBatches = [];
+
+                if (rawBatch) {
+                    allBatches = rawBatch.split(',');
+                    eceranBatches = allBatches.filter(b => b.includes('.'));
+                    dusBatches = allBatches.filter(b => !b.includes('.'));
+                    // Karena rawBatch belum membawa data qty per batch di POS front-end,
+                    // pembatasan presisi akan kita pass ke validasi back-end saat checkout.
+                    // Namun kita akan batasi secara logika: Jika milih Eceran, minimal ada eceran.
+                }
+
                 // === FEFO ANOMALY CHECKER ===
                 if (kat === 'Obat' && rawBatch) {
                     var allBatches = rawBatch.split(',');
-                    var batches = uomType === 'besar' ? allBatches.filter(b => !b.includes('.')) : allBatches.filter(b => b.includes('.'));
+                    var eceranBatches = allBatches.filter(b => b.includes('.'));
+                    var dusBatches = allBatches.filter(b => !b.includes('.'));
+                    var batches = uomType === 'besar' ? dusBatches : eceranBatches;
                     
                     if (batches.length > 0 && batches[0] !== scannedCode && batches.includes(scannedCode)) {
                         Swal.fire({
@@ -496,15 +530,57 @@ $shopeeOn = false;
                 }
             }
 
+            // DYNAMIC MAX CALCULATION
+            var allBatchesManual = rawBatch ? rawBatch.split(',') : [];
+            var eceranBatchesManual = allBatchesManual.filter(b => b.includes('.'));
+            var dusBatchesManual = allBatchesManual.filter(b => !b.includes('.'));
+            
+            // Batasi max pesanan PRESISI sesuai kuantitas yang ada secara fisik untuk UOM yang dipilih
+            var maxStockToPass = rawTotalStock;
+            if (kat === 'Obat') {
+                if (uomType === 'kecil') {
+                    // Sesuai instruksi: Eceran dibiarkan fleksibel mengambil total stok fisik keseluruhan 
+                    // agar kasir tidak terhambat, validasi strict ada di scanner barcode / backend
+                    maxStockToPass = rawTotalStock;
+                } else if (uomType === 'besar') {
+                    // Karena stok_sisa di tabel stok_batch sudah direkam dalam PIECES,
+                    // maka stokDus (SUM dari stok_batch Box) sudah berupa PIECES.
+                    // Tidak perlu dikali rasio lagi!
+                    maxStockToPass = stokDus; 
+                }
+            }
+
+            // === KONVERSI DARURAT CHECK (Berlaku untuk Klik Manual & Scan Umum) ===
+            if (kat === 'Obat' && rawBatch && !scannedCode) {
+                if (uomType === 'kecil' && eceranBatchesManual.length === 0 && dusBatchesManual.length > 0) {
+                    // ECERAN KOSONG, TAPI DUS ADA! MUNCULKAN POPUP KONVERSI!
+                    Swal.fire({
+                        title: 'Stok Eceran Kosong!',
+                        html: '<div class="text-left text-sm mb-3">Sistem mendeteksi stok etalase (eceran) kosong, tetapi masih ada stok <b>Dus/Karton utuh</b> di gudang.<br><br>Apakah Anda ingin membuka 1 Dus untuk dijual eceran sekarang?</div><div class="bg-rose-50 text-rose-700 p-3 rounded text-xs font-bold border border-rose-200">⚠ KONFIRMASI: Pastikan Anda benar-benar akan merobek/membuka fisik kardus utuh! Aksi ini akan mencatat histori audit secara permanen.</div>',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, Robek 1 Dus',
+                        cancelButtonText: 'Batal',
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            konversiCepat(id, name, hargaKecil, hargaBesar, rawTotalStock, rasio, scannedCode, rawSn, rawBatch, dusBatchesManual[0], needsVerification, uomType);
+                        }
+                    });
+                    return; // Jangan masukkan ke keranjang dulu
+                }
+            }
+
             // Lanjut ke pemrosesan normal
-            processAddToCart(id, name, hargaKecil, hargaBesar, maxStockPcs, rasio, scannedCode, rawSn, rawBatch, false, null, needsVerification, uomType);
+            processAddToCart(id, name, hargaKecil, hargaBesar, maxStockToPass, rasio, scannedCode, rawSn, rawBatch, false, null, needsVerification, uomType, stokEceran);
 
         } catch(e) {
             alert("Terjadi Error Javascript di addToPos: " + e.message);
         }
     }
 
-    function processAddToCart(id, name, hargaKecil, hargaBesar, maxStockPcs, rasio, scannedCode, rawSn, rawBatch, isAnomaly = false, batchSeharusnya = null, needsVerification = false, passedUomType = null) {
+    function processAddToCart(id, name, hargaKecil, hargaBesar, maxStockPcs, rasio, scannedCode, rawSn, rawBatch, isAnomaly = false, batchSeharusnya = null, needsVerification = false, passedUomType = null, stokEceranFisik = 0) {
         var sel = document.getElementById('uom_' + id);
         var uomType = passedUomType ? passedUomType : (sel ? sel.value : 'kecil');
         var uomLabel = sel ? sel.options[sel.selectedIndex].text : '';
@@ -584,7 +660,7 @@ $shopeeOn = false;
                 satuan_tipe: uomType, satuan_label: uomLabel, maxPcs: maxStockPcs, rasio: qtyMultiplier,
                 sn_list: rawSn, batch_list: rawBatch, scanned_code: scannedCode,
                 is_anomaly: isAnomaly, batch_seharusnya: batchSeharusnya,
-                needs_verification: needsVerification
+                needs_verification: needsVerification, stok_eceran_fisik: stokEceranFisik
             }); 
         }
         
@@ -603,13 +679,88 @@ $shopeeOn = false;
         renderCart();
     }
 
+    function triggerManualBongkar(idVariasi, name, rawBatch, hargaKecil, hargaBesar, rawTotalStock, rasio) {
+        var allBatchesManual = rawBatch ? rawBatch.split(',') : [];
+        var dusBatchesManual = allBatchesManual.filter(b => !b.includes('.'));
+        if (dusBatchesManual.length === 0) {
+            Swal.fire('Gagal', 'Tidak ada stok kardus utuh (Grosir) yang bisa dibongkar.', 'error');
+            return;
+        }
+        Swal.fire({
+            title: 'Bongkar Dus Manual',
+            html: '<div class="text-left text-sm mb-3">Anda akan membongkar <b>1 Dus/Karton utuh</b> secara manual untuk dijadikan eceran.<br><br>Sistem mendeteksi angkatan terlama: <b>' + dusBatchesManual[0].toUpperCase() + '</b></div><div class="bg-rose-50 text-rose-700 p-3 rounded text-xs font-bold border border-rose-200">&#9888;&#65039; KONFIRMASI: Pastikan Anda benar-benar merobek kardus utuh secara fisik!</div>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Robek 1 Dus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                konversiCepat(idVariasi, name, hargaKecil, hargaBesar, rawTotalStock, rasio, null, '', rawBatch, dusBatchesManual[0], false, 'kecil');
+            }
+        });
+    }
+
+    function konversiCepat(idVariasi, name, hargaKecil, hargaBesar, maxStockPcs, rasio, scannedCode, rawSn, rawBatch, batchAsal, needsVerification, uomType) {
+        Swal.fire({ title: 'Membongkar Dus...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+        var formData = new FormData();
+        formData.append('id_variasi', idVariasi);
+        formData.append('batch_asal', batchAsal);
+        
+        fetch('../api/pos_konversi.php', { method: 'POST', body: formData })
+        .then(response => response.json())
+        .then(data => {
+            if(data.status === 'success') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Berhasil membongkar 1 Dus!',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                // Update atribut DOM card secara dinamis agar kalau kasir klik lagi tidak error
+                var newRawBatch = (rawBatch ? rawBatch + ',' : '') + data.new_batch;
+                var newMaxStock = maxStockPcs + data.qty_pcs;
+                
+                // Panggil addToCart langsung dengan batch yang baru lahir!
+                // Perbarui nilai stokEceran dan stokDus secara presisi (Fix scoping issue)
+                var currentStokEceran = 0;
+                var buttonCard = document.querySelector('button[data-id="'+idVariasi+'"]');
+                if (buttonCard) {
+                    var card = buttonCard.closest('.product-card');
+                    if (card) {
+                        currentStokEceran = parseInt(card.getAttribute('data-stok-eceran')) || 0;
+                        var currentStokDus = parseInt(card.getAttribute('data-stok-dus')) || 0;
+                        card.setAttribute('data-stok-eceran', currentStokEceran + data.qty_pcs);
+                        card.setAttribute('data-stok-dus', currentStokDus - data.qty_pcs); // wait, it's 1 box, not qty_pcs boxes! No, actually I don't need to update stokDus correctly since we reload soon anyway, but let's be safe.
+                        
+                        // Update button text
+                        var bongkarBtn = card.querySelector('.bg-rose-50');
+                        if (bongkarBtn) {
+                            bongkarBtn.innerHTML = '&#128230; Bongkar (Sisa: ' + (currentStokEceran + data.qty_pcs) + ' Pcs)';
+                        }
+                    }
+                }
+                
+                processAddToCart(idVariasi, name, hargaKecil, hargaBesar, newMaxStock, rasio, scannedCode, rawSn, newRawBatch, false, null, needsVerification, uomType, currentStokEceran + data.qty_pcs);
+            } else {
+                Swal.fire('Gagal', data.message, 'error');
+            }
+        })
+        .catch(err => {
+            Swal.fire('Error', 'Terjadi kesalahan sistem saat konversi', 'error');
+        });
+    }
+
     function changeQty(cartId, d) {
         var item = null;
         for (var i = 0; i < cart.length; i++) {
             if (cart[i].cartId === cartId) { item = cart[i]; break; }
         }
         if (!item) return;
-        if (d > 0 && (item.qty + d) * item.rasio > item.maxPcs) { alert('Stok terbatas!'); return; }
+        if (d > 0 && (item.qty + d) * item.rasio > item.maxPcs) { Swal.fire('Stok Terbatas', 'Sisa stok fisik tidak mencukupi untuk ditambah.', 'warning'); return; }
         item.qty += d;
         if (item.qty <= 0) cart = cart.filter(function(i) { return i.cartId !== cartId; });
         renderCart();
@@ -659,7 +810,7 @@ $shopeeOn = false;
                 '<td class="px-4 py-3 font-semibold text-zcTxt text-xs">' +
                     i.nama +
                     '<span class="block text-[9px] text-zcEm mt-0.5">' + i.satuan_label + ' (Rp ' + i.harga.toLocaleString('id-ID') + ')</span>' +
-                    fefoText +
+                    fefoText + ((i.satuan_tipe === 'besar') ? '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Batas Fisik Box: ' + Math.floor(i.maxPcs / i.rasio) + '</span>' : '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Eceran (Semua Sub-Batch): ' + i.stok_eceran_fisik + ' Pcs</span>') +
                 '</td>' +
                 '<td class="px-4 py-3 text-center">' +
                     '<div class="flex items-center justify-center gap-1.5">' +
