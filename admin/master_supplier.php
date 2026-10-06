@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // File: admin/master_supplier.php
 // Master Supplier – Super Admin Only
 session_start();
@@ -53,15 +53,24 @@ layoutHeader('Master Supplier', 'Kelola data distributor & supplier alat kesehat
     </div>
 <?php endif; ?>
 
-<div class="flex items-center justify-between mb-5">
+<div class="flex items-center justify-between mb-5 flex-wrap gap-3">
     <div>
         <h2 class="text-base font-bold text-zcText">Daftar Supplier</h2>
         <p class="text-xs text-zcMuted mt-0.5"><?= count($suppliers) ?> supplier terdaftar</p>
     </div>
-    <button onclick="document.getElementById('modal_tambah').classList.remove('hidden')"
-        class="flex items-center gap-2 px-4 py-2.5 bg-zc hover:bg-zcHv text-white text-xs font-bold rounded-xl transition shadow-sm">
-        + Tambah Supplier
-    </button>
+    <div class="flex flex-wrap gap-2 items-center justify-end w-full md:w-auto">
+        <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </span>
+            <input type="text" id="searchSupplier" onkeyup="filterSupplier()" placeholder="Cari nama supplier..." 
+                   class="pl-9 pr-4 py-2.5 bg-white border border-zcBorder rounded-xl text-xs focus:outline-none focus:border-zc shadow-sm min-w-[220px]">
+        </div>
+        <button onclick="document.getElementById('modal_tambah').classList.remove('hidden')"
+            class="flex items-center gap-2 px-4 py-2.5 bg-zc hover:bg-zcHv text-white text-xs font-bold rounded-xl transition shadow-sm">
+            + Tambah Supplier
+        </button>
+    </div>
 </div>
 
 <div class="bg-white border border-zcBorder rounded-2xl shadow-sm overflow-hidden">
@@ -163,6 +172,21 @@ function openEdit(id, nama, kontak, alamat) {
     document.getElementById('edit_sup_kontak').value = kontak;
     document.getElementById('edit_sup_alamat').value = alamat;
     document.getElementById('modal_edit').classList.remove('hidden');
+}
+
+function filterSupplier() {
+    let input = document.getElementById("searchSupplier");
+    let filter = input.value.toLowerCase();
+    let rows = document.querySelectorAll('tbody tr');
+
+    rows.forEach(row => {
+        let text = row.innerText.toLowerCase();
+        if (text.includes(filter)) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
 }
 </script>
 

@@ -29,9 +29,9 @@ try {
         return $pdo->lastInsertId();
     }
 
-    function insertVar($pdo, $idInduk, $sku, $namaVar, $sKecil, $sBesar, $rasio, $hKecil, $hBesar, $minStok = 5) {
-        $stmt = $pdo->prepare("INSERT INTO produk_variasi (id_produk_induk, sku_variasi, nama_variasi, satuan_kecil, satuan_besar, rasio_konversi, harga_jual_kecil, harga_jual_besar, stok_minimum, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
-        $stmt->execute([$idInduk, $sku, $namaVar, $sKecil, $sBesar, $rasio, $hKecil, $hBesar, $minStok]);
+    function insertVar($pdo, $idInduk, $sku, $namaVar, $sKecil, $sBesar, $rasio, $hKecil, $hBesar, $minStok = 5, $minStokBesar = 2) {
+        $stmt = $pdo->prepare("INSERT INTO produk_variasi (id_produk_induk, sku_variasi, nama_variasi, satuan_kecil, satuan_besar, rasio_konversi, harga_jual_kecil, harga_jual_besar, stok_minimum_kecil, stok_minimum_besar, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
+        $stmt->execute([$idInduk, $sku, $namaVar, $sKecil, $sBesar, $rasio, $hKecil, $hBesar, $minStok, $minStokBesar]);
         $idVar = $pdo->lastInsertId();
         $pdo->prepare("INSERT INTO stok_toko (id_variasi, stok) VALUES (?, 0)")->execute([$idVar]);
         return $idVar;

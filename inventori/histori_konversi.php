@@ -20,7 +20,7 @@ $stmt = $pdo->query("
     JOIN produk_variasi pv ON hk.id_variasi = pv.id
     JOIN produk_induk pi ON pv.id_produk_induk = pi.id
     LEFT JOIN users u ON hk.dibuat_oleh = u.id
-    LEFT JOIN stok_batch sb ON sb.no_batch = hk.batch_hasil AND sb.id_variasi = hk.id_variasi
+    LEFT JOIN stok_batch sb ON sb.no_batch COLLATE utf8mb4_unicode_ci = hk.batch_hasil COLLATE utf8mb4_unicode_ci AND sb.id_variasi = hk.id_variasi
     ORDER BY hk.created_at DESC
 ");
 $histori = $stmt->fetchAll();

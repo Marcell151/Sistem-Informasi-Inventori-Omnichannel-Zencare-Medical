@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $jMutasi = $jenisMutasi === 'Penambahan' ? 'Masuk' : 'Keluar';
             $fullCatatan = $catatan . $detailLog;
             
-            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Manual', ?, ?, ?, ?, ?)");
+            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, ?, 'Manual', ?, ?, ?, ?, ?)");
             $stmtKartu->execute([$idVariasi, $jMutasi, $alasan, $qty, $sisaStok, $fullCatatan, $userId]);
 
             $pdo->commit();

@@ -28,7 +28,7 @@ try {
 
     function tambahVariasi($idInduk, $sku, $nama, $satKecil, $satBesar, $rasio, $hrgKecil, $hrgBesar, $berat, $stokMin) {
         global $pdo;
-        $stmt = $pdo->prepare("INSERT INTO produk_variasi (id_produk_induk, sku_variasi, nama_variasi, satuan_kecil, satuan_besar, rasio_konversi, harga_jual_kecil, harga_jual_besar, berat, stok_minimum, tampil_di_online, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)");
+        $stmt = $pdo->prepare("INSERT INTO produk_variasi (id_produk_induk, sku_variasi, nama_variasi, satuan_kecil, satuan_besar, rasio_konversi, harga_jual_kecil, harga_jual_besar, berat, stok_minimum_kecil, stok_minimum_besar, tampil_di_online, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)");
         $stmt->execute([$idInduk, $sku, $nama, $satKecil, $satBesar, $rasio, $hrgKecil, $hrgBesar, $berat, $stokMin]);
         $idVar = $pdo->lastInsertId();
         

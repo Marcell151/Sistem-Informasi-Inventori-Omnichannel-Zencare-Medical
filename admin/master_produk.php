@@ -84,7 +84,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hrgBesar = floatval($_POST['harga_jual_besar'] ?? 0);
 
         $berat    = intval($_POST['berat'] ?? 100);
-        $minStok  = intval($_POST['stok_minimum'] ?? 0);
+        $minStokKecil  = intval($_POST['stok_minimum_kecil'] ?? 0);
+        $minStokBesar  = intval($_POST['stok_minimum_besar'] ?? 0);
         
         // --- MULTIPLE IMAGE HANDLING ---
         $gambarText = trim($_POST['gambar'] ?? '');
@@ -111,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($idInduk && $sku && $namaVar && $hrgKecil > 0) {
             try {
-                $pdo->prepare("INSERT INTO produk_variasi (id_produk_induk,sku_variasi,nama_variasi,satuan_kecil,satuan_besar,rasio_konversi,harga_jual_kecil,harga_jual_besar,berat,stok_minimum,gambar,tampil_di_online,is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)")
+                $pdo->prepare("INSERT INTO produk_variasi (id_produk_induk,sku_variasi,nama_variasi,satuan_kecil,satuan_besar,rasio_konversi,harga_jual_kecil,harga_jual_besar,berat,stok_minimum_kecil,stok_minimum_besar,gambar,tampil_di_online,is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,1)")
                     ->execute([$idInduk,$sku,$namaVar,$satKecil,$satBesar,$rasio,$hrgKecil,$hrgBesar,$berat,$minStok,$gambar,$tampil]);
                 
                 // Auto-init stok 0
@@ -134,7 +135,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hrgKecil = floatval($_POST['harga_jual_kecil'] ?? 0);
         $hrgBesar = floatval($_POST['harga_jual_besar'] ?? 0);
         $berat = intval($_POST['berat'] ?? 100);
-        $minStok  = intval($_POST['stok_minimum'] ?? 0);
+        $minStokKecil  = intval($_POST['stok_minimum_kecil'] ?? 0);
+        $minStokBesar  = intval($_POST['stok_minimum_besar'] ?? 0);
 
         if ($_SESSION['role'] !== 'superadmin') {
             $existing = $pdo->prepare("SELECT rasio_konversi, harga_jual_kecil, harga_jual_besar FROM produk_variasi WHERE id = ?");
@@ -171,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($idVal && $sku && $nama && $hrgKecil > 0) {
             try {
-                $pdo->prepare("UPDATE produk_variasi SET sku_variasi=?, nama_variasi=?, satuan_kecil=?, satuan_besar=?, rasio_konversi=?, harga_jual_kecil=?, harga_jual_besar=?, berat=?, stok_minimum=?, gambar=?, tampil_di_online=? WHERE id=?")
+                $pdo->prepare("UPDATE produk_variasi SET sku_variasi=?, nama_variasi=?, satuan_kecil=?, satuan_besar=?, rasio_konversi=?, harga_jual_kecil=?, harga_jual_besar=?, berat=?, stok_minimum_kecil=?, stok_minimum_besar=?, gambar=?, tampil_di_online=? WHERE id=?")
                     ->execute([$sku, $nama, $satKecil, $satBesar, $rasio, $hrgKecil, $hrgBesar, $berat, $minStok, $gambar, $tampil, $idVal]);
                 $msg = "Variasi '$nama' berhasil diperbarui."; $msgType = 'success';
             } catch (Exception $e) { $msg = "Error: " . $e->getMessage(); $msgType = 'error'; }
@@ -293,7 +295,16 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
         <h2 class="text-base font-bold text-zcTxt">Daftar Produk Induk</h2>
         <p class="text-xs text-zcMut mt-0.5">Total: <?= count($produkInduk) ?> produk &bull; Klik &blacktriangledown; untuk lihat variasi & tambah variasi</p>
     </div>
-    <div class="flex gap-2">
+    <div class="flex flex-wrap gap-2 items-center justify-end w-full md:w-auto">
+        <!-- Search Input -->
+        <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </span>
+            <input type="text" id="searchProduk" onkeyup="filterProduk()" placeholder="Cari nama atau SKU produk..." 
+                   class="pl-9 pr-4 py-2.5 bg-white border border-zcBrd rounded-xl text-xs focus:outline-none focus:border-zc shadow-sm min-w-[220px]">
+        </div>
+        
         <button onclick="document.getElementById('modal_import_csv').classList.remove('hidden')"
             class="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-xl transition shadow-sm">
             <?= icon('download', 'w-4 h-4') ?> Import CSV
@@ -306,7 +317,7 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
 </div>
 
 <!-- PRODUK LIST ACCORDION -->
-<div class="space-y-3">
+<div class="space-y-3" id="produk-list-container">
 <?php foreach ($produkInduk as $pi): ?>
     <?php
     $variasiList = $pdo->prepare("SELECT * FROM produk_variasi WHERE id_produk_induk=? ORDER BY id ASC");
@@ -314,7 +325,7 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
     $variasiList = $variasiList->fetchAll();
     $aktif = $pi['is_active'] ? true : false;
     ?>
-    <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden <?= !$aktif ? 'opacity-60' : '' ?>">
+    <div class="produk-item bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden <?= !$aktif ? 'opacity-60' : '' ?>">
         <!-- Header row -->
         <div class="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-slate-50 transition"
              onclick="toggleAcc('acc_<?= $pi['id'] ?>')">
@@ -397,7 +408,7 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                                             </span>
                                         </td>
                                         <td class="py-2.5 px-3 text-center space-x-1">
-                                            <button onclick="openEditVariasi(<?= $v['id'] ?>, '<?= htmlspecialchars($v['sku_variasi']) ?>', '<?= htmlspecialchars($v['nama_variasi']) ?>', '<?= htmlspecialchars($v['satuan_kecil']) ?>', '<?= htmlspecialchars($v['satuan_besar']) ?>', <?= $v['rasio_konversi'] ?>, <?= $v['harga_jual_kecil'] ?>, <?= $v['harga_jual_besar'] ?>, <?= $v['berat'] ?>, <?= intval($v['stok_minimum'] ?? 0) ?>, '<?= htmlspecialchars($v['gambar'] ?? '') ?>', <?= $v['tampil_di_online'] ?>)" 
+                                            <button onclick="openEditVariasi(<?= $v['id'] ?>, '<?= htmlspecialchars($v['sku_variasi']) ?>', '<?= htmlspecialchars($v['nama_variasi']) ?>', '<?= htmlspecialchars($v['satuan_kecil']) ?>', '<?= htmlspecialchars($v['satuan_besar']) ?>', <?= $v['rasio_konversi'] ?>, <?= $v['harga_jual_kecil'] ?>, <?= $v['harga_jual_besar'] ?>, <?= $v['berat'] ?>, <?= intval($v['stok_minimum_kecil'] ?? 0) ?>, <?= intval($v['stok_minimum_besar'] ?? 0) ?>, '<?= htmlspecialchars($v['gambar'] ?? '') ?>', <?= $v['tampil_di_online'] ?>)" 
                                                     class="text-[10px] font-bold px-2 py-1 bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 rounded-lg">
                                                 Edit
                                             </button>
@@ -582,9 +593,17 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                     <label class="block text-xs font-bold text-zcTxt mb-1.5">Berat (gram) *</label>
                     <input type="number" name="berat" required min="1" placeholder="250" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Batas Stok Minimum (ROP) *</label>
-                    <input type="number" name="stok_minimum" required min="0" placeholder="10" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                <div style="grid-column: span 2 / span 2;">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-zcTxt mb-1.5">Batas Min (Eceran) *</label>
+                            <input type="number" name="stok_minimum_kecil" required min="0" placeholder="10" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-zcTxt mb-1.5">Batas Min (Grosir) *</label>
+                            <input type="number" name="stok_minimum_besar" required min="0" placeholder="2" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -671,9 +690,17 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                     <label class="block text-xs font-bold text-zcTxt mb-1.5">Berat (gram) *</label>
                     <input type="number" name="berat" id="edit_berat_variasi" required min="1" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Batas Stok Min (ROP) *</label>
-                    <input type="number" name="stok_minimum" id="edit_stok_minimum_variasi" required min="0" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                <div style="grid-column: span 2 / span 2;">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-zcTxt mb-1.5">Batas Min (Eceran) *</label>
+                            <input type="number" name="stok_minimum_kecil" id="edit_stok_minimum_kecil" required min="0" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-zcTxt mb-1.5">Batas Min (Grosir) *</label>
+                            <input type="number" name="stok_minimum_besar" id="edit_stok_minimum_besar" required min="0" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -747,7 +774,7 @@ function openTambahVariasi(idInduk, namaInduk) {
     document.getElementById('var_parent_name').innerText = namaInduk;
     document.getElementById('modal_tambah_variasi').classList.remove('hidden');
 }
-function openEditVariasi(id, sku, nama, satKecil, satBesar, rasio, hrgKecil, hrgBesar, berat, minStok, gambar, tampil) {
+function openEditVariasi(id, sku, nama, satKecil, satBesar, rasio, hrgKecil, hrgBesar, berat, minStokKecil, minStokBesar, gambar, tampil) {
     document.getElementById('edit_id_variasi').value = id;
     document.getElementById('edit_sku_variasi').value = sku;
     document.getElementById('edit_nama_variasi').value = nama;
@@ -757,7 +784,8 @@ function openEditVariasi(id, sku, nama, satKecil, satBesar, rasio, hrgKecil, hrg
     document.getElementById('edit_harga_jual_kecil').value = hrgKecil;
     document.getElementById('edit_harga_jual_besar').value = hrgBesar;
     document.getElementById('edit_berat_variasi').value = berat;
-    document.getElementById('edit_stok_minimum_variasi').value = minStok;
+    document.getElementById('edit_stok_minimum_kecil').value = minStokKecil;
+    document.getElementById('edit_stok_minimum_besar').value = minStokBesar;
     document.getElementById('edit_gambar_variasi').value = gambar;
     document.getElementById('edit_tampil_di_online').checked = (tampil == 1);
     document.getElementById('modal_edit_variasi').classList.remove('hidden');
@@ -821,6 +849,22 @@ async function openCetakModal(id, nama) {
     } catch (e) {
         alert("Gagal mengambil data dari server.");
     }
+}
+
+function filterProduk() {
+    let input = document.getElementById("searchProduk");
+    let filter = input.value.toLowerCase();
+    let container = document.getElementById("produk-list-container");
+    let items = container.querySelectorAll('.produk-item');
+
+    items.forEach(item => {
+        let text = item.innerText.toLowerCase();
+        if (text.includes(filter)) {
+            item.style.display = "";
+        } else {
+            item.style.display = "none";
+        }
+    });
 }
 </script>
 

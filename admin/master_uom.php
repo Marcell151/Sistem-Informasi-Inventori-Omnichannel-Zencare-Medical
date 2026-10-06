@@ -33,7 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        $stokMin      = max(0, intval($_POST['stok_minimum'] ?? 0));
+        $stokMinKecil = max(0, intval($_POST['stok_minimum_kecil'] ?? 0));
+        $stokMinBesar = max(0, intval($_POST['stok_minimum_besar'] ?? 0));
         $berat        = max(0, intval($_POST['berat'] ?? 0));
 
         if (!$satuanKecil || !$satuanBesar) {
@@ -43,9 +44,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 UPDATE produk_variasi SET 
                     satuan_kecil = ?, satuan_besar = ?, rasio_konversi = ?,
                     harga_jual_kecil = ?, harga_jual_besar = ?,
-                    stok_minimum = ?, berat = ?
+                    stok_minimum_kecil = ?, stok_minimum_besar = ?, berat = ?
                 WHERE id = ?
-            ")->execute([$satuanKecil, $satuanBesar, $rasio, $hargaKecil, $hargaBesar, $stokMin, $berat, $idVariasi]);
+            ")->execute([$satuanKecil, $satuanBesar, $rasio, $hargaKecil, $hargaBesar, $stokMinKecil, $stokMinBesar, $berat, $idVariasi]);
             $msg = 'Satuan & UOM berhasil diperbarui.'; $msgType = 'success';
         }
     }
@@ -77,6 +78,17 @@ layoutHeader('Master Satuan & UOM', 'Pengaturan Unit of Measure & Harga per Vari
     <?= $msg ?>
 </div>
 <?php endif; ?>
+
+<!-- Search Box -->
+<div class="flex items-center justify-between mb-4">
+    <div class="relative w-full md:max-w-xs">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </span>
+        <input type="text" id="searchUom" onkeyup="filterUom()" placeholder="Cari nama atau SKU..." 
+               class="w-full pl-9 pr-4 py-2.5 bg-white border border-zcBrd rounded-xl text-xs focus:outline-none focus:border-zc shadow-sm">
+    </div>
+</div>
 
 <!-- Info Box -->
 <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6 flex gap-3">
@@ -130,7 +142,8 @@ layoutHeader('Master Satuan & UOM', 'Pengaturan Unit of Measure & Harga per Vari
                     <td class="px-4 py-3 text-right font-semibold text-zcTxt">Rp <?= number_format($p['harga_jual_kecil'],0,',','.') ?></td>
                     <td class="px-4 py-3 text-right font-semibold text-zcTxt">Rp <?= number_format($p['harga_jual_besar'],0,',','.') ?></td>
                     <td class="px-4 py-3 text-right">
-                        <span class="font-bold <?= $p['stok_minimum'] > 0 ? 'text-amber-600' : 'text-slate-400' ?>"><?= $p['stok_minimum'] ?></span>
+                        <div class="text-[10px]">Kecil: <span class="font-bold <?= $p['stok_minimum_kecil'] > 0 ? 'text-amber-600' : 'text-slate-400' ?>"><?= $p['stok_minimum_kecil'] ?></span></div>
+       <div class="text-[10px]">Besar: <span class="font-bold <?= $p['stok_minimum_besar'] > 0 ? 'text-amber-600' : 'text-slate-400' ?>"><?= $p['stok_minimum_besar'] ?></span></div>
                     </td>
                     <td class="px-4 py-3 text-right">
                         <button onclick="openEditModal(<?= htmlspecialchars(json_encode($p)) ?>)"
@@ -195,10 +208,13 @@ layoutHeader('Master Satuan & UOM', 'Pengaturan Unit of Measure & Harga per Vari
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-semibold text-zcTxt mb-1.5">Stok Minimum (Alert Kritis)</label>
-                    <input type="number" name="stok_minimum" id="edit_stok_min" min="0"
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5">Stok Min (Eceran)</label>
+                    <input type="number" name="stok_minimum_kecil" id="edit_stok_min_kecil" min="0"
                         class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
-                    <p class="text-[10px] text-zcMut mt-1">Dalam satuan kecil</p>
+                    
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5 mt-2">Stok Min (Grosir)</label>
+                    <input type="number" name="stok_minimum_besar" id="edit_stok_min_besar" min="0"
+                        class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-zcTxt mb-1.5">Berat (gram)</label>
@@ -224,7 +240,8 @@ function openEditModal(data) {
     document.getElementById('edit_rasio').value = data.rasio_konversi;
     document.getElementById('edit_harga_kecil').value = data.harga_jual_kecil;
     document.getElementById('edit_harga_besar').value = data.harga_jual_besar;
-    document.getElementById('edit_stok_min').value = data.stok_minimum;
+    document.getElementById('edit_stok_min_kecil').value = data.stok_minimum_kecil;
+    document.getElementById('edit_stok_min_besar').value = data.stok_minimum_besar;
     document.getElementById('edit_berat').value = data.berat;
     // Show Alkes note if Single-UOM
     const isAlkes = (parseInt(data.rasio_konversi) === 1);
@@ -233,6 +250,21 @@ function openEditModal(data) {
 }
 function closeModal() {
     document.getElementById('modal-edit-uom').classList.add('hidden');
+}
+
+function filterUom() {
+    let input = document.getElementById("searchUom");
+    let filter = input.value.toLowerCase();
+    let rows = document.querySelectorAll('tbody tr');
+
+    rows.forEach(row => {
+        let text = row.innerText.toLowerCase();
+        if (text.includes(filter)) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
 }
 </script>
 

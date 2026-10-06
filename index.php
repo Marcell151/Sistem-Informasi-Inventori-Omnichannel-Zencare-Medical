@@ -14,9 +14,14 @@ $namaUser     = $_SESSION['nama_lengkap'] ?? 'Pengguna';
 // ─── WIDGET DATA BERSAMA (Admin & Superadmin) ─────────────────────────────
 $totalStokFisik   = (int)$pdo->query("SELECT COALESCE(SUM(stok),0) FROM stok_toko")->fetchColumn();
 $stokKritisCount  = (int)$pdo->query("
-    SELECT COUNT(*) FROM stok_toko st
-    JOIN produk_variasi pv ON st.id_variasi = pv.id
-    WHERE st.stok <= pv.stok_minimum AND pv.is_active=1
+    SELECT COUNT(*) FROM (
+        SELECT pv.id FROM produk_variasi pv
+        LEFT JOIN stok_batch sb ON sb.id_variasi = pv.id
+        WHERE pv.is_active=1
+        GROUP BY pv.id, pv.rasio_konversi, pv.stok_minimum_besar, pv.stok_minimum_kecil
+        HAVING (COALESCE(SUM(CASE WHEN sb.no_batch NOT LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) / pv.rasio_konversi) <= pv.stok_minimum_besar
+            OR COALESCE(SUM(CASE WHEN sb.no_batch LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) <= pv.stok_minimum_kecil
+    ) as kritis
 ")->fetchColumn();
 $expWarningCount  = (int)$pdo->query("
     SELECT COUNT(*) FROM stok_batch sb
@@ -42,7 +47,7 @@ if ($isSuperadmin) {
     $volPosHariIni    = (int)($row['qty_pos']    ?? 0);
     $volOnlineHariIni = (int)($row['qty_online'] ?? 0);
 
-    // Pergerakan inventaris bulan ini (unit masuk vs keluar dari kartu_stok)
+    // Pergerakan barang bulan ini (unit masuk vs keluar dari kartu_stok)
     $mutasiBulan = $pdo->query("
         SELECT
             COALESCE(SUM(CASE WHEN jenis_mutasi='Masuk'  THEN qty ELSE 0 END),0) AS total_masuk,
@@ -58,7 +63,7 @@ if ($isSuperadmin) {
     // Stok menipis detail (ROP Logic Update: Pisahkan Eceran vs Dus via Batch)
     $stokMenipis = $pdo->query("
         SELECT pv.id AS id_variasi, CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, 
-               pv.satuan_kecil, pv.satuan_besar, pv.stok_minimum, pv.rasio_konversi,
+               pv.satuan_kecil, pv.satuan_besar, pv.stok_minimum_kecil, pv.stok_minimum_besar, pv.rasio_konversi,
                COALESCE(SUM(sb.stok_sisa), 0) AS stok_total,
                COALESCE(SUM(CASE WHEN sb.no_batch NOT LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) AS stok_pcs_dus,
                COALESCE(SUM(CASE WHEN sb.no_batch LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) AS stok_pcs_eceran
@@ -66,9 +71,9 @@ if ($isSuperadmin) {
         JOIN produk_induk pi ON pv.id_produk_induk = pi.id
         LEFT JOIN stok_batch sb ON sb.id_variasi = pv.id
         WHERE pv.is_active = 1
-        GROUP BY pv.id
-        HAVING COALESCE(SUM(CASE WHEN sb.no_batch LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) <= pv.stok_minimum
-        ORDER BY (COALESCE(SUM(CASE WHEN sb.no_batch LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) - pv.stok_minimum) ASC LIMIT 10
+        GROUP BY pv.id, pv.rasio_konversi, pv.stok_minimum_besar, pv.stok_minimum_kecil
+        HAVING (COALESCE(SUM(CASE WHEN sb.no_batch NOT LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) / pv.rasio_konversi) <= pv.stok_minimum_besar
+            OR COALESCE(SUM(CASE WHEN sb.no_batch LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) <= pv.stok_minimum_kecil
     ")->fetchAll();
 
     // Top 5 produk terlaris bulan ini (berdasarkan qty unit terjual)
@@ -93,7 +98,7 @@ if ($isSuperadmin) {
         JOIN produk_variasi pv ON ks.id_variasi=pv.id
         JOIN produk_induk pi ON pv.id_produk_induk=pi.id
         LEFT JOIN users u ON ks.dibuat_oleh=u.id
-        ORDER BY ks.id DESC LIMIT 10
+        ORDER BY ks.id DESC LIMIT 100
     ")->fetchAll();
 
     // Riwayat Pengadaan & Harga Beli
@@ -106,7 +111,7 @@ if ($isSuperadmin) {
         JOIN produk_variasi pv ON pd.id_variasi = pv.id
         JOIN produk_induk pi ON pv.id_produk_induk = pi.id
         LEFT JOIN users u ON ps.dibuat_oleh = u.id
-        ORDER BY ps.id DESC LIMIT 10
+        ORDER BY ps.id DESC LIMIT 100
     ")->fetchAll();
 
     // Data Grafik: Volume Penjualan 7 Hari Terakhir (POS vs E-Commerce)
@@ -349,7 +354,7 @@ layoutHeader(
 </div>
 
 <!-- ROW 3: Stok Menipis + Log Audit Kartu Stok -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+<div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;margin-bottom:14px;">
 
     <!-- Panel: Stok Menipis -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
@@ -363,34 +368,107 @@ layoutHeader(
         <?php if (empty($stokMenipis)): ?>
         <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Semua item stok aman (di atas batas minimum) ✓</div>
         <?php else: ?>
-        <?php foreach ($stokMenipis as $s): 
+        <div id="rop-superadmin-list">
+        <?php foreach ($stokMenipis as $index => $s): 
             $stokDusFisik = floor($s['stok_pcs_dus'] / $s['rasio_konversi']);
-            $isBisaKonversi = $stokDusFisik > 0;
+            $isEceranMenipis = $s['stok_pcs_eceran'] <= $s['stok_minimum_kecil'];
+            $isDusMenipis = $stokDusFisik <= $s['stok_minimum_besar'];
         ?>
-        <div style="padding:10px 16px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
+        <div class="rop-superadmin-item" style="padding:10px 16px;border-bottom:1px solid #f8fafc;display:none;justify-content:space-between;align-items:center;">
             <div style="flex:1;min-width:0;">
                 <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;"><?= htmlspecialchars($s['nama']) ?></div>
                 <div style="font-size:10px;margin-top:3px;display:flex;align-items:center;gap:6px;">
-                    <span style="color:#94a3b8;">Sisa Eceran: <span style="font-weight:700;color:#dc2626;"><?= $s['stok_pcs_eceran'] ?></span> / <?= $s['stok_minimum'] ?> <?= htmlspecialchars($s['satuan_kecil']) ?></span>
+                    <span style="color:#94a3b8;">Sisa Eceran: <span style="font-weight:700;color:<?= $isEceranMenipis ? '#dc2626' : '#10b981' ?>;"><?= $s['stok_pcs_eceran'] ?></span> / <?= $s['stok_minimum_kecil'] ?> <?= htmlspecialchars($s['satuan_kecil']) ?></span>
+                    <span style="color:#cbd5e1;">|</span>
+                    <span style="color:#94a3b8;">Sisa Grosir: <span style="font-weight:700;color:<?= $isDusMenipis ? '#dc2626' : '#10b981' ?>;"><?= $stokDusFisik ?></span> / <?= $s['stok_minimum_besar'] ?> <?= htmlspecialchars($s['satuan_besar']) ?></span>
                 </div>
-                <?php if($isBisaKonversi): ?>
-                    <div style="margin-top:4px;font-size:10px;color:#ea580c;background:#fff7ed;border:1px solid #fed7aa;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
-                        ⚠ Stok Gudang Masih Ada <?= $stokDusFisik ?> <?= htmlspecialchars($s['satuan_besar']) ?>. Segera Konversi Buka Dus!
-                    </div>
-                <?php else: ?>
+                
+                <?php if($isEceranMenipis): ?>
+                    <?php if($stokDusFisik > 0): ?>
+                        <div style="margin-top:4px;font-size:10px;color:#ea580c;background:#fff7ed;border:1px solid #fed7aa;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
+                            ⚠ Stok Eceran Menipis - Lakukan Konversi (Buka Satuan Besar).
+                        </div>
+                    <?php else: ?>
+                        <div style="margin-top:4px;font-size:10px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
+                            🚨 Eceran & Grosir Habis! Segera Lakukan Penerimaan Barang.
+                        </div>
+                    <?php endif; ?>
+                <?php elseif($isDusMenipis): ?>
                     <div style="margin-top:4px;font-size:10px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
-                        🚨 Habis Total! Segera Lakukan Pengadaan ke Supplier.
+                        🚨 Stok Grosir Menipis - Lakukan Penerimaan Barang.
                     </div>
                 <?php endif; ?>
             </div>
-            <?php if($isBisaKonversi): ?>
+            
+            <?php if($isEceranMenipis && $stokDusFisik > 0): ?>
                 <a href="inventori/konversi_uom.php" style="font-size:10px;font-weight:700;color:#ea580c;text-decoration:none;background:#ffedd5;padding:5px 10px;border-radius:5px;white-space:nowrap;margin-left:10px;border:1px solid #fed7aa;">Konversi</a>
+            <?php elseif($isDusMenipis || ($isEceranMenipis && $stokDusFisik == 0)): ?>
+                <a href="inventori/tambah_stok.php" style="font-size:10px;font-weight:700;color:#b91c1c;text-decoration:none;background:#fee2e2;padding:5px 10px;border-radius:5px;white-space:nowrap;margin-left:10px;border:1px solid #fecaca;">Penerimaan Barang</a>
             <?php endif; ?>
         </div>
         <?php endforeach; ?>
+        </div>
+        <!-- Paginator UI -->
+        <div style="padding:10px 16px; display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border-top:1px solid #e4e9f0;">
+            <div style="font-size:10px; color:#64748b;">Menampilkan <span id="rop-sa-range">0-0</span> dari <span id="rop-sa-total"><?= count($stokMenipis) ?></span></div>
+            <div style="display:flex; gap:5px;">
+                <button onclick="prevRopSA()" style="padding:4px 10px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:11px; cursor:pointer; color:#334155;">&lt; Prev</button>
+                <button onclick="nextRopSA()" style="padding:4px 10px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:11px; cursor:pointer; color:#334155;">Next &gt;</button>
+            </div>
+        </div>
         <?php endif; ?>
     </div>
 
+<!-- Obat Hampir Kedaluwarsa (SuperAdmin) -->
+    <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
+        <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:700;color:#1e293b;">Peringatan Kedaluwarsa</div>
+            <span style="font-size:10px;color:#94a3b8;">Batch Aktif</span>
+        </div>
+        <?php
+        $expList = $pdo->query("
+            SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sb.no_batch, sb.tgl_exp, sb.stok_sisa, pv.satuan_kecil, pi.batas_hari_expired,
+                   DATEDIFF(sb.tgl_exp, CURDATE()) AS sisa_hari
+            FROM stok_batch sb
+            JOIN produk_variasi pv ON sb.id_variasi = pv.id
+            JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+            WHERE sb.stok_sisa > 0 AND sb.tgl_exp <= DATE_ADD(CURDATE(), INTERVAL COALESCE(pi.batas_hari_expired, 30) DAY)
+            ORDER BY sb.tgl_exp ASC LIMIT 100
+        ")->fetchAll();
+        ?>
+        <?php if (empty($expList)): ?>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Tidak ada obat yang mendekati masa kedaluwarsa.</div>
+        <?php else: ?>
+        <div id="exp-superadmin-list">
+        <?php foreach ($expList as $index => $e): 
+            $isExpired = $e['sisa_hari'] <= 0;
+            $color = $isExpired ? '#dc2626' : '#d97706';
+            $bg = $isExpired ? '#fee2e2' : '#fef3c7';
+            $label = $isExpired ? 'EXPIRED (Sisa: ' . $e['sisa_hari'] . ' Hari)' : 'Sisa: ' . $e['sisa_hari'] . ' Hari';
+        ?>
+        <div class="exp-superadmin-item" style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:none;justify-content:space-between;align-items:center;">
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($e['nama']) ?></div>
+                <div style="font-size:10px;color:<?= $color ?>;margin-top:1px;font-weight:600;display:flex;align-items:center;gap:4px;">
+                    <span style="background:<?= $bg ?>;padding:1px 4px;border-radius:3px;font-size:9px;"><?= $label ?></span> 
+                    Batch: <?= htmlspecialchars($e['no_batch']) ?>
+                </div>
+            </div>
+            <span style="font-size:12px;font-weight:700;color:<?= $color ?>;margin-left:12px;white-space:nowrap;">
+                <?= $e['stok_sisa'] ?> <?= htmlspecialchars($e['satuan_kecil']) ?>
+            </span>
+        </div>
+        <?php endforeach; ?>
+        </div>
+        <div style="padding:10px 16px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:10px;color:#64748b;">Menampilkan <span id="exp-sa-range">1-5</span></span>
+            <div style="display:flex;gap:6px;">
+                <button onclick="prevExpSA()" style="padding:4px 10px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:11px; cursor:pointer; color:#334155;">&lt; Prev</button>
+                <button onclick="nextExpSA()" style="padding:4px 10px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:11px; cursor:pointer; color:#334155;">Next &gt;</button>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
     <!-- Panel: Top 5 Produk Terlaris (qty/unit) -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
         <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
@@ -466,9 +544,9 @@ layoutHeader(
         <?php endif; ?>
     </div>
 
-    <!-- Ringkasan Pergerakan Inventaris Bulan Ini -->
+    <!-- Ringkasan Pergerakan Barang Bulan Ini -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:18px;">
-        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:16px;">Pergerakan Inventaris Bulan Ini</div>
+        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:16px;">Pergerakan Barang Bulan Ini</div>
 
         <div style="padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #f1f5f9;">
             <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:4px;letter-spacing:.03em;">TOTAL BARANG MASUK</div>
@@ -667,24 +745,71 @@ document.addEventListener("DOMContentLoaded", function() {
         </div>
         <?php
         $stokMenipis2 = $pdo->query("
-            SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sc.stok, pv.satuan_kecil, pv.stok_minimum
-            FROM stok_toko sc JOIN produk_variasi pv ON sc.id_variasi=pv.id
-            JOIN produk_induk pi ON pv.id_produk_induk=pi.id
-            WHERE sc.stok <= pv.stok_minimum AND pv.is_active=1 ORDER BY (sc.stok - pv.stok_minimum) ASC LIMIT 8
+            SELECT pv.id AS id_variasi, CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, 
+               pv.satuan_kecil, pv.satuan_besar, pv.stok_minimum_kecil, pv.stok_minimum_besar, pv.rasio_konversi,
+               COALESCE(SUM(CASE WHEN sb.no_batch NOT LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) AS stok_pcs_dus,
+               COALESCE(SUM(CASE WHEN sb.no_batch LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) AS stok_pcs_eceran
+            FROM produk_variasi pv
+            JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+            LEFT JOIN stok_batch sb ON sb.id_variasi = pv.id
+            WHERE pv.is_active = 1
+            GROUP BY pv.id, pv.rasio_konversi, pv.stok_minimum_besar, pv.stok_minimum_kecil
+            HAVING (COALESCE(SUM(CASE WHEN sb.no_batch NOT LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) / pv.rasio_konversi) <= pv.stok_minimum_besar
+                OR COALESCE(SUM(CASE WHEN sb.no_batch LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) <= pv.stok_minimum_kecil
+            LIMIT 100
         ")->fetchAll();
         ?>
         <?php if (empty($stokMenipis2)): ?>
         <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Semua item stok aman ✓</div>
         <?php else: ?>
-        <?php foreach ($stokMenipis2 as $s): ?>
-        <div style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
+        <div id="rop-admin-list">
+        <?php foreach ($stokMenipis2 as $index => $s): 
+            $stokDusFisik = floor($s['stok_pcs_dus'] / $s['rasio_konversi']);
+            $isEceranMenipis = $s['stok_pcs_eceran'] <= $s['stok_minimum_kecil'];
+            $isDusMenipis = $stokDusFisik <= $s['stok_minimum_besar'];
+        ?>
+        <div class="rop-admin-item" style="padding:10px 16px;border-bottom:1px solid #f8fafc;display:none;justify-content:space-between;align-items:center;">
             <div style="flex:1;min-width:0;">
-                <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($s['nama']) ?></div>
-                <div style="font-size:10px;color:#94a3b8;margin-top:1px;">Batas Min: <?= $s['stok_minimum'] ?></div>
+                <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;"><?= htmlspecialchars($s['nama']) ?></div>
+                <div style="font-size:10px;margin-top:3px;display:flex;align-items:center;gap:6px;">
+                    <span style="color:#94a3b8;">Sisa Eceran: <span style="font-weight:700;color:<?= $isEceranMenipis ? '#dc2626' : '#10b981' ?>;"><?= $s['stok_pcs_eceran'] ?></span> / <?= $s['stok_minimum_kecil'] ?> <?= htmlspecialchars($s['satuan_kecil']) ?></span>
+                    <span style="color:#cbd5e1;">|</span>
+                    <span style="color:#94a3b8;">Sisa Grosir: <span style="font-weight:700;color:<?= $isDusMenipis ? '#dc2626' : '#10b981' ?>;"><?= $stokDusFisik ?></span> / <?= $s['stok_minimum_besar'] ?> <?= htmlspecialchars($s['satuan_besar']) ?></span>
+                </div>
+                
+                <?php if($isEceranMenipis): ?>
+                    <?php if($stokDusFisik > 0): ?>
+                        <div style="margin-top:4px;font-size:10px;color:#ea580c;background:#fff7ed;border:1px solid #fed7aa;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
+                            ⚠ Stok Eceran Menipis - Lakukan Konversi (Buka Satuan Besar).
+                        </div>
+                    <?php else: ?>
+                        <div style="margin-top:4px;font-size:10px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
+                            🚨 Eceran & Grosir Habis! Segera Lakukan Penerimaan Barang.
+                        </div>
+                    <?php endif; ?>
+                <?php elseif($isDusMenipis): ?>
+                    <div style="margin-top:4px;font-size:10px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
+                        🚨 Stok Grosir Menipis - Lakukan Penerimaan Barang.
+                    </div>
+                <?php endif; ?>
             </div>
-            <span style="font-size:12px;font-weight:700;color:#dc2626;margin-left:12px;"><?= $s['stok'] ?> <?= htmlspecialchars($s['satuan_kecil']) ?></span>
+            
+            <?php if($isEceranMenipis && $stokDusFisik > 0): ?>
+                <a href="inventori/konversi_uom.php" style="font-size:10px;font-weight:700;color:#ea580c;text-decoration:none;background:#ffedd5;padding:5px 10px;border-radius:5px;white-space:nowrap;margin-left:10px;border:1px solid #fed7aa;">Konversi</a>
+            <?php elseif($isDusMenipis || ($isEceranMenipis && $stokDusFisik == 0)): ?>
+                <a href="inventori/tambah_stok.php" style="font-size:10px;font-weight:700;color:#b91c1c;text-decoration:none;background:#fee2e2;padding:5px 10px;border-radius:5px;white-space:nowrap;margin-left:10px;border:1px solid #fecaca;">Penerimaan Barang</a>
+            <?php endif; ?>
         </div>
         <?php endforeach; ?>
+        </div>
+        <!-- Paginator UI ROP Admin -->
+        <div style="padding:8px 16px; display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border-top:1px solid #e4e9f0;">
+            <div style="font-size:9px; color:#64748b;"><span id="rop-ad-range">0-0</span> dari <span id="rop-ad-total"><?= count($stokMenipis2) ?></span></div>
+            <div style="display:flex; gap:3px;">
+                <button type="button" onclick="prevRopAD()" style="padding:2px 8px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:10px; cursor:pointer; color:#334155;">&lt;</button>
+                <button type="button" onclick="nextRopAD()" style="padding:2px 8px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:10px; cursor:pointer; color:#334155;">&gt;</button>
+            </div>
+        </div>
         <?php endif; ?>
     </div>
 
@@ -702,19 +827,20 @@ document.addEventListener("DOMContentLoaded", function() {
             JOIN produk_variasi pv ON sb.id_variasi = pv.id
             JOIN produk_induk pi ON pv.id_produk_induk = pi.id
             WHERE sb.stok_sisa > 0 AND sb.tgl_exp <= DATE_ADD(CURDATE(), INTERVAL COALESCE(pi.batas_hari_expired, 30) DAY)
-            ORDER BY sb.tgl_exp ASC LIMIT 8
+            ORDER BY sb.tgl_exp ASC LIMIT 100
         ")->fetchAll();
         ?>
         <?php if (empty($expList)): ?>
         <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Tidak ada obat yang mendekati masa kedaluwarsa.</div>
         <?php else: ?>
-        <?php foreach ($expList as $e): 
+        <div id="exp-admin-list">
+        <?php foreach ($expList as $index => $e): 
             $isExpired = $e['sisa_hari'] <= 0;
             $color = $isExpired ? '#dc2626' : '#d97706';
             $bg = $isExpired ? '#fee2e2' : '#fef3c7';
             $label = $isExpired ? 'EXPIRED (Sisa: ' . $e['sisa_hari'] . ' Hari)' : 'Sisa: ' . $e['sisa_hari'] . ' Hari';
         ?>
-        <div style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
+        <div class="exp-admin-item" style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:none;justify-content:space-between;align-items:center;">
             <div style="flex:1;min-width:0;">
                 <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($e['nama']) ?></div>
                 <div style="font-size:10px;color:<?= $color ?>;margin-top:1px;font-weight:600;display:flex;align-items:center;gap:4px;">
@@ -727,6 +853,15 @@ document.addEventListener("DOMContentLoaded", function() {
             </span>
         </div>
         <?php endforeach; ?>
+        </div>
+        <!-- Paginator UI Exp Admin -->
+        <div style="padding:8px 16px; display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border-top:1px solid #e4e9f0;">
+            <div style="font-size:9px; color:#64748b;"><span id="exp-ad-range">0-0</span> dari <span id="exp-ad-total"><?= count($expList) ?></span></div>
+            <div style="display:flex; gap:3px;">
+                <button type="button" onclick="prevExpAD()" style="padding:2px 8px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:10px; cursor:pointer; color:#334155;">&lt;</button>
+                <button type="button" onclick="nextExpAD()" style="padding:2px 8px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:10px; cursor:pointer; color:#334155;">&gt;</button>
+            </div>
+        </div>
         <?php endif; ?>
     </div>
 
@@ -756,6 +891,140 @@ document.addEventListener("DOMContentLoaded", function() {
 
 <?php endif; ?>
 
+<script>
+// Paginator for SuperAdmin ROP
+let ropSaPage = 1;
+const ropSaLimit = 5;
+const saItems = document.querySelectorAll('.rop-superadmin-item');
+if(saItems.length > 0) renderSaRop();
 
+function renderSaRop() {
+    let start = (ropSaPage - 1) * ropSaLimit;
+    let end = start + ropSaLimit;
+    
+    saItems.forEach((el, i) => {
+        if(i >= start && i < end) el.style.display = 'flex';
+        else el.style.display = 'none';
+    });
+    
+    let endDisplay = end > saItems.length ? saItems.length : end;
+    let startDisplay = saItems.length === 0 ? 0 : start + 1;
+    let rangeEl = document.getElementById('rop-sa-range');
+    if(rangeEl) rangeEl.innerText = startDisplay + '-' + endDisplay;
+}
+function nextRopSA() {
+    if(ropSaPage * ropSaLimit < saItems.length) {
+        ropSaPage++;
+        renderSaRop();
+    }
+}
+function prevRopSA() {
+    if(ropSaPage > 1) {
+        ropSaPage--;
+        renderSaRop();
+    }
+}
+
+
+// Paginator for SuperAdmin EXP
+let expSaPage = 1;
+const expSaLimit = 5;
+const expSaItems = document.querySelectorAll('.exp-superadmin-item');
+if(expSaItems.length > 0) renderExpSa();
+
+function renderExpSa() {
+    let start = (expSaPage - 1) * expSaLimit;
+    let end = start + expSaLimit;
+    
+    expSaItems.forEach((el, i) => {
+        if(i >= start && i < end) el.style.display = 'flex';
+        else el.style.display = 'none';
+    });
+    
+    let endDisplay = end > expSaItems.length ? expSaItems.length : end;
+    let startDisplay = expSaItems.length === 0 ? 0 : start + 1;
+    let rangeEl = document.getElementById('exp-sa-range');
+    if(rangeEl) rangeEl.innerText = startDisplay + '-' + endDisplay;
+}
+function nextExpSA() {
+    if(expSaPage * expSaLimit < expSaItems.length) {
+        expSaPage++;
+        renderExpSa();
+    }
+}
+function prevExpSA() {
+    if(expSaPage > 1) {
+        expSaPage--;
+        renderExpSa();
+    }
+}
+
+// Paginator for Admin ROP
+let ropAdPage = 1;
+const ropAdLimit = 5;
+const adItems = document.querySelectorAll('.rop-admin-item');
+if(adItems.length > 0) renderAdRop();
+
+function renderAdRop() {
+    let start = (ropAdPage - 1) * ropAdLimit;
+    let end = start + ropAdLimit;
+    
+    adItems.forEach((el, i) => {
+        if(i >= start && i < end) el.style.display = 'flex';
+        else el.style.display = 'none';
+    });
+    
+    let endDisplay = end > adItems.length ? adItems.length : end;
+    let startDisplay = adItems.length === 0 ? 0 : start + 1;
+    let rangeEl = document.getElementById('rop-ad-range');
+    if(rangeEl) rangeEl.innerText = startDisplay + '-' + endDisplay;
+}
+function nextRopAD() {
+    if(ropAdPage * ropAdLimit < adItems.length) {
+        ropAdPage++;
+        renderAdRop();
+    }
+}
+function prevRopAD() {
+    if(ropAdPage > 1) {
+        ropAdPage--;
+        renderAdRop();
+    }
+}
+
+// Paginator for Admin EXP
+let expAdPage = 1;
+const expAdLimit = 5;
+const expAdItems = document.querySelectorAll('.exp-admin-item');
+if(expAdItems.length > 0) renderExpAd();
+
+function renderExpAd() {
+    let start = (expAdPage - 1) * expAdLimit;
+    let end = start + expAdLimit;
+    
+    expAdItems.forEach((el, i) => {
+        if(i >= start && i < end) el.style.display = 'flex';
+        else el.style.display = 'none';
+    });
+    
+    let endDisplay = end > expAdItems.length ? expAdItems.length : end;
+    let startDisplay = expAdItems.length === 0 ? 0 : start + 1;
+    let rangeEl = document.getElementById('exp-ad-range');
+    if(rangeEl) rangeEl.innerText = startDisplay + '-' + endDisplay;
+}
+function nextExpAD() {
+    if(expAdPage * expAdLimit < expAdItems.length) {
+        expAdPage++;
+        renderExpAd();
+    }
+}
+function prevExpAD() {
+    if(expAdPage > 1) {
+        expAdPage--;
+        renderExpAd();
+    }
+}
+
+</script>
 
 <?php layoutFooter(); ?>

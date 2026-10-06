@@ -45,7 +45,7 @@ try {
     
     // Generate Sub-Batch ID
     $stmtCekSub = $pdo->prepare("SELECT no_batch FROM stok_batch WHERE id_variasi = ? AND no_batch LIKE ? ORDER BY no_batch DESC LIMIT 1");
-    $stmtCekSub->execute([$idVariasi, $noBatchAsal . ".*"]);
+    $stmtCekSub->execute([$idVariasi, $noBatchAsal . ".%"]);
     $lastSub = $stmtCekSub->fetchColumn();
     
     $subBatchSuffix = ".A";

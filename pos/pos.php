@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                         $catatanLogistik[] = $scannedCode . " ({$qtyPotong}x)";
                     } else {
                         // Auto FEFO fallback
-                        $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC FOR UPDATE");
+                        $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC, no_batch ASC FOR UPDATE");
                         $stmtBatch->execute([$idVar]);
                         $batches = $stmtBatch->fetchAll();
                         
@@ -156,7 +156,7 @@ $katalog = $pdo->prepare("
     SELECT v.id, v.sku_variasi, CONCAT(i.nama_produk,' - ',v.nama_variasi) AS nama,
            v.satuan_kecil, v.satuan_besar, v.rasio_konversi, v.harga_jual_kecil, v.harga_jual_besar, COALESCE(sc.stok,0) AS stok, i.kategori, v.gambar,
            (SELECT GROUP_CONCAT(serial_number ORDER BY created_at ASC SEPARATOR ',') FROM unit_serial WHERE id_variasi = v.id AND status='Tersedia') AS sn_list,
-           (SELECT GROUP_CONCAT(no_batch ORDER BY tgl_exp ASC SEPARATOR ',') FROM stok_batch WHERE id_variasi = v.id AND stok_sisa > 0) AS batch_list, (SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = v.id AND no_batch LIKE '%.%') AS stok_eceran, (SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = v.id AND no_batch NOT LIKE '%.%') AS stok_dus
+           (SELECT GROUP_CONCAT(CONCAT(no_batch, '|', stok_sisa) ORDER BY tgl_exp ASC, no_batch ASC SEPARATOR ',') FROM stok_batch WHERE id_variasi = v.id AND stok_sisa > 0) AS batch_list, (SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = v.id AND no_batch LIKE '%.%') AS stok_eceran, (SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = v.id AND no_batch NOT LIKE '%.%') AS stok_dus
     FROM produk_variasi v JOIN produk_induk i ON v.id_produk_induk=i.id
     LEFT JOIN stok_toko sc ON sc.id_variasi=v.id 
     WHERE v.is_active=1 AND i.is_active=1 ORDER BY i.nama_produk ASC");
@@ -492,17 +492,43 @@ $shopeeOn = false;
                 var dusBatches = [];
 
                 if (rawBatch) {
-                    allBatches = rawBatch.split(',');
+                    allBatches = rawBatch.split(',').map(b => b.split('|')[0]);
                     eceranBatches = allBatches.filter(b => b.includes('.'));
                     dusBatches = allBatches.filter(b => !b.includes('.'));
-                    // Karena rawBatch belum membawa data qty per batch di POS front-end,
-                    // pembatasan presisi akan kita pass ke validasi back-end saat checkout.
-                    // Namun kita akan batasi secara logika: Jika milih Eceran, minimal ada eceran.
                 }
+            }
 
+            // DYNAMIC MAX CALCULATION
+            var allBatchesManualRaw = rawBatch ? rawBatch.split(',') : [];
+            var allBatchesManual = allBatchesManualRaw.map(b => b.split('|')[0]);
+            var eceranBatchesManual = allBatchesManual.filter(b => b.includes('.'));
+            var dusBatchesManual = allBatchesManual.filter(b => !b.includes('.'));
+            
+            // Dapatkan stok presisi spesifik untuk batch yang dipilih/discan (atau rekomendasi FEFO jika belum)
+            var specificBatchStok = 0;
+            var targetBatchStr = scannedCode;
+            if (!targetBatchStr) {
+                targetBatchStr = (uomType === 'kecil') ? (eceranBatchesManual.length > 0 ? eceranBatchesManual[0] : null) : (dusBatchesManual.length > 0 ? dusBatchesManual[0] : null);
+            }
+            if (targetBatchStr) {
+                var targetRaw = allBatchesManualRaw.find(b => b.split('|')[0].toLowerCase() === targetBatchStr.toLowerCase());
+                if (targetRaw) specificBatchStok = parseInt(targetRaw.split('|')[1]);
+            }
+
+            var maxStockToPass = specificBatchStok || rawTotalStock; // Hard-lock max quantity to the specific batch!
+            
+            if (kat === 'Obat') {
+                if (uomType === 'kecil') {
+                    stokEceran = specificBatchStok;
+                } else if (uomType === 'besar') {
+                    stokDus = specificBatchStok;
+                }
+            }
+            
+            if (scannedCode) {
                 // === FEFO ANOMALY CHECKER ===
                 if (kat === 'Obat' && rawBatch) {
-                    var allBatches = rawBatch.split(',');
+                    var allBatches = rawBatch.split(',').map(b => b.split('|')[0]);
                     var eceranBatches = allBatches.filter(b => b.includes('.'));
                     var dusBatches = allBatches.filter(b => !b.includes('.'));
                     var batches = uomType === 'besar' ? dusBatches : eceranBatches;
@@ -522,31 +548,11 @@ $shopeeOn = false;
                             focusCancel: true
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                processAddToCart(id, name, hargaKecil, hargaBesar, maxStockPcs, rasio, scannedCode, rawSn, rawBatch, true, batches[0], needsVerification, uomType);
+                                processAddToCart(id, name, hargaKecil, hargaBesar, maxStockToPass, rasio, scannedCode, rawSn, rawBatch, true, batches[0], needsVerification, uomType, stokEceran);
                             }
                         });
                         return;
                     }
-                }
-            }
-
-            // DYNAMIC MAX CALCULATION
-            var allBatchesManual = rawBatch ? rawBatch.split(',') : [];
-            var eceranBatchesManual = allBatchesManual.filter(b => b.includes('.'));
-            var dusBatchesManual = allBatchesManual.filter(b => !b.includes('.'));
-            
-            // Batasi max pesanan PRESISI sesuai kuantitas yang ada secara fisik untuk UOM yang dipilih
-            var maxStockToPass = rawTotalStock;
-            if (kat === 'Obat') {
-                if (uomType === 'kecil') {
-                    // Sesuai instruksi: Eceran dibiarkan fleksibel mengambil total stok fisik keseluruhan 
-                    // agar kasir tidak terhambat, validasi strict ada di scanner barcode / backend
-                    maxStockToPass = rawTotalStock;
-                } else if (uomType === 'besar') {
-                    // Karena stok_sisa di tabel stok_batch sudah direkam dalam PIECES,
-                    // maka stokDus (SUM dari stok_batch Box) sudah berupa PIECES.
-                    // Tidak perlu dikali rasio lagi!
-                    maxStockToPass = stokDus; 
                 }
             }
 
@@ -622,6 +628,8 @@ $shopeeOn = false;
                     cart[i].cartId = cartId; // ubah cartId menjadi yang sudah di-scan
                     cart[i].is_anomaly = isAnomaly;
                     cart[i].batch_seharusnya = batchSeharusnya;
+                    cart[i].maxPcs = maxStockPcs; // Update maxPcs ke stok batch baru
+                    cart[i].stok_eceran_fisik = stokEceranFisik; // Update hint UI ke stok batch baru
                     // Jaga qty tetap sama dengan unverified item sebelumnya
                 }
                 
@@ -680,7 +688,7 @@ $shopeeOn = false;
     }
 
     function triggerManualBongkar(idVariasi, name, rawBatch, hargaKecil, hargaBesar, rawTotalStock, rasio) {
-        var allBatchesManual = rawBatch ? rawBatch.split(',') : [];
+        var allBatchesManual = rawBatch ? rawBatch.split(',').map(b => b.split('|')[0]) : [];
         var dusBatchesManual = allBatchesManual.filter(b => !b.includes('.'));
         if (dusBatchesManual.length === 0) {
             Swal.fire('Gagal', 'Tidak ada stok kardus utuh (Grosir) yang bisa dibongkar.', 'error');
@@ -792,7 +800,7 @@ $shopeeOn = false;
                 fefoText = '<span class="block text-[9px] text-blue-600 font-bold mt-1 rounded bg-blue-50 px-1.5 py-0.5 inline-block border border-blue-200 shadow-sm">&#10004;&#65039; Fisik Tervalidasi: ' + i.scanned_code.toUpperCase() + '</span>';
             } else if (i.needs_verification) {
                 if (i.batch_list) {
-                    let allBatches = i.batch_list.split(',');
+                    let allBatches = i.batch_list.split(',').map(b => b.split('|')[0]);
                       let targetBatches = [];
                       if (i.satuan_tipe === 'besar') {
                           targetBatches = allBatches.filter(b => !b.includes('.'));
@@ -810,7 +818,7 @@ $shopeeOn = false;
                 '<td class="px-4 py-3 font-semibold text-zcTxt text-xs">' +
                     i.nama +
                     '<span class="block text-[9px] text-zcEm mt-0.5">' + i.satuan_label + ' (Rp ' + i.harga.toLocaleString('id-ID') + ')</span>' +
-                    fefoText + ((i.satuan_tipe === 'besar') ? '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Batas Fisik Box: ' + Math.floor(i.maxPcs / i.rasio) + '</span>' : '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Eceran (Semua Sub-Batch): ' + i.stok_eceran_fisik + ' Pcs</span>') +
+                    fefoText + ((i.satuan_tipe === 'besar') ? '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Fisik Box: ' + Math.floor(i.maxPcs / i.rasio) + '</span>' : '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Batch Spesifik (Utama): ' + i.stok_eceran_fisik + ' Pcs</span>') +
                 '</td>' +
                 '<td class="px-4 py-3 text-center">' +
                     '<div class="flex items-center justify-center gap-1.5">' +
@@ -1011,11 +1019,12 @@ $shopeeOn = false;
                 var skuSpan = c.querySelector('span.font-mono');
                 var dataSn = c.getAttribute('data-sn') || '';
                 var dataBatch = c.getAttribute('data-batch') || '';
+                var batchArray = dataBatch ? dataBatch.split(',').map(b => b.split('|')[0].toLowerCase()) : [];
                 
                 var isMatch = false;
                 if (skuSpan && skuSpan.innerText.toLowerCase() === sku) isMatch = true;
                 else if (dataSn.split(',').includes(sku)) isMatch = true;
-                else if (dataBatch.split(',').includes(sku)) isMatch = true;
+                else if (batchArray.includes(sku)) isMatch = true;
 
                 if (isMatch) {
                     var btn = c.querySelector('button');
