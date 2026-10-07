@@ -123,6 +123,7 @@ $produkList = $pdo->query("
 // Ambil riwayat mutasi terbaru dari kartu_stok
 $mutasiLog = $pdo->query("
     SELECT ks.tanggal AS created_at, ks.jenis_mutasi, ks.qty, ks.sisa_stok, ks.alasan_mutasi AS alasan, ks.keterangan AS catatan,
+           ks.satuan_tipe, pv.satuan_besar, pv.satuan_kecil,
            CONCAT(pi.nama_produk, ' — ', pv.nama_variasi) AS nama_item,
            u.nama_lengkap AS pembuat
     FROM kartu_stok ks
@@ -240,15 +241,17 @@ layoutHeader('Mutasi Stok Manual', 'Penyesuaian stok gudang karena selisih, retu
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-zcBrd/60">
-                            <?php foreach ($mutasiLog as $m): ?>
+                            <?php foreach ($mutasiLog as $m): 
+                                $satuanLabel = $m['satuan_tipe'] === 'besar' ? $m['satuan_besar'] : $m['satuan_kecil'];
+                            ?>
                                 <tr class="hover:bg-slate-50/60 transition">
                                     <td class="px-4 py-3 text-zcMut font-mono"><?= date('d/m/y H:i', strtotime($m['created_at'])) ?></td>
                                     <td class="px-4 py-3 font-semibold text-zcTxt"><?= htmlspecialchars($m['nama_item']) ?></td>
                                     <td class="px-4 py-3">
-                                        <?php if ($m['jenis_mutasi'] === 'Penambahan'): ?>
-                                            <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md font-bold text-[10px]">+ <?= $m['qty'] ?> unit</span>
+                                        <?php if (in_array($m['jenis_mutasi'], ['Masuk', 'Penambahan'])): ?>
+                                            <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md font-bold text-[10px]">+ <?= $m['qty'] ?> <?= htmlspecialchars($satuanLabel) ?></span>
                                         <?php else: ?>
-                                            <span class="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-md font-bold text-[10px]">- <?= $m['qty'] ?> unit</span>
+                                            <span class="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-md font-bold text-[10px]">- <?= $m['qty'] ?> <?= htmlspecialchars($satuanLabel) ?></span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="px-4 py-3 text-zcTxt text-[11px]">

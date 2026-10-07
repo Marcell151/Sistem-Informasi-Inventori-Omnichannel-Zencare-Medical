@@ -12,6 +12,10 @@ function layoutHead(string $title = 'Dashboard') {
 <title>' . htmlspecialchars($title) . ' – ZenCare Medical</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- jQuery & Select2 for Searchable Dropdowns -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
   tailwind.config = {
     theme: {
@@ -226,7 +230,18 @@ function layoutHeader(string $title, string $subtitle = '', bool $showBranchSele
 }
 
 function layoutEnd() {
-    echo '</main></div></body></html>';
+    echo '</main></div>
+    <script>
+      $(document).ready(function() {
+          if ($(".select2").length > 0) {
+              $(".select2").select2({ width: "100%" });
+              $(".select2").on("select2:select", function(e) {
+                  this.dispatchEvent(new Event("change", { bubbles: true }));
+              });
+          }
+      });
+    </script>
+    </body></html>';
 }
 
 function layoutFooter() {

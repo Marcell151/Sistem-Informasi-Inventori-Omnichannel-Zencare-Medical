@@ -149,7 +149,7 @@ layoutHeader('Konversi UOM', 'Pemecahan Box Kardus Utuh ke Satuan Eceran (Sub-Ba
         <form method="POST" class="space-y-5">
             <div>
                 <label class="block text-sm font-semibold text-zcTxt mb-1.5">Pilih Obat (Dengan Multi-UOM) *</label>
-                <select name="id_variasi" id="id_variasi" required class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                <select name="id_variasi" id="id_variasi" required class="select2 w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                     <option value="">-- Pilih Obat --</option>
                     <?php foreach ($produkList as $p): ?>
                         <option value="<?= $p['id'] ?>" data-satbesar="<?= htmlspecialchars($p['satuan_besar']) ?>" data-satkecil="<?= htmlspecialchars($p['satuan_kecil']) ?>" data-rasio="<?= $p['rasio_konversi'] ?>">

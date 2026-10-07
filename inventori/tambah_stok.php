@@ -160,7 +160,7 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-zcTxt mb-1.5">Supplier (Opsional)</label>
-                    <select name="id_supplier" class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
+                    <select name="id_supplier" class="select2 w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
                         <option value="">Umum / Tidak Terdaftar</option>
                         <?php foreach($supplierList as $s): ?>
                         <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['nama']) ?></option>

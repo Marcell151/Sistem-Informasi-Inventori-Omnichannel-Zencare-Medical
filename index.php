@@ -91,9 +91,9 @@ if ($isSuperadmin) {
 
     // Log audit mutasi terbaru (hanya mutasi manual)
     $auditMutasi = $pdo->query("
-        SELECT ks.tanggal, ks.jenis_mutasi, ks.qty, ks.sisa_stok, ks.keterangan,
+        SELECT ks.tanggal, ks.jenis_mutasi, ks.qty, ks.sisa_stok, ks.keterangan, ks.satuan_tipe,
                CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama_produk,
-               u.nama_lengkap AS operator, ks.kanal, ks.alasan_mutasi
+               u.nama_lengkap AS operator, ks.kanal, ks.alasan_mutasi, pv.satuan_besar, pv.satuan_kecil
         FROM kartu_stok ks
         JOIN produk_variasi pv ON ks.id_variasi=pv.id
         JOIN produk_induk pi ON pv.id_produk_induk=pi.id
@@ -154,8 +154,8 @@ if ($isSuperadmin) {
 // ─── DATA ADMIN & SHARED ──────────────────────────────────────────────────
 // Stok menipis (shared, needed for admin panel too)
 $kartuTerbaru = $pdo->query("
-    SELECT ks.tanggal, ks.jenis_mutasi, ks.qty, ks.sisa_stok,
-           CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama_produk, ks.keterangan
+    SELECT ks.tanggal, ks.jenis_mutasi, ks.qty, ks.sisa_stok, ks.satuan_tipe, ks.alasan_mutasi,
+           CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama_produk, ks.keterangan, pv.satuan_besar, pv.satuan_kecil
     FROM kartu_stok ks
     JOIN produk_variasi pv ON ks.id_variasi=pv.id
     JOIN produk_induk pi ON pv.id_produk_induk=pi.id
@@ -523,17 +523,20 @@ layoutHeader(
                 </tr>
             </thead>
             <tbody>
-            <?php foreach ($auditMutasi as $a): ?>
+            <?php foreach ($auditMutasi as $a): 
+                $satuanLabel = $a['satuan_tipe'] === 'besar' ? $a['satuan_besar'] : $a['satuan_kecil'];
+            ?>
             <tr style="border-top:1px solid #f1f5f9;hover:background:#f8fafc;">
                 <td style="padding:8px 16px;">
-                    <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;"><?= htmlspecialchars($a['nama_produk']) ?></div>
-                    <div style="font-size:10px;color:#94a3b8;"><?= htmlspecialchars($a['operator'] ?? 'Sistem') ?></div>
+                    <div style="font-size:12px;color:#334155;font-weight:600;"><?= htmlspecialchars($a['nama_produk']) ?></div>
+                    <div style="font-size:10px;color:#64748b;margin-top:2px;"><?= htmlspecialchars($a['alasan_mutasi']) ?> <?= $a['keterangan'] ? '&mdash; '.htmlspecialchars($a['keterangan']) : '' ?></div>
+                    <div style="font-size:9px;color:#94a3b8;margin-top:2px;">Oleh: <?= htmlspecialchars($a['operator'] ?? 'Sistem') ?></div>
                 </td>
                 <td style="padding:8px;text-align:center;">
                     <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:#f1f5f9;color:#64748b;"><?= htmlspecialchars($a['kanal'] ?? '-') ?></span>
                 </td>
                 <td style="padding:8px;text-align:right;font-weight:700;color:<?= $a['jenis_mutasi']==='Masuk'?'#16a34a':'#dc2626' ?>;">
-                    <?= $a['jenis_mutasi']==='Masuk'?'+':'-' ?><?= number_format($a['qty']) ?>
+                    <?= $a['jenis_mutasi']==='Masuk'?'+':'-' ?><?= number_format($a['qty']) ?> <span style="font-size:10px;font-weight:500;color:#64748b;"><?= $satuanLabel ?></span>
                 </td>
                 <td style="padding:8px;text-align:right;color:#64748b;"><?= number_format($a['sisa_stok']) ?></td>
                 <td style="padding:8px 16px;text-align:right;color:#94a3b8;font-size:10px;"><?= date('d/m H:i', strtotime($a['tanggal'])) ?></td>
@@ -874,14 +877,17 @@ document.addEventListener("DOMContentLoaded", function() {
         <?php if (empty($kartuTerbaru)): ?>
         <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Belum ada aktivitas stok.</div>
         <?php else: ?>
-        <?php foreach ($kartuTerbaru as $k): ?>
+        <?php foreach ($kartuTerbaru as $k): 
+            $satuanLabel = $k['satuan_tipe'] === 'besar' ? $k['satuan_besar'] : $k['satuan_kecil'];
+        ?>
         <div style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
             <div style="flex:1;min-width:0;">
-                <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($k['nama_produk']) ?></div>
-                <div style="font-size:10px;color:#94a3b8;margin-top:1px;"><?= date('d/m H:i', strtotime($k['tanggal'])) ?></div>
+                <div style="font-size:12px;color:#334155;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?= htmlspecialchars($k['nama_produk']) ?></div>
+                <div style="font-size:10px;color:#64748b;margin-top:2px;"><?= htmlspecialchars($k['alasan_mutasi']) ?> <?= $k['keterangan'] ? '&mdash; '.htmlspecialchars($k['keterangan']) : '' ?></div>
+                <div style="font-size:9px;color:#94a3b8;margin-top:2px;"><?= date('d/m H:i', strtotime($k['tanggal'])) ?></div>
             </div>
             <span style="font-size:12px;font-weight:700;color:<?= $k['jenis_mutasi']==='Masuk'?'#16a34a':'#dc2626' ?>;margin-left:12px;white-space:nowrap;">
-                <?= $k['jenis_mutasi']==='Masuk'?'+':'-' ?><?= number_format($k['qty']) ?>
+                <?= $k['jenis_mutasi']==='Masuk'?'+':'-' ?><?= number_format($k['qty']) ?> <span style="font-size:10px;font-weight:500;color:#64748b;"><?= $satuanLabel ?></span>
             </span>
         </div>
         <?php endforeach; ?>

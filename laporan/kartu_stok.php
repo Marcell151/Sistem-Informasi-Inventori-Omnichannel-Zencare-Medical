@@ -139,7 +139,7 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
     <form method="GET" class="flex flex-wrap items-end gap-4">
         <div class="flex-1 min-w-[250px]">
             <label class="block text-xs font-semibold text-zcTxt mb-1.5">Pilih Barang *</label>
-            <select name="id_variasi" required class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+            <select name="id_variasi" required class="select2 w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                 <option value="">-- Pilih Barang / SKU --</option>
                 <?php foreach($variasiList as $v): ?>
                 <option value="<?= $v['id'] ?>" <?= $id_variasi==$v['id']?'selected':'' ?>>
@@ -250,7 +250,7 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
                 <div>Satuan (Eceran)</div><div>:</div><div class="font-black text-emerald-700 uppercase"><?= htmlspecialchars($produkData['satuan_kecil'] ?? '-') ?></div>
             </div>
             <div class="grid grid-cols-[130px_10px_auto] gap-y-1">
-                <div>Minimum Stok</div><div>:</div><div><?= htmlspecialchars($produkData['stok_minimum_besar']) ?> <?= htmlspecialchars($produkData['satuan_besar']) ?></div>
+                <div>Minimum Stok</div><div>:</div><div><?= htmlspecialchars($produkData['stok_minimum_kecil']) ?> <?= htmlspecialchars($produkData['satuan_kecil']) ?></div>
                 <div>Stok Riil (Sisa)</div><div>:</div><div class="text-rose-600 font-bold"><?= htmlspecialchars($produkData['stok_riil_kecil']) ?></div>
                 <div>Lokasi (Toko)</div><div>:</div><div>Pusat (Muharto)</div>
             </div>
