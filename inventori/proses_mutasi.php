@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $jMutasi = $jenisMutasi === 'Penambahan' ? 'Masuk' : 'Keluar';
             $fullCatatan = $catatan . $detailLog;
             
-            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, ?, 'Manual', ?, ?, ?, ?, ?)");
+            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'kecil', ?, 'Manual', ?, ?, ?, ?, ?)");
             $stmtKartu->execute([$idVariasi, $jMutasi, $alasan, $qty, $sisaStok, $fullCatatan, $userId]);
 
             $pdo->commit();
@@ -300,6 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let html = '';
 
                 if (kat === 'Obat') {
+                    document.getElementById('qty_input').removeAttribute('readonly');
                     labelTitle.textContent = 'IDENTITAS BATCH (OBAT)';
                     if (jenis === 'Pengurangan') {
                         html += `<label class="block text-xs font-semibold text-zcTxt mb-1">Pilih Batch yang Dikurangi *</label>

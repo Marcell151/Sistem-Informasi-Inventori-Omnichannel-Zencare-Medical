@@ -73,15 +73,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $exp   = trim($tglExps[$i] ?? '') ?: null;
                     $hargaBeli = floatval($hargaBelis[$i] ?? 0) ?: null;
                     
-                    // Insert Detail
+                    $stmtInfo = $pdo->query("SELECT pv.rasio_konversi, pi.kategori FROM produk_variasi pv JOIN produk_induk pi ON pv.id_produk_induk = pi.id WHERE pv.id = $idV")->fetch();
+                    $rasio = max(1, (int)$stmtInfo['rasio_konversi']);
+                    $kategori = $stmtInfo['kategori'];
+                    $qtyPcs = $qty * $rasio;
+                    
+                    // Insert Detail (qty in box for penerimaan_detail)
                     $stmtDetail->execute([$idPenerimaan, $idV, $qty, $hargaBeli, $batch, $exp]);
                     
-                    // Update Stok Fisik
-                    $stmtStok->execute([$qty, $idV]);
+                    // Update Stok Fisik (qtyPcs for stok_toko)
+                    $stmtStok->execute([$qtyPcs, $idV]);
                     
-                    // Jika Obat (Ada Batch & Exp)
+                    // Jika Obat (Ada Batch & Exp) - stok_batch stores pcs
                     if ($batch && $exp) {
-                        $stmtBatch->execute([$idV, $batch, $exp, $qty, $qty]);
+                        $stmtBatch->execute([$idV, $batch, $exp, $qtyPcs, $qtyPcs]);
                     }
                     
                     // Jika Alkes (Ada Serial Number dipisah koma)
@@ -96,7 +101,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Log Kartu Stok
                     $sisaStok = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idV AND 1=1")->fetchColumn();
                     $deskripsi = "Penerimaan Barang [$sumber] - Ref: $noReferensi";
-                    $stmtKartu->execute([$idV, $idPenerimaan, $qty, $sisaStok, $deskripsi, $userId]);
+                    
+                    $satuanTipe = ($kategori === 'Alat Kesehatan') ? 'kecil' : 'besar';
+                    $qtyKartu   = ($kategori === 'Alat Kesehatan') ? $qtyPcs : $qty;
+                    
+                    $stmtKartu->execute([$idV, $satuanTipe, $idPenerimaan, $qtyKartu, $sisaStok, $deskripsi, $userId]);
                 }
             }
 

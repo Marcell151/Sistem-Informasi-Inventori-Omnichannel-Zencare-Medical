@@ -16,11 +16,13 @@ $totalStokFisik   = (int)$pdo->query("SELECT COALESCE(SUM(stok),0) FROM stok_tok
 $stokKritisCount  = (int)$pdo->query("
     SELECT COUNT(*) FROM (
         SELECT pv.id FROM produk_variasi pv
+        JOIN produk_induk pi ON pv.id_produk_induk = pi.id
         LEFT JOIN stok_batch sb ON sb.id_variasi = pv.id
+        LEFT JOIN stok_toko sc ON sc.id_variasi = pv.id
         WHERE pv.is_active=1
-        GROUP BY pv.id, pv.rasio_konversi, pv.stok_minimum_besar, pv.stok_minimum_kecil
-        HAVING (COALESCE(SUM(CASE WHEN sb.no_batch NOT LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) / pv.rasio_konversi) <= pv.stok_minimum_besar
-            OR COALESCE(SUM(CASE WHEN sb.no_batch LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) <= pv.stok_minimum_kecil
+        GROUP BY pv.id, pi.kategori, pv.rasio_konversi, pv.stok_minimum_besar, pv.stok_minimum_kecil, sc.stok
+        HAVING (pi.kategori != 'Alat Kesehatan' AND (COALESCE(SUM(CASE WHEN sb.no_batch NOT LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) / pv.rasio_konversi) <= pv.stok_minimum_besar)
+            OR (CASE WHEN pi.kategori = 'Alat Kesehatan' THEN COALESCE(sc.stok, 0) ELSE COALESCE(SUM(CASE WHEN sb.no_batch LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) END) <= pv.stok_minimum_kecil
     ) as kritis
 ")->fetchColumn();
 $expWarningCount  = (int)$pdo->query("
@@ -60,20 +62,21 @@ if ($isSuperadmin) {
     $totalProdukAktif = (int)$pdo->query("SELECT COUNT(*) FROM produk_variasi WHERE is_active=1")->fetchColumn();
     $totalSupplier    = (int)$pdo->query("SELECT COUNT(*) FROM supplier WHERE is_active=1")->fetchColumn();
 
-    // Stok menipis detail (ROP Logic Update: Pisahkan Eceran vs Dus via Batch)
+    // Stok menipis detail (ROP Logic Update: Pisahkan Eceran vs Dus via Batch, atau pakai stok_toko untuk Alkes)
     $stokMenipis = $pdo->query("
         SELECT pv.id AS id_variasi, CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, 
-               pv.satuan_kecil, pv.satuan_besar, pv.stok_minimum_kecil, pv.stok_minimum_besar, pv.rasio_konversi,
-               COALESCE(SUM(sb.stok_sisa), 0) AS stok_total,
-               COALESCE(SUM(CASE WHEN sb.no_batch NOT LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) AS stok_pcs_dus,
-               COALESCE(SUM(CASE WHEN sb.no_batch LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) AS stok_pcs_eceran
+               pv.satuan_kecil, pv.satuan_besar, pv.stok_minimum_kecil, pv.stok_minimum_besar, pv.rasio_konversi, pi.kategori,
+               COALESCE(sc.stok, 0) AS stok_total,
+               CASE WHEN pi.kategori = 'Alat Kesehatan' THEN FLOOR(COALESCE(sc.stok, 0) / pv.rasio_konversi) * pv.rasio_konversi ELSE COALESCE(SUM(CASE WHEN sb.no_batch NOT LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) END AS stok_pcs_dus,
+               CASE WHEN pi.kategori = 'Alat Kesehatan' THEN COALESCE(sc.stok, 0) ELSE COALESCE(SUM(CASE WHEN sb.no_batch LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) END AS stok_pcs_eceran
         FROM produk_variasi pv
         JOIN produk_induk pi ON pv.id_produk_induk = pi.id
         LEFT JOIN stok_batch sb ON sb.id_variasi = pv.id
+        LEFT JOIN stok_toko sc ON sc.id_variasi = pv.id
         WHERE pv.is_active = 1
-        GROUP BY pv.id, pv.rasio_konversi, pv.stok_minimum_besar, pv.stok_minimum_kecil
-        HAVING (COALESCE(SUM(CASE WHEN sb.no_batch NOT LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) / pv.rasio_konversi) <= pv.stok_minimum_besar
-            OR COALESCE(SUM(CASE WHEN sb.no_batch LIKE '%.%' THEN sb.stok_sisa ELSE 0 END), 0) <= pv.stok_minimum_kecil
+        GROUP BY pv.id, pi.kategori, pv.rasio_konversi, pv.stok_minimum_besar, pv.stok_minimum_kecil, sc.stok
+        HAVING (pi.kategori != 'Alat Kesehatan' AND (stok_pcs_dus / pv.rasio_konversi) <= pv.stok_minimum_besar)
+            OR stok_pcs_eceran <= pv.stok_minimum_kecil
     ")->fetchAll();
 
     // Top 5 produk terlaris bulan ini (berdasarkan qty unit terjual)
@@ -372,25 +375,27 @@ layoutHeader(
         <?php foreach ($stokMenipis as $index => $s): 
             $stokDusFisik = floor($s['stok_pcs_dus'] / $s['rasio_konversi']);
             $isEceranMenipis = $s['stok_pcs_eceran'] <= $s['stok_minimum_kecil'];
-            $isDusMenipis = $stokDusFisik <= $s['stok_minimum_besar'];
+            $isDusMenipis = $s['kategori'] !== 'Alat Kesehatan' && $stokDusFisik <= $s['stok_minimum_besar'];
         ?>
         <div class="rop-superadmin-item" style="padding:10px 16px;border-bottom:1px solid #f8fafc;display:none;justify-content:space-between;align-items:center;">
             <div style="flex:1;min-width:0;">
                 <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;"><?= htmlspecialchars($s['nama']) ?></div>
                 <div style="font-size:10px;margin-top:3px;display:flex;align-items:center;gap:6px;">
                     <span style="color:#94a3b8;">Sisa Eceran: <span style="font-weight:700;color:<?= $isEceranMenipis ? '#dc2626' : '#10b981' ?>;"><?= $s['stok_pcs_eceran'] ?></span> / <?= $s['stok_minimum_kecil'] ?> <?= htmlspecialchars($s['satuan_kecil']) ?></span>
+                    <?php if($s['kategori'] !== 'Alat Kesehatan'): ?>
                     <span style="color:#cbd5e1;">|</span>
                     <span style="color:#94a3b8;">Sisa Grosir: <span style="font-weight:700;color:<?= $isDusMenipis ? '#dc2626' : '#10b981' ?>;"><?= $stokDusFisik ?></span> / <?= $s['stok_minimum_besar'] ?> <?= htmlspecialchars($s['satuan_besar']) ?></span>
+                    <?php endif; ?>
                 </div>
                 
                 <?php if($isEceranMenipis): ?>
-                    <?php if($stokDusFisik > 0): ?>
+                    <?php if($stokDusFisik > 0 && $s['kategori'] !== 'Alat Kesehatan'): ?>
                         <div style="margin-top:4px;font-size:10px;color:#ea580c;background:#fff7ed;border:1px solid #fed7aa;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
                             ⚠ Stok Eceran Menipis - Lakukan Konversi (Buka Satuan Besar).
                         </div>
                     <?php else: ?>
                         <div style="margin-top:4px;font-size:10px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
-                            🚨 Eceran & Grosir Habis! Segera Lakukan Penerimaan Barang.
+                            🚨 <?= $s['kategori'] === 'Alat Kesehatan' ? 'Stok Habis!' : 'Eceran & Grosir Habis!' ?> Segera Lakukan Penerimaan Barang.
                         </div>
                     <?php endif; ?>
                 <?php elseif($isDusMenipis): ?>
@@ -400,9 +405,9 @@ layoutHeader(
                 <?php endif; ?>
             </div>
             
-            <?php if($isEceranMenipis && $stokDusFisik > 0): ?>
+            <?php if($isEceranMenipis && $stokDusFisik > 0 && $s['kategori'] !== 'Alat Kesehatan'): ?>
                 <a href="inventori/konversi_uom.php" style="font-size:10px;font-weight:700;color:#ea580c;text-decoration:none;background:#ffedd5;padding:5px 10px;border-radius:5px;white-space:nowrap;margin-left:10px;border:1px solid #fed7aa;">Konversi</a>
-            <?php elseif($isDusMenipis || ($isEceranMenipis && $stokDusFisik == 0)): ?>
+            <?php elseif($isDusMenipis || ($isEceranMenipis && ($stokDusFisik == 0 || $s['kategori'] === 'Alat Kesehatan'))): ?>
                 <a href="inventori/tambah_stok.php" style="font-size:10px;font-weight:700;color:#b91c1c;text-decoration:none;background:#fee2e2;padding:5px 10px;border-radius:5px;white-space:nowrap;margin-left:10px;border:1px solid #fecaca;">Penerimaan Barang</a>
             <?php endif; ?>
         </div>

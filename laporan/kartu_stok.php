@@ -27,7 +27,7 @@ $logDataKecil = [];
 if ($id_variasi > 0) {
     // Info Barang
     $stmtProd = $pdo->prepare("
-        SELECT pv.sku_variasi, pi.nama_produk, pv.nama_variasi, 
+        SELECT pv.sku_variasi, pi.nama_produk, pv.nama_variasi, pi.kategori,
                pv.satuan_kecil, pv.satuan_besar, pv.rasio_konversi, pv.stok_minimum_kecil, pv.stok_minimum_besar, sc.stok
         FROM produk_variasi pv
         JOIN produk_induk pi ON pv.id_produk_induk = pi.id
@@ -38,13 +38,18 @@ if ($id_variasi > 0) {
     $produkData = $stmtProd->fetch();
     
     if ($produkData) {
-        $stokDus = $pdo->prepare("SELECT COALESCE(SUM(stok_sisa),0) FROM stok_batch WHERE id_variasi=? AND no_batch NOT LIKE '%.%'");
-        $stokDus->execute([$id_variasi]);
-        $produkData['stok_riil_besar'] = floor(intval($stokDus->fetchColumn()) / $produkData['rasio_konversi']);
+        if ($produkData['kategori'] === 'Alat Kesehatan') {
+            $produkData['stok_riil_besar'] = floor(intval($produkData['stok']) / max(1, intval($produkData['rasio_konversi'])));
+            $produkData['stok_riil_kecil'] = intval($produkData['stok']);
+        } else {
+            $stokDus = $pdo->prepare("SELECT COALESCE(SUM(stok_sisa),0) FROM stok_batch WHERE id_variasi=? AND no_batch NOT LIKE '%.%'");
+            $stokDus->execute([$id_variasi]);
+            $produkData['stok_riil_besar'] = floor(intval($stokDus->fetchColumn()) / max(1, intval($produkData['rasio_konversi'])));
 
-        $stokEceran = $pdo->prepare("SELECT COALESCE(SUM(stok_sisa),0) FROM stok_batch WHERE id_variasi=? AND no_batch LIKE '%.%'");
-        $stokEceran->execute([$id_variasi]);
-        $produkData['stok_riil_kecil'] = $stokEceran->fetchColumn();
+            $stokEceran = $pdo->prepare("SELECT COALESCE(SUM(stok_sisa),0) FROM stok_batch WHERE id_variasi=? AND no_batch LIKE '%.%'");
+            $stokEceran->execute([$id_variasi]);
+            $produkData['stok_riil_kecil'] = intval($stokEceran->fetchColumn());
+        }
     }
 
     // Ambil SEMUA data mutasi untuk hitung running balance
@@ -174,10 +179,13 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
 <?php if ($id_variasi > 0 && $produkData): ?>
 <!-- TAB NAVIGATION -->
 <div class="flex border-b border-slate-200 mb-6 print:hidden">
+    <?php if ($produkData['kategori'] !== 'Alat Kesehatan'): ?>
     <button onclick="switchTab('besar')" id="tab_btn_besar" class="px-6 py-3 font-bold text-sm border-b-4 border-amber-600 text-amber-700 transition">Kartu Stok Gudang (Satuan Besar)</button>
+    <?php endif; ?>
     <button onclick="switchTab('kecil')" id="tab_btn_kecil" class="px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition">Kartu Stok Etalase (Satuan Kecil)</button>
 </div>
 <div id="print-container" class="space-y-8 print:space-y-0">
+    <?php if ($produkData['kategori'] !== 'Alat Kesehatan'): ?>
     <!-- TABEL KARTU STOK GROSIR (BESAR) -->
     <div id="tab_content_besar" class="bg-white p-8 md:p-12 shadow-sm rounded-none border border-slate-300 w-full max-w-5xl mx-auto font-sans print:m-0 print:border-none print:shadow-none print:p-0 print:block page-break-after">
         <h1 class="text-center text-xl md:text-2xl font-black mb-10 tracking-wide text-black">Kartu Stok Gudang (Satuan Besar)</h1>
@@ -237,6 +245,7 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
             </tbody>
         </table>
     </div>
+    <?php endif; ?>
 
     <!-- TABEL KARTU STOK ECERAN (KECIL) -->
     <div id="tab_content_kecil" class="hidden bg-white p-8 md:p-12 shadow-sm rounded-none border border-slate-300 w-full max-w-5xl mx-auto font-sans print:m-0 print:border-none print:shadow-none print:p-0 print:block">
@@ -358,6 +367,10 @@ function switchTab(tab) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    <?php if ($produkData['kategori'] === 'Alat Kesehatan'): ?>
+    switchTab('kecil');
+    <?php endif; ?>
+    
     let dari = document.querySelector('input[name="dari"]');
     let sampai = document.querySelector('input[name="sampai"]');
     
