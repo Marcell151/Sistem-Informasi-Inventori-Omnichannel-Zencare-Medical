@@ -248,6 +248,13 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
     <?php endif; ?>
 
     <!-- TABEL KARTU STOK ECERAN (KECIL) -->
+    <?php if ($produkData['kategori'] === 'Alat Kesehatan'): ?>
+    <div class="mb-5 flex items-start gap-3 p-4 rounded-xl text-sm font-medium bg-blue-50 border border-blue-200 text-blue-800 max-w-5xl mx-auto print:hidden">
+        <svg class="w-5 h-5 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span><strong>Info:</strong> Kartu Stok Satuan Besar tidak ditampilkan untuk kategori Alat Kesehatan. Setiap unit fisik dikelola dan dicatat secara individual (per Serial Number) sejak proses Penerimaan Barang, sehingga rasio konversinya adalah 1:1 dan tidak melalui proses mutasi pembongkaran kemasan.</span>
+    </div>
+    <?php endif; ?>
+    
     <div id="tab_content_kecil" class="hidden bg-white p-8 md:p-12 shadow-sm rounded-none border border-slate-300 w-full max-w-5xl mx-auto font-sans print:m-0 print:border-none print:shadow-none print:p-0 print:block">
         <h1 class="text-center text-xl md:text-2xl font-black mb-10 tracking-wide text-black">Kartu Stok Etalase (Satuan Kecil)</h1>
         

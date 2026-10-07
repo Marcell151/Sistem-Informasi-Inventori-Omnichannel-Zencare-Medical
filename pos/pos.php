@@ -89,9 +89,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                 // SN Auto-Pick / Scan untuk Alkes
                 if ($kategori === 'Alat Kesehatan') {
                     if ($scannedCode) {
-                        $pdo->prepare("UPDATE unit_serial SET status = 'Terjual', id_penjualan = ? WHERE serial_number = ? AND id_variasi = ? AND status = 'Tersedia'")
-                            ->execute([$idPenjualan, $scannedCode, $idVar]);
-                        if ($pdo->rowCount() === 0) throw new Exception("SN $scannedCode tidak valid/tersedia.");
+                        $stmtUpdateSN = $pdo->prepare("UPDATE unit_serial SET status = 'Terjual', id_penjualan = ? WHERE serial_number = ? AND id_variasi = ? AND status = 'Tersedia'");
+                        $stmtUpdateSN->execute([$idPenjualan, $scannedCode, $idVar]);
+                        if ($stmtUpdateSN->rowCount() === 0) throw new Exception("SN $scannedCode tidak valid/tersedia.");
                         $catatanLogistik[] = $scannedCode;
                     } else {
                         $stmtSn = $pdo->prepare("SELECT serial_number FROM unit_serial WHERE id_variasi = ? AND status = 'Tersedia' LIMIT ? FOR UPDATE");
@@ -288,14 +288,23 @@ $shopeeOn = false;
                             <div class="pt-2.5 border-t border-zcBrd flex items-end justify-between">
                                 <div>
                                     <span class="text-xs font-bold text-zcTxt block">Rp <?= number_format($item['harga_jual_kecil'], 0, ',', '.') ?> <span class="font-normal text-[10px] text-zcMut">/ <?= htmlspecialchars($item['satuan_kecil']) ?></span></span>
+                                    <?php if ($item['rasio_konversi'] > 1): ?>
                                     <span class="text-[9px] font-semibold text-zcEm block">Grosir: Rp <?= number_format($item['harga_jual_besar'], 0, ',', '.') ?> / <?= htmlspecialchars($item['satuan_besar']) ?></span>
+                                    <?php endif; ?>
                                     <span class="text-[10px] <?= $stok > 0 ? 'text-emerald-600' : 'text-rose-500' ?> font-semibold">Stok: <?= $stok ?> <?= htmlspecialchars($item['satuan_kecil']) ?></span>
                                 </div>
                                 <div class="flex flex-col gap-1 items-end">
+                                    <?php if ($item['rasio_konversi'] > 1): ?>
                                     <select id="uom_<?= $item['id'] ?>" class="text-[10px] border border-zcBrd rounded px-1 py-0.5 bg-white focus:outline-none focus:border-zc w-full" <?= $stok <= 0 ? 'disabled' : '' ?>>
                                         <option value="kecil"><?= htmlspecialchars($item['satuan_kecil']) ?></option>
                                         <option value="besar" <?= $stok < $item['rasio_konversi'] ? 'disabled' : '' ?>><?= htmlspecialchars($item['satuan_besar']) ?></option>
                                     </select>
+                                    <?php else: ?>
+                                    <input type="hidden" id="uom_<?= $item['id'] ?>" value="kecil" data-label="<?= htmlspecialchars($item['satuan_kecil']) ?>">
+                                    <div class="text-[10px] border border-zcBrd rounded px-1 py-0.5 bg-slate-100 text-slate-500 text-center w-full font-semibold">
+                                        <?= htmlspecialchars($item['satuan_kecil']) ?>
+                                    </div>
+                                    <?php endif; ?>
                                     <button type="button" 
                                         data-id="<?= intval($item['id']) ?>"
                                         data-nama="<?= htmlspecialchars($item['nama'], ENT_QUOTES, 'UTF-8') ?>"
@@ -589,7 +598,14 @@ $shopeeOn = false;
     function processAddToCart(id, name, hargaKecil, hargaBesar, maxStockPcs, rasio, scannedCode, rawSn, rawBatch, isAnomaly = false, batchSeharusnya = null, needsVerification = false, passedUomType = null, stokEceranFisik = 0) {
         var sel = document.getElementById('uom_' + id);
         var uomType = passedUomType ? passedUomType : (sel ? sel.value : 'kecil');
-        var uomLabel = sel ? sel.options[sel.selectedIndex].text : '';
+        var uomLabel = '';
+        if (sel) {
+            if (sel.tagName.toLowerCase() === 'select') {
+                uomLabel = sel.options[sel.selectedIndex].text;
+            } else {
+                uomLabel = sel.getAttribute('data-label') || '';
+            }
+        }
         
         var price = (uomType === 'besar') ? hargaBesar : hargaKecil;
         var qtyMultiplier = (uomType === 'besar') ? rasio : 1;
@@ -608,7 +624,8 @@ $shopeeOn = false;
             }
 
             if (unverifiedIndex !== -1) {
-                var i = unverifiedIndex;
+                var qtyToValidate = rawSn ? 1 : cart[i].qty;
+                
                 var existingVerified = null;
                 for (var j = 0; j < cart.length; j++) {
                     if (j !== i && cart[j].cartId === cartId) {
@@ -618,19 +635,38 @@ $shopeeOn = false;
                 }
 
                 if (existingVerified) {
-                    if ((existingVerified.qty + cart[i].qty) * existingVerified.rasio > existingVerified.maxPcs) { 
+                    if (qtyToValidate === 1 && rawSn) {
+                        Swal.fire('Error', 'SN ' + scannedCode.toUpperCase() + ' sudah ada di keranjang!', 'error');
+                        return;
+                    }
+                    if ((existingVerified.qty + qtyToValidate) * existingVerified.rasio > existingVerified.maxPcs) { 
                         alert('Stok terbatas!'); return; 
                     }
-                    existingVerified.qty += cart[i].qty;
-                    cart.splice(i, 1);
+                    existingVerified.qty += qtyToValidate;
+                    
+                    if (qtyToValidate === cart[i].qty) {
+                        cart.splice(i, 1);
+                    } else {
+                        cart[i].qty -= qtyToValidate;
+                    }
                 } else {
-                    cart[i].scanned_code = scannedCode;
-                    cart[i].cartId = cartId; // ubah cartId menjadi yang sudah di-scan
-                    cart[i].is_anomaly = isAnomaly;
-                    cart[i].batch_seharusnya = batchSeharusnya;
-                    cart[i].maxPcs = maxStockPcs; // Update maxPcs ke stok batch baru
-                    cart[i].stok_eceran_fisik = stokEceranFisik; // Update hint UI ke stok batch baru
-                    // Jaga qty tetap sama dengan unverified item sebelumnya
+                    if (qtyToValidate === cart[i].qty) {
+                        cart[i].scanned_code = scannedCode;
+                        cart[i].cartId = cartId; // ubah cartId menjadi yang sudah di-scan
+                        cart[i].is_anomaly = isAnomaly;
+                        cart[i].batch_seharusnya = batchSeharusnya;
+                        cart[i].maxPcs = maxStockPcs; // Update maxPcs ke stok batch baru
+                        cart[i].stok_eceran_fisik = stokEceranFisik; // Update hint UI ke stok batch baru
+                    } else {
+                        cart[i].qty -= qtyToValidate;
+                        cart.push({
+                            id: id, cartId: cartId, nama: name, harga: price, qty: qtyToValidate, 
+                            satuan_tipe: uomType, satuan_label: uomLabel, maxPcs: maxStockPcs, rasio: qtyMultiplier,
+                            sn_list: rawSn, batch_list: rawBatch, scanned_code: scannedCode,
+                            is_anomaly: isAnomaly, batch_seharusnya: batchSeharusnya,
+                            needs_verification: needsVerification, stok_eceran_fisik: stokEceranFisik
+                        });
+                    }
                 }
                 
                 Swal.fire({
@@ -814,11 +850,18 @@ $shopeeOn = false;
                 }
             }
 
+            var stokInfo = '';
+            if (i.batch_list) {
+                stokInfo = (i.satuan_tipe === 'besar') ? '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Fisik Box: ' + Math.floor(i.maxPcs / i.rasio) + '</span>' : '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Batch Spesifik (Utama): ' + i.stok_eceran_fisik + ' Pcs</span>';
+            } else {
+                stokInfo = '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Stok: ' + i.maxPcs + ' ' + i.satuan_label + '</span>';
+            }
+
             html += '<tr class="hover:bg-slate-50/60">' +
                 '<td class="px-4 py-3 font-semibold text-zcTxt text-xs">' +
                     i.nama +
                     '<span class="block text-[9px] text-zcEm mt-0.5">' + i.satuan_label + ' (Rp ' + i.harga.toLocaleString('id-ID') + ')</span>' +
-                    fefoText + ((i.satuan_tipe === 'besar') ? '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Fisik Box: ' + Math.floor(i.maxPcs / i.rasio) + '</span>' : '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Batch Spesifik (Utama): ' + i.stok_eceran_fisik + ' Pcs</span>') +
+                    fefoText + stokInfo +
                 '</td>' +
                 '<td class="px-4 py-3 text-center">' +
                     '<div class="flex items-center justify-center gap-1.5">' +

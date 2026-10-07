@@ -137,11 +137,38 @@ $items = $stmtDetail->fetchAll();
             </tr>
         </thead>
         <tbody>
-            <?php $no = 1; foreach ($items as $item): ?>
+            <?php 
+                $aggregatedItems = [];
+                foreach ($items as $row) {
+                    $key = $row['id_variasi'] . '_' . $row['harga_satuan'];
+                    if (isset($aggregatedItems[$key])) {
+                        $aggregatedItems[$key]['qty'] += $row['qty'];
+                        if (!empty($row['catatan_logistik'])) {
+                            if (!empty($aggregatedItems[$key]['catatan_logistik'])) {
+                                $parts = array_map('trim', explode(',', $aggregatedItems[$key]['catatan_logistik'] . ',' . $row['catatan_logistik']));
+                                $aggregatedItems[$key]['catatan_logistik'] = implode(', ', array_unique(array_filter($parts)));
+                            } else {
+                                $parts = array_map('trim', explode(',', $row['catatan_logistik']));
+                                $aggregatedItems[$key]['catatan_logistik'] = implode(', ', array_unique(array_filter($parts)));
+                            }
+                        }
+                    } else {
+                        $aggregatedItems[$key] = $row;
+                    }
+                }
+                
+                $no = 1; 
+                foreach ($aggregatedItems as $item): 
+            ?>
                 <tr>
                     <td class="text-center"><?= $no++ ?></td>
                     <td><?= htmlspecialchars($item['sku_variasi']) ?></td>
-                    <td><?= htmlspecialchars($item['nama_item']) ?></td>
+                    <td>
+                        <?= htmlspecialchars($item['nama_item']) ?>
+                        <?php if (!empty($item['catatan_logistik'])): ?>
+                            <br><small style="color: #666;">(SN/Batch: <?= htmlspecialchars($item['catatan_logistik']) ?>)</small>
+                        <?php endif; ?>
+                    </td>
                     <td class="text-center"><?= intval($item['qty']) ?></td>
                     <td class="text-right">Rp <?= number_format($item['harga_satuan'], 0, ',', '.') ?></td>
                 </tr>
