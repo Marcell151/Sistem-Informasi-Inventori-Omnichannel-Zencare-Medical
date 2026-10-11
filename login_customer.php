@@ -69,8 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Brand Mark -->
         <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white border border-white/20 mb-3 overflow-hidden p-0.5 shadow-sm">
-                <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-xl">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white border border-white/20 mb-3 overflow-hidden shadow-sm">
+                <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
             </div>
             <h1 class="text-xl font-bold text-white">Selamat Datang Kembali</h1>
             <p class="text-xs text-slate-400 mt-1">Masuk untuk melanjutkan belanja alat kesehatan</p>

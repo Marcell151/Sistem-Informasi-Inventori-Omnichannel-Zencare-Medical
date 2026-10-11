@@ -72,8 +72,8 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
     <header class="bg-white border-b border-zcBrd sticky top-0 z-50 shadow-xs">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
-                <div class="w-10 h-10 rounded-lg bg-white border border-zcBrd flex items-center justify-center overflow-hidden p-0.5">
-                    <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain">
+                <div class="w-10 h-10 rounded-full bg-white border border-zcBrd flex items-center justify-center overflow-hidden shadow-sm">
+                    <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
                 </div>
                 <a href="ecommerce/index.php" class="font-semibold text-zcTxt text-sm"><?= htmlspecialchars($namaToko) ?> <span class="text-zc">Checkout</span></a>
             </div>

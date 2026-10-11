@@ -32,8 +32,8 @@
                 <!-- Brand Info -->
                 <div class="space-y-4">
                     <div class="flex items-center gap-2.5">
-                        <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-md overflow-hidden p-0.5">
-                            <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain">
+                        <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm overflow-hidden">
+                            <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
                         </div>
                         <div>
                             <h2 class="text-xl font-black tracking-tight text-[#0f2d5a] leading-none">ZenCare</h2>

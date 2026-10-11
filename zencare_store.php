@@ -1,6 +1,8 @@
 <?php
 // File: zencare_store.php
-// ZenCare Medical E-Commerce Store (Premium Design v4)
+// Redirect otomatis ke E-Commerce Store Baru (ecommerce/index.php)
+header('Location: ecommerce/index.php');
+exit;
 session_start();
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/koneksi.php';
@@ -103,8 +105,8 @@ foreach ($products as $p) {
                 <?php if ($logoUrl): ?>
                     <img src="<?= htmlspecialchars($logoUrl) ?>" alt="Logo" class="h-8 w-auto">
                 <?php else: ?>
-                    <div class="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden p-0.5 shadow-sm">
-                        <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain">
+                    <div class="w-12 h-12 rounded-full bg-white border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+                        <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
                     </div>
                 <?php endif; ?>
                 <div class="hidden sm:block">
@@ -444,8 +446,8 @@ foreach ($products as $p) {
     <footer class="bg-slate-900 text-slate-400 mt-12 py-8">
         <div class="max-w-7xl mx-auto px-4 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-2.5">
-                <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center overflow-hidden p-0.5">
-                    <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain">
+                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center overflow-hidden shadow-sm">
+                    <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
                 </div>
                 <span class="text-white font-semibold text-sm"><?= htmlspecialchars($namaToko) ?></span>
             </div>

@@ -107,9 +107,9 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
     echo '<aside class="w-[230px] bg-white border-r border-zcBrd flex flex-col shrink-0 min-h-screen sticky top-0 hidden md:flex">';
 
     // Brand logo
-    echo '<div class="h-14 flex items-center px-4 border-b border-zcBrd gap-2.5">
-      <div class="w-12 h-12 rounded-xl bg-white border border-zcBrd flex items-center justify-center shrink-0 shadow-sm overflow-hidden p-0.5">
-        <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain">
+    echo '<div class="h-16 flex items-center px-4 border-b border-zcBrd gap-2.5">
+      <div class="w-11 h-11 rounded-full bg-white border border-zcBrd flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
+        <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
       </div>
       <div>
         <span class="text-[13px] font-black text-zcTxt leading-tight block">ZenCare Medical</span>

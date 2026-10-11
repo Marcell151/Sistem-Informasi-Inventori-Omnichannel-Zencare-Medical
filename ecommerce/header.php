@@ -125,8 +125,8 @@ $namaPelanggan = $isLoggedIn ? $_SESSION['nama_lengkap'] : '';
 
             <!-- Brand Logo -->
             <a href="index.php" class="flex items-center gap-2.5 shrink-0 group">
-                <div class="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center group-hover:scale-105 transition shadow-md overflow-hidden p-0.5">
-                    <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain">
+                <div class="w-12 h-12 rounded-full bg-white border border-slate-200 flex items-center justify-center group-hover:scale-105 transition shadow-sm overflow-hidden">
+                    <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
                 </div>
                 <div>
                     <h1 class="text-xl font-black tracking-tight text-[#0f2d5a] leading-none">ZenCare</h1>

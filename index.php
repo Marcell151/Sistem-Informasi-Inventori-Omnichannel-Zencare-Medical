@@ -354,7 +354,7 @@ layoutHeader(
     <a href="laporan/ketersediaan_stok.php" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Laporan Stok</a>
     <a href="laporan/logistik_medis.php" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Logistik Medis</a>
     <a href="laporan/kartu_stok.php" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Kartu Stok</a>
-    <a href="zencare_store.php" target="_blank" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Buka Store</a>
+    <a href="ecommerce/index.php" target="_blank" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Buka Store</a>
 </div>
 
 <!-- ROW 3: Stok Menipis + Log Audit Kartu Stok -->
@@ -741,7 +741,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <div style="display:flex;gap:10px;margin-bottom:20px;">
     <a href="inventori/tambah_stok.php" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">+ Terima Stok Baru</a>
     <a href="admin/pesanan.php" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Kelola Pesanan</a>
-    <a href="zencare_store.php" target="_blank" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Buka Store</a>
+    <a href="ecommerce/index.php" target="_blank" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Buka Store</a>
 </div>
 
 <!-- Row 2: Stok Menipis + Obat Kedaluwarsa + Audit Kartu Stok -->

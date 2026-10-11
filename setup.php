@@ -268,7 +268,7 @@ try {
 
     echo "<h3>4. Data Dummy Master dan Stok per Cabang berhasil diisi.</h3>";
     echo "<h3>Setup Keseluruhan Berhasil! Sistem Omnichannel Zencare Medical sudah siap digunakan.</h3>";
-    echo "<a href='zencare_store.php' style='display:inline-block; padding:10px 20px; background:#007bff; color:white; text-decoration:none; border-radius:5px; font-weight:bold;'>Buka Zencare Store</a>";
+    echo "<a href='ecommerce/index.php' style='display:inline-block; padding:10px 20px; background:#007bff; color:white; text-decoration:none; border-radius:5px; font-weight:bold;'>Buka Zencare Store</a>";
 
 } catch (PDOException $e) {
     die("<h3>Setup Gagal: " . $e->getMessage() . "</h3>");

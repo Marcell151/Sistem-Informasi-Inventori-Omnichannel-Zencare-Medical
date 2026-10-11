@@ -1,1 +1,1 @@
-{"data":[{"service":"REG","description":"Layanan Reguler","cost":15000,"etd":"2-3 Hari"},{"service":"YES","description":"Yakin Esok Sampai","cost":24000,"etd":"1 Hari"}]}
+{"meta":{"message":"Success Calculate Domestic Shipping cost","code":200,"status":"success"},"data":[{"name":"Jalur Nugraha Ekakurir (JNE)","code":"jne","service":"CTC","description":"JNE City Courier","cost":14000,"etd":"2 day"},{"name":"Jalur Nugraha Ekakurir (JNE)","code":"jne","service":"JTR","description":"JNE Trucking","cost":105000,"etd":"6 day"}]}
