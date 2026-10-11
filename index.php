@@ -89,6 +89,7 @@ if ($isSuperadmin) {
         JOIN penjualan p ON dp.id_penjualan=p.id
         WHERE MONTH(p.created_at)=MONTH(CURDATE()) AND YEAR(p.created_at)=YEAR(CURDATE())
           AND p.status_pesanan NOT IN ('Dibatalkan')
+          AND p.tipe_transaksi != 'Mutasi Konversi'
         GROUP BY dp.id_variasi ORDER BY total_qty DESC LIMIT 5
     ")->fetchAll();
 

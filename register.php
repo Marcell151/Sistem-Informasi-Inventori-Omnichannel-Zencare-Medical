@@ -66,10 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Brand Mark -->
         <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-white/10 border border-white/20 mb-3">
-                <svg viewBox="0 0 24 24" class="w-6 h-6 text-sky-400" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                </svg>
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white border border-white/20 mb-3 overflow-hidden p-0.5 shadow-sm">
+                <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-xl">
             </div>
             <h1 class="text-xl font-bold text-white">Daftar Pelanggan ZenCare</h1>
             <p class="text-xs text-slate-400 mt-1">Dapatkan akses penuh ke pembelian alkes secara e-commerce</p>

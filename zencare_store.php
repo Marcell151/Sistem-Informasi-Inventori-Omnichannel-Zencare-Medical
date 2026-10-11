@@ -103,8 +103,8 @@ foreach ($products as $p) {
                 <?php if ($logoUrl): ?>
                     <img src="<?= htmlspecialchars($logoUrl) ?>" alt="Logo" class="h-8 w-auto">
                 <?php else: ?>
-                    <div class="w-9 h-9 rounded-xl bg-zc flex items-center justify-center shrink-0">
-                        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    <div class="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden p-0.5 shadow-sm">
+                        <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain">
                     </div>
                 <?php endif; ?>
                 <div class="hidden sm:block">
@@ -444,8 +444,8 @@ foreach ($products as $p) {
     <footer class="bg-slate-900 text-slate-400 mt-12 py-8">
         <div class="max-w-7xl mx-auto px-4 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-zc flex items-center justify-center">
-                    <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center overflow-hidden p-0.5">
+                    <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain">
                 </div>
                 <span class="text-white font-semibold text-sm"><?= htmlspecialchars($namaToko) ?></span>
             </div>

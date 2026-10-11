@@ -13,7 +13,7 @@ $dari   = $_GET['dari']    ?? date('Y-m-01');
 $sampai = $_GET['sampai']  ?? date('Y-m-d');
 $kanal  = $_GET['kanal']   ?? 'semua';  // semua / pos / online
 
-$kanalWhere = '';
+$kanalWhere = "AND pj.tipe_transaksi != 'Mutasi Konversi'";
 if ($kanal === 'pos')    $kanalWhere = "AND pj.tipe_transaksi = 'pos'";
 if ($kanal === 'ecommerce') $kanalWhere = "AND pj.tipe_transaksi = 'ecommerce'";
 

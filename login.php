@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .field:focus { border-color:#1a75d2; background:#fff; }
         .btn-submit { width:100%; background:#1a75d2; color:#fff; font-weight:700; font-size:13px; padding:10px; border-radius:6px; border:none; cursor:pointer; transition:background .15s; }
         .btn-submit:hover { background:#1562b3; }
-        .logo-box { width:44px; height:44px; background:#1a75d2; border-radius:10px; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
+        .logo-box { width:64px; height:64px; background:#1a75d2; border-radius:10px; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center font-sans p-4">
@@ -80,10 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Logo & Title -->
         <div class="text-center mb-5">
-            <div class="logo-box">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
-                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                </svg>
+            <div class="logo-box" style="background:transparent; border:none; overflow:hidden; padding:0;">
+                <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" style="width:100%;height:100%;object-fit:contain;">
             </div>
             <h1 style="font-size:17px;font-weight:800;color:#1e293b;margin-bottom:3px;">ZenCare Medical Admin</h1>
             <p style="font-size:12px;color:#64748b;">Portal Internal Operasional ZenCare Medical</p>

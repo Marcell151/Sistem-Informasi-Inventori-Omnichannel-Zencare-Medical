@@ -108,8 +108,8 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
 
     // Brand logo
     echo '<div class="h-14 flex items-center px-4 border-b border-zcBrd gap-2.5">
-      <div class="w-8 h-8 rounded-xl bg-zc flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/30">
-        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <div class="w-12 h-12 rounded-xl bg-white border border-zcBrd flex items-center justify-center shrink-0 shadow-sm overflow-hidden p-0.5">
+        <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain">
       </div>
       <div>
         <span class="text-[13px] font-black text-zcTxt leading-tight block">ZenCare Medical</span>
