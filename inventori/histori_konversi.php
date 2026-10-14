@@ -79,12 +79,14 @@ layoutHeader('Histori Konversi / Buka Dus', 'Laporan jejak audit (Audit Trail) p
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center gap-1.5 text-rose-600 font-bold bg-rose-50/80 px-2.5 py-1 rounded border border-rose-100">
-                                ↓ Keluar <?= $h['qty_box_buka'] ?> <?= htmlspecialchars($h['satuan_besar']) ?>
+                                <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                                <span>Keluar <?= $h['qty_box_buka'] ?> <?= htmlspecialchars($h['satuan_besar']) ?></span>
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 text-amber-800 text-xs font-bold border border-amber-200">
-                                📦 <?= intval($h['sisa_dus_akhir'] ?? 0) ?> <?= htmlspecialchars($h['satuan_besar']) ?> Tersisa
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200">
+                                <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                                <span><?= intval($h['sisa_dus_akhir'] ?? 0) ?> <?= htmlspecialchars($h['satuan_besar']) ?> Tersisa</span>
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -92,7 +94,8 @@ layoutHeader('Histori Konversi / Buka Dus', 'Laporan jejak audit (Audit Trail) p
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center gap-1.5 text-emerald-600 font-bold bg-emerald-50/80 px-2.5 py-1 rounded border border-emerald-100">
-                                ↑ Masuk <?= $h['qty_pcs_hasil'] ?> <?= htmlspecialchars($h['satuan_kecil']) ?>
+                                <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                                <span>Masuk <?= $h['qty_pcs_hasil'] ?> <?= htmlspecialchars($h['satuan_kecil']) ?></span>
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center">

@@ -78,12 +78,18 @@ layoutHeader('Gudang Karantina Barang Cacat', 'Isolasi barang defect/retur garan
     <div class="lg:col-span-4">
         <div class="bg-white border border-zcBorder rounded-2xl shadow-sm p-6">
             <h2 class="text-sm font-bold text-zcText mb-4 pb-3 border-b border-zcBorder flex items-center gap-2">
-                <span class="text-base">⚠️</span> Form Isolasi Barang
+                <svg class="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>Form Isolasi Barang</span>
             </h2>
 
             <?php if ($msg): ?>
                 <div class="mb-4 p-3.5 rounded-xl border text-xs font-semibold flex items-center gap-2 <?= $msgType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800' ?>">
-                    <?= $msgType === 'success' ? '✅' : '⛔' ?> <?= htmlspecialchars($msg) ?>
+                    <?php if ($msgType === 'success'): ?>
+                        <svg class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    <?php else: ?>
+                        <svg class="w-4 h-4 text-rose-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    <?php endif; ?>
+                    <span><?= htmlspecialchars($msg) ?></span>
                 </div>
             <?php endif; ?>
 
@@ -120,8 +126,9 @@ layoutHeader('Gudang Karantina Barang Cacat', 'Isolasi barang defect/retur garan
                         <option value="Lainnya">Lainnya</option>
                     </select>
                 </div>
-                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-3 rounded-xl transition shadow-sm">
-                    ⚠️ Karantinakan Barang
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-3 rounded-xl transition shadow-sm flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <span>Karantinakan Barang</span>
                 </button>
             </form>
         </div>
@@ -130,9 +137,9 @@ layoutHeader('Gudang Karantina Barang Cacat', 'Isolasi barang defect/retur garan
     <!-- Daftar Karantina -->
     <div class="lg:col-span-8">
         <div class="bg-white border border-zcBorder rounded-2xl shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-zcBorder">
-                <h3 class="text-sm font-bold text-zcText">📋 Riwayat Gudang Karantina (20 Terbaru)</h3>
-                <p class="text-[11px] text-zcMuted mt-0.5">Barang terisolasi yang belum dikembalikan/dihapuskan</p>
+            <div class="px-5 py-4 border-b border-zcBorder flex items-center gap-2">
+                <svg class="w-4 h-4 text-zcMuted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                <h3 class="text-sm font-bold text-zcText">Riwayat Gudang Karantina (20 Terbaru)</h3>
             </div>
             <?php if (empty($karantinaLog)): ?>
                 <div class="p-10 text-center text-xs text-zcMuted italic">Gudang karantina kosong – semua barang dalam kondisi normal.</div>

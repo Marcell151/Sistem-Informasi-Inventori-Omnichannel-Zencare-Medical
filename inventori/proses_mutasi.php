@@ -243,11 +243,11 @@ layoutHeader('Mutasi Stok Manual', 'Penyesuaian stok gudang karena selisih, retu
                     <table class="w-full text-xs">
                         <thead class="bg-slate-50 border-b border-zcBrd text-zcMut font-bold">
                             <tr>
-                                <th class="px-4 py-3 text-left">Waktu</th>
+                                <th class="px-4 py-3 text-left whitespace-nowrap">Waktu</th>
                                 <th class="px-4 py-3 text-left">Produk</th>
-                                <th class="px-4 py-3 text-left">Jenis</th>
+                                <th class="px-4 py-3 text-left whitespace-nowrap">Jenis</th>
                                 <th class="px-4 py-3 text-left">Alasan</th>
-                                <th class="px-4 py-3 text-right">Oleh</th>
+                                <th class="px-4 py-3 text-right whitespace-nowrap">Oleh</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-zcBrd/60">
@@ -255,13 +255,13 @@ layoutHeader('Mutasi Stok Manual', 'Penyesuaian stok gudang karena selisih, retu
                                 $satuanLabel = $m['satuan_tipe'] === 'besar' ? $m['satuan_besar'] : $m['satuan_kecil'];
                             ?>
                                 <tr class="hover:bg-slate-50/60 transition">
-                                    <td class="px-4 py-3 text-zcMut font-mono"><?= date('d/m/y H:i', strtotime($m['created_at'])) ?></td>
+                                    <td class="px-4 py-3 text-zcMut font-mono whitespace-nowrap"><?= date('d/m/y H:i', strtotime($m['created_at'])) ?></td>
                                     <td class="px-4 py-3 font-semibold text-zcTxt"><?= htmlspecialchars($m['nama_item']) ?></td>
-                                    <td class="px-4 py-3">
+                                    <td class="px-4 py-3 whitespace-nowrap">
                                         <?php if (in_array($m['jenis_mutasi'], ['Masuk', 'Penambahan'])): ?>
-                                            <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md font-bold text-[10px]">+ <?= $m['qty'] ?> <?= htmlspecialchars($satuanLabel) ?></span>
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg font-bold text-xs whitespace-nowrap">+ <?= $m['qty'] ?> <?= htmlspecialchars($satuanLabel) ?></span>
                                         <?php else: ?>
-                                            <span class="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-md font-bold text-[10px]">- <?= $m['qty'] ?> <?= htmlspecialchars($satuanLabel) ?></span>
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg font-bold text-xs whitespace-nowrap">- <?= $m['qty'] ?> <?= htmlspecialchars($satuanLabel) ?></span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="px-4 py-3 text-zcTxt text-[11px]">
