@@ -24,10 +24,16 @@ $stmtProduk = $pdo->prepare("
            v.harga_jual_besar AS harga_jual,
            v.harga_jual_kecil AS harga_eceran,
            v.berat AS berat_gram,
-           v.gambar,
+           v.gambar AS gambar,
            v.sku_variasi,
            i.deskripsi,
            COALESCE(sc.stok, 0) AS stok_sistem,
+           (SELECT COALESCE(SUM(sb.stok_sisa), 0) 
+            FROM stok_batch sb 
+            WHERE sb.id_variasi = v.id 
+              AND sb.no_batch NOT LIKE '%.%' 
+              AND sb.tgl_exp >= CURDATE()
+           ) AS stok_batch_utuh,
            v.tampil_di_online, v.satuan_besar, v.satuan_kecil, v.rasio_konversi
     FROM produk_variasi v
     JOIN produk_induk i ON v.id_produk_induk = i.id
@@ -45,8 +51,10 @@ sort($categories);
 // Build stok-aware product JSON for JS
 $productMeta = [];
 foreach ($products as $p) {
-    $rasio = intval($p['rasio_konversi']) ?: 1;
-    $stokBox = floor(intval($p['stok_sistem']) / $rasio);
+    $rasio = max(1, intval($p['rasio_konversi']));
+    $stokBox = ($p['kategori'] === 'Obat')
+        ? (int) floor(intval($p['stok_batch_utuh']) / $rasio)
+        : (int) floor(intval($p['stok_sistem']) / $rasio);
     $productMeta[$p['id']] = ['stokBox' => $stokBox, 'satBesar' => $p['satuan_besar']];
 }
 ?>
@@ -193,7 +201,7 @@ foreach ($products as $p) {
             <div class="max-w-lg">
                 <span class="inline-block px-3 py-1 bg-zc/10 text-zc text-[10px] font-bold uppercase tracking-widest rounded-md mb-4 border border-zc/20">Distributor Resmi</span>
                 <h1 class="text-3xl sm:text-4xl font-extrabold text-zcTxt tracking-tight leading-[1.15] mb-4">Solusi Pengadaan<br>Alkes &amp; Obat Medis.</h1>
-                <p class="text-zcMut text-sm leading-relaxed mb-6">Pembelian grosir B2B untuk klinik dan apotek dengan jaminan produk bersertifikat BPOM & Kemenkes RI.</p>
+                <p class="text-zcMut text-sm leading-relaxed mb-6">Penyedia alat kesehatan dan obat dengan jaminan keaslian produk dan kemudahan pemesanan.</p>
                 <div class="flex gap-3">
                     <button class="px-5 py-2.5 bg-zc text-white text-xs font-bold rounded-xl hover:bg-zcHv transition">Belanja Sekarang</button>
                     <button class="px-5 py-2.5 bg-white text-zcTxt text-xs font-bold rounded-xl border border-zcBrd hover:border-zc transition">Lihat Katalog</button>
@@ -270,9 +278,10 @@ foreach ($products as $p) {
         <!-- Product Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5" id="product-grid">
             <?php foreach ($products as $p):
-                $stokPcs  = intval($p['stok_sistem']);
-                $rasio    = intval($p['rasio_konversi']) ?: 1;
-                $stokBox  = floor($stokPcs / $rasio);
+                $rasio    = max(1, intval($p['rasio_konversi']));
+                $stokBox  = ($p['kategori'] === 'Obat')
+                    ? (int) floor(intval($p['stok_batch_utuh']) / $rasio)
+                    : (int) floor(intval($p['stok_sistem']) / $rasio);
                 $harga    = floatval($p['harga_jual']);
                 $hargaEceran = floatval($p['harga_eceran']);
                 $satBesar = $p['satuan_besar'];
@@ -494,7 +503,10 @@ foreach ($products as $p) {
             <a href="zencare_checkout.php" class="flex items-center justify-center w-full py-3 bg-zc hover:bg-zcHv text-white text-xs font-bold rounded-xl transition shadow-md">
                 Lanjut ke Pembayaran
             </a>
-            <button onclick="toggleCartDrawer()" class="w-full text-center py-2 mt-2 text-xs font-medium text-zcMut hover:text-zcTxt transition">
+            <a href="ecommerce/cart.php" class="flex items-center justify-center w-full py-2.5 mt-2 bg-white border border-zcBrd hover:border-zc text-zc text-xs font-bold rounded-xl transition">
+                Buka Halaman Keranjang Penuh
+            </a>
+            <button onclick="toggleCartDrawer()" class="w-full text-center py-2 mt-1 text-xs font-medium text-zcMut hover:text-zcTxt transition">
                 Lanjutkan Belanja
             </button>
         </div>
@@ -508,8 +520,11 @@ foreach ($products as $p) {
     const productMeta = <?= json_encode($productMeta) ?>;
     
     // ─── Cart Functions ───────────────────────────────────────────
-    function getCart() { return JSON.parse(localStorage.getItem('zencare_cart') || '[]'); }
+    function getCart() { 
+        return JSON.parse(localStorage.getItem('zc_cart') || localStorage.getItem('zencare_cart') || '[]'); 
+    }
     function saveCart(cart) {
+        localStorage.setItem('zc_cart', JSON.stringify(cart));
         localStorage.setItem('zencare_cart', JSON.stringify(cart));
         updateCartBadge();
     }
@@ -571,19 +586,32 @@ foreach ($products as $p) {
 
         if (existing) {
             existing.qty += qty;
+            if (existing.selected === undefined) existing.selected = true;
+            if (!existing.nama) existing.nama = name;
+            if (!existing.harga) existing.harga = price;
+            if (!existing.gambar) existing.gambar = image;
+            if (!existing.satuan) existing.satuan = satBesar;
+            if (!existing.max) existing.max = maxStokBox;
         } else {
             cart.push({
                 id: id,
                 name: name,
+                nama: name,
                 price: price,
+                harga: price,
                 weight: weight,
+                berat: weight,
                 image: image,
+                gambar: image,
                 qty: qty,
+                satuan: satBesar,
                 satuan_besar: satBesar,
                 satuan_label: satBesar,
                 rasio_konversi: rasio,
+                max: maxStokBox,
                 maxStokBox: maxStokBox,
-                stokBox: maxStokBox
+                stokBox: maxStokBox,
+                selected: true
             });
         }
 
@@ -668,6 +696,7 @@ foreach ($products as $p) {
             drawer.classList.remove('translate-x-full');
             overlay.classList.remove('opacity-0', 'invisible');
             overlay.classList.add('opacity-100', 'visible');
+            syncLiveStockWithServer();
         }
     }
 
@@ -693,24 +722,33 @@ foreach ($products as $p) {
         cart.forEach(item => {
             const sub = item.price * item.qty;
             total += sub;
+            const maxStok = (productMeta && productMeta[item.id]) ? productMeta[item.id].stokBox : (parseInt(item.maxStokBox) || parseInt(item.max) || 0);
+            const sat = item.satuan || item.satuan_besar || 'Box';
+            const isMax = item.qty >= maxStok;
+
             html += `
-            <div class="flex gap-3 bg-white border border-zcBrd rounded-xl p-2">
+            <div class="flex gap-3 bg-white border border-zcBrd rounded-xl p-2.5">
                 <div class="w-16 h-16 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 overflow-hidden">
                     ${item.image ? `<img src="${item.image}" class="w-full h-full object-contain p-1">` : `<svg class="w-6 h-6 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`}
                 </div>
-                <div class="flex-1 flex flex-col justify-between py-0.5">
+                <div class="flex-1 flex flex-col justify-between py-0.5 min-w-0">
                     <div class="flex justify-between items-start gap-2">
-                        <p class="text-[11px] font-bold text-zcTxt leading-tight line-clamp-2">${item.name}</p>
-                        <button onclick="removeDrawerItem(${item.id})" class="text-rose-400 hover:text-rose-600 transition shrink-0">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-[11px] font-bold text-zcTxt leading-tight line-clamp-2">${item.name || item.nama}</p>
+                            <span class="inline-block mt-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded border ${maxStok <= 0 ? 'bg-rose-50 text-rose-700 border-rose-200' : (maxStok <= 5 ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200')}">
+                                Sisa: ${maxStok} ${sat}
+                            </span>
+                        </div>
+                        <button onclick="removeDrawerItem(${item.id})" class="text-rose-400 hover:text-rose-600 transition shrink-0 p-1" title="Hapus">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                         </button>
                     </div>
-                    <div class="flex justify-between items-end">
-                        <span class="text-[11px] font-semibold text-zc">Rp ${new Intl.NumberFormat('id-ID').format(item.price)}</span>
-                        <div class="flex items-center gap-2 text-[10px]">
-                            <button onclick="updateDrawerQty(${item.id}, -1)" class="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200">-</button>
-                            <span class="font-bold w-4 text-center">${item.qty}</span>
-                            <button onclick="updateDrawerQty(${item.id}, 1)" class="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200">+</button>
+                    <div class="flex justify-between items-end mt-2 pt-1 border-t border-slate-50">
+                        <span class="text-[11px] font-semibold text-zc">Rp ${new Intl.NumberFormat('id-ID').format(item.price || item.harga)}</span>
+                        <div class="flex items-center gap-1.5 text-[10px]">
+                            <button onclick="updateDrawerQty(${item.id}, -1)" class="w-6 h-6 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 font-bold transition">−</button>
+                            <span class="font-bold w-5 text-center text-xs text-slate-800">${item.qty}</span>
+                            <button onclick="updateDrawerQty(${item.id}, 1)" ${isMax ? 'disabled' : ''} class="w-6 h-6 flex items-center justify-center rounded font-bold transition ${isMax ? 'opacity-25 bg-slate-100 text-slate-300 cursor-not-allowed pointer-events-none' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer'}">+</button>
                         </div>
                     </div>
                 </div>
@@ -732,20 +770,64 @@ foreach ($products as $p) {
         let cart = getCart();
         let item = cart.find(i => i.id === id);
         if (item) {
+            const maxStok = (productMeta && productMeta[item.id]) ? productMeta[item.id].stokBox : (parseInt(item.maxStokBox) || parseInt(item.max) || 0);
             let newQty = item.qty + delta;
             if (newQty < 1) newQty = 1;
-            if (newQty > item.maxStokBox) {
-                showToast('Maksimal stok tercapai!', 'error');
+            if (delta > 0 && newQty > maxStok) {
+                showToast('Maksimal stok tercapai! Hanya tersisa ' + maxStok + ' unit.', 'error');
                 return;
             }
             item.qty = newQty;
+            item.max = maxStok;
+            item.maxStokBox = maxStok;
+            item.stokBox = maxStok;
             saveCart(cart);
             renderCartDrawer();
         }
     }
 
+    // --- Real-time Stock Sync with POS / Store Database ---
+    let isSyncingStock = false;
+    async function syncLiveStockWithServer() {
+        let cart = getCart();
+        if (isSyncingStock || !cart || cart.length === 0) return;
+        isSyncingStock = true;
+        try {
+            const res = await fetch('/inventory_zencare/api/cek_stok_keranjang.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cart: cart })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                if (data.stock_map) {
+                    cart.forEach(item => {
+                        if (data.stock_map[item.id]) {
+                            let maxDus = data.stock_map[item.id].max_dus;
+                            item.max = maxDus;
+                            item.maxStokBox = maxDus;
+                            item.stokBox = maxDus;
+                            if (item.qty > maxDus) {
+                                item.qty = Math.max(1, maxDus);
+                            }
+                        }
+                    });
+                }
+                saveCart(cart);
+                renderCartDrawer();
+            }
+        } catch (e) {
+            console.warn('Gagal sinkronisasi stok:', e);
+        } finally {
+            isSyncingStock = false;
+        }
+    }
+
     // Init
-    document.addEventListener('DOMContentLoaded', updateCartBadge);
+    document.addEventListener('DOMContentLoaded', () => {
+        updateCartBadge();
+        syncLiveStockWithServer();
+    });
     </script>
 </body>
 </html>

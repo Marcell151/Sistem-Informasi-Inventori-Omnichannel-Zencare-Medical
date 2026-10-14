@@ -83,7 +83,10 @@ try {
             $catatan = trim($item['catatan_logistik'] ?? '');
             if (!empty($catatan)) {
                 if ($item['kategori'] === 'Obat') {
-                    preg_match_all('/(.+?)\s*\((\d+)x\)/', $catatan, $matches, PREG_SET_ORDER);
+                    preg_match_all('/([^\(,\s]+)\s*\((?:.*=\s*)?(\d+)(?:x|[^\)]*)?\)/i', $catatan, $matches, PREG_SET_ORDER);
+                    if (empty($matches)) {
+                        preg_match_all('/(.+?)\s*\((\d+)x\)/', $catatan, $matches, PREG_SET_ORDER);
+                    }
                     foreach ($matches as $match) {
                         $batchNo = trim($match[1]);
                         $batchQty = intval($match[2]);

@@ -45,6 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $batchAsal = $stmtBatch->fetch();
             
             if (!$batchAsal) throw new Exception("Batch asal tidak ditemukan.");
+            if ($batchAsal['tgl_exp'] < date('Y-m-d')) {
+                throw new Exception("Batch asal sudah kadaluarsa (Expired: {$batchAsal['tgl_exp']}). Obat kadaluarsa tidak dapat dikonversi!");
+            }
             if ($batchAsal['stok_sisa'] < $qtyPcs) {
                 throw new Exception("Stok batch asal tidak mencukupi. Butuh $qtyPcs " . $var['satuan_kecil'] . " (Setara $qtyBox " . $var['satuan_besar'] . "). Tersedia: " . $batchAsal['stok_sisa'] . " " . $var['satuan_kecil']);
             }
@@ -84,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sisaStokDus = floor($sisaStokEceran / $rasio);
             
             // 1. Kartu Stok DUS (Keluar)
-            $catatanKeluar = "Bongkar 1 " . $var['satuan_besar'] . " (Rp0 - Konversi)";
+            $catatanKeluar = "Bongkar $qtyBox " . $var['satuan_besar'] . " (Rp0 - Konversi) [Batch: $noBatchAsal]";
             $stmtKartu1 = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'besar', 'Keluar', 'Manual', 'Bongkar Dus', ?, ?, ?, ?)");
             $stmtKartu1->execute([$idVariasi, $qtyBox, $sisaStokDus, $catatanKeluar, $userId]);
             
@@ -94,8 +97,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmtKartu2->execute([$idVariasi, $qtyPcs, $sisaStokEceran, $catatanMasuk, $userId]);
             
             // 3. Catat ke Tabel Histori Konversi
-            $stmtHist = $pdo->prepare("INSERT INTO histori_konversi (id_variasi, batch_asal, batch_hasil, qty_box_buka, qty_pcs_hasil, dibuat_oleh) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmtHist->execute([$idVariasi, $noBatchAsal, $newBatchName, $qtyBox, $qtyPcs, $userId]);
+            $stmtHist = $pdo->prepare("INSERT INTO histori_konversi (id_variasi, batch_asal, batch_hasil, qty_box_buka, qty_pcs_hasil, sisa_dus_akhir, dibuat_oleh) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmtHist->execute([$idVariasi, $noBatchAsal, $newBatchName, $qtyBox, $qtyPcs, $sisaStokDus, $userId]);
             
             $pdo->commit();
             $msg = "Berhasil memecah box! Sub-Batch baru $newBatchName telah dibuat dengan stok $qtyPcs " . $var['satuan_kecil'] . ".";
@@ -161,7 +164,7 @@ layoutHeader('Konversi UOM', 'Pemecahan Box Kardus Utuh ke Satuan Eceran (Sub-Ba
             
             <div id="batch_container" class="hidden">
                 <label class="block text-sm font-semibold text-zcTxt mb-1.5">Pilih Batch Asal (Kardus Utuh) *</label>
-                <select name="no_batch_asal" id="no_batch_asal" required class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-white">
+                <select name="no_batch_asal" id="no_batch_asal" required class="select2 w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-white">
                     <option value="">-- Memuat Batch... --</option>
                 </select>
             </div>
@@ -203,6 +206,20 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let currentRasio = 1;
 
+    function initBatchSelect2() {
+        if (window.jQuery && $.fn.select2) {
+            if ($('#no_batch_asal').data('select2')) {
+                $('#no_batch_asal').select2('destroy');
+            }
+            $('#no_batch_asal').select2({
+                width: '100%',
+                placeholder: '-- Pilih Batch Asal --'
+            }).off('change.batchSync').on('change.batchSync', function() {
+                selBatch.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        }
+    }
+
     selVariasi.addEventListener('change', function() {
         const val = this.value;
         const opt = this.options[this.selectedIndex];
@@ -214,8 +231,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        const satBesar = opt.getAttribute('data-satbesar');
-        const satKecil = opt.getAttribute('data-satkecil');
+        const satBesar = opt.getAttribute('data-satbesar') || 'Box';
+        const satKecil = opt.getAttribute('data-satkecil') || 'Pcs';
         currentRasio = parseInt(opt.getAttribute('data-rasio')) || 1;
         
         lblBesar.textContent = satBesar;
@@ -230,27 +247,50 @@ document.addEventListener('DOMContentLoaded', () => {
         qtyContainer.classList.remove('hidden');
         selBatch.required = true;
         selBatch.innerHTML = '<option value="">-- Memuat Batch... --</option>';
+        initBatchSelect2();
         
         fetch(`../api/get_batch_sn.php?id_variasi=${val}`)
             .then(res => res.json())
             .then(data => {
                 if (data.error || !data.items || data.items.length === 0) {
                     selBatch.innerHTML = '<option value="">(Tidak ada Batch Aktif)</option>';
+                    initBatchSelect2();
                     return;
                 }
                 
                 let html = '<option value="">-- Pilih Batch Asal --</option>';
+                let validCount = 0;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
                 data.items.forEach(i => {
                     // Hanya tampilkan batch utama (jangan tampilkan sub-batch berakhiran .A .B dll)
                     if (i.no_batch && i.no_batch.includes('.')) return;
                     
+                    // Proteksi ganda: Hide batch yang sudah kadaluarsa
+                    if (i.tgl_exp) {
+                        const expDate = new Date(i.tgl_exp);
+                        if (expDate < today) return; // HIDE KADALUARSA
+                    }
+                    
                     // Hanya tampilkan jika stoknya cukup untuk dipecah (minimal 1 satuan besar)
                     if (i.stok_sisa >= currentRasio) {
+                        validCount++;
                         const boxSisa = Math.floor(i.stok_sisa / currentRasio);
                         html += `<option value="${i.no_batch}" data-maxbox="${boxSisa}">Batch: ${i.no_batch} (Tersedia utuh: ${boxSisa} ${satBesar} / ${i.stok_sisa} ${satKecil}) | Exp: ${i.tgl_exp}</option>`;
                     }
                 });
+
+                if (validCount === 0) {
+                    html = '<option value="">(Tidak ada Batch Utuh Aktif / Belum Expired)</option>';
+                }
+
                 selBatch.innerHTML = html;
+                initBatchSelect2();
+            })
+            .catch(() => {
+                selBatch.innerHTML = '<option value="">(Gagal memuat batch)</option>';
+                initBatchSelect2();
             });
     });
 

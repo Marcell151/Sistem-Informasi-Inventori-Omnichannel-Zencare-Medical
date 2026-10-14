@@ -19,7 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
         $pdo->beginTransaction();
         try {
             $totalHarga = 0;
-            $invoiceNo  = "POS-" . date('Ymd') . "-" . rand(1000, 9999);
+            $customInv = trim($_POST['custom_invoice'] ?? '');
+            $invoiceNo  = (!empty($customInv) && preg_match('/^POS-/', $customInv)) ? $customInv : ("POS-" . date('Ymd') . "-" . rand(1000, 9999));
             $metodeBayar = $_POST['metode_pembayaran'] ?? 'Tunai';
             $pdo->prepare("INSERT INTO penjualan (no_invoice,id_user,tipe_transaksi,status_pesanan,total_harga,metode_bayar_pos,created_at) VALUES (?,?,'pos','Selesai',0,?,NOW())")
                 ->execute([$invoiceNo, $_SESSION['user_id'] ?? 2, $metodeBayar]);
@@ -54,11 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                 if ($kategori === 'Obat') {
                     if ($scannedCode) {
                         // Pakai batch spesifik yang di-scan
-                        $stmtCheck = $pdo->prepare("SELECT id, stok_sisa FROM stok_batch WHERE id_variasi = ? AND no_batch = ? FOR UPDATE");
+                        $stmtCheck = $pdo->prepare("SELECT id, no_batch, tgl_exp, stok_sisa FROM stok_batch WHERE id_variasi = ? AND no_batch = ? FOR UPDATE");
                         $stmtCheck->execute([$idVar, $scannedCode]);
                         $b = $stmtCheck->fetch();
                         if (!$b || $b['stok_sisa'] < $qtyPotong) {
                             throw new Exception("Stok Batch $scannedCode tidak mencukupi untuk Obat ID $idVar.");
+                        }
+                        if ($b['tgl_exp'] < date('Y-m-d')) {
+                            throw new Exception("Batch $scannedCode sudah KADALUARSA (Expired: {$b['tgl_exp']}). Obat kadaluarsa dilarang dijual!");
                         }
                         $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$qtyPotong, $b['id']]);
                         
@@ -69,8 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
 
                         $catatanLogistik[] = $scannedCode . " ({$qtyPotong}x)";
                     } else {
-                        // Auto FEFO fallback
-                        $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC, no_batch ASC FOR UPDATE");
+                        // Auto FEFO fallback (HANYA batch yang belum expired)
+                        $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 AND tgl_exp >= CURDATE() ORDER BY tgl_exp ASC, no_batch ASC FOR UPDATE");
                         $stmtBatch->execute([$idVar]);
                         $batches = $stmtBatch->fetchAll();
                         
@@ -82,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                             $catatanLogistik[] = $b['no_batch'] . " ({$potongBatch}x)";
                             $sisaPotong -= $potongBatch;
                         }
-                        if ($sisaPotong > 0) throw new Exception("Stok Batch Obat tidak mencukupi untuk dipotong FEFO.");
+                        if ($sisaPotong > 0) throw new Exception("Stok Batch Obat yang masih aktif/belum expired tidak mencukupi untuk dipotong FEFO.");
                     }
                 }
 
@@ -119,8 +123,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                 $sisaQ->execute([$idVar]);
                 $sisa = $sisaQ->fetchColumn();
                 $satLable = ($satuanTipe === 'besar') ? $varData['satuan_besar'] : $varData['satuan_kecil'];
-                $pdo->prepare("INSERT INTO kartu_stok (id_variasi,jenis_mutasi,qty,sisa_stok,keterangan) VALUES (?,?,?,?,?)")
-                    ->execute([$idVar,'Keluar',$qtyPotong,$sisa,"Penjualan Luring $invoiceNo"] );
+                $batchStr = !empty($catatanLogistik) ? " [Batch: " . implode(', ', $catatanLogistik) . "]" : "";
+                $deskripsi = "Penjualan Luring $invoiceNo$batchStr";
+                $kasirUserId = $_SESSION['user_id'] ?? null;
+
+                $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Keluar', 'POS', 'Penjualan POS', ?, ?, ?, ?, ?)")
+                    ->execute([$idVar, $satuanTipe, $invoiceNo, $qtyPotong, $sisa, $deskripsi, $kasirUserId]);
                 $totalHarga += $effPrice * $qtyInput;
             }
 
@@ -156,7 +164,10 @@ $katalog = $pdo->prepare("
     SELECT v.id, v.sku_variasi, CONCAT(i.nama_produk,' - ',v.nama_variasi) AS nama,
            v.satuan_kecil, v.satuan_besar, v.rasio_konversi, v.harga_jual_kecil, v.harga_jual_besar, COALESCE(sc.stok,0) AS stok, i.kategori, v.gambar,
            (SELECT GROUP_CONCAT(serial_number ORDER BY created_at ASC SEPARATOR ',') FROM unit_serial WHERE id_variasi = v.id AND status='Tersedia') AS sn_list,
-           (SELECT GROUP_CONCAT(CONCAT(no_batch, '|', stok_sisa) ORDER BY tgl_exp ASC, no_batch ASC SEPARATOR ',') FROM stok_batch WHERE id_variasi = v.id AND stok_sisa > 0) AS batch_list, (SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = v.id AND no_batch LIKE '%.%') AS stok_eceran, (SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = v.id AND no_batch NOT LIKE '%.%') AS stok_dus
+           (SELECT GROUP_CONCAT(CONCAT(no_batch, '|', stok_sisa) ORDER BY tgl_exp ASC, no_batch ASC SEPARATOR ',') FROM stok_batch WHERE id_variasi = v.id AND stok_sisa > 0 AND tgl_exp >= CURDATE()) AS batch_list,
+           (SELECT GROUP_CONCAT(CONCAT(no_batch, '|', tgl_exp) SEPARATOR ',') FROM stok_batch WHERE id_variasi = v.id AND tgl_exp < CURDATE()) AS expired_batch_list,
+           (SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = v.id AND no_batch LIKE '%.%' AND tgl_exp >= CURDATE()) AS stok_eceran,
+           (SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = v.id AND no_batch NOT LIKE '%.%' AND tgl_exp >= CURDATE()) AS stok_dus
     FROM produk_variasi v JOIN produk_induk i ON v.id_produk_induk=i.id
     LEFT JOIN stok_toko sc ON sc.id_variasi=v.id 
     WHERE v.is_active=1 AND i.is_active=1 ORDER BY i.nama_produk ASC");
@@ -187,9 +198,26 @@ $shopeeOn = false;
       }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="<?= MIDTRANS_SNAP_URL ?>" data-client-key="<?= MIDTRANS_CLIENT_KEY ?>"></script>
+    <script src="../assets/js/html5-qrcode.min.js"></script>
     <style>
         ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:99px; }
         body { animation: fadeIn .15s ease; } @keyframes fadeIn { from{opacity:.7;} to{opacity:1;} }
+        
+        /* Fix live camera viewport - menghilangkan potongan & garis hitam samping */
+        #camera_scanner_view { width: 100% !important; overflow: hidden !important; border-radius: 0.75rem !important; background: #0f172a !important; }
+        #camera_scanner_view video {
+            width: 100% !important;
+            height: 100% !important;
+            min-height: 280px !important;
+            max-height: 360px !important;
+            object-fit: cover !important;
+            border-radius: 0.75rem !important;
+            display: block !important;
+            margin: 0 auto !important;
+        }
+        #camera_scanner_view canvas { border-radius: 0.75rem !important; }
+        #camera_scanner_view #qr-shaded-region { border-radius: 0.75rem !important; }
     </style>
 </head>
 <body class="bg-slate-50 font-sans antialiased text-zcTxt">
@@ -252,6 +280,7 @@ $shopeeOn = false;
                              data-search="<?= strtolower($item['nama'] . ' ' . $item['sku_variasi']) ?>"
                              data-sn="<?= strtolower($item['sn_list'] ?? '') ?>"
                              data-batch="<?= strtolower($item['batch_list'] ?? '') ?>"
+                             data-expired-batch="<?= htmlspecialchars(strtolower($item['expired_batch_list'] ?? '')) ?>"
                              data-stok-eceran="<?= isset($item['stok_eceran']) ? intval($item['stok_eceran']) : intval($item['stok']) ?>"
                              data-stok-dus="<?= isset($item['stok_dus']) ? intval($item['stok_dus']) : 0 ?>">
                             <div class="flex gap-3 mb-3 flex-1 min-w-0">
@@ -285,26 +314,66 @@ $shopeeOn = false;
                                     <?php endif; ?>
                                 </div>
                             </div>
-                            <div class="pt-2.5 border-t border-zcBrd flex items-end justify-between">
-                                <div>
-                                    <span class="text-xs font-bold text-zcTxt block">Rp <?= number_format($item['harga_jual_kecil'], 0, ',', '.') ?> <span class="font-normal text-[10px] text-zcMut">/ <?= htmlspecialchars($item['satuan_kecil']) ?></span></span>
-                                    <?php if ($item['rasio_konversi'] > 1): ?>
-                                    <span class="text-[9px] font-semibold text-zcEm block">Grosir: Rp <?= number_format($item['harga_jual_besar'], 0, ',', '.') ?> / <?= htmlspecialchars($item['satuan_besar']) ?></span>
-                                    <?php endif; ?>
-                                    <span class="text-[10px] <?= $stok > 0 ? 'text-emerald-600' : 'text-rose-500' ?> font-semibold">Stok: <?= $stok ?> <?= htmlspecialchars($item['satuan_kecil']) ?></span>
+                            <?php 
+                            $rasioItem = max(1, intval($item['rasio_konversi']));
+                            if ($item['kategori'] === 'Obat') {
+                                $dusUtuh = floor(intval($item['stok_dus'] ?? 0) / $rasioItem);
+                                $eceranSisa = intval($item['stok_eceran'] ?? 0);
+                            } else {
+                                $dusUtuh = floor(intval($stok) / $rasioItem);
+                                $eceranSisa = intval($stok) % $rasioItem;
+                            }
+                            ?>
+                            <div class="pt-2.5 border-t border-zcBrd flex flex-col gap-2">
+                                <!-- Pilihan Harga Seimbang & Berpembatas -->
+                                <div class="grid grid-cols-2 gap-1.5 p-1.5 bg-slate-100/70 rounded-xl border border-slate-200 text-center">
+                                    <div class="bg-white rounded-lg p-1.5 shadow-xs border border-slate-200/60">
+                                        <span class="text-[9px] font-bold text-slate-400 block uppercase tracking-wide">Eceran</span>
+                                        <span class="text-xs font-black text-slate-800 block">Rp <?= number_format($item['harga_jual_kecil'], 0, ',', '.') ?></span>
+                                        <span class="text-[9px] font-semibold text-slate-500 block">/ <?= htmlspecialchars($item['satuan_kecil']) ?></span>
+                                    </div>
+                                    <div class="bg-white rounded-lg p-1.5 shadow-xs border border-slate-200/60">
+                                        <span class="text-[9px] font-bold text-slate-400 block uppercase tracking-wide">Grosir</span>
+                                        <?php if ($item['rasio_konversi'] > 1): ?>
+                                            <span class="text-xs font-black text-slate-800 block">Rp <?= number_format($item['harga_jual_besar'], 0, ',', '.') ?></span>
+                                            <span class="text-[9px] font-semibold text-slate-500 block">/ <?= htmlspecialchars($item['satuan_besar']) ?></span>
+                                        <?php else: ?>
+                                            <span class="text-xs font-black text-slate-400 block">-</span>
+                                            <span class="text-[9px] font-semibold text-slate-400 block">(1 Satuan)</span>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                                <div class="flex flex-col gap-1 items-end">
+
+                                <!-- Sisa Stok Terpisah (Besar vs Kecil) -->
+                                <div class="p-1.5 rounded-lg border text-[10px] <?= $stok > 0 ? 'bg-emerald-50/60 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-700' ?> flex items-center justify-between">
+                                    <span class="font-bold">Sisa Stok:</span>
+                                    <div class="flex items-center gap-1 font-extrabold text-[10px]">
+                                        <?php if ($item['rasio_konversi'] > 1): ?>
+                                            <span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700"><?= $dusUtuh ?> <?= htmlspecialchars($item['satuan_besar']) ?></span>
+                                            <span class="text-slate-400">•</span>
+                                            <span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700"><?= $eceranSisa ?> <?= htmlspecialchars($item['satuan_kecil']) ?></span>
+                                        <?php else: ?>
+                                            <span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700"><?= $stok ?> <?= htmlspecialchars($item['satuan_kecil']) ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
+                                <!-- Dropdown Satuan & Tombol Aksi -->
+                                <div class="flex items-center gap-1.5">
                                     <?php if ($item['rasio_konversi'] > 1): ?>
-                                    <select id="uom_<?= $item['id'] ?>" class="text-[10px] border border-zcBrd rounded px-1 py-0.5 bg-white focus:outline-none focus:border-zc w-full" <?= $stok <= 0 ? 'disabled' : '' ?>>
-                                        <option value="kecil"><?= htmlspecialchars($item['satuan_kecil']) ?></option>
-                                        <option value="besar" <?= $stok < $item['rasio_konversi'] ? 'disabled' : '' ?>><?= htmlspecialchars($item['satuan_besar']) ?></option>
-                                    </select>
+                                    <div class="w-1/2">
+                                        <select id="uom_<?= $item['id'] ?>" class="text-[11px] font-bold border border-zcBrd rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:border-zc w-full shadow-xs" <?= $stok <= 0 ? 'disabled' : '' ?>>
+                                            <option value="kecil" <?= $eceranSisa <= 0 && $dusUtuh > 0 ? '' : 'selected' ?>>Ecer (<?= htmlspecialchars($item['satuan_kecil']) ?>)</option>
+                                            <option value="besar" <?= $dusUtuh <= 0 ? 'disabled' : '' ?>>Grosir (<?= htmlspecialchars($item['satuan_besar']) ?>)</option>
+                                        </select>
+                                    </div>
                                     <?php else: ?>
                                     <input type="hidden" id="uom_<?= $item['id'] ?>" value="kecil" data-label="<?= htmlspecialchars($item['satuan_kecil']) ?>">
-                                    <div class="text-[10px] border border-zcBrd rounded px-1 py-0.5 bg-slate-100 text-slate-500 text-center w-full font-semibold">
+                                    <div class="w-1/2 text-[10px] border border-zcBrd rounded-lg px-2 py-1.5 bg-slate-100 text-slate-500 text-center font-bold">
                                         <?= htmlspecialchars($item['satuan_kecil']) ?>
                                     </div>
                                     <?php endif; ?>
+
                                     <button type="button" 
                                         data-id="<?= intval($item['id']) ?>"
                                         data-nama="<?= htmlspecialchars($item['nama'], ENT_QUOTES, 'UTF-8') ?>"
@@ -315,17 +384,18 @@ $shopeeOn = false;
                                         data-kat="<?= htmlspecialchars($item['kategori'], ENT_QUOTES, 'UTF-8') ?>"
                                         onclick="addToPos(this, null)"
                                         <?= $stok <= 0 ? 'disabled' : '' ?>
-                                        class="w-full text-[11px] font-bold px-2 py-1 rounded border transition <?= $stok > 0 ? 'bg-zc hover:bg-zcHv text-white border-zc shadow-xs' : 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed' ?>">
-                                        + Pilih Manual
+                                        class="w-1/2 text-[11px] font-bold px-2 py-1.5 rounded-lg border transition <?= $stok > 0 ? 'bg-zc hover:bg-zcHv text-white border-zc shadow-xs' : 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed' ?>">
+                                        + Pilih
                                     </button>
-                                    <?php if ($item['kategori'] === 'Obat' && (isset($item['stok_dus']) && $item['stok_dus'] > 0)): ?>
-                                        <button type="button" 
-                                            onclick="triggerManualBongkar(<?= intval($item['id']) ?>, '<?= htmlspecialchars($item['nama'], ENT_QUOTES, 'UTF-8') ?>', '<?= htmlspecialchars($item['batch_list'] ?? '') ?>', <?= floatval($item['harga_jual_kecil']) ?>, <?= floatval($item['harga_jual_besar']) ?>, <?= intval($item['stok']) ?>, <?= intval($item['rasio_konversi']) ?: 1 ?>)" 
-                                            class="w-full text-[9px] font-bold px-2 py-1 mt-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 transition shadow-sm">
-                                            &#128230; Bongkar (Sisa: <?= isset($item['stok_eceran']) ? $item['stok_eceran'] : 0 ?> Pcs)
-                                        </button>
-                                    <?php endif; ?>
                                 </div>
+
+                                <?php if ($item['kategori'] === 'Obat' && (isset($item['stok_dus']) && $item['stok_dus'] > 0)): ?>
+                                    <button type="button" 
+                                        onclick="triggerManualBongkar(<?= intval($item['id']) ?>, '<?= htmlspecialchars($item['nama'], ENT_QUOTES, 'UTF-8') ?>', '<?= htmlspecialchars($item['batch_list'] ?? '') ?>', <?= floatval($item['harga_jual_kecil']) ?>, <?= floatval($item['harga_jual_besar']) ?>, <?= intval($item['stok']) ?>, <?= intval($item['rasio_konversi']) ?: 1 ?>)" 
+                                        class="w-full text-[9px] font-bold px-2 py-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 transition shadow-xs">
+                                        📦 Bongkar Box (Tersisa: <?= isset($item['stok_eceran']) ? $item['stok_eceran'] : 0 ?> <?= htmlspecialchars($item['satuan_kecil']) ?>)
+                                    </button>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -336,7 +406,13 @@ $shopeeOn = false;
             <div class="lg:col-span-5 bg-white border border-zcBrd rounded-2xl shadow-sm flex flex-col">
                 <div class="px-5 py-4 border-b border-zcBrd flex items-center justify-between gap-2">
                     <h2 class="text-sm font-bold text-zcTxt">Billing Transaksi Karyawan</h2>
-                    <input type="text" id="manual_barcode_input" placeholder="Scan / Ketik Barcode..." autocomplete="off" onkeypress="handleManualBarcode(event)" class="text-xs border border-zcBrd rounded-lg px-3 py-1.5 focus:outline-none focus:border-zc focus:ring-1 focus:ring-zc bg-slate-50 w-44 shadow-inner transition-colors">
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="openCameraScannerModal()" class="px-2.5 py-1.5 bg-blue-50 hover:bg-zc text-zc hover:text-white border border-blue-200 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Scan Barcode via Kamera Webcam Laptop">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span>Scan Kamera</span>
+                        </button>
+                        <input type="text" id="manual_barcode_input" placeholder="Scan / Ketik Barcode..." autocomplete="off" onkeypress="handleManualBarcode(event)" class="text-xs border border-zcBrd rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-zc focus:ring-1 focus:ring-zc bg-slate-50 w-32 sm:w-40 shadow-inner transition-colors">
+                    </div>
                 </div>
 
                 <div class="flex-1 overflow-y-auto">
@@ -364,6 +440,7 @@ $shopeeOn = false;
                         <input type="hidden" name="aksi" value="bayar_pos">
                         <input type="hidden" name="cart_data" id="cart_input">
                         <input type="hidden" name="metode_pembayaran" id="form_metode_pembayaran" value="Tunai">
+                        <input type="hidden" name="custom_invoice" id="form_custom_invoice" value="">
                         <button type="button" id="btn_pay" disabled onclick="openPaymentModal()"
                             class="w-full py-3.5 rounded-xl text-xs font-bold transition shadow-sm bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed">
                             Proses Pembayaran
@@ -418,13 +495,122 @@ $shopeeOn = false;
                     <span class="text-2xl font-bold text-zcTxt" id="val_kembalian">-</span>
                 </div>
                 
-                <div id="non_tunai_inf? class="hidden p-4 rounded-xl border border-blue-200 bg-blue-50 text-blue-800 text-xs text-center font-medium">
-                    Pastikan pembayaran melalui EDC/Transfer/QRIS telah berhasil masuk sebelum menyelesaikan transaksi.
+                <!-- Dynamic QRIS Midtrans Section -->
+                <div id="qris_dynamic_section" class="hidden p-4 rounded-xl border-2 border-blue-200 bg-gradient-to-b from-blue-50/70 to-white text-center space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-zc uppercase tracking-wider flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                            Dynamic QRIS Midtrans
+                        </span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800" id="qris_status_badge">Siap Dimunculkan</span>
+                    </div>
+
+                    <p class="text-xs text-slate-600">Klik tombol di bawah untuk membuka QRIS dinamis Midtrans dengan nominal presisi tagihan kasir.</p>
+
+                    <div class="pt-1">
+                        <button type="button" id="btn_open_snap_qris" onclick="triggerMidtransPosQRIS()" class="w-full py-3 px-4 rounded-xl font-bold text-xs bg-zc hover:bg-zcHv text-white shadow-md shadow-zc/30 transition flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                            ⚡ Buka QRIS Midtrans (Pop-up Kasir)
+                        </button>
+                    </div>
+
+                    <div class="text-[10px] text-slate-400 flex items-center justify-center gap-1.5">
+                        <span>Mendukung GoPay, BCA, Mandiri, ShopeePay, DANA, dsb.</span>
+                    </div>
+                </div>
+
+                <div id="non_tunai_info" class="hidden p-4 rounded-xl border border-blue-200 bg-blue-50 text-blue-800 text-xs text-center font-medium">
+                    Pastikan pembayaran melalui EDC / Transfer telah berhasil masuk sebelum menyelesaikan transaksi.
                 </div>
             </div>
             <div class="p-5 border-t border-zcBrd bg-slate-50 flex gap-3">
                 <button onclick="closePaymentModal()" class="flex-1 py-3.5 rounded-xl text-sm font-bold bg-white text-slate-600 border border-slate-300 hover:bg-slate-100 transition shadow-sm">Batal</button>
                 <button id="btn_submit_pay" onclick="submitPayment()" disabled class="flex-[2] py-3.5 rounded-xl text-sm font-bold bg-slate-300 text-slate-500 cursor-not-allowed transition">Selesaikan Transaksi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Barcode Scanner Webcam / Kamera -->
+    <div id="camera_modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0 duration-200 border border-slate-200" id="camera_modal_content">
+            <div class="bg-gradient-to-r from-zc to-zcHv px-5 py-4 flex items-center justify-between text-white">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm leading-tight">Live Barcode Scanner Kamera</h3>
+                        <p class="text-[11px] text-blue-100">Arahkan barcode / SN produk ke kamera laptop atau webcam</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeCameraScannerModal()" class="text-blue-100 hover:text-white transition p-1">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            
+            <div class="p-5 space-y-4">
+                <!-- Camera Viewport Box -->
+                <div class="relative bg-slate-900 rounded-xl overflow-hidden shadow-inner border-2 border-slate-700 min-h-[250px] flex items-center justify-center">
+                    <div id="camera_scanner_view" class="w-full"></div>
+                    <div id="camera_loading_indicator" class="text-center p-4 text-white text-xs">
+                        <div class="inline-block w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin mb-2"></div>
+                        <p>Memulai kamera...</p>
+                    </div>
+                </div>
+
+                <!-- Camera Selector & Feedback -->
+                <div class="flex items-center justify-between gap-3 text-xs">
+                    <div class="flex-1">
+                        <label class="block text-[11px] font-bold text-zcMut mb-1">Pilih Perangkat Kamera:</label>
+                        <select id="camera_device_select" onchange="changeCameraDevice(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-semibold focus:outline-none focus:border-zc">
+                            <option value="">Deteksi kamera...</option>
+                        </select>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800" id="scan_status_badge">
+                            🟢 Scanner Aktif
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Live Status & Feedback Transaksi (Anti-Bingung & Anti-Double Scan) -->
+                <div id="cam_feedback_card" class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs transition-all shadow-sm">
+                    <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-200">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[11px] font-bold text-slate-700">Keranjang Kasir Realtime:</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="cam_cart_count_badge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 border border-blue-200">0 Item</span>
+                            <span id="cam_cart_total_badge" class="text-xs font-black text-slate-800">Rp 0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="min-w-0 flex-1">
+                            <span class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block">Scan Terakhir:</span>
+                            <span id="cam_last_product_label" class="font-bold text-xs text-slate-700 truncate block">Arahkan barcode ke kotak kamera</span>
+                        </div>
+                        <span id="cam_cooldown_indicator" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 shrink-0">
+                            Siap Scan
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Last Scanned Info Card (Compact) -->
+                <div id="last_scanned_box" class="px-3 py-2 rounded-xl bg-blue-50/70 border border-blue-200 text-xs text-blue-900 flex items-center justify-between">
+                    <div>
+                        <span class="text-[9.5px] font-bold text-zc uppercase tracking-wider inline mr-1">Barcode:</span>
+                        <span id="last_scanned_code" class="font-mono font-bold text-xs text-zcTxt">-</span>
+                    </div>
+                    <span id="last_scanned_time" class="text-[10px] text-slate-500 font-medium">Belum ada scan</span>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-zcBrd bg-slate-50 flex justify-between items-center">
+                <span class="text-[11px] text-zcMut">Otomatis berbunyi bip saat barcode terbaca.</span>
+                <button type="button" onclick="closeCameraScannerModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 transition">
+                    Tutup Scanner
+                </button>
             </div>
         </div>
     </div>
@@ -461,34 +647,67 @@ $shopeeOn = false;
             var isScannedSubBatch = scannedCode ? scannedCode.includes('.') : false;
 
             if (scannedCode) {
-                // 1. Cek apakah ada keranjang yang menunggu verifikasi untuk produk ini
-                var unverifiedUom = null;
-                for (var i = 0; i < cart.length; i++) {
-                    if (parseInt(cart[i].id) === id && cart[i].needs_verification && !cart[i].scanned_code) {
-                        unverifiedUom = cart[i].satuan_tipe;
-                        break;
-                    }
-                }
-
-                // 2. Deteksi UOM dari fisik barcode (Hanya berlaku untuk barang ber-batch)
+                // 1. Deteksi UOM dari fisik barcode (Hanya berlaku untuk barang ber-batch)
                 var detectedUom = uomType;
                 if (rawBatch) {
                     detectedUom = isScannedSubBatch ? 'kecil' : 'besar';
                 }
 
-                if (unverifiedUom) {
-                    // JIKA VERIFIKASI: Barcode harus cocok dengan satuan di keranjang!
-                    if (unverifiedUom === 'kecil' && detectedUom === 'besar') {
-                        Swal.fire({title: '&#10060; Salah Barcode!', html: 'Keranjang menunggu verifikasi <b>ECERAN (Kecil)</b>, tetapi fisik yang di-scan adalah <b>GROSIR (Besar)</b>.', icon: 'error'});
+                // 2. SPECIFIC IDENTITY SEARCH:
+                // Cek status baris keranjang untuk produk ini secara komprehensif (Fleksibel scan acak)
+                var exactUnverifiedItem = null;
+                var otherUnverifiedItem = null;
+
+                for (var i = 0; i < cart.length; i++) {
+                    if (parseInt(cart[i].id) === id && cart[i].needs_verification && !cart[i].scanned_code) {
+                        if (cart[i].satuan_tipe === detectedUom) {
+                            exactUnverifiedItem = cart[i];
+                            break; // Prioritas utama: temukan baris yang menunggu verifikasi dengan UOM yang sama
+                        } else if (!otherUnverifiedItem) {
+                            otherUnverifiedItem = cart[i]; // Simpan baris unverified satuan lain sebagai pembanding
+                        }
+                    }
+                }
+
+                // Cek apakah ada baris keranjang yang SUDAH TERVERIFIKASI dengan UOM yang sama
+                var verifiedItemSameUom = null;
+                for (var i = 0; i < cart.length; i++) {
+                    if (parseInt(cart[i].id) === id && cart[i].satuan_tipe === detectedUom && cart[i].scanned_code) {
+                        verifiedItemSameUom = cart[i];
+                        break;
+                    }
+                }
+
+                if (exactUnverifiedItem) {
+                    // Kasus A: Ada baris di keranjang yang memang menunggu verifikasi satuan ini!
+                    uomType = exactUnverifiedItem.satuan_tipe;
+                } else if (verifiedItemSameUom) {
+                    // Kasus B: Baris satuan ini sudah ada & sudah terverifikasi sebelumnya.
+                    // Scan fisik kedua kali berarti menambah kuantitas (+1) satuan ini!
+                    uomType = detectedUom;
+                } else if (otherUnverifiedItem) {
+                    // Kasus C: Di keranjang HANYA ada pesanan satuan lain (misal hanya beli eceran),
+                    // dan sama sekali TIDAK ada pesanan grosir kardus (atau sebaliknya).
+                    // Ini adalah SAFETY GUARD murni: cegah karyawan salah ambil fisik!
+                    if (otherUnverifiedItem.satuan_tipe === 'kecil' && detectedUom === 'besar') {
+                        Swal.fire({
+                            title: '❌ Salah Ambil Fisik!', 
+                            html: 'Di keranjang pesanan adalah <b>ECERAN (Kecil)</b>, tetapi fisik yang Anda scan adalah <b>GROSIR / DUS (Besar)</b>.<br><br><span class="text-xs text-slate-500">Silakan ambil kemasan eceran (sub-batch bertitik) atau tambahkan kardus ke keranjang terlebih dahulu.</span>', 
+                            icon: 'error'
+                        });
                         return;
                     }
-                    if (unverifiedUom === 'besar' && detectedUom === 'kecil') {
-                        Swal.fire({title: '&#10060; Salah Barcode!', html: 'Keranjang menunggu verifikasi <b>GROSIR (Besar)</b>, tetapi fisik yang di-scan adalah <b>ECERAN (Kecil)</b>.', icon: 'error'});
+                    if (otherUnverifiedItem.satuan_tipe === 'besar' && detectedUom === 'kecil') {
+                        Swal.fire({
+                            title: '❌ Salah Ambil Fisik!', 
+                            html: 'Di keranjang pesanan adalah <b>GROSIR / DUS (Besar)</b>, tetapi fisik yang Anda scan adalah <b>ECERAN (Kecil)</b>.<br><br><span class="text-xs text-slate-500">Silakan ambil kemasan kardus utuh atau tambahkan eceran ke keranjang terlebih dahulu.</span>', 
+                            icon: 'error'
+                        });
                         return;
                     }
-                    uomType = unverifiedUom;
+                    uomType = detectedUom;
                 } else {
-                    // JIKA DIRECT SCAN: Percaya pada fisik barcode, abaikan dropdown katalog
+                    // Kasus D: Direct Scan (kasir langsung scan tanpa klik katalog dulu)
                     uomType = detectedUom;
                     if (sel) sel.value = uomType; // Sinkronkan visual
                 }
@@ -613,22 +832,23 @@ $shopeeOn = false;
 
         var found = null;
 
-        // Validasi Fisik: Jika scan dilakukan, cari item di keranjang yang MENUNGGU VERIFIKASI
+        // Validasi Fisik: Jika scan dilakukan, cari item di keranjang yang MENUNGGU VERIFIKASI DENGAN SATUAN YANG COCOK
         if (scannedCode && needsVerification) {
             var unverifiedIndex = -1;
             for (var i = 0; i < cart.length; i++) {
-                if (parseInt(cart[i].id) === parseInt(id) && cart[i].needs_verification && !cart[i].scanned_code) {
+                if (parseInt(cart[i].id) === parseInt(id) && cart[i].needs_verification && !cart[i].scanned_code && cart[i].satuan_tipe === uomType) {
                     unverifiedIndex = i;
                     break;
                 }
             }
 
             if (unverifiedIndex !== -1) {
-                var qtyToValidate = rawSn ? 1 : cart[i].qty;
+                var targetItem = cart[unverifiedIndex];
+                var qtyToValidate = rawSn ? 1 : targetItem.qty;
                 
                 var existingVerified = null;
                 for (var j = 0; j < cart.length; j++) {
-                    if (j !== i && cart[j].cartId === cartId) {
+                    if (j !== unverifiedIndex && cart[j].cartId === cartId) {
                         existingVerified = cart[j];
                         break;
                     }
@@ -644,21 +864,21 @@ $shopeeOn = false;
                     }
                     existingVerified.qty += qtyToValidate;
                     
-                    if (qtyToValidate === cart[i].qty) {
-                        cart.splice(i, 1);
+                    if (qtyToValidate === targetItem.qty) {
+                        cart.splice(unverifiedIndex, 1);
                     } else {
-                        cart[i].qty -= qtyToValidate;
+                        targetItem.qty -= qtyToValidate;
                     }
                 } else {
-                    if (qtyToValidate === cart[i].qty) {
-                        cart[i].scanned_code = scannedCode;
-                        cart[i].cartId = cartId; // ubah cartId menjadi yang sudah di-scan
-                        cart[i].is_anomaly = isAnomaly;
-                        cart[i].batch_seharusnya = batchSeharusnya;
-                        cart[i].maxPcs = maxStockPcs; // Update maxPcs ke stok batch baru
-                        cart[i].stok_eceran_fisik = stokEceranFisik; // Update hint UI ke stok batch baru
+                    if (qtyToValidate === targetItem.qty) {
+                        targetItem.scanned_code = scannedCode;
+                        targetItem.cartId = cartId; // ubah cartId menjadi yang sudah di-scan
+                        targetItem.is_anomaly = isAnomaly;
+                        targetItem.batch_seharusnya = batchSeharusnya;
+                        targetItem.maxPcs = maxStockPcs; // Update maxPcs ke stok batch baru
+                        targetItem.stok_eceran_fisik = stokEceranFisik; // Update hint UI ke stok batch baru
                     } else {
-                        cart[i].qty -= qtyToValidate;
+                        targetItem.qty -= qtyToValidate;
                         cart.push({
                             id: id, cartId: cartId, nama: name, harga: price, qty: qtyToValidate, 
                             satuan_tipe: uomType, satuan_label: uomLabel, maxPcs: maxStockPcs, rasio: qtyMultiplier,
@@ -671,14 +891,15 @@ $shopeeOn = false;
                 
                 Swal.fire({
                     toast: true,
-                    position: 'top-end',
+                    position: 'top',
                     icon: 'success',
-                    title: 'Tervalidasi: ' + scannedCode.toUpperCase(),
+                    title: '✅ Tervalidasi: ' + name + ' [' + scannedCode.toUpperCase() + ']',
                     showConfirmButton: false,
-                    timer: 1500,
+                    timer: 1800,
                     timerProgressBar: true
                 });
 
+                updateCameraModalCartPreview(name + ' (' + uomLabel + ')');
                 renderCart();
                 return; // PASTI RETURN, TIDAK AKAN NAMBAH BARU
             }
@@ -711,15 +932,16 @@ $shopeeOn = false;
         if (scannedCode) {
             Swal.fire({
                 toast: true,
-                position: 'top-end',
+                position: 'top',
                 icon: 'success',
-                title: 'Item Ditambahkan: ' + scannedCode.toUpperCase(),
+                title: '✅ Masuk Keranjang: ' + name + ' (' + uomLabel + ')',
                 showConfirmButton: false,
-                timer: 1500,
+                timer: 1800,
                 timerProgressBar: true
             });
         }
         
+        updateCameraModalCartPreview(name + ' (' + uomLabel + ')');
         renderCart();
     }
 
@@ -810,6 +1032,28 @@ $shopeeOn = false;
         renderCart();
     }
 
+    function setQtyManual(cartId, val) {
+        var item = null;
+        for (var i = 0; i < cart.length; i++) {
+            if (cart[i].cartId === cartId) { item = cart[i]; break; }
+        }
+        if (!item) return;
+        var newQty = parseInt(val) || 0;
+        if (newQty <= 0) {
+            cart = cart.filter(function(i) { return i.cartId !== cartId; });
+            renderCart();
+            return;
+        }
+        var maxAllowed = Math.floor(item.maxPcs / item.rasio);
+        if (newQty > maxAllowed) {
+            Swal.fire('Stok Terbatas', 'Jumlah melebihi batas stok fisik (Maks: ' + maxAllowed + ').', 'warning');
+            item.qty = maxAllowed > 0 ? maxAllowed : 1;
+        } else {
+            item.qty = newQty;
+        }
+        renderCart();
+    }
+
     function removeItem(cartId) { cart = cart.filter(function(i) { return i.cartId !== cartId; }); renderCart(); }
     function clearCart() { cart = []; renderCart(); }
 
@@ -824,7 +1068,9 @@ $shopeeOn = false;
             totalEl.innerText = 'Rp 0';
             btn.disabled = true;
             btn.className = 'w-full py-3.5 rounded-xl text-xs font-bold bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed';
-            inp.value = '[]'; return;
+            inp.value = '[]';
+            updateCameraModalCartPreview();
+            return;
         }
 
         var total = 0, html = '';
@@ -851,8 +1097,9 @@ $shopeeOn = false;
             }
 
             var stokInfo = '';
+            var maxAllowed = Math.floor(i.maxPcs / i.rasio);
             if (i.batch_list) {
-                stokInfo = (i.satuan_tipe === 'besar') ? '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Fisik Box: ' + Math.floor(i.maxPcs / i.rasio) + '</span>' : '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Batch Spesifik (Utama): ' + i.stok_eceran_fisik + ' Pcs</span>';
+                stokInfo = (i.satuan_tipe === 'besar') ? '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Fisik Box: ' + maxAllowed + '</span>' : '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Batch Spesifik (Utama): ' + i.stok_eceran_fisik + ' Pcs</span>';
             } else {
                 stokInfo = '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Stok: ' + i.maxPcs + ' ' + i.satuan_label + '</span>';
             }
@@ -865,9 +1112,9 @@ $shopeeOn = false;
                 '</td>' +
                 '<td class="px-4 py-3 text-center">' +
                     '<div class="flex items-center justify-center gap-1.5">' +
-                        '<button type="button" onclick="changeQty(\'' + i.cartId + '\',-1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition">-</button>' +
-                        '<span class="font-bold text-xs w-5 text-center">' + i.qty + '</span>' +
-                        '<button type="button" onclick="changeQty(\'' + i.cartId + '\',1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition">+</button>' +
+                        '<button type="button" onclick="changeQty(\'' + i.cartId + '\',-1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition flex items-center justify-center">-</button>' +
+                        '<input type="number" min="1" max="' + maxAllowed + '" value="' + i.qty + '" onchange="setQtyManual(\'' + i.cartId + '\', this.value)" class="w-12 text-center font-bold text-xs border border-zcBrd rounded-lg py-1 px-1 focus:outline-none focus:border-zc bg-white shadow-xs">' +
+                        '<button type="button" onclick="changeQty(\'' + i.cartId + '\',1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition flex items-center justify-center">+</button>' +
                     '</div>' +
                 '</td>' +
                 '<td class="px-4 py-3 text-right font-bold text-xs">Rp ' + sub.toLocaleString('id-ID') + '</td>' +
@@ -880,6 +1127,7 @@ $shopeeOn = false;
         btn.disabled = false;
         btn.className = 'w-full py-3.5 rounded-xl text-xs font-bold bg-zc hover:bg-zcHv text-white transition shadow-sm cursor-pointer';
         inp.value = JSON.stringify(cart);
+        updateCameraModalCartPreview();
     }
 
     // --- Payment UI Logic ---
@@ -993,25 +1241,301 @@ $shopeeOn = false;
         }
     }
 
+    let currentPosSnapToken = null;
+    let currentPosOrderId = null;
+
     function toggleNominalInput() {
         var metode = document.getElementById('modal_metode').value;
         var nominalSec = document.getElementById('nominal_section');
         var infoSec = document.getElementById('non_tunai_info');
+        var qrisSec = document.getElementById('qris_dynamic_section');
         
         if (metode === 'Tunai') {
             nominalSec.classList.remove('hidden');
             infoSec.classList.add('hidden');
+            if (qrisSec) qrisSec.classList.add('hidden');
+        } else if (metode === 'QRIS') {
+            nominalSec.classList.add('hidden');
+            infoSec.classList.add('hidden');
+            if (qrisSec) qrisSec.classList.remove('hidden');
         } else {
             nominalSec.classList.add('hidden');
             infoSec.classList.remove('hidden');
+            if (qrisSec) qrisSec.classList.add('hidden');
         }
         calcKembalian();
     }
 
+    async function triggerMidtransPosQRIS() {
+        let btn = document.getElementById('btn_open_snap_qris');
+        let badge = document.getElementById('qris_status_badge');
+        btn.disabled = true;
+        btn.innerHTML = 'Membuat QRIS Midtrans...';
+        badge.innerText = 'Menghubungkan...';
+
+        let now = new Date();
+        let ymd = now.getFullYear().toString() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
+        let rand = Math.floor(1000 + Math.random() * 9000);
+        currentPosOrderId = 'POS-' + ymd + '-' + rand;
+
+        try {
+            let res = await fetch('../api/pos_snap_token.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    total: currentTotal,
+                    cart: cart,
+                    invoice: currentPosOrderId
+                })
+            });
+            let data = await res.json();
+            if (data.status === 'success' && data.token) {
+                currentPosSnapToken = data.token;
+                currentPosOrderId = data.order_id;
+                badge.innerText = 'Menunggu Scan...';
+                btn.innerHTML = '⚡ Tampilkan Ulang QRIS Midtrans';
+                btn.disabled = false;
+
+                if (typeof snap !== 'undefined' && snap.pay) {
+                    snap.pay(data.token, {
+                        onSuccess: function(result) {
+                            badge.innerText = '✅ Lunas';
+                            badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800';
+                            Swal.fire({
+                                title: 'Pembayaran QRIS Berhasil!',
+                                text: 'Pembayaran Midtrans sukses terverifikasi. Menyimpan struk POS...',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            document.getElementById('form_custom_invoice').value = currentPosOrderId;
+                            document.getElementById('form_metode_pembayaran').value = 'QRIS';
+                            setTimeout(() => {
+                                document.getElementById('form_pos').submit();
+                            }, 1200);
+                        },
+                        onPending: function(result) {
+                            badge.innerText = 'Menunggu Konfirmasi';
+                            Swal.fire({
+                                title: 'Menunggu Pembayaran',
+                                text: 'QRIS telah ditampilkan kepada customer. Klik Selesaikan Transaksi jika customer sudah bayar.',
+                                icon: 'info'
+                            });
+                        },
+                        onError: function(result) {
+                            badge.innerText = 'Gagal';
+                            Swal.fire('Pembayaran Gagal', 'Transaksi QRIS gagal atau dibatalkan.', 'error');
+                        },
+                        onClose: function() {
+                            badge.innerText = 'QRIS Ditutup';
+                        }
+                    });
+                } else {
+                    alert('Midtrans Snap JS tidak terdeteksi. Silakan periksa koneksi.');
+                }
+            } else {
+                throw new Error(data.message || 'Gagal generate snap token');
+            }
+        } catch (err) {
+            btn.disabled = false;
+            btn.innerHTML = '⚡ Coba Lagi QRIS Midtrans';
+            badge.innerText = 'Error API';
+            Swal.fire('Midtrans Error', 'Gagal memanggil API Midtrans: ' + err.message, 'warning');
+        }
+    }
+
     function submitPayment() {
         document.getElementById('form_metode_pembayaran').value = document.getElementById('modal_metode').value;
+        if (currentPosOrderId && document.getElementById('modal_metode').value === 'QRIS') {
+            document.getElementById('form_custom_invoice').value = currentPosOrderId;
+        }
         document.getElementById('btn_submit_pay').innerText = 'Memproses...';
         document.getElementById('form_pos').submit();
+    }
+
+    // --- Camera Scanner Implementation (html5-qrcode) ---
+    let html5QrCode = null;
+    let isCameraScannerRunning = false;
+    let lastScannedBarcode = '';
+    let lastScanTimestamp = 0;
+
+    function updateCameraModalCartPreview(lastProductName = null) {
+        let countEl = document.getElementById('cam_cart_count_badge');
+        let totalEl = document.getElementById('cam_cart_total_badge');
+        let prodEl = document.getElementById('cam_last_product_label');
+        let cdEl = document.getElementById('cam_cooldown_indicator');
+        
+        let totalQty = 0;
+        let totalPrice = 0;
+        if (typeof cart !== 'undefined' && Array.isArray(cart)) {
+            cart.forEach(item => {
+                totalQty += item.qty;
+                totalPrice += (item.harga * item.qty);
+            });
+        }
+        
+        if (countEl) countEl.innerText = totalQty + ' Item';
+        if (totalEl) totalEl.innerText = 'Rp ' + totalPrice.toLocaleString('id-ID');
+        
+        if (lastProductName && prodEl) {
+            prodEl.innerHTML = `<span class="text-emerald-700 font-extrabold truncate block">✅ ${lastProductName}</span>`;
+            if (cdEl) {
+                cdEl.innerText = '✅ Berhasil Masuk!';
+                cdEl.className = 'text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2 py-1 rounded-lg border border-emerald-300 shrink-0';
+                setTimeout(() => {
+                    if (cdEl) {
+                        cdEl.innerText = 'Siap Scan';
+                        cdEl.className = 'text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 shrink-0';
+                    }
+                }, 2000);
+            }
+        }
+    }
+
+    async function openCameraScannerModal() {
+        let modal = document.getElementById('camera_modal');
+        let modalContent = document.getElementById('camera_modal_content');
+        updateCameraModalCartPreview();
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modalContent.classList.remove('scale-95', 'opacity-0');
+            modalContent.classList.add('scale-100', 'opacity-100');
+        }, 10);
+        await startCameraScanner();
+    }
+
+    async function closeCameraScannerModal() {
+        let modal = document.getElementById('camera_modal');
+        let modalContent = document.getElementById('camera_modal_content');
+        if (html5QrCode && isCameraScannerRunning) {
+            try {
+                await html5QrCode.stop();
+            } catch(e) {}
+            isCameraScannerRunning = false;
+        }
+        modalContent.classList.remove('scale-100', 'opacity-100');
+        modalContent.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 200);
+    }
+
+    async function startCameraScanner(cameraId = null) {
+        let loading = document.getElementById('camera_loading_indicator');
+        let badge = document.getElementById('scan_status_badge');
+        if (loading) loading.classList.remove('hidden');
+
+        try {
+            if (typeof Html5Qrcode === 'undefined') {
+                throw new Error('Library Html5Qrcode belum selesai dimuat.');
+            }
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("camera_scanner_view");
+            }
+            
+            const devices = await Html5Qrcode.getCameras();
+            let select = document.getElementById('camera_device_select');
+            if (select && devices && devices.length) {
+                select.innerHTML = '';
+                devices.forEach((dev, idx) => {
+                    let opt = document.createElement('option');
+                    opt.value = dev.id;
+                    opt.text = dev.label || `Kamera ${idx + 1}`;
+                    if (cameraId && dev.id === cameraId) opt.selected = true;
+                    select.appendChild(opt);
+                });
+            }
+
+            const chosenCamera = cameraId || (devices && devices.length > 0 ? devices[0].id : { facingMode: "environment" });
+
+            const config = {
+                fps: 20,
+                qrbox: function(viewfinderWidth, viewfinderHeight) {
+                    let w = Math.min(Math.floor(viewfinderWidth * 0.75), 280);
+                    let h = Math.min(Math.floor(viewfinderHeight * 0.65), 180);
+                    return { width: Math.max(w, 200), height: Math.max(h, 120) };
+                }
+            };
+
+            await html5QrCode.start(
+                chosenCamera,
+                config,
+                (decodedText) => {
+                    onBarcodeScanSuccess(decodedText);
+                },
+                (errorMessage) => {}
+            );
+
+            isCameraScannerRunning = true;
+            if (loading) loading.classList.add('hidden');
+            if (badge) {
+                badge.innerText = '🟢 Kamera Aktif';
+                badge.className = 'inline-block px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800';
+            }
+
+        } catch (err) {
+            if (loading) loading.classList.add('hidden');
+            if (badge) {
+                badge.innerText = '🔴 Gagal Akses Kamera';
+                badge.className = 'inline-block px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800';
+            }
+            Swal.fire({
+                title: 'Akses Kamera Terkendala',
+                text: 'Pastikan browser Anda mengizinkan akses webcam atau kamera. (' + err.message + ')',
+                icon: 'warning'
+            });
+        }
+    }
+
+    async function changeCameraDevice(newDeviceId) {
+        if (html5QrCode && isCameraScannerRunning) {
+            await html5QrCode.stop();
+            isCameraScannerRunning = false;
+        }
+        if (newDeviceId) {
+            await startCameraScanner(newDeviceId);
+        }
+    }
+
+    function onBarcodeScanSuccess(code) {
+        code = code.trim();
+        let now = Date.now();
+        
+        // Cooldown 3.5 detik khusus barcode yang SAMA PERSIS agar kasir tidak men-scan ganda secara tak sengaja
+        if (code.toLowerCase() === (lastScannedBarcode || '').toLowerCase() && (now - lastScanTimestamp) < 3500) {
+            let sisaDetik = Math.ceil((3500 - (now - lastScanTimestamp)) / 1000);
+            let cdEl = document.getElementById('cam_cooldown_indicator');
+            if (cdEl) {
+                cdEl.innerText = `Cooldown (${sisaDetik}s)`;
+                cdEl.className = 'text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200 shrink-0';
+            }
+            return;
+        }
+        
+        // Jeda minimal 1 detik antar barang berbeda
+        if ((now - lastScanTimestamp) < 1000) {
+            return;
+        }
+        
+        lastScannedBarcode = code;
+        lastScanTimestamp = now;
+
+        // Visual shutter flash pada viewport scanner kamera
+        let scanBox = document.getElementById('camera_scanner_view');
+        if (scanBox) {
+            scanBox.classList.add('ring-4', 'ring-emerald-400');
+            setTimeout(() => { scanBox.classList.remove('ring-4', 'ring-emerald-400'); }, 600);
+        }
+
+        let codeEl = document.getElementById('last_scanned_code');
+        let timeEl = document.getElementById('last_scanned_time');
+        let inputEl = document.getElementById('manual_barcode_input');
+        if (codeEl) codeEl.innerText = code;
+        if (timeEl) timeEl.innerText = new Date().toLocaleTimeString('id-ID');
+        if (inputEl) inputEl.value = code;
+
+        // PENTING: Suara beep HANYA dibunyikan 1x di dalam processBarcode() saat item valid masuk keranjang!
+        processBarcode(code);
     }
 
     // --- Barcode Scanner Listener ---
@@ -1103,7 +1627,142 @@ $shopeeOn = false;
                 }
             }
             if (!found) {
-                alert('SKU Barcode tidak ditemukan atau stok kosong: ' + sku.toUpperCase());
+                // 1. Cek apakah barcode cocok dengan batch obat yang SUDAH KADALUARSA di katalog
+                var expiredMatch = null;
+                for (var i = 0; i < cards.length; i++) {
+                    var c = cards[i];
+                    var expAttr = c.getAttribute('data-expired-batch') || '';
+                    if (expAttr) {
+                        var expItems = expAttr.split(',');
+                        for (var j = 0; j < expItems.length; j++) {
+                            var parts = expItems[j].split('|');
+                            var bCode = parts[0].trim().toLowerCase();
+                            var bExp = parts[1] || '';
+                            if (bCode === sku || (bCode.split('.')[0] === sku)) {
+                                var pName = c.querySelector('span.text-xs.font-bold') ? c.querySelector('span.text-xs.font-bold').innerText : 'Obat';
+                                expiredMatch = { batch: parts[0].toUpperCase(), exp: bExp, name: pName };
+                                break;
+                            }
+                        }
+                        if (expiredMatch) break;
+                    }
+                }
+
+                if (expiredMatch) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '⛔ OBAT KADALUARSA!',
+                        html: `Fisik batch yang Anda scan: <b>${expiredMatch.batch}</b> (${expiredMatch.name})<br><br>` +
+                              `Status: <span class="text-rose-600 font-extrabold text-sm">SUDAH KADALUARSA</span> (Exp: <b>${expiredMatch.exp}</b>).<br><br>` +
+                              `<div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 text-left font-medium">` +
+                              `⚠️ <b>PERINGATAN KETAT FARMASI:</b><br>` +
+                              `Sistem secara otomatis <b>MEMBLOKIR</b> penjualan obat yang telah melewati tanggal kadaluarsa demi keselamatan pasien dan kepatuhan BPOM.<br><br>` +
+                              `Silakan pisahkan fisik obat ini ke karantina dan lakukan <b>Mutasi Keluar (Barang Rusak/Kadaluarsa)</b>.</div>`,
+                        confirmButtonColor: '#e11d48',
+                        confirmButtonText: 'Saya Mengerti'
+                    });
+                    return;
+                }
+
+                // 2. Jika tidak ditemukan di kartu yang tampil, verifikasi ke database via API
+                fetch('../api/check_barcode.php?barcode=' + encodeURIComponent(sku))
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        if (res.found && res.is_expired) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: '⛔ OBAT KADALUARSA!',
+                                html: `Fisik batch yang Anda scan: <b>${res.no_batch}</b> (${res.nama})<br><br>` +
+                                      `Status: <span class="text-rose-600 font-extrabold text-sm">SUDAH KADALUARSA</span> (Exp: <b>${res.tgl_exp}</b>).<br><br>` +
+                                      `<div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 text-left font-medium">` +
+                                      `⚠️ <b>PERINGATAN KETAT FARMASI:</b><br>` +
+                                      `Sistem secara otomatis <b>MEMBLOKIR</b> penjualan obat yang telah melewati tanggal kadaluarsa demi keselamatan pasien dan kepatuhan BPOM.<br><br>` +
+                                      `Silakan pisahkan fisik obat ini ke karantina dan lakukan <b>Mutasi Keluar (Barang Rusak/Kadaluarsa)</b>.</div>`,
+                                confirmButtonColor: '#e11d48',
+                                confirmButtonText: 'Saya Mengerti'
+                            });
+                        } else if (res.found && res.tipe === 'batch' && res.stok_sisa <= 0) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Stok Batch Habis',
+                                html: `Batch <b>${res.no_batch}</b> (${res.nama}) tercatat di sistem tetapi <b>stok sisa = 0</b>.`,
+                                confirmButtonColor: '#1a75d2'
+                            });
+                        } else if (res.found && res.tipe === 'sn' && res.status !== 'Tersedia') {
+                            let camLabel = document.getElementById('cam_last_product_label');
+                            let camCooldown = document.getElementById('cam_cooldown_indicator');
+                            if (res.status === 'Retur/Rusak') {
+                                if (camLabel) camLabel.innerHTML = `<span class="text-rose-600 font-bold">⛔ DITOLAK: UNIT RUSAK (${res.serial_number})</span>`;
+                                if (camCooldown) {
+                                    camCooldown.innerText = 'Unit Rusak';
+                                    camCooldown.className = 'text-[10px] font-extrabold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200 shrink-0';
+                                }
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: '⛔ ALAT KESEHATAN RUSAK / AFKIR!',
+                                    html: `Fisik unit yang Anda scan: <b>${res.serial_number}</b><br>` +
+                                          `Produk: <b>${res.nama}</b><br><br>` +
+                                          `Status Sistem: <span class="text-rose-600 font-extrabold text-sm uppercase">RUSAK / DIKARANTINA</span><br>` +
+                                          (res.catatan ? `<div class="mt-2 p-2.5 bg-slate-100 rounded-lg text-slate-700 text-xs border border-slate-200 text-left"><b>Catatan:</b> ${res.catatan}</div><br>` : `<br>`) +
+                                          `<div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 text-left font-medium">` +
+                                          `⚠️ <b>PERINGATAN OPERASIONAL KASIR:</b><br>` +
+                                          `Unit ini telah dicatat sebagai <b>Barang Rusak / Cacat</b> dan dilarang keras untuk dijual ke pelanggan!<br><br>` +
+                                          `Silakan pisahkan fisik alat ini ke area karantina atau kembalikan (retur) ke supplier untuk diganti unit baru.</div>`,
+                                    confirmButtonColor: '#e11d48',
+                                    confirmButtonText: 'Saya Mengerti'
+                                });
+                            } else if (res.status === 'Terjual') {
+                                if (camLabel) camLabel.innerHTML = `<span class="text-amber-600 font-bold">⚠️ SUDAH TERJUAL: ${res.serial_number}</span>`;
+                                let garansiHtml = '';
+                                if (res.sisa_garansi !== null && res.sisa_garansi !== undefined) {
+                                    if (res.sisa_garansi >= 0) {
+                                        garansiHtml = `<div class="mt-2 p-2.5 bg-emerald-50 rounded-lg text-emerald-800 text-xs border border-emerald-200 text-left">` +
+                                                      `<b>Invoice:</b> ${res.no_invoice || '-'}<br>` +
+                                                      `<b>Tgl Pembelian:</b> ${res.tgl_terjual || '-'}<br>` +
+                                                      `<b>Status Garansi:</b> <span class="font-bold text-emerald-700">AKTIF (${res.sisa_garansi} hari tersisa)</span></div>`;
+                                    } else {
+                                        garansiHtml = `<div class="mt-2 p-2.5 bg-slate-100 rounded-lg text-slate-700 text-xs border border-slate-200 text-left">` +
+                                                      `<b>Invoice:</b> ${res.no_invoice || '-'}<br>` +
+                                                      `<b>Tgl Pembelian:</b> ${res.tgl_terjual || '-'}<br>` +
+                                                      `<b>Status Garansi:</b> <span class="font-bold text-slate-500">KADALUWARSA / HABIS</span></div>`;
+                                    }
+                                }
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: '⚠️ UNIT ALKES SUDAH TERJUAL!',
+                                    html: `Serial Number <b>${res.serial_number}</b> (${res.nama}) tercatat sudah <b>TERJUAL</b> pada transaksi sebelumnya.<br>` +
+                                          garansiHtml + `<br>` +
+                                          `<div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 text-left font-medium">` +
+                                          `ℹ️ <b>Petunjuk Layanan Kasir:</b><br>` +
+                                          `Jika pelanggan datang untuk klaim garansi kerusakan, silakan arahkan ke <b>Laporan Logistik Medis (Jejak SN)</b> untuk memproses isolasi Karantina.</div>`,
+                                    confirmButtonColor: '#d97706',
+                                    confirmButtonText: 'Saya Mengerti'
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Unit Alkes Tidak Tersedia',
+                                    html: `Serial Number <b>${res.serial_number}</b> (${res.nama}) sudah berstatus <b>${res.status}</b>.`,
+                                    confirmButtonColor: '#1a75d2'
+                                });
+                            }
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Barcode Tidak Ditemukan',
+                                html: `SKU / Barcode tidak ditemukan atau stok kosong: <b>${sku.toUpperCase()}</b>`,
+                                confirmButtonColor: '#1a75d2'
+                            });
+                        }
+                    })
+                    .catch(function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Barcode Tidak Ditemukan',
+                            html: `SKU / Barcode tidak ditemukan atau stok kosong: <b>${sku.toUpperCase()}</b>`,
+                            confirmButtonColor: '#1a75d2'
+                        });
+                    });
             }
         } catch(e) { alert("Error JS di Barcode: " + e.message); }
     }

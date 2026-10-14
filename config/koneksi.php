@@ -13,6 +13,7 @@ try {
     ];
     
     $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+    $pdo->exec("SET time_zone = '+07:00'");
 } catch (PDOException $e) {
     // Sembunyikan detail sensitif database saat produksi, catat ke log server
     error_log("ZenCare DB Connection Failure: " . $e->getMessage());
@@ -21,4 +22,6 @@ try {
             <p>Sistem tidak dapat terhubung ke server database ZenCare Medical. Pastikan MySQL aktif.</p>
          </div>");
 }
+
+require_once __DIR__ . '/order_helper.php';
 ?>

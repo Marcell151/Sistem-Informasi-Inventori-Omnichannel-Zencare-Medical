@@ -19,8 +19,8 @@ try {
     $response = ['kategori' => $kategori, 'items' => []];
 
     if ($kategori === 'Obat') {
-        // Ambil Batch aktif
-        $stmt = $pdo->prepare("SELECT no_batch, tgl_exp, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC");
+        // Ambil Batch aktif yang BELUM KADALUARSA
+        $stmt = $pdo->prepare("SELECT no_batch, tgl_exp, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 AND tgl_exp >= CURDATE() ORDER BY tgl_exp ASC");
         $stmt->execute([$idVariasi]);
         $response['items'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } else if ($kategori === 'Alat Kesehatan') {

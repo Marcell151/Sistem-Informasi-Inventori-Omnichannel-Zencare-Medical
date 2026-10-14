@@ -47,6 +47,7 @@ layoutHeader('Histori Konversi / Buka Dus', 'Laporan jejak audit (Audit Trail) p
                     <th class="px-6 py-4">Produk</th>
                     <th class="px-6 py-4">Batch Asal (Utuh)</th>
                     <th class="px-6 py-4">Mutasi Dus Keluar</th>
+                    <th class="px-6 py-4">Sisa Dus Gudang</th>
                     <th class="px-6 py-4">Batch Baru (Eceran)</th>
                     <th class="px-6 py-4">Mutasi Pcs Masuk</th>
                     <th class="px-6 py-4 text-center">Aksi Fisik</th>
@@ -55,7 +56,7 @@ layoutHeader('Histori Konversi / Buka Dus', 'Laporan jejak audit (Audit Trail) p
             <tbody class="divide-y divide-zcBrd text-sm">
                 <?php if(empty($histori)): ?>
                     <tr>
-                        <td colspan="8" class="px-6 py-12 text-center text-zcMut italic">Belum ada riwayat pembongkaran dus.</td>
+                        <td colspan="9" class="px-6 py-12 text-center text-zcMut italic">Belum ada riwayat pembongkaran dus.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach($histori as $h): ?>
@@ -79,6 +80,11 @@ layoutHeader('Histori Konversi / Buka Dus', 'Laporan jejak audit (Audit Trail) p
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center gap-1.5 text-rose-600 font-bold bg-rose-50/80 px-2.5 py-1 rounded border border-rose-100">
                                 ↓ Keluar <?= $h['qty_box_buka'] ?> <?= htmlspecialchars($h['satuan_besar']) ?>
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 text-amber-800 text-xs font-bold border border-amber-200">
+                                📦 <?= intval($h['sisa_dus_akhir'] ?? 0) ?> <?= htmlspecialchars($h['satuan_besar']) ?> Tersisa
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">

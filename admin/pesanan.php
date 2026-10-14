@@ -14,6 +14,16 @@ if (isset($_GET['cabang'])) $_SESSION['id_cabang'] = $activeCabang = intval($_GE
 
 $msg = ''; $msgType = '';
 
+// Auto-cancel pesanan e-commerce 'Menunggu Pembayaran' yang kadaluarsa & kembalikan stok
+$autoCancelled = batalkanPesananKadaluarsa($pdo);
+if ($autoCancelled > 0) {
+    $cooldownText = defined('RESERVASI_COOLDOWN_MENIT') && RESERVASI_COOLDOWN_MENIT < 60 
+        ? RESERVASI_COOLDOWN_MENIT . ' menit' 
+        : '2 jam';
+    $msg = "$autoCancelled pesanan e-commerce 'Menunggu Pembayaran' telah dibatalkan otomatis karena melebihi batas waktu $cooldownText, stok fisik & batch FEFO telah dipulihkan.";
+    $msgType = 'info';
+}
+
 // Handle Status Update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['aksi'] === 'update_status') {
     $idPesanan  = intval($_POST['id_penjualan'] ?? 0);
@@ -112,7 +122,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
                         $catatan = trim($item['catatan_logistik'] ?? '');
                         if (!empty($catatan)) {
                             if ($item['kategori'] === 'Obat') {
-                                preg_match_all('/(.+?)\s*\((\d+)x\)/', $catatan, $matches, PREG_SET_ORDER);
+                                preg_match_all('/([^\(,\s]+)\s*\((?:.*=\s*)?(\d+)(?:x|[^\)]*)?\)/i', $catatan, $matches, PREG_SET_ORDER);
+                                if (empty($matches)) {
+                                    preg_match_all('/(.+?)\s*\((\d+)x\)/', $catatan, $matches, PREG_SET_ORDER);
+                                }
                                 foreach ($matches as $match) {
                                     $batchNo = trim($match[1]);
                                     $batchQty = intval($match[2]);
@@ -178,6 +191,15 @@ if (!empty($orderIds)) {
     $inClause = implode(',', $orderIds);
     $qDetails = $pdo->query("
         SELECT dp.*, pv.nama_variasi, pi.nama_produk, pi.kategori,
+               pv.satuan_besar, pv.satuan_kecil, pv.rasio_konversi,
+               (SELECT CONCAT(DATE_FORMAT(sb.tgl_exp, '%d/%m/%Y'), '|', DATEDIFF(sb.tgl_exp, CURDATE())) 
+                FROM stok_batch sb 
+                WHERE sb.id_variasi = dp.id_variasi 
+                  AND sb.no_batch = SUBSTRING_INDEX(dp.catatan_logistik, ' ', 1) 
+                LIMIT 1) AS exp_info,
+               (SELECT GROUP_CONCAT(CONCAT(sb.no_batch, '|', sb.tgl_exp) SEPARATOR ',') 
+                FROM stok_batch sb 
+                WHERE sb.id_variasi = dp.id_variasi AND sb.tgl_exp < CURDATE()) AS expired_batches,
                CASE 
                    WHEN pi.kategori = 'Obat' THEN (SELECT GROUP_CONCAT(DISTINCT no_batch SEPARATOR ',') FROM stok_batch WHERE id_variasi = dp.id_variasi AND no_batch NOT LIKE '%.%')
                    WHEN pi.kategori = 'Alat Kesehatan' THEN (SELECT GROUP_CONCAT(serial_number SEPARATOR ',') FROM unit_serial WHERE id_variasi = dp.id_variasi)
@@ -319,26 +341,132 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                 <div class="text-xs">
                                     <h4 class="font-bold text-zcTxt mb-2 uppercase tracking-wide border-b border-zcBrd pb-1 inline-block">Detail Item Pesanan</h4>
                                     <ul class="space-y-2 mt-2">
-                                        <?php $items = $orderDetails[$o['id']] ?? []; ?>
-                                        <?php foreach($items as $it): ?>
+                                         <?php $items = $orderDetails[$o['id']] ?? []; ?>
+                                        <?php foreach($items as $it): 
+                                            $satBesar = !empty($it['satuan_besar']) ? $it['satuan_besar'] : 'Karton';
+                                            $satKecil = !empty($it['satuan_kecil']) ? $it['satuan_kecil'] : 'Botol';
+                                            $rasio = max(1, intval($it['rasio_konversi'] ?? 1));
+                                            $isEcommerce = in_array(strtolower($o['tipe_transaksi'] ?? ''), ['ecommerce', 'online']);
+
+                                            // Format badge Qty: Tampilkan kedua satuan untuk transaksi e-commerce (satuan besar)
+                                            if ($isEcommerce && $rasio > 1) {
+                                                $totalPcs = $it['qty'] * $rasio;
+                                                $qtyLabel = $it['qty'] . ' ' . $satBesar . ' (' . number_format($totalPcs) . ' ' . $satKecil . ')';
+                                            } else {
+                                                $qtyLabel = 'x' . $it['qty'] . ' ' . $satKecil;
+                                            }
+
+                                            // Format label fisik logistik agar jelas (misal 1 Karton = 50 Botol)
+                                            $rawLogistik = trim($it['catatan_logistik'] ?? '');
+                                            $displayLogistik = $rawLogistik;
+                                            $cleanBarcodeInstruksi = $rawLogistik ? explode(' ', $rawLogistik)[0] : '';
+                                            $cleanBarcodeInstruksi = trim(explode('(', $cleanBarcodeInstruksi)[0]);
+
+                                            // Ekstrak semua kode batch bersih tanpa embel-embel keterangan satuan
+                                            $cleanBatchesList = [];
+                                            if (!empty($rawLogistik)) {
+                                                foreach (explode(',', $rawLogistik) as $rb) {
+                                                    $cb = trim(preg_replace('/\s*\(.*?\)/', '', $rb));
+                                                    $cb = trim(preg_replace('/\[.*?\]/', '', $cb));
+                                                    if ($cb) $cleanBatchesList[] = $cb;
+                                                }
+                                            }
+                                            $cleanBatchesAttr = implode(',', $cleanBatchesList);
+
+                                            if (!empty($rawLogistik)) {
+                                                $parts = array_map('trim', explode(',', $rawLogistik));
+                                                $formattedParts = [];
+                                                foreach ($parts as $pPart) {
+                                                    if (preg_match('/^([^\(]+)\s*\((\d+)x\)$/i', $pPart, $mLog)) {
+                                                        $bCode = trim($mLog[1]);
+                                                        $pcsVal = intval($mLog[2]);
+                                                        if ($isEcommerce && $rasio > 1 && $pcsVal >= $rasio) {
+                                                            $dusVal = floor($pcsVal / $rasio);
+                                                            $formattedParts[] = $bCode . " ({$dusVal} {$satBesar} = {$pcsVal} {$satKecil})";
+                                                        } else {
+                                                            $formattedParts[] = $bCode . " ({$pcsVal} {$satKecil})";
+                                                        }
+                                                    } elseif (preg_match('/^([^\(]+)\s*\((.*?)\)$/i', $pPart)) {
+                                                        $formattedParts[] = $pPart;
+                                                    } else {
+                                                        if ($isEcommerce && $rasio > 1) {
+                                                            $totalPcs = $it['qty'] * $rasio;
+                                                            $formattedParts[] = $pPart . " ({$it['qty']} {$satBesar} = {$totalPcs} {$satKecil})";
+                                                        } else {
+                                                            $formattedParts[] = $pPart;
+                                                        }
+                                                    }
+                                                }
+                                                $displayLogistik = implode(', ', $formattedParts);
+                                            }
+                                        ?>
                                             <li class="item-packing flex flex-col bg-white p-2.5 rounded-lg border border-zcBrd shadow-sm" 
                                                 data-id-variasi="<?= $it['id_variasi'] ?>" 
                                                 data-qty="<?= $it['qty'] ?>"
                                                 data-batches="<?= htmlspecialchars(strtolower($it['valid_batches'] ?? '')) ?>"
-                                                data-kategori="<?= htmlspecialchars($it['kategori']) ?>">
+                                                data-kategori="<?= htmlspecialchars($it['kategori']) ?>"
+                                                data-instruksi="<?= htmlspecialchars($displayLogistik ?: $cleanBarcodeInstruksi) ?>"
+                                                data-clean-batches="<?= htmlspecialchars(strtolower($cleanBatchesAttr ?: $cleanBarcodeInstruksi)) ?>"
+                                                data-expired-batches="<?= htmlspecialchars(strtolower($it['expired_batches'] ?? '')) ?>"
+                                                data-exp-info="<?= htmlspecialchars($it['exp_info'] ?? '') ?>">
                                                 <div class="flex justify-between items-center">
                                                     <span class="font-bold text-slate-700"><?= htmlspecialchars($it['nama_produk'] . ' - ' . $it['nama_variasi']) ?></span>
-                                                    <span class="font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">x<?= $it['qty'] ?></span>
+                                                    <span class="font-semibold text-slate-700 <?= ($isEcommerce && $rasio > 1) ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-slate-100 border-slate-200 text-slate-600' ?> px-2.5 py-0.5 rounded border"><?= htmlspecialchars($qtyLabel) ?></span>
                                                 </div>
-                                                <?php if(!empty($it['catatan_logistik'])): ?>
-                                                    <div class="mt-2 flex items-start gap-2 p-2 bg-rose-50 border border-rose-200 rounded-md">
-                                                        <svg class="w-4 h-4 text-rose-600 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                                                        <span class="text-[13px] font-bold text-rose-700 uppercase tracking-tight">(INSTRUKSI AMBIL FISIK: <?= htmlspecialchars($it['catatan_logistik']) ?>)</span>
+                                                <?php if(!empty($displayLogistik)): ?>
+                                                    <?php 
+                                                        $expTxt = '';
+                                                        if (!empty($it['exp_info'])) {
+                                                            $expParts = explode('|', $it['exp_info']);
+                                                            $expTxt = "Exp: " . ($expParts[0] ?? '-') . " / Sisa " . ($expParts[1] ?? '0') . " Hari";
+                                                        }
+                                                    ?>
+                                                    <div class="mt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 bg-rose-50 border border-rose-200 rounded-md">
+                                                        <div class="flex items-center gap-1.5">
+                                                            <svg class="w-4 h-4 text-rose-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                                            <span class="text-[12px] font-bold text-rose-700 tracking-tight">AMBIL FISIK: <span class="font-mono bg-white px-1.5 py-0.5 rounded border border-rose-300"><?= htmlspecialchars($displayLogistik) ?></span></span>
+                                                        </div>
+                                                        <?php if ($expTxt): ?>
+                                                            <span class="text-[11px] text-emerald-700 font-extrabold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 w-fit"><?= $expTxt ?></span>
+                                                        <?php endif; ?>
                                                     </div>
                                                 <?php endif; ?>
                                             </li>
                                         <?php endforeach; ?>
                                     </ul>
+
+                                    <!-- Tombol Aksi Lanjutkan Status Langsung di Detail Pesanan -->
+                                    <div class="mt-4 pt-3 border-t border-zcBrd flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                        <div class="text-[11px] text-zcMut">
+                                            Metode Pengambilan: <strong class="text-slate-800"><?= htmlspecialchars($o['metode_pengambilan']) ?></strong> • 
+                                            Layanan: <strong class="text-slate-800"><?= htmlspecialchars($o['kurir'] ?? 'Direct') ?> (<?= htmlspecialchars($o['layanan'] ?? 'Standard') ?>)</strong>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <?php if ($o['status_pesanan'] === 'Diproses'): ?>
+                                                <?php if ($o['metode_pengambilan'] === 'Pick-up'): ?>
+                                                    <button type="button" onclick="triggerStatusFromDetail(<?= $o['id'] ?>, 'Siap Diambil')" 
+                                                        class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                                        Lanjutkan: Siapkan Pesanan untuk Ambil di Toko
+                                                    </button>
+                                                <?php else: ?>
+                                                    <button type="button" onclick="triggerStatusFromDetail(<?= $o['id'] ?>, 'Dikirim')" 
+                                                        class="px-3.5 py-2 bg-zc hover:bg-zcHv text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                                        Lanjutkan: Siapkan Pengiriman Pesanan (Kirim)
+                                                    </button>
+                                                <?php endif; ?>
+                                            <?php elseif (in_array($o['status_pesanan'], ['Dikirim', 'Siap Diambil'])): ?>
+                                                <button type="button" onclick="triggerStatusFromDetail(<?= $o['id'] ?>, 'Selesai')" 
+                                                    class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                                    Selesaikan Pesanan
+                                                </button>
+                                            <?php elseif ($o['status_pesanan'] === 'Menunggu Pembayaran'): ?>
+                                                <button type="button" onclick="triggerStatusFromDetail(<?= $o['id'] ?>, 'Dibatalkan')" 
+                                                    class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                                    Batalkan Pesanan
+                                                </button>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -346,6 +474,97 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                 <?php endif; ?>
             </tbody>
         </table>
+    </div>
+</div>
+
+<style>
+/* Fix live camera viewport - menghilangkan potongan & garis hitam samping */
+#pack_camera_view { width: 100% !important; overflow: hidden !important; border-radius: 0.75rem !important; background: #0f172a !important; }
+#pack_camera_view video {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 280px !important;
+    max-height: 360px !important;
+    object-fit: cover !important;
+    border-radius: 0.75rem !important;
+    display: block !important;
+    margin: 0 auto !important;
+}
+#pack_camera_view canvas { border-radius: 0.75rem !important; }
+#pack_camera_view #qr-shaded-region { border-radius: 0.75rem !important; }
+</style>
+
+<!-- Modal Live Barcode Scanner Kamera untuk Verifikasi Packing E-Commerce -->
+<div id="pack_camera_modal" class="fixed inset-0 z-[10000] hidden bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0 duration-200 border border-slate-200" id="pack_camera_modal_content">
+        <!-- Header Modal -->
+        <div class="bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-4 flex items-center justify-between text-white">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm leading-tight">Live Barcode Scanner Kamera (E-Commerce)</h3>
+                    <p class="text-[11px] text-blue-100">Scan barcode batch obat / nomor seri (SN) langsung via webcam</p>
+                </div>
+            </div>
+            <button type="button" onclick="closePackCameraModal()" class="text-blue-100 hover:text-white transition p-1">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <div class="p-5 space-y-4">
+            <!-- Camera Viewport Box -->
+            <div class="relative bg-slate-900 rounded-xl overflow-hidden shadow-inner border-2 border-slate-700 min-h-[250px] flex items-center justify-center">
+                <div id="pack_camera_view" class="w-full"></div>
+                <div id="pack_camera_loading" class="text-center p-4 text-white text-xs">
+                    <div class="inline-block w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin mb-2"></div>
+                    <p>Menghubungkan ke kamera...</p>
+                </div>
+            </div>
+
+            <!-- Device Selector & Status Badge -->
+            <div class="flex items-center justify-between gap-3 text-xs">
+                <div class="flex-1">
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Pilih Perangkat Kamera:</label>
+                    <select id="pack_camera_select" onchange="changePackCamera(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-semibold focus:outline-none focus:border-indigo-500">
+                        <option value="">Deteksi kamera...</option>
+                    </select>
+                </div>
+                <div class="text-right">
+                    <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800" id="pack_scan_status_badge">
+                        🟢 Scanner Aktif
+                    </span>
+                </div>
+            </div>
+
+            <!-- Checklist Status Barang yang Harus Di-scan -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                <div class="text-[11px] font-bold text-slate-700 mb-2 flex items-center justify-between">
+                    <span>Daftar Verifikasi Barang:</span>
+                    <span id="pack_progress_text" class="text-indigo-600 font-extrabold text-[11px]">0 / 0 Selesai</span>
+                </div>
+                <div id="pack_camera_items_list" class="space-y-1.5 max-h-32 overflow-y-auto pr-1 text-xs">
+                    <!-- Dinamis terisi dari pendingItems -->
+                </div>
+            </div>
+
+            <!-- Last Scanned Info Card -->
+            <div id="pack_last_scanned_box" class="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">Hasil Scan Terakhir:</span>
+                    <span id="pack_last_scanned_code" class="font-mono font-bold text-sm text-slate-800">-</span>
+                </div>
+                <span id="pack_last_scanned_time" class="text-[11px] text-slate-500 font-medium">Belum ada scan</span>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
+            <span class="text-[11px] text-slate-500">Arahkan barcode kardus / SN ke kotak kamera</span>
+            <button type="button" onclick="closePackCameraModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 transition">
+                Tutup Scanner
+            </button>
+        </div>
     </div>
 </div>
 
@@ -407,10 +626,13 @@ function handleStatusChange(selectEl, orderId) {
         var lis = ul.querySelectorAll('li.item-packing');
         lis.forEach(function(li) {
             var nama = li.querySelector('span.font-bold.text-slate-700').innerText;
-            var instruksi = '';
-            var insSpan = li.querySelector('span.text-rose-700');
-            if (insSpan) {
-                instruksi = insSpan.innerText.replace('(INSTRUKSI AMBIL FISIK:', '').replace(')', '').trim();
+            var instruksi = li.getAttribute('data-instruksi') || '';
+            var cleanBatches = (li.getAttribute('data-clean-batches') || '').toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
+            if (!instruksi) {
+                var insSpan = li.querySelector('span.text-rose-700');
+                if (insSpan) {
+                    instruksi = insSpan.innerText.replace(/\(AMBIL FISIK:|\(INSTRUKSI AMBIL FISIK:|AMBIL FISIK:/gi, '').replace(/\)/g, '').trim();
+                }
             }
             
             pendingItems.push({
@@ -418,6 +640,9 @@ function handleStatusChange(selectEl, orderId) {
                 qty: li.getAttribute('data-qty'),
                 nama: nama,
                 instruksi: instruksi,
+                cleanBatches: cleanBatches,
+                expiredBatches: (li.getAttribute('data-expired-batches') || '').toLowerCase().split(',').filter(Boolean),
+                expInfo: li.getAttribute('data-exp-info') || '',
                 validBatches: (li.getAttribute('data-batches') || "").split(","),
                 kategori: li.getAttribute('data-kategori') || "",
                 verified: false,
@@ -433,6 +658,14 @@ function handleStatusChange(selectEl, orderId) {
     }
 }
 
+function triggerStatusFromDetail(orderId, targetStatus) {
+    var selectEl = document.querySelector('select[name="status_pesanan"][onchange*="' + orderId + '"]');
+    if (selectEl) {
+        selectEl.value = targetStatus;
+        handleStatusChange(selectEl, orderId);
+    }
+}
+
 function showPackingModal(targetStatus) {
     let html = `<div class="text-left">`;
     html += `<div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-4">
@@ -441,8 +674,8 @@ function showPackingModal(targetStatus) {
                         <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                     </div>
                     <div>
-                        <h4 class="text-sm font-bold text-indigo-900">Validasi Fisik Paket</h4>
-                        <p class="text-xs text-indigo-700 mt-0.5">Wajib men-scan barcode yang tepat sebelum pesanan <b>${targetStatus}</b>.</p>
+                        <h4 class="text-sm font-bold text-indigo-900">Validasi Fisik Paket (Logika FEFO)</h4>
+                        <p class="text-xs text-indigo-700 mt-0.5">Wajib men-scan barcode batch kardus terdekat sebelum pesanan <b>${targetStatus}</b>.</p>
                     </div>
                 </div>
              </div>`;
@@ -456,12 +689,19 @@ function showPackingModal(targetStatus) {
             ? `<div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></div>`
             : `<div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0"><span class="text-slate-400 text-xs font-bold">?</span></div>`;
             
-        // Pisahkan nama instruksi dan jumlah Qty
-        let cleanInstruksi = it.instruksi.replace(/\s*\(\d+x\)/gi, "").trim(); 
-        let qtyMatch = it.instruksi.match(/\((\d+)x\)/i);
-        let qtyText = qtyMatch ? `<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] ml-1 font-bold">ISI ${qtyMatch[1]} PCS/STRIP</span>` : "";
+        // Pisahkan nama instruksi dan keterangan Qty
+        let cleanInstruksi = it.instruksi.split('(')[0].replace(/\[.*?\]/g, "").trim(); 
+        let qtyMatch = it.instruksi.match(/\((.*?)\)/);
+        let qtyText = qtyMatch ? `<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[10px] ml-1 font-bold">${qtyMatch[1]}</span>` : "";
+        
+        let expBadge = "";
+        if (it.expInfo) {
+            let expParts = it.expInfo.split('|');
+            expBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">⏳ Exp: ${expParts[0]} (${expParts[1]} Hari)</span>
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black bg-blue-50 text-blue-700 border border-blue-200 uppercase">Rekomendasi FEFO</span>`;
+        }
             
-        let rec = cleanInstruksi ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 tracking-wide font-mono">${cleanInstruksi}</span> ${qtyText}` : "<span class=\"text-slate-400 text-xs italic\">Non-Batch</span>";
+        let rec = cleanInstruksi ? `<div class="flex items-center gap-1.5 flex-wrap"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-900 border border-blue-200 tracking-wide font-mono">📦 ${cleanInstruksi}</span> ${qtyText} ${expBadge}</div>` : "<span class=\"text-slate-400 text-xs italic\">Non-Batch</span>";
 
         let scannedDisplay = "";
         if (isVerified && it.scannedBatch) {
@@ -496,8 +736,14 @@ function showPackingModal(targetStatus) {
     });
     html += `</div>`;
     
-    html += `<div class="relative mt-2">
-                <input type="text" id="pack-scanner" class="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-sm font-semibold focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors placeholder-slate-400" placeholder="Arahkan Scanner Barcode di sini..." autocomplete="off">
+    html += `<div class="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <div class="relative flex-1">
+                    <input type="text" id="pack-scanner" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-300 rounded-xl text-sm font-semibold focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors placeholder-slate-400" placeholder="Arahkan Scanner / Ketik Barcode di sini..." autocomplete="off">
+                </div>
+                <button type="button" onclick="openPackCameraScanner('${targetStatus}')" class="px-4 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-md shadow-indigo-500/20 active:scale-95 shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+                    <span>Scan Kamera</span>
+                </button>
              </div>`;
              
     html += `</div>`;
@@ -515,15 +761,17 @@ function showPackingModal(targetStatus) {
         allowOutsideClick: false,
         didOpen: () => {
             let inp = document.getElementById("pack-scanner");
-            inp.focus();
-            inp.addEventListener("keypress", function(e) {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    let val = this.value.trim().toLowerCase();
-                    this.value = "";
-                    if (val) handlePackScan(val, targetStatus);
-                }
-            });
+            if (inp) {
+                inp.focus();
+                inp.addEventListener("keypress", function(e) {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        let val = this.value.trim().toLowerCase();
+                        this.value = "";
+                        if (val) handlePackScan(val, targetStatus, false);
+                    }
+                });
+            }
         }
     }).then((result) => {
         if (result.isConfirmed) {
@@ -536,12 +784,186 @@ function showPackingModal(targetStatus) {
     });
 }
 
+// =========================================================================
+// WEBCAM SCANNER UNTUK PACKING E-COMMERCE (html5-qrcode)
+// =========================================================================
+let packHtml5QrCode = null;
+let isPackCameraRunning = false;
+let packLastBarcode = '';
+let packLastTimestamp = 0;
+let packCurrentTargetStatus = '';
 
-function handlePackScan(val, targetStatus) {
-    let matchIdx = -1;
-    let anomalyIdx = -1;
-    let wrongProductIdx = -1;
+function updatePackCameraItemsList() {
+    let listEl = document.getElementById('pack_camera_items_list');
+    let progEl = document.getElementById('pack_progress_text');
+    if (!listEl) return;
+    
+    let verifiedCount = 0;
+    let html = '';
+    pendingItems.forEach((it) => {
+        if (it.verified) verifiedCount++;
+        let icon = it.verified ? '✅' : '⏳';
+        let cls = it.verified ? 'text-emerald-800 font-bold bg-emerald-50 border-emerald-300' : 'text-slate-700 bg-white border-slate-200';
+        let detail = it.verified ? `[Selesai: ${it.scannedBatch}]` : `[Target: ${it.instruksi || 'Batch/SN'}]`;
+        html += `<div class="p-2 rounded-lg border flex items-center justify-between gap-2 ${cls}">
+            <span class="truncate flex-1 font-semibold">${icon} ${it.nama}</span>
+            <span class="font-mono text-[10.5px] ml-2 shrink-0 font-bold">${detail}</span>
+        </div>`;
+    });
+    listEl.innerHTML = html;
+    if (progEl) {
+        progEl.innerText = `${verifiedCount} / ${pendingItems.length} Selesai`;
+    }
+}
 
+async function openPackCameraScanner(targetStatus) {
+    packCurrentTargetStatus = targetStatus;
+    
+    // Tutup popup Swal packing sementara
+    if (typeof Swal !== 'undefined' && Swal.isVisible()) {
+        Swal.close();
+    }
+    
+    let modal = document.getElementById('pack_camera_modal');
+    let content = document.getElementById('pack_camera_modal_content');
+    updatePackCameraItemsList();
+    
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+    
+    await startPackCamera();
+}
+
+async function closePackCameraModal() {
+    let modal = document.getElementById('pack_camera_modal');
+    let content = document.getElementById('pack_camera_modal_content');
+    
+    if (packHtml5QrCode && isPackCameraRunning) {
+        try {
+            await packHtml5QrCode.stop();
+        } catch(e) {}
+        isPackCameraRunning = false;
+    }
+    
+    content.classList.remove('scale-100', 'opacity-100');
+    content.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        showPackingModal(packCurrentTargetStatus);
+    }, 200);
+}
+
+async function startPackCamera(cameraId = null) {
+    let loading = document.getElementById('pack_camera_loading');
+    let badge = document.getElementById('pack_scan_status_badge');
+    if (loading) loading.classList.remove('hidden');
+    
+    try {
+        if (typeof Html5Qrcode === 'undefined') {
+            throw new Error('Library Html5Qrcode belum dimuat.');
+        }
+        if (!packHtml5QrCode) {
+            packHtml5QrCode = new Html5Qrcode("pack_camera_view");
+        }
+        
+        const devices = await Html5Qrcode.getCameras();
+        let select = document.getElementById('pack_camera_select');
+        if (select && devices && devices.length) {
+            select.innerHTML = '';
+            devices.forEach((dev, idx) => {
+                let opt = document.createElement('option');
+                opt.value = dev.id;
+                opt.text = dev.label || `Kamera ${idx + 1}`;
+                if (cameraId && dev.id === cameraId) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+        
+        const chosenCamera = cameraId || (devices && devices.length > 0 ? devices[0].id : { facingMode: "environment" });
+        const config = {
+            fps: 20,
+            qrbox: function(viewfinderWidth, viewfinderHeight) {
+                let w = Math.min(Math.floor(viewfinderWidth * 0.75), 280);
+                let h = Math.min(Math.floor(viewfinderHeight * 0.65), 180);
+                return { width: Math.max(w, 200), height: Math.max(h, 120) };
+            }
+        };
+        
+        await packHtml5QrCode.start(
+            chosenCamera,
+            config,
+            (decodedText) => {
+                onPackCameraSuccess(decodedText);
+            },
+            (error) => {}
+        );
+        
+        isPackCameraRunning = true;
+        if (loading) loading.classList.add('hidden');
+        if (badge) {
+            badge.innerText = '🟢 Kamera Aktif';
+            badge.className = 'inline-block px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800';
+        }
+    } catch (err) {
+        if (loading) loading.classList.add('hidden');
+        if (badge) {
+            badge.innerText = '🔴 Gagal Akses Kamera';
+            badge.className = 'inline-block px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800';
+        }
+        Swal.fire({
+            title: 'Akses Kamera Terkendala',
+            text: 'Pastikan browser Anda mengizinkan akses webcam atau kamera. (' + err.message + ')',
+            icon: 'warning'
+        }).then(() => {
+            closePackCameraModal();
+        });
+    }
+}
+
+async function changePackCamera(newDeviceId) {
+    if (packHtml5QrCode && isPackCameraRunning) {
+        await packHtml5QrCode.stop();
+        isPackCameraRunning = false;
+    }
+    if (newDeviceId) {
+        await startPackCamera(newDeviceId);
+    }
+}
+
+function onPackCameraSuccess(code) {
+    code = code.trim();
+    let now = Date.now();
+    if (code === packLastBarcode && (now - packLastTimestamp) < 1800) {
+        return;
+    }
+    packLastBarcode = code;
+    packLastTimestamp = now;
+    
+    // Suara Beep Synthesizer via Web Audio API
+    try {
+        var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var osc = audioCtx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        osc.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.12);
+    } catch(e) {}
+    
+    let codeEl = document.getElementById('pack_last_scanned_code');
+    let timeEl = document.getElementById('pack_last_scanned_time');
+    if (codeEl) codeEl.innerText = code;
+    if (timeEl) timeEl.innerText = new Date().toLocaleTimeString('id-ID');
+    
+    // Jalankan verifikasi barang
+    handlePackScan(code.toLowerCase(), packCurrentTargetStatus, true);
+}
+
+
+function handlePackScan(val, targetStatus, fromCamera = false) {
     // KUNCI GANDA 1: Blokir Eceran untuk Pesanan E-Commerce
     if (val.includes(".")) {
         Swal.fire({
@@ -550,32 +972,113 @@ function handlePackScan(val, targetStatus) {
                    Anda men-scan barang <b>Eceran (Sub-batch .A)</b>.<br>
                    <i>Dilarang keras mem-packing barang eceran untuk pembeli online!</i>`,
             icon: "error"
-        }).then(() => { showPackingModal(targetStatus); });
+        }).then(() => { 
+            if (!fromCamera) showPackingModal(targetStatus); 
+        });
         return;
     }
 
-    for (let i=0; i<pendingItems.length; i++) {
+    // KUNCI GANDA 2: SAFETY GUARD - BLOKIR MUTLAK OBAT KADALUARSA!
+    let expiredMatch = null;
+    for (let i = 0; i < pendingItems.length; i++) {
+        let expList = pendingItems[i].expiredBatches || [];
+        for (let j = 0; j < expList.length; j++) {
+            let parts = expList[j].split('|');
+            let bCode = parts[0].trim().toLowerCase();
+            let bExp = parts[1] || '';
+            if (bCode === val || bCode.split('.')[0] === val) {
+                expiredMatch = { batch: parts[0].toUpperCase(), exp: bExp, name: pendingItems[i].nama };
+                break;
+            }
+        }
+        if (expiredMatch) break;
+    }
+
+    if (expiredMatch) {
+        Swal.fire({
+            title: "⛔ OBAT KADALUARSA TERDETEKSI!",
+            html: `Fisik batch yang Anda scan: <b>${expiredMatch.batch}</b> (${expiredMatch.name})<br><br>
+                   Status: <span class="text-rose-600 font-extrabold text-sm">SUDAH KADALUARSA</span> (Exp: <b>${expiredMatch.exp}</b>).<br><br>
+                   <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 text-left font-medium">
+                   ⚠️ <b>SISTEM SAFETY GUARD E-COMMERCE:</b><br>
+                   Dilarang keras mem-packing atau mengirimkan obat yang telah melewati masa kadaluarsa kepada pelanggan online demi keselamatan pasien dan regulasi BPOM.<br><br>
+                   Sistem secara otomatis <b>MEMBLOKIR</b> batch ini. Silakan pisahkan kardus obat ini ke karantina dan ambil batch yang masih aktif/valid!</div>`,
+            icon: "error",
+            confirmButtonColor: "#e11d48",
+            confirmButtonText: "Saya Mengerti (Ambil Batch Aktif)"
+        }).then(() => { 
+            if (!fromCamera) showPackingModal(targetStatus); 
+        });
+        return;
+    }
+
+    // Fallback Cek Real-time ke Database via check_barcode API
+    fetch(`../api/check_barcode.php?barcode=${encodeURIComponent(val)}`)
+        .then(r => r.json())
+        .then(res => {
+            if (res.found && res.is_expired) {
+                Swal.fire({
+                    title: "⛔ OBAT KADALUARSA TERDETEKSI!",
+                    html: `Fisik batch yang Anda scan: <b>${res.no_batch}</b> (${res.nama})<br><br>
+                           Status: <span class="text-rose-600 font-extrabold text-sm">SUDAH KADALUARSA</span> (Exp: <b>${res.tgl_exp}</b>).<br><br>
+                           <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 text-left font-medium">
+                           ⚠️ <b>SISTEM SAFETY GUARD E-COMMERCE:</b><br>
+                           Dilarang keras mem-packing atau mengirimkan obat yang telah melewati masa kadaluarsa kepada pelanggan online demi keselamatan pasien dan regulasi BPOM.<br><br>
+                           Sistem secara otomatis <b>MEMBLOKIR</b> batch ini. Silakan pisahkan kardus obat ini ke karantina dan ambil batch yang masih aktif/valid!</div>`,
+                    icon: "error",
+                    confirmButtonColor: "#e11d48",
+                    confirmButtonText: "Saya Mengerti (Ambil Batch Aktif)"
+                }).then(() => { 
+                    if (!fromCamera) showPackingModal(targetStatus); 
+                });
+                return;
+            }
+            proceedPackingMatch(val, targetStatus, fromCamera);
+        })
+        .catch(() => {
+            proceedPackingMatch(val, targetStatus, fromCamera);
+        });
+}
+
+function proceedPackingMatch(val, targetStatus, fromCamera = false) {
+    let matchIdx = -1;
+    let anomalyIdx = -1;
+    let wrongProductIdx = -1;
+
+    // PASS 1: Cari target FEFO / clean batch yang cocok pada SEMUA item yang belum diverifikasi (Bisa scan acak)
+    for (let i = 0; i < pendingItems.length; i++) {
         if (!pendingItems[i].verified) {
             let instruksiRaw = pendingItems[i].instruksi.toLowerCase();
-            let instruksi = instruksiRaw.replace(/\s*\(\d+x\)/g, "").trim();
+            let pureBatches = instruksiRaw.split(',').map(b => b.replace(/\(.*?\)/g, "").replace(/\[.*?\]/g, "").trim());
+            let cleanBatches = pendingItems[i].cleanBatches || [];
+            let allExpected = pureBatches.concat(cleanBatches).filter(Boolean);
             
-            if (instruksi === val) { // KUNCI: Wajib Sama Persis (===), BUKAN includes!
+            if (allExpected.includes(val)) {
                 matchIdx = i;
                 break;
-            } else if (instruksi !== "") {
-                // Ekstrak kode prefix batch (contoh: "huf" dari "huf-2026-00")
-                let prefix = instruksi.split("-")[0];
-                if (val.startsWith(prefix)) {
-                    // Cek apakah batch anomali tersebut BENAR-BENAR TERDAFTAR di database
-                    if (pendingItems[i].validBatches.includes(val)) {
-                        anomalyIdx = i; // Valid batch, just wrong FEFO order
-                    } else {
-                        wrongProductIdx = i; // FIKTIF! Batch tidak terdaftar
-                    }
-                } else {
-                    // Prefix sama sekali beda = SALAH PRODUK
-                    wrongProductIdx = i;
+            }
+        }
+    }
+
+    // PASS 2: Jika tidak ada exact match target FEFO, cari apakah barcode merupakan batch/SN valid untuk salah satu item (Anomali FEFO / Tukar Batch)
+    if (matchIdx === -1) {
+        for (let i = 0; i < pendingItems.length; i++) {
+            if (!pendingItems[i].verified) {
+                let validList = (pendingItems[i].validBatches || []).map(b => b.trim().toLowerCase()).filter(Boolean);
+                if (validList.includes(val)) {
+                    anomalyIdx = i;
+                    break;
                 }
+            }
+        }
+    }
+
+    // PASS 3: Jika barcode tidak terdaftar pada item pesanan mana pun yang tersisa
+    if (matchIdx === -1 && anomalyIdx === -1) {
+        for (let i = 0; i < pendingItems.length; i++) {
+            if (!pendingItems[i].verified) {
+                wrongProductIdx = i;
+                break;
             }
         }
     }
@@ -583,10 +1086,32 @@ function handlePackScan(val, targetStatus) {
     if (matchIdx !== -1) {
         pendingItems[matchIdx].verified = true;
         pendingItems[matchIdx].scannedBatch = val.toUpperCase();
-        showPackingModal(targetStatus);
+        
+        let allDone = pendingItems.every(i => i.verified);
+        if (fromCamera && isPackCameraRunning) {
+            updatePackCameraItemsList();
+            if (allDone) {
+                // Semua barang telah lengkap terverifikasi
+                closePackCameraModal();
+            } else {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top',
+                    showConfirmButton: false,
+                    timer: 1600,
+                    timerProgressBar: true
+                });
+                Toast.fire({
+                    icon: 'success',
+                    title: `✅ Terverifikasi: ${val.toUpperCase()} (${pendingItems[matchIdx].nama})`
+                });
+            }
+        } else {
+            showPackingModal(targetStatus);
+        }
     } else if (anomalyIdx !== -1) {
         if (pendingItems[anomalyIdx].kategori === 'Alat Kesehatan') {
-            // SILENT ACCEPT FOR ALKES!
+            // SILENT ACCEPT UNTUK ALKES
             pendingItems[anomalyIdx].verified = true;
             pendingItems[anomalyIdx].scannedBatch = val.toUpperCase();
             
@@ -596,7 +1121,18 @@ function handlePackScan(val, targetStatus) {
             h.value = pendingItems[anomalyIdx].id_variasi + "|" + pendingItems[anomalyIdx].instruksi + "|" + val.toUpperCase() + "|" + pendingItems[anomalyIdx].qty + "|" + pendingItems[anomalyIdx].kategori;
             activeForm.appendChild(h);
 
-            showPackingModal(targetStatus);
+            let allDone = pendingItems.every(i => i.verified);
+            if (fromCamera && isPackCameraRunning) {
+                updatePackCameraItemsList();
+                if (allDone) {
+                    closePackCameraModal();
+                } else {
+                    const Toast = Swal.mixin({ toast: true, position: 'top', showConfirmButton: false, timer: 1600 });
+                    Toast.fire({ icon: 'success', title: `SN Terverifikasi: ${val.toUpperCase()}` });
+                }
+            } else {
+                showPackingModal(targetStatus);
+            }
             return;
         }
 
@@ -624,31 +1160,39 @@ function handlePackScan(val, targetStatus) {
                 h.value = pendingItems[anomalyIdx].id_variasi + "|" + pendingItems[anomalyIdx].instruksi + "|" + val.toUpperCase() + "|" + pendingItems[anomalyIdx].qty;
                 activeForm.appendChild(h);
 
-                showPackingModal(targetStatus);
+                let allDone = pendingItems.every(i => i.verified);
+                if (fromCamera && isPackCameraRunning) {
+                    updatePackCameraItemsList();
+                    if (allDone) closePackCameraModal();
+                } else {
+                    showPackingModal(targetStatus);
+                }
             } else {
-                showPackingModal(targetStatus);
+                if (!fromCamera) showPackingModal(targetStatus);
             }
         });
     } else if (wrongProductIdx !== -1) {
-        // KUNCI GANDA 2: Blokir Salah Produk Ekstrem
         Swal.fire({
             title: "&#10060; SALAH PRODUK!",
             html: `Anda men-scan barang yang <b>BERBEDA</b> dari daftar pesanan!<br><br>
                    Pesanan yang harus di-packing: <b>${pendingItems[wrongProductIdx].nama}</b><br>
                    Barcode yang di-scan: <b>${val.toUpperCase()}</b>`,
             icon: "error"
-        }).then(() => { showPackingModal(targetStatus); });
+        }).then(() => { 
+            if (!fromCamera) showPackingModal(targetStatus); 
+        });
     } else {
         Swal.fire({
             icon: "error",
             title: "Tidak Ditemukan",
             text: "Barcode/SN tidak cocok dengan barang manapun yang belum di-scan."
         }).then(() => {
-            showPackingModal(targetStatus);
+            if (!fromCamera) showPackingModal(targetStatus);
         });
     }
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="../assets/js/html5-qrcode.min.js"></script>
 
 <?php layoutEnd(); ?>

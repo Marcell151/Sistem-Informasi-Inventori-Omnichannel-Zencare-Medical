@@ -153,13 +153,25 @@
 
         <!-- Footer / Checkout -->
         <div class="p-5 border-t border-slate-100 bg-white">
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-sm font-bold text-slate-500">Total Belanja</span>
+            <div class="flex items-center justify-between mb-3 text-xs">
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-slate-700 select-none">
+                    <input type="checkbox" id="drawer-check-all" onchange="toggleSelectAllDrawer(this.checked)" class="w-4 h-4 rounded text-zc border-slate-300 focus:ring-zc cursor-pointer">
+                    <span>Pilih Semua (<span id="cart-drawer-selected-count">0</span> terpilih)</span>
+                </label>
+            </div>
+            <div class="flex justify-between items-baseline mb-4">
+                <span class="text-xs font-bold text-slate-500">Total Harga:</span>
                 <span class="text-2xl font-black text-[#1e293b]" id="cart-total">Rp 0</span>
             </div>
-            <a href="../zencare_checkout.php" class="block w-full py-4 text-center rounded-xl bg-[#1a75d2] hover:bg-[#0f2d5a] text-white font-bold text-base shadow-lg shadow-blue-500/30 transition active:scale-[0.98]">
-                Lanjut ke Pembayaran
-            </a>
+            <div class="space-y-2">
+                <button type="button" onclick="checkoutSelectedItems()" id="btn-drawer-checkout" class="block w-full py-3.5 text-center rounded-xl bg-[#1a75d2] hover:bg-[#0f2d5a] text-white font-bold text-sm shadow-md shadow-blue-500/20 transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                    Checkout Produk Terpilih
+                </button>
+                <a href="cart.php" class="block w-full py-2.5 text-center rounded-xl border border-slate-200 hover:border-zc text-slate-700 hover:text-zc font-bold text-xs bg-slate-50 hover:bg-white transition flex items-center justify-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    Lihat Keranjang Belanja Penuh
+                </a>
+            </div>
             <p class="text-[10px] text-center text-slate-400 mt-3 flex items-center justify-center gap-1.5">
                 <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 Pembayaran aman terenkripsi & stok terjamin
@@ -172,11 +184,15 @@
 
     <script>
     // --- Cart State Management (localStorage) ---
-    let cartData = JSON.parse(localStorage.getItem('zc_cart') || '[]');
+    let cartData = JSON.parse(localStorage.getItem('zc_cart') || localStorage.getItem('zencare_cart') || '[]');
 
     function saveCart() {
         localStorage.setItem('zc_cart', JSON.stringify(cartData));
+        localStorage.setItem('zencare_cart', JSON.stringify(cartData));
         renderCart();
+        if (typeof renderCartPage === 'function') {
+            renderCartPage();
+        }
     }
 
     function toggleCart() {
@@ -190,6 +206,7 @@
             drawer.classList.remove('translate-x-full');
             document.body.style.overflow = 'hidden'; // prevent bg scroll
             renderCart();
+            syncLiveStockWithServer();
         } else {
             overlay.classList.add('opacity-0');
             drawer.classList.add('translate-x-full');
@@ -247,6 +264,8 @@
                 cartData[itemIndex].qty = newQty;
                 showToast('Berhasil', `${nama} ditambahkan ke keranjang.`);
             }
+            cartData[itemIndex].max = maxStokBox;
+            cartData[itemIndex].selected = true;
         } else {
             if (qty > maxStokBox) {
                 showToast('Stok Tidak Cukup', `Maksimal pembelian untuk item ini adalah ${maxStokBox} ${satB}.`, 'warning');
@@ -254,7 +273,7 @@
             } else {
                 showToast('Berhasil', `${nama} ditambahkan ke keranjang.`);
             }
-            cartData.push({ id, nama, harga, berat, gambar, satuan: satB, rasio, max: maxStokBox, qty });
+            cartData.push({ id, nama, harga, berat, gambar, satuan: satB, rasio, max: maxStokBox, qty, selected: true });
         }
         
         saveCart();
@@ -267,7 +286,8 @@
             qtyInput = parseInt(qtyEl.value) || 1;
         }
         addToCart(id, nama, harga, berat, gambar, satB, rasio, maxStokBox, qtyInput);
-        window.location.href = '../zencare_checkout.php';
+        let targetUrl = window.location.pathname.includes('/ecommerce/') ? '../zencare_checkout.php' : 'zencare_checkout.php';
+        window.location.href = targetUrl;
     };
 
     function removeCartItem(id) {
@@ -275,16 +295,34 @@
         saveCart();
     }
 
+    function toggleItemSelect(id) {
+        let idx = cartData.findIndex(i => i.id == id);
+        if (idx > -1) {
+            cartData[idx].selected = !(cartData[idx].selected !== false);
+            saveCart();
+        }
+    }
+
+    function toggleSelectAllDrawer(checked) {
+        cartData.forEach(item => {
+            item.selected = checked;
+        });
+        saveCart();
+    }
+
     function updateCartItemQty(id, delta) {
         let itemIndex = cartData.findIndex(item => item.id == id);
         if (itemIndex > -1) {
             let item = cartData[itemIndex];
+            let maxLimit = parseInt(item.max) || parseInt(item.maxStokBox) || parseInt(item.stokBox) || 0;
             let newQty = item.qty + delta;
             
             if (newQty <= 0) {
                 removeCartItem(id);
-            } else if (newQty > item.max) {
-                showToast('Stok Maksimal', `Stok tersedia hanya ${item.max} ${item.satuan}.`, 'warning');
+            } else if (delta > 0 && newQty > maxLimit) {
+                showToast('Stok Maksimal', `Stok tersedia hanya ${maxLimit} ${item.satuan || 'Box'}.`, 'warning');
+                item.qty = maxLimit;
+                saveCart();
             } else {
                 item.qty = newQty;
                 saveCart();
@@ -301,77 +339,184 @@
         input.value = v;
     }
 
+    function checkoutSelectedItems() {
+        let selected = cartData.filter(i => i.selected !== false);
+        if (selected.length === 0) {
+            showToast('Pilih Produk', 'Centang minimal satu produk untuk melanjutkan checkout.', 'warning');
+            return;
+        }
+        let targetUrl = window.location.pathname.includes('/ecommerce/') ? '../zencare_checkout.php' : 'zencare_checkout.php';
+        window.location.href = targetUrl;
+    }
+
+    function resolveProductImg(gbr) {
+        let isEcommerce = window.location.pathname.includes('/ecommerce/');
+        let placeholder = isEcommerce ? '../assets/img/no-image.png' : 'assets/img/no-image.png';
+        if (!gbr) return placeholder;
+        if (gbr.startsWith('http')) return gbr;
+        let clean = gbr.replace(/^\.\.\//, '');
+        return isEcommerce ? ('../' + clean) : clean;
+    }
+
     function renderCart() {
         const badge1 = document.getElementById('cart-count-badge');
         const badge2 = document.getElementById('cart-drawer-count');
         const itemsContainer = document.getElementById('cart-items');
         const emptyState = document.getElementById('cart-empty');
         const totalLabel = document.getElementById('cart-total');
+        const drawerCheckAll = document.getElementById('drawer-check-all');
+        const drawerSelectedCount = document.getElementById('cart-drawer-selected-count');
+        const btnCheckout = document.getElementById('btn-drawer-checkout');
 
         // Update counts
         const totalItems = cartData.reduce((sum, item) => sum + item.qty, 0);
-        badge1.textContent = totalItems;
-        if(totalItems > 0) {
-            badge1.classList.remove('hidden');
-        } else {
-            badge1.classList.add('hidden');
+        if (badge1) {
+            badge1.textContent = totalItems;
+            if(totalItems > 0) {
+                badge1.classList.remove('hidden');
+            } else {
+                badge1.classList.add('hidden');
+            }
         }
         if(badge2) badge2.textContent = totalItems;
 
         // Toggle Empty State
         if (cartData.length === 0) {
-            itemsContainer.innerHTML = '';
-            itemsContainer.classList.add('hidden');
-            emptyState.classList.remove('hidden');
-            totalLabel.textContent = 'Rp 0';
+            if (itemsContainer) {
+                itemsContainer.innerHTML = '';
+                itemsContainer.classList.add('hidden');
+            }
+            if (emptyState) emptyState.classList.remove('hidden');
+            if (totalLabel) totalLabel.textContent = 'Rp 0';
+            if (drawerCheckAll) drawerCheckAll.checked = false;
+            if (drawerSelectedCount) drawerSelectedCount.innerText = '0';
+            if (btnCheckout) btnCheckout.disabled = true;
             return;
         }
 
-        itemsContainer.classList.remove('hidden');
-        emptyState.classList.add('hidden');
+        if (itemsContainer) itemsContainer.classList.remove('hidden');
+        if (emptyState) emptyState.classList.add('hidden');
 
         // Render Items
         let html = '';
         let totalHarga = 0;
+        let selectedCount = 0;
+        let allSelected = true;
 
         cartData.forEach(item => {
-            const subtotal = item.harga * item.qty;
-            totalHarga += subtotal;
+            const isSelected = (item.selected !== false);
+            if (isSelected) {
+                totalHarga += (item.harga * item.qty);
+                selectedCount += item.qty;
+            } else {
+                allSelected = false;
+            }
             
-            const imgPath = item.gambar ? `../${item.gambar}` : 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjY2JkNWUxIiBzdHJva2Utd2lkdGg9IjEiPjxwYXRoIGQ9Ik0xMiAyMnM4LTQgOC0xMFY1bC04LTMtOCAzdjdjMCA2IDggMTAgOCAxMHoiLz48L3N2Zz4=';
+            const maxStok = parseInt(item.max) || 0;
+            const sat = item.satuan || 'Box';
+            const imgPath = resolveProductImg(item.gambar);
 
             html += `
-            <div class="bg-white rounded-2xl p-3 border border-slate-100 flex gap-4 shadow-sm animate-fade-in">
-                <div class="w-20 h-20 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center shrink-0 p-2 overflow-hidden">
-                    <img src="${imgPath}" class="w-full h-full object-contain mix-blend-multiply" alt="${item.nama}">
+            <div class="bg-white rounded-2xl p-3 border border-slate-100 flex items-start gap-3 shadow-xs animate-fade-in ${isSelected ? '' : 'opacity-70 bg-slate-50/70'}">
+                <div class="pt-2">
+                    <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleItemSelect(${item.id})" class="w-4 h-4 rounded text-[#1a75d2] border-slate-300 focus:ring-[#1a75d2] cursor-pointer">
                 </div>
-                <div class="flex-1 flex flex-col justify-between">
+                <div class="w-16 h-16 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center shrink-0 p-1.5 overflow-hidden">
+                    <img src="${imgPath}" class="w-full h-full object-contain mix-blend-multiply" alt="${item.nama}" onerror="this.src=resolveProductImg('')">
+                </div>
+                <div class="flex-1 flex flex-col justify-between min-w-0">
                     <div class="flex justify-between items-start gap-2">
-                        <h4 class="text-xs font-bold text-[#1e293b] leading-tight line-clamp-2">${item.nama}</h4>
-                        <button onclick="removeCartItem(${item.id})" class="text-slate-300 hover:text-rose-500 transition">
+                        <div>
+                            <h4 class="text-xs font-bold text-[#1e293b] leading-tight line-clamp-2">${item.nama}</h4>
+                            <span class="inline-block mt-0.5 text-[9px] font-extrabold px-1.5 py-0.2 rounded border ${maxStok <= 0 ? 'bg-rose-50 text-rose-700 border-rose-200' : (maxStok <= 5 ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200')}">
+                                Sisa: ${maxStok} ${sat}
+                            </span>
+                        </div>
+                        <button onclick="removeCartItem(${item.id})" class="text-slate-300 hover:text-rose-500 transition p-1" title="Hapus">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         </button>
                     </div>
-                    <div class="flex items-end justify-between mt-2">
-                        <div class="text-[#1a75d2] font-black text-sm">${formatRupiah(item.harga)}</div>
+                    <div class="flex items-end justify-between mt-2 pt-1 border-t border-slate-100">
+                        <div class="text-[#1a75d2] font-black text-xs">${formatRupiah(item.harga)}</div>
                         
                         <!-- Qty Adjuster -->
-                        <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg overflow-hidden h-8">
-                            <button onclick="updateCartItemQty(${item.id}, -1)" class="w-8 h-full flex items-center justify-center hover:bg-slate-200 text-slate-600 font-bold transition">−</button>
-                            <span class="w-8 text-center text-xs font-bold text-[#1e293b]">${item.qty}</span>
-                            <button onclick="updateCartItemQty(${item.id}, 1)" class="w-8 h-full flex items-center justify-center hover:bg-slate-200 text-slate-600 font-bold transition">+</button>
+                        <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg overflow-hidden h-7">
+                            <button onclick="updateCartItemQty(${item.id}, -1)" class="w-7 h-full flex items-center justify-center hover:bg-slate-200 text-slate-600 font-bold transition">−</button>
+                            <span class="w-7 text-center text-xs font-bold text-[#1e293b]">${item.qty}</span>
+                            <button onclick="updateCartItemQty(${item.id}, 1)" ${item.qty >= maxStok ? 'disabled' : ''} class="w-7 h-full flex items-center justify-center font-bold transition ${item.qty >= maxStok ? 'opacity-25 bg-slate-100 text-slate-300 cursor-not-allowed pointer-events-none' : 'hover:bg-slate-200 text-slate-600 cursor-pointer'}">+</button>
                         </div>
                     </div>
                 </div>
             </div>`;
         });
 
-        itemsContainer.innerHTML = html;
-        totalLabel.textContent = formatRupiah(totalHarga);
+        if (itemsContainer) itemsContainer.innerHTML = html;
+        if (totalLabel) totalLabel.textContent = formatRupiah(totalHarga);
+        if (drawerCheckAll) drawerCheckAll.checked = allSelected && cartData.length > 0;
+        if (drawerSelectedCount) drawerSelectedCount.innerText = selectedCount;
+        if (btnCheckout) {
+            btnCheckout.disabled = (selectedCount <= 0);
+            btnCheckout.innerText = `Checkout (${selectedCount} Barang)`;
+        }
     }
 
-    // Initialize cart badge on load
-    document.addEventListener('DOMContentLoaded', renderCart);
+    // --- Real-time Stock Sync with POS / Store Database ---
+    let isSyncingStock = false;
+    async function syncLiveStockWithServer() {
+        if (isSyncingStock || !cartData || cartData.length === 0) return;
+        isSyncingStock = true;
+        try {
+            const res = await fetch('/inventory_zencare/api/cek_stok_keranjang.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cart: cartData })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                if (data.stock_map) {
+                    cartData.forEach(item => {
+                        if (data.stock_map[item.id]) {
+                            let maxDus = data.stock_map[item.id].max_dus;
+                            item.max = maxDus;
+                            item.maxStokBox = maxDus;
+                            item.stokBox = maxDus;
+                            if (item.qty > maxDus) {
+                                item.qty = Math.max(1, maxDus);
+                            }
+                        }
+                    });
+                }
+                if (data.has_adjustments && data.adjusted_items.length > 0) {
+                    data.adjusted_items.forEach(adj => {
+                        const idx = cartData.findIndex(i => i.id == adj.id);
+                        if (idx > -1) {
+                            if (adj.new_qty <= 0) {
+                                cartData.splice(idx, 1);
+                                showToast('Stok Habis di Toko', `Produk ${adj.nama} dihapus dari keranjang karena habis di toko fisik.`, 'warning');
+                            } else {
+                                cartData[idx].qty = adj.new_qty;
+                                cartData[idx].max = adj.max_dus;
+                                cartData[idx].maxStokBox = adj.max_dus;
+                                cartData[idx].stokBox = adj.max_dus;
+                                showToast('Penyesuaian Stok', `Stok ${adj.nama} tersisa ${adj.max_dus} ${adj.satuan}. Jumlah otomatis disesuaikan.`, 'warning');
+                            }
+                        }
+                    });
+                }
+                saveCart();
+            }
+        } catch (e) {
+            console.warn('Gagal sinkronisasi stok:', e);
+        } finally {
+            isSyncingStock = false;
+        }
+    }
+
+    // Initialize cart badge and stock sync on load
+    document.addEventListener('DOMContentLoaded', () => {
+        renderCart();
+        syncLiveStockWithServer();
+    });
     </script>
 </body>
 </html>

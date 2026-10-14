@@ -4,8 +4,16 @@ session_start();
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/koneksi.php';
 
+$redirect = trim($_GET['redirect'] ?? $_POST['redirect'] ?? '');
+$targetUrl = 'ecommerce/index.php';
+if ($redirect === 'checkout' || $redirect === 'zencare_checkout.php') {
+    $targetUrl = 'zencare_checkout.php';
+} elseif (!empty($redirect) && !preg_match('/^https?:\/\//i', $redirect)) {
+    $targetUrl = ltrim($redirect, '/');
+}
+
 if (isset($_SESSION['user_id'])) {
-    header('Location: ecommerce/index.php');
+    header('Location: ' . $targetUrl);
     exit;
 }
 
@@ -28,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['nama_lengkap'] = $user['nama_lengkap'];
                     $_SESSION['role'] = $user['role'];
                     
-                    header('Location: ecommerce/index.php');
+                    header('Location: ' . $targetUrl);
                     exit;
                 } else {
                     $error = "Akun ini terdaftar sebagai staf medis. Silakan login melalui halaman Admin.";
@@ -88,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
                 
                 <form method="POST" class="space-y-4">
+                    <input type="hidden" name="redirect" value="<?= htmlspecialchars($redirect) ?>">
                     <div>
                         <label class="block text-sm font-bold text-zcMut uppercase tracking-wider mb-2">Username</label>
                         <input type="text" name="username" required placeholder="Masukkan username Anda"

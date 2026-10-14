@@ -11,6 +11,7 @@ requireRole(['superadmin', 'admin']);
 $id_variasi = intval($_GET['id_variasi'] ?? 0);
 $dari       = $_GET['dari'] ?? date('Y-m-01');
 $sampai     = $_GET['sampai'] ?? date('Y-m-d');
+$filterKonversi = isset($_GET['filter_konversi']) && $_GET['filter_konversi'] == '1';
 
 $variasiList = $pdo->query("
     SELECT pv.id, pv.sku_variasi, CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS label 
@@ -54,9 +55,12 @@ if ($id_variasi > 0) {
 
     // Ambil SEMUA data mutasi untuk hitung running balance
     $stmtLog = $pdo->prepare("
-        SELECT ks.tanggal, ks.keterangan as deskripsi, ks.jenis_mutasi, ks.qty, u.nama_lengkap, ks.satuan_tipe
+        SELECT ks.id, ks.tanggal, ks.keterangan as deskripsi, ks.jenis_mutasi, ks.qty, ks.no_ref_dokumen, ks.kanal, ks.alasan_mutasi,
+               COALESCE(u.nama_lengkap, up.nama_lengkap, 'Sistem') AS nama_lengkap, ks.satuan_tipe
         FROM kartu_stok ks
         LEFT JOIN users u ON ks.dibuat_oleh = u.id
+        LEFT JOIN penjualan p ON (p.no_invoice = ks.no_ref_dokumen OR (ks.keterangan LIKE '%Penjualan Luring%' AND ks.keterangan LIKE CONCAT('%', p.no_invoice, '%')))
+        LEFT JOIN users up ON p.id_user = up.id
         WHERE ks.id_variasi = ? 
         ORDER BY ks.tanggal ASC, ks.id ASC
     ");
@@ -71,6 +75,59 @@ if ($id_variasi > 0) {
         else $allLogsKecil[] = $log;
     }
     
+    // Helper function untuk mengekstrak atau mencari nomor batch
+    $getBatchForLog = function($log) use ($pdo, $id_variasi) {
+        $desc = $log['deskripsi'] ?? '';
+        $batch = '';
+        
+        // 1. Ekstrak dari teks deskripsi [Batch: XXX] atau Sub-Batch XXX atau SN: XXX
+        if (preg_match('/(?:Batch|Sub-Batch|SN)[:\s]+([A-Za-z0-9\-\.\,\s]+?)(?:\]|\)|$)/i', $desc, $m)) {
+            $batch = trim($m[1]);
+        } elseif (preg_match('/(?:Batch|Sub-Batch|SN)[:\s]+([A-Za-z0-9\-\.]+)/i', $desc, $m)) {
+            $batch = trim($m[1]);
+        }
+        
+        // 2. Fallback: Cari dari detail_penjualan (POS / E-Commerce) jika kosong
+        if (empty($batch)) {
+            $invoiceNo = $log['no_ref_dokumen'] ?? '';
+            if (empty($invoiceNo) && preg_match('/(POS-\d+-\d+|INV-\d+-\d+|ZEN-\d+-\d+)/i', $desc, $mInv)) {
+                $invoiceNo = $mInv[1];
+            }
+            if (!empty($invoiceNo)) {
+                $qLogistik = $pdo->prepare("
+                    SELECT dp.catatan_logistik 
+                    FROM detail_penjualan dp 
+                    JOIN penjualan p ON p.id = dp.id_penjualan 
+                    WHERE p.no_invoice = ? AND dp.id_variasi = ? LIMIT 1
+                ");
+                $qLogistik->execute([$invoiceNo, $id_variasi]);
+                $val = $qLogistik->fetchColumn();
+                if ($val) $batch = $val;
+            }
+        }
+        
+        // 3. Fallback: Cari dari penerimaan_detail jika dokumen penerimaan
+        if (empty($batch)) {
+            $refPO = $log['no_ref_dokumen'] ?? '';
+            if (empty($refPO) && preg_match('/Ref:\s*([A-Za-z0-9\-\_]+)/i', $desc, $mRef)) {
+                $refPO = $mRef[1];
+            }
+            if (!empty($refPO)) {
+                $qPO = $pdo->prepare("
+                    SELECT pd.no_batch 
+                    FROM penerimaan_detail pd 
+                    JOIN penerimaan_stok ps ON ps.id = pd.id_penerimaan 
+                    WHERE ps.no_referensi = ? AND pd.id_variasi = ? LIMIT 1
+                ");
+                $qPO->execute([$refPO, $id_variasi]);
+                $val = $qPO->fetchColumn();
+                if ($val) $batch = $val;
+            }
+        }
+        
+        return $batch;
+    };
+
     // Proses Besar (Mundur dari stok sekarang)
     $allLogsBesar = array_reverse($allLogsBesar);
     $currentBalanceBesar = intval($produkData['stok_riil_besar']);
@@ -93,11 +150,7 @@ if ($id_variasi > 0) {
         
         $logDate = date('Y-m-d', strtotime($log['tanggal']));
         if ($logDate >= $dari && $logDate <= $sampai) {
-            $batch_match = '';
-            if (preg_match('/(?:Batch|Sub-Batch)\s+([A-Za-z0-9\-\.]+)/i', $log['deskripsi'], $m)) {
-                $batch_match = $m[1];
-            }
-            $log['no_batch'] = $batch_match;
+            $log['no_batch'] = $getBatchForLog($log);
             $logDataBesar[] = $log;
         }
     }
@@ -123,15 +176,32 @@ if ($id_variasi > 0) {
         
         $logDate = date('Y-m-d', strtotime($log['tanggal']));
         if ($logDate >= $dari && $logDate <= $sampai) {
-            $batch_match = '';
-            if (preg_match('/(?:Batch|Sub-Batch)\s+([A-Za-z0-9\-\.]+)/i', $log['deskripsi'], $m)) {
-                $batch_match = $m[1];
-            }
-            $log['no_batch'] = $batch_match;
+            $log['no_batch'] = $getBatchForLog($log);
             $logDataKecil[] = $log;
         }
     }
     $logDataKecil = array_reverse($logDataKecil);
+
+    // Filter khusus audit pembongkaran dus (Konversi UOM)
+    $totalDusDibongkar = 0;
+    $totalPcsHasilBongkar = 0;
+    if ($filterKonversi) {
+        $logDataBesar = array_values(array_filter($logDataBesar, function($l) use (&$totalDusDibongkar) {
+            $isBongkar = (stripos($l['deskripsi'], 'Bongkar') !== false || stripos($l['deskripsi'], 'Konversi') !== false);
+            if ($isBongkar && $l['jenis_mutasi'] === 'Keluar') {
+                $totalDusDibongkar += $l['qty_calc'];
+            }
+            return $isBongkar;
+        }));
+
+        $logDataKecil = array_values(array_filter($logDataKecil, function($l) use (&$totalPcsHasilBongkar) {
+            $isHasil = (stripos($l['deskripsi'], 'Bongkar') !== false || stripos($l['deskripsi'], 'Sub-Batch') !== false || stripos($l['deskripsi'], 'Konversi') !== false);
+            if ($isHasil && $l['jenis_mutasi'] === 'Masuk') {
+                $totalPcsHasilBongkar += $l['qty_calc'];
+            }
+            return $isHasil;
+        }));
+    }
 }
 
 layoutHead('Kartu Stok');
@@ -161,6 +231,13 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
             <label class="block text-xs font-semibold text-zcTxt mb-1.5">Sampai Tanggal</label>
             <input type="date" name="sampai" value="<?= htmlspecialchars($sampai) ?>" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
         </div>
+        <div>
+            <label class="block text-xs font-semibold text-zcTxt mb-1.5">Kategori Aktivitas</label>
+            <select name="filter_konversi" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50 font-bold">
+                <option value="0" <?= !$filterKonversi ? 'selected' : '' ?>>Semua Aktivitas</option>
+                <option value="1" <?= $filterKonversi ? 'selected' : '' ?>>Semua Aktivitas Konversi</option>
+            </select>
+        </div>
         <div class="flex gap-2">
             <button type="submit" class="px-5 py-2.5 bg-zc hover:bg-zcHv text-white font-bold text-sm rounded-xl transition flex items-center gap-2">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -176,13 +253,35 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
     </form>
 </div>
 
+<?php if ($id_variasi > 0 && $produkData && $filterKonversi): ?>
+<!-- BANNER AUDIT KHUSUS PEMBONGKARAN DUS -->
+<div class="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm print:hidden">
+    <div class="flex items-center gap-3">
+        <div>
+            <h4 class="text-sm font-black uppercase tracking-wide">Khusus Pembongkaran Kardus (Konversi UOM)</h4>
+            <p class="text-xs text-amber-800 mt-0.5">Memfilter mutasi hanya pada aktivitas pemecahan dus utuh menjadi eceran.</p>
+        </div>
+    </div>
+    <div class="flex items-center gap-2 self-stretch sm:self-auto">
+        <div class="bg-white px-4 py-2 rounded-xl border border-amber-200 text-center shadow-xs flex-1 sm:flex-initial">
+            <span class="block text-[10px] uppercase font-bold text-slate-500">Total Dus Dibongkar</span>
+            <span class="text-base font-black text-rose-600">-<?= $totalDusDibongkar ?> <?= htmlspecialchars($produkData['satuan_besar'] ?? 'Dus') ?></span>
+        </div>
+        <div class="bg-white px-4 py-2 rounded-xl border border-amber-200 text-center shadow-xs flex-1 sm:flex-initial">
+            <span class="block text-[10px] uppercase font-bold text-slate-500">Total Eceran Tercipta</span>
+            <span class="text-base font-black text-emerald-600">+<?= $totalPcsHasilBongkar ?> <?= htmlspecialchars($produkData['satuan_kecil'] ?? 'Pcs') ?></span>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <?php if ($id_variasi > 0 && $produkData): ?>
 <!-- TAB NAVIGATION -->
 <div class="flex border-b border-slate-200 mb-6 print:hidden">
     <?php if ($produkData['kategori'] !== 'Alat Kesehatan'): ?>
     <button onclick="switchTab('besar')" id="tab_btn_besar" class="px-6 py-3 font-bold text-sm border-b-4 border-amber-600 text-amber-700 transition">Kartu Stok Gudang (Satuan Besar)</button>
     <?php endif; ?>
-    <button onclick="switchTab('kecil')" id="tab_btn_kecil" class="px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition">Kartu Stok Etalase (Satuan Kecil)</button>
+    <button onclick="switchTab('kecil')" id="tab_btn_kecil" class="px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition"><?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Kartu Stok Alat Kesehatan (Unit Fisik)' : 'Kartu Stok Etalase (Satuan Kecil)' ?></button>
 </div>
 <div id="print-container" class="space-y-8 print:space-y-0">
     <?php if ($produkData['kategori'] !== 'Alat Kesehatan'): ?>
@@ -256,14 +355,14 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
     <?php endif; ?>
     
     <div id="tab_content_kecil" class="hidden bg-white p-8 md:p-12 shadow-sm rounded-none border border-slate-300 w-full max-w-5xl mx-auto font-sans print:m-0 print:border-none print:shadow-none print:p-0 print:block">
-        <h1 class="text-center text-xl md:text-2xl font-black mb-10 tracking-wide text-black">Kartu Stok Etalase (Satuan Kecil)</h1>
+        <h1 class="text-center text-xl md:text-2xl font-black mb-10 tracking-wide text-black"><?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Kartu Stok Alat Kesehatan (Unit Fisik)' : 'Kartu Stok Etalase (Satuan Kecil)' ?></h1>
         
         <!-- Informasi Header Kartu -->
         <div class="grid grid-cols-2 gap-x-12 mb-6 text-sm font-semibold text-black">
             <div class="grid grid-cols-[130px_10px_auto] gap-y-1">
                 <div>Nama Barang</div><div>:</div><div><?= htmlspecialchars($produkData['nama_produk'] . ' - ' . $produkData['nama_variasi']) ?></div>
                 <div>Kode Barang</div><div>:</div><div><?= htmlspecialchars($produkData['sku_variasi']) ?></div>
-                <div>Satuan (Eceran)</div><div>:</div><div class="font-black text-emerald-700 uppercase"><?= htmlspecialchars($produkData['satuan_kecil'] ?? '-') ?></div>
+                <div>Satuan (<?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Alkes' : 'Eceran' ?>)</div><div>:</div><div class="font-black text-emerald-700 uppercase"><?= htmlspecialchars($produkData['satuan_kecil'] ?? '-') ?></div>
             </div>
             <div class="grid grid-cols-[130px_10px_auto] gap-y-1">
                 <div>Minimum Stok</div><div>:</div><div><?= htmlspecialchars($produkData['stok_minimum_kecil']) ?> <?= htmlspecialchars($produkData['satuan_kecil']) ?></div>
@@ -277,7 +376,7 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
             <thead class="bg-emerald-600 text-white border-b-2 border-slate-900">
                 <tr>
                     <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-24">Tanggal</th>
-                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-24">No. Batch</th>
+                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-28"><?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Serial Number' : 'No. Batch' ?></th>
                     <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle">Jenis Mutasi & Aktivitas</th>
                     <th colspan="3" class="border border-slate-900 px-3 py-1.5 text-center">Kuantitas</th>
                     <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-32">Penanggung Jawab</th>
@@ -305,7 +404,7 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-black bg-slate-50"><?= number_format($log['sisa_stok_calc']) ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center text-xs"><?= htmlspecialchars($log['nama_lengkap'] ?? 'Sistem') ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-xs text-center text-slate-500">
-                            <?= ($log['no_batch'] ? 'Batch Terdata' : '-') ?>
+                            <?= ($log['no_batch'] ? ($produkData['kategori'] === 'Alat Kesehatan' ? 'SN Terdata' : 'Batch Terdata') : '-') ?>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -344,16 +443,29 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
     /* Break page after the first table */
     .page-break-after { page-break-after: always; }
     
-    /* Page Setup to remove URL and Date (Localhost Header/Footer) */
+    /* Page Setup */
     @page { 
         size: A4 portrait;
-        margin: 0; /* Removing margin removes default headers and footers */
+        margin: 15mm 12mm 18mm 12mm;
     }
     
-    /* Add padding back to body so content isn't cut off by printer */
-    body {
-        padding: 1.5cm;
+    body, main, .flex-1, .min-w-0 {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: auto !important;
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
     }
+    
+    table thead { display: table-header-group !important; }
+    table tfoot { display: table-row-group !important; }
+    table tr, table th, table td { break-inside: avoid !important; page-break-inside: avoid !important; }
+    table td > *, table th > * { break-inside: avoid !important; page-break-inside: avoid !important; }
 }
 </style>
 <?php endif; ?>

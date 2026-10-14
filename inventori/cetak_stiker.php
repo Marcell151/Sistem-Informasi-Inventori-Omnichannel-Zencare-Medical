@@ -38,7 +38,7 @@ if ($tipe === 'batch') {
     if ($data) {
         $nama_produk = $data['nama_produk'] . ' - ' . $data['nama_variasi'];
         $kode = $data['serial_number'];
-        $tgl_exp = 'Garansi Aktif';
+        $tgl_exp = 'Unit Original';
     }
 }
 

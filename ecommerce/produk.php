@@ -19,10 +19,16 @@ $stmt = $pdo->prepare("
            v.harga_jual_besar AS harga_jual,
            v.harga_jual_kecil AS harga_eceran,
            v.berat AS berat_gram,
-           i.gambar,
+           v.gambar AS gambar,
            v.sku_variasi,
            i.deskripsi,
            COALESCE(sc.stok, 0) AS stok_sistem,
+           (SELECT COALESCE(SUM(sb.stok_sisa), 0) 
+            FROM stok_batch sb 
+            WHERE sb.id_variasi = v.id 
+              AND sb.no_batch NOT LIKE '%.%' 
+              AND sb.tgl_exp >= CURDATE()
+           ) AS stok_batch_utuh,
            v.satuan_besar, v.satuan_kecil, v.rasio_konversi
     FROM produk_variasi v
     JOIN produk_induk i ON v.id_produk_induk = i.id
@@ -42,9 +48,10 @@ if (!$p) {
     exit;
 }
 
-$stokPcs     = intval($p['stok_sistem']);
-$rasio       = intval($p['rasio_konversi']) ?: 1;
-$stokBox     = floor($stokPcs / $rasio);
+$rasio       = max(1, intval($p['rasio_konversi']));
+$stokBox     = ($p['kategori'] === 'Obat')
+    ? (int) floor(intval($p['stok_batch_utuh']) / $rasio)
+    : (int) floor(intval($p['stok_sistem']) / $rasio);
 $harga       = floatval($p['harga_jual']);
 $hargaEceran = floatval($p['harga_eceran']);
 $satBesar    = $p['satuan_besar'] ?: 'Box';
@@ -54,7 +61,7 @@ $satKecil    = $p['satuan_kecil'] ?: 'Pcs';
 if ($stokBox <= 0) {
     $stokClass = 'bg-rose-50 text-rose-700 border-rose-200';
     $stokDot   = 'bg-rose-500';
-    $stokLabel = 'Stok Habis di Cabang Ini';
+    $stokLabel = 'Stok Habis';
 } elseif ($stokBox <= 5) {
     $stokClass = 'bg-amber-50 text-amber-800 border-amber-200';
     $stokDot   = 'bg-amber-400';
@@ -67,7 +74,9 @@ if ($stokBox <= 0) {
 
 // Fetch other variations under the same parent product
 $stmtVariants = $pdo->prepare("
-    SELECT v.id, v.nama_variasi, v.harga_jual_besar, v.sku_variasi, COALESCE(sc.stok, 0) AS stok_sistem, v.rasio_konversi
+    SELECT v.id, v.nama_variasi, v.harga_jual_besar, v.sku_variasi, COALESCE(sc.stok, 0) AS stok_sistem,
+           (SELECT COALESCE(SUM(sb.stok_sisa), 0) FROM stok_batch sb WHERE sb.id_variasi = v.id AND sb.no_batch NOT LIKE '%.%' AND sb.tgl_exp >= CURDATE()) AS stok_batch_utuh,
+           v.rasio_konversi
     FROM produk_variasi v
     LEFT JOIN stok_toko sc ON sc.id_variasi = v.id 
     WHERE v.id_produk_induk = ? AND v.is_active = 1
@@ -78,7 +87,7 @@ $siblings = $stmtVariants->fetchAll();
 
 // Related products in the same category
 $stmtRelated = $pdo->prepare("
-    SELECT v.id, i.nama_produk AS nama_induk, v.nama_variasi, v.harga_jual_besar AS harga_jual, i.gambar, v.satuan_besar
+    SELECT v.id, i.nama_produk AS nama_induk, v.nama_variasi, v.harga_jual_besar AS harga_jual, v.gambar AS gambar, v.satuan_besar
     FROM produk_variasi v
     JOIN produk_induk i ON v.id_produk_induk = i.id
     WHERE i.kategori = ? AND v.id != ? AND v.is_active = 1
@@ -186,8 +195,8 @@ $related = $stmtRelated->fetchAll();
                         <span class="text-[9px] text-zcMut">Standar Medis</span>
                     </div>
                     <div class="p-2 bg-slate-50 border border-slate-100 rounded-xl">
-                        <span class="block text-zc font-bold text-xs">Izin Edar</span>
-                        <span class="text-[9px] text-zcMut">Kemenkes RI</span>
+                        <span class="block text-zc font-bold text-xs">Resmi</span>
+                        <span class="text-[9px] text-zcMut">Produk Asli</span>
                     </div>
                     <div class="p-2 bg-slate-50 border border-slate-100 rounded-xl">
                         <span class="block text-slate-700 font-bold text-xs">Grosir B2B</span>
@@ -254,7 +263,9 @@ $related = $stmtRelated->fetchAll();
                         <?php foreach ($siblings as $sib):
                             $isCurrent = ($sib['id'] == $p['id']);
                             $sibRasio  = intval($sib['rasio_konversi']) ?: 1;
-                            $sibStokBox = floor(intval($sib['stok_sistem']) / $sibRasio);
+                            $sibStokBox = ($p['kategori'] === 'Obat')
+                                ? (int) floor(intval($sib['stok_batch_utuh']) / $sibRasio)
+                                : (int) floor(intval($sib['stok_sistem']) / $sibRasio);
                         ?>
                         <a href="produk.php?id=<?= $sib['id'] ?>" 
                            class="px-3 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-2 <?= $isCurrent ? 'bg-zc text-white border-zc shadow-sm' : 'bg-white text-zcTxt border-slate-200 hover:border-zc hover:bg-slate-50' ?>">
@@ -271,10 +282,10 @@ $related = $stmtRelated->fetchAll();
                 <!-- Stock Status Bar -->
                 <div class="flex items-center justify-between p-3 rounded-xl border <?= $stokClass ?> text-xs font-semibold mb-6">
                     <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full <?= $stokDot ?> animate-pulse"></span>
+                        <span class="w-2.5 h-2.5 rounded-full <?= $stokDot ?>"></span>
                         <span><?= htmlspecialchars($stokLabel) ?></span>
                     </div>
-                    <span class="text-[10px] opacity-80">Cabang: <?= htmlspecialchars($cabangAktif['nama'] ?? 'Utama') ?></span>
+                    <span class="text-[10px] opacity-80">ZenCare Medical</span>
                 </div>
 
                 <!-- Action Controls (Stepper + Add to Cart & Buy Now) -->
@@ -316,7 +327,7 @@ $related = $stmtRelated->fetchAll();
                 </div>
                 <?php else: ?>
                 <div class="p-4 bg-slate-100 border border-slate-200 rounded-2xl text-center text-slate-400 font-semibold text-xs mt-auto">
-                    Persediaan produk ini saat ini kosong di cabang terpilih. Silakan ganti cabang pengiriman di bagian atas untuk memeriksa stok lokasi lain.
+                    Persediaan produk ini saat ini sedang habis di toko. Silakan hubungi customer service kami untuk informasi ketersediaan.
                 </div>
                 <?php endif; ?>
 
@@ -343,7 +354,7 @@ $related = $stmtRelated->fetchAll();
                     </p>
                     <div class="p-3 bg-blue-50/60 border border-blue-100 rounded-xl text-[11px] text-blue-900 flex items-start gap-2 max-w-2xl">
                         <svg class="w-4 h-4 text-zc shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        <span>Untuk pembelian jumlah kontainer/karton besar rumah sakit, hubungi bagian logistik cabang untuk pengiriman kargo khusus.</span>
+                        <span>Untuk pembelian jumlah kontainer/karton besar rumah sakit, hubungi bagian logistik ZenCare Medical untuk pengiriman kargo khusus.</span>
                     </div>
                 </div>
 
@@ -382,9 +393,9 @@ $related = $stmtRelated->fetchAll();
                 <div id="tab-ship" class="hidden animate-fade-in">
                     <h4 class="font-bold text-zcTxt mb-3">Ketentuan Pengiriman B2B</h4>
                     <ul class="list-disc list-inside space-y-2 text-slate-600 mb-4">
-                        <li>Pengiriman diproses dari <strong>Cabang <?= htmlspecialchars($cabangAktif['nama'] ?? 'Utama') ?></strong>.</li>
+                        <li>Pengiriman diproses langsung dari <strong>Gudang Utama ZenCare Medical</strong>.</li>
                         <li>Estimasi pengiriman logistik medis menggunakan armada khusus berpendingin (jika diperlukan) memakan waktu 1-3 hari kerja.</li>
-                        <li>Pickup In-Store tersedia. Anda bisa mengambil pesanan langsung ke gudang cabang terdekat.</li>
+                        <li>Pickup In-Store tersedia. Anda dapat mengambil pesanan langsung ke toko fisik ZenCare Medical.</li>
                     </ul>
                     <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold mt-2">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 18V6a2 2 0 00-2-2H4a2 2 0 00-2 2v11a1 1 0 001 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 001-1v-3.65a1 1 0 00-.22-.624l-3.48-4.35A1 1 0 0017.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>

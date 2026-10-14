@@ -39,6 +39,9 @@ try {
     if (!$batchAsal || $batchAsal["stok_sisa"] < $qtyPcs) {
         throw new Exception("Stok box asal tidak mencukupi.");
     }
+    if ($batchAsal["tgl_exp"] < date('Y-m-d')) {
+        throw new Exception("Batch asal sudah kadaluarsa ({$batchAsal['tgl_exp']}). Tidak dapat dikonversi ke eceran.");
+    }
     
     // Kurangi batch asal
     $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$qtyPcs, $batchAsal["id"]]);
@@ -70,18 +73,18 @@ try {
     $sisaStokDus = floor($sisaStokEceran / $rasio);
     
     // 1. Kartu Stok DUS (Keluar)
-    $catatanKeluar = "Bongkar 1 " . $var["satuan_besar"] . " (Rp0 - Konversi POS)";
-    $stmtKartu1 = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Keluar', 'POS', 'Bongkar Dus', 1, ?, ?, ?)");
+    $catatanKeluar = "Bongkar 1 " . $var["satuan_besar"] . " (Rp0 - Konversi POS) [Batch: $noBatchAsal]";
+    $stmtKartu1 = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'besar', 'Keluar', 'POS', 'Bongkar Dus', 1, ?, ?, ?)");
     $stmtKartu1->execute([$idVariasi, $sisaStokDus, $catatanKeluar, $userId]);
     
     // 2. Kartu Stok ECERAN (Masuk)
     $catatanMasuk = "Lahir Sub-Batch $newBatchName (Masuk $qtyPcs " . $var["satuan_kecil"] . ")";
-    $stmtKartu2 = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Masuk', 'POS', 'Hasil Bongkar', ?, ?, ?, ?)");
+    $stmtKartu2 = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'kecil', 'Masuk', 'POS', 'Hasil Bongkar', ?, ?, ?, ?)");
     $stmtKartu2->execute([$idVariasi, $qtyPcs, $sisaStokEceran, $catatanMasuk, $userId]);
     
     // 3. Histori Konversi
-    $stmtHist = $pdo->prepare("INSERT INTO histori_konversi (id_variasi, batch_asal, batch_hasil, qty_box_buka, qty_pcs_hasil, dibuat_oleh) VALUES (?, ?, ?, 1, ?, ?)");
-    $stmtHist->execute([$idVariasi, $noBatchAsal, $newBatchName, $qtyPcs, $userId]);
+    $stmtHist = $pdo->prepare("INSERT INTO histori_konversi (id_variasi, batch_asal, batch_hasil, qty_box_buka, qty_pcs_hasil, sisa_dus_akhir, dibuat_oleh) VALUES (?, ?, ?, 1, ?, ?, ?)");
+    $stmtHist->execute([$idVariasi, $noBatchAsal, $newBatchName, $qtyPcs, $sisaStokDus, $userId]);
     
     $pdo->commit();
     echo json_encode([

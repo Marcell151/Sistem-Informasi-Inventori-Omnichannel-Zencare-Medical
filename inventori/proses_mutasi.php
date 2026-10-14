@@ -49,6 +49,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Penambahan Batch
                     $tglExp = $_POST['tgl_exp'] ?? '';
                     if (!$tglExp) throw new Exception("Tanggal Kedaluwarsa wajib diisi untuk penambahan Obat.");
+                    $minExpLimit = date('Y-m-d', strtotime('+90 days'));
+                    if ($tglExp < $minExpLimit) {
+                        $tglMinFmt = date('d/m/Y', strtotime($minExpLimit));
+                        $tglExpFmt = date('d/m/Y', strtotime($tglExp));
+                        throw new Exception("Masa kedaluwarsa Batch '$noBatch' ($tglExpFmt) ditolak! Standar SOP Logistik Farmasi mewajibkan masa kedaluwarsa minimal 3 bulan (90 hari) ke depan (Minimal tanggal $tglMinFmt).");
+                    }
                     
                     $pdo->prepare("INSERT INTO stok_batch (id_variasi, no_batch, tgl_exp, stok_sisa) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE stok_sisa = stok_sisa + ?")->execute([$idVariasi, $noBatch, $tglExp, $qty, $qty]);
                 }
@@ -67,7 +73,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($statusSn !== 'Tersedia') {
                         throw new Exception("Serial Number $snStr tidak tersedia atau sudah keluar.");
                     }
-                    $pdo->prepare("UPDATE unit_serial SET status = 'Mutasi/Rusak' WHERE id_variasi = ? AND serial_number = ?")->execute([$idVariasi, $snStr]);
+                    $catatanRusak = $alasan . ($catatan ? ': ' . $catatan : '');
+                    $newStatus = ($alasan === 'Klaim Garansi Pelanggan') ? 'Terjual' : 'Retur/Rusak';
+                    $pdo->prepare("UPDATE unit_serial SET status = ?, catatan = ? WHERE id_variasi = ? AND serial_number = ?")->execute([$newStatus, $catatanRusak, $idVariasi, $snStr]);
                 } else {
                     // Penambahan SN (bisa comma separated)
                     $snArr = array_filter(array_map('trim', explode(',', $snStr)));
@@ -137,7 +145,7 @@ $mutasiLog = $pdo->query("
 
 layoutHead('Mutasi Stok');
 layoutBodyOpen();
-layoutSidebar('mutasi_stok');
+layoutSidebar('mutasi');
 layoutHeader('Mutasi Stok Manual', 'Penyesuaian stok gudang karena selisih, retur, atau barang rusak.');
 ?>
 
@@ -158,8 +166,8 @@ layoutHeader('Mutasi Stok Manual', 'Penyesuaian stok gudang karena selisih, retu
             <form method="POST" class="space-y-4">
                 <div>
                     <label class="block text-sm font-semibold text-zcTxt mb-1.5">Pilih Produk *</label>
-                    <select name="id_variasi" required class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
-                        <option value="">-- Pilih Barang --</option>
+                    <select name="id_variasi" id="select_mutasi_produk" required class="select2 w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                        <option value="">-- Cari &amp; Pilih Barang --</option>
                         <?php foreach ($produkList as $p): ?>
                             <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['label']) ?></option>
                         <?php endforeach; ?>
@@ -192,11 +200,13 @@ layoutHeader('Mutasi Stok Manual', 'Penyesuaian stok gudang karena selisih, retu
                     <label class="block text-sm font-semibold text-zcTxt mb-1.5">Alasan *</label>
                     <select name="alasan" required class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                         <option value="">-- Pilih Alasan --</option>
+                        <option value="Barang Rusak / Cacat Pabrik">Barang Rusak / Cacat Pabrik</option>
+                        <option value="Barang Kadaluwarsa">Barang Kadaluwarsa</option>
+                        <option value="Retur ke Supplier">Retur ke Supplier (Unit Rusak)</option>
+                        <option value="Penggantian Unit dari Supplier">Penggantian Unit dari Supplier (Baru)</option>
                         <option value="Selisih Stock Opname">Selisih Stock Opname</option>
-                        <option value="Barang Rusak / Kadaluwarsa">Barang Rusak / Kadaluwarsa</option>
-                        <option value="Retur ke Supplier">Retur ke Supplier</option>
-                        <option value="Klaim Garansi">Klaim Garansi Pelanggan</option>
-                        <option value="Sampel / Bonus">Sampel / Penggunaan Internal</option>
+                        <option value="Klaim Garansi Pelanggan">Klaim Garansi Pelanggan</option>
+                        <option value="Sampel / Penggunaan Internal">Sampel / Penggunaan Internal</option>
                         <option value="Lainnya">Lainnya...</option>
                     </select>
                 </div>
@@ -341,7 +351,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-zcTxt mb-1">Tgl Kedaluwarsa *</label>
-                                        <input type="date" name="tgl_exp" required class="w-full text-sm border border-zcBrd rounded-lg px-3 py-2 bg-white">
+                                        <input type="date" name="tgl_exp" min="<?= date('Y-m-d', strtotime('+90 days')) ?>" required class="w-full text-sm border border-zcBrd rounded-lg px-3 py-2 bg-white">
+                                        <div class="text-[9px] text-amber-700 mt-1">Min. +90 Hari (3 Bulan)</div>
                                     </div>
                                  </div>`;
                     }
@@ -378,6 +389,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     selectProduk.addEventListener('change', checkDynamicInputs);
     selectJenis.addEventListener('change', checkDynamicInputs);
+
+    if (window.jQuery && $.fn.select2) {
+        $('#select_mutasi_produk').select2({
+            placeholder: '-- Cari & Pilih Barang --',
+            width: '100%'
+        }).on('change', function() {
+            checkDynamicInputs();
+        });
+    }
 });
 </script>
 

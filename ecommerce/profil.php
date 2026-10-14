@@ -71,26 +71,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             throw new Exception("Hanya pesanan berstatus Menunggu Pembayaran yang dapat dibatalkan.");
         }
 
-        // Update status ke Dibatalkan
-        $pdo->prepare("UPDATE penjualan SET status_pesanan = 'Dibatalkan' WHERE no_invoice = ?")->execute([$cancelInvoice]);
-
-        // Kembalikan Stok
-        $stmtItems = $pdo->prepare("SELECT d.id_variasi, d.qty, v.rasio_konversi, v.satuan_besar FROM detail_penjualan d JOIN produk_variasi v ON d.id_variasi = v.id WHERE d.id_penjualan = ?");
-        $stmtItems->execute([$orderToCancel['id']]);
-        $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
-
-        foreach ($items as $item) {
-            $idVar = $item['id_variasi'];
-            $qtyBox = intval($item['qty']);
-            $rasio = intval($item['rasio_konversi']) ?: 1;
-            $qtyPotong = $qtyBox * $rasio;
-            $satBesar = $item['satuan_besar'];
-
-            $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi = ?")->execute([$qtyPotong, $idVar]);
-        }
+        // Batalkan dan pulihkan seluruh stok toko, stok batch FEFO, dan unit serial
+        batalkanSatuPesananInternal($pdo, $orderToCancel['id']);
 
         $pdo->commit();
-        $successMsg = "Pesanan $cancelInvoice berhasil dibatalkan dan stok telah dikembalikan.";
+        $successMsg = "Pesanan $cancelInvoice berhasil dibatalkan dan seluruh stok reserved telah dikembalikan.";
     } catch (Exception $e) {
         $pdo->rollBack();
         $errorMsg = "Gagal membatalkan pesanan: " . $e->getMessage();
@@ -134,19 +119,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
+// Batalkan pesanan 'Menunggu Pembayaran' yang kadaluarsa & pulihkan stok
+batalkanPesananKadaluarsa($pdo);
+
 // Fetch current user data
 $stmtUser = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmtUser->execute([$userId]);
 $user = $stmtUser->fetch();
 
-// Fetch orders history for this customer
+// Status filter & counts for this customer
+$statusFilter = $_GET['status'] ?? 'semua';
+$validStatuses = ['Menunggu Pembayaran', 'Diproses', 'Dikirim', 'Siap Diambil', 'Selesai', 'Dibatalkan'];
+
+$countStatusStmt = $pdo->prepare("
+    SELECT status_pesanan, COUNT(*) as cnt 
+    FROM penjualan 
+    WHERE id_user = ? 
+    GROUP BY status_pesanan
+");
+$countStatusStmt->execute([$userId]);
+$statusCounts = $countStatusStmt->fetchAll(PDO::FETCH_KEY_PAIR);
+$totalCustomerOrders = array_sum($statusCounts);
+
+// Pagination setup (10 orders per page)
+$perPage = 10;
+$page = max(1, intval($_GET['page'] ?? 1));
+
+$whereSql = "WHERE id_user = ?";
+$paramsSql = [$userId];
+if (in_array($statusFilter, $validStatuses)) {
+    $whereSql .= " AND status_pesanan = ?";
+    $paramsSql[] = $statusFilter;
+}
+
+$countFilteredStmt = $pdo->prepare("SELECT COUNT(*) FROM penjualan $whereSql");
+$countFilteredStmt->execute($paramsSql);
+$filteredCount = (int) $countFilteredStmt->fetchColumn();
+
+$totalPages = max(1, (int) ceil($filteredCount / $perPage));
+if ($page > $totalPages) $page = $totalPages;
+$offset = ($page - 1) * $perPage;
+
+// Fetch paginated orders history for this customer (Latest first)
 $stmtOrders = $pdo->prepare("
     SELECT p.*, 'Pusat' AS nama_cabang
     FROM penjualan p
-    WHERE p.id_user = ?
+    $whereSql
     ORDER BY p.id DESC
+    LIMIT $perPage OFFSET $offset
 ");
-$stmtOrders->execute([$userId]);
+$stmtOrders->execute($paramsSql);
 $orders = $stmtOrders->fetchAll();
 
 // Pre-fetch order details for all customer orders
@@ -248,14 +270,39 @@ if (!empty($orderIds)) {
         <!-- ── RIGHT: Order History (8 cols) ── -->
         <div class="lg:col-span-8 bg-white border border-slate-100 rounded-3xl p-6 sm:p-7 shadow-sm">
             
-            <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
                 <div>
                     <h2 class="text-base font-extrabold text-zcTxt">Riwayat Pesanan Saya</h2>
-                    <p class="text-sm text-zcMut">Lihat status dan detail pesanan yang telah Anda buat</p>
+                    <p class="text-sm text-zcMut">Lihat status dan rincian transaksi pesanan online Anda</p>
                 </div>
-                <span class="text-xs font-extrabold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full">
-                    Total: <?= count($orders) ?> Pesanan
+                <span class="text-xs font-extrabold bg-slate-100 text-slate-700 px-3 py-1 rounded-full">
+                    <?= $filteredCount ?> Pesanan
                 </span>
+            </div>
+
+            <!-- Filter Status Pills -->
+            <div class="flex flex-wrap items-center gap-2 mb-6 text-xs">
+                <a href="?status=semua" class="px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition <?= $statusFilter === 'semua' ? 'bg-zc text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
+                    Semua (<?= $totalCustomerOrders ?>)
+                </a>
+                <a href="?status=Menunggu+Pembayaran" class="px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition <?= $statusFilter === 'Menunggu Pembayaran' ? 'bg-amber-500 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
+                    Menunggu Bayar (<?= $statusCounts['Menunggu Pembayaran'] ?? 0 ?>)
+                </a>
+                <a href="?status=Diproses" class="px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition <?= $statusFilter === 'Diproses' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
+                    Diproses (<?= $statusCounts['Diproses'] ?? 0 ?>)
+                </a>
+                <a href="?status=Dikirim" class="px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition <?= $statusFilter === 'Dikirim' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
+                    Dikirim (<?= $statusCounts['Dikirim'] ?? 0 ?>)
+                </a>
+                <a href="?status=Siap+Diambil" class="px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition <?= $statusFilter === 'Siap Diambil' ? 'bg-teal-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
+                    Siap Diambil (<?= $statusCounts['Siap Diambil'] ?? 0 ?>)
+                </a>
+                <a href="?status=Selesai" class="px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition <?= $statusFilter === 'Selesai' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
+                    Selesai (<?= $statusCounts['Selesai'] ?? 0 ?>)
+                </a>
+                <a href="?status=Dibatalkan" class="px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition <?= $statusFilter === 'Dibatalkan' ? 'bg-rose-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
+                    Dibatalkan (<?= $statusCounts['Dibatalkan'] ?? 0 ?>)
+                </a>
             </div>
 
             <?php if (!empty($orders)): ?>
@@ -320,6 +367,25 @@ if (!empty($orderIds)) {
                             </div>
                         </div>
 
+                        <?php if ($status === 'Menunggu Pembayaran'): 
+                            $cooldownDetik = (defined('RESERVASI_COOLDOWN_MENIT') ? RESERVASI_COOLDOWN_MENIT : 120) * 60;
+                            $expireTime = strtotime($ord['created_at']) + $cooldownDetik;
+                            $sisaDetik = max(0, $expireTime - time());
+                            $cooldownLabel = defined('RESERVASI_COOLDOWN_MENIT') && RESERVASI_COOLDOWN_MENIT < 60 
+                                ? RESERVASI_COOLDOWN_MENIT . ' Menit (Mode Uji Coba)' 
+                                : round($cooldownDetik / 3600) . ' Jam';
+                        ?>
+                        <div class="mt-2.5 mb-1 p-2.5 rounded-xl bg-amber-50/90 border border-amber-200 text-amber-900 text-[11px] flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 shadow-2xs">
+                            <div class="flex items-center gap-1.5 font-medium">
+                                <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                <span>Stok barang telah dicadangkan (reserved). Batas waktu pembayaran (<?= $cooldownLabel ?>):</span>
+                            </div>
+                            <div class="flex items-center gap-1 self-start sm:self-auto font-mono font-black text-xs px-2.5 py-0.5 rounded-lg bg-amber-200/70 text-amber-950 countdown-timer shrink-0" data-seconds="<?= $sisaDetik ?>">
+                                <span class="countdown-text">--:--:--</span>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
                         <!-- Purchased Items List -->
                         <div class="py-3 text-xs space-y-1.5">
                             <?php foreach ($items as $it): ?>
@@ -354,6 +420,36 @@ if (!empty($orderIds)) {
                     </div>
                     <?php endforeach; ?>
                 </div>
+
+                <!-- Pagination Controls -->
+                <?php if ($totalPages > 1): ?>
+                <div class="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                    <span class="text-zcMut font-medium">
+                        Menampilkan <?= ($page - 1) * $perPage + 1 ?> – <?= min($page * $perPage, $filteredCount) ?> dari <?= $filteredCount ?> pesanan
+                    </span>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <?php if ($page > 1): ?>
+                            <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-zcTxt hover:bg-slate-50 font-semibold transition">&larr; Sebelumnya</a>
+                        <?php else: ?>
+                            <span class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-400 font-semibold cursor-not-allowed">&larr; Sebelumnya</span>
+                        <?php endif; ?>
+
+                        <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+                            <?php if ($p == 1 || $p == $totalPages || ($p >= $page - 2 && $p <= $page + 2)): ?>
+                                <a href="?<?= http_build_query(array_merge($_GET, ['page' => $p])) ?>" class="w-8 h-8 flex items-center justify-center rounded-xl border text-xs font-bold transition <?= $p == $page ? 'bg-zc border-zc text-white shadow-xs' : 'border-slate-200 bg-white text-zcTxt hover:bg-slate-50' ?>"><?= $p ?></a>
+                            <?php elseif ($p == 2 || $p == $totalPages - 1): ?>
+                                <span class="px-1 text-slate-400 font-bold">...</span>
+                            <?php endif; ?>
+                        <?php endfor; ?>
+
+                        <?php if ($page < $totalPages): ?>
+                            <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-zcTxt hover:bg-slate-50 font-semibold transition">Selanjutnya &rarr;</a>
+                        <?php else: ?>
+                            <span class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-400 font-semibold cursor-not-allowed">Selanjutnya &rarr;</span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
             <?php else: ?>
                 <div class="py-16 text-center text-slate-400">
                     <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -400,6 +496,40 @@ if (!empty($orderIds)) {
             }
         });
     }
+
+    function startOrderCountdowns() {
+        const timers = document.querySelectorAll('.countdown-timer');
+        if (!timers.length) return;
+        
+        function update() {
+            let hasActive = false;
+            timers.forEach(t => {
+                let sec = parseInt(t.getAttribute('data-seconds'), 10);
+                if (isNaN(sec)) return;
+                const txt = t.querySelector('.countdown-text') || t;
+                if (sec <= 0) {
+                    txt.innerHTML = '<span class="text-rose-600 font-bold">Waktu Habis (Otomatis Batal)</span>';
+                    if (!t.dataset.expiredTriggered) {
+                        t.dataset.expiredTriggered = '1';
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                } else {
+                    hasActive = true;
+                    sec--;
+                    t.setAttribute('data-seconds', sec);
+                    const h = Math.floor(sec / 3600).toString().padStart(2, '0');
+                    const m = Math.floor((sec % 3600) / 60).toString().padStart(2, '0');
+                    const s = (sec % 60).toString().padStart(2, '0');
+                    txt.textContent = `${h}:${m}:${s}`;
+                }
+            });
+            if (hasActive) {
+                setTimeout(update, 1000);
+            }
+        }
+        update();
+    }
+    document.addEventListener('DOMContentLoaded', startOrderCountdowns);
 </script>
 
 <?php require_once __DIR__ . '/footer.php'; ?>

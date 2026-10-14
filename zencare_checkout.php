@@ -59,6 +59,44 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
       }
     </script>
 
+    <!-- jQuery & Select2 -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <style>
+      .select2-container--default .select2-selection--single {
+        height: 42px !important;
+        border: 1px solid #e4e9f0 !important;
+        border-radius: 0.75rem !important;
+        padding: 6px 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        background-color: #fff !important;
+      }
+      .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #1e293b !important;
+        font-size: 0.75rem !important;
+        padding-left: 0 !important;
+      }
+      .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px !important;
+        right: 8px !important;
+      }
+      .select2-dropdown {
+        border: 1px solid #e4e9f0 !important;
+        border-radius: 0.75rem !important;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1) !important;
+        overflow: hidden !important;
+      }
+      .select2-results__option {
+        font-size: 0.75rem !important;
+        padding: 8px 12px !important;
+      }
+      .select2-results__option--highlighted {
+        background-color: #1a75d2 !important;
+      }
+    </style>
+
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -223,6 +261,12 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                     </div>
                     
                     <!-- Interactive Editable Cart Summary List -->
+                    <div id="stock_sync_alert" class="hidden mb-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+                        <div class="flex items-start gap-2">
+                            <span class="text-base leading-none">⚠️</span>
+                            <div id="stock_sync_text" class="flex-1 font-medium leading-relaxed"></div>
+                        </div>
+                    </div>
                     <div id="cart_summary_list" class="space-y-3 max-h-64 overflow-y-auto pr-1 mb-4">
                         <!-- Loaded via JavaScript -->
                     </div>
@@ -370,6 +414,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                             html += `<option value="${id}" ${sel}>${name}</option>`;
                         });
                         provSelect.innerHTML = html;
+                        initSelect2Provinsi();
                         loadCitiesAPI();
                     } else { throw new Error("No data"); }
                 })
@@ -380,14 +425,28 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                         <option value="12">JAWA TENGAH</option>
                         <option value="5">JAWA BARAT</option>
                     `;
+                    initSelect2Provinsi();
                     loadCitiesAPI();
                 });
+        }
+
+        function initSelect2Provinsi() {
+            if (window.jQuery && $.fn.select2) {
+                $('#provinsi_select').select2({ placeholder: '-- Cari & Pilih Provinsi --', width: '100%' })
+                    .off('change.select2custom')
+                    .on('change.select2custom', function() {
+                        loadCitiesAPI();
+                    });
+            }
         }
 
         function loadCitiesAPI() {
             let provId = document.getElementById('provinsi_select').value || '18';
             let citySelect = document.getElementById('kota_select');
             citySelect.disabled = true;
+            if (window.jQuery && $.fn.select2) {
+                $('#kota_select').prop('disabled', true);
+            }
             citySelect.innerHTML = '<option value="">Memuat kota...</option>';
 
             fetch('api/rajaongkir.php?action=cities&province_id=' + provId)
@@ -404,6 +463,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                         });
                         citySelect.innerHTML = html;
                         citySelect.disabled = false;
+                        initSelect2Kota();
                         onCityChange();
                     } else { throw new Error("No cities"); }
                 })
@@ -415,8 +475,19 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                         <option value="393">BATU</option>
                     `;
                     citySelect.disabled = false;
+                    initSelect2Kota();
                     onCityChange();
                 });
+        }
+
+        function initSelect2Kota() {
+            if (window.jQuery && $.fn.select2) {
+                $('#kota_select').prop('disabled', false).select2({ placeholder: '-- Cari & Pilih Kota --', width: '100%' })
+                    .off('change.select2custom')
+                    .on('change.select2custom', function() {
+                        onCityChange();
+                    });
+            }
         }
 
         function onCityChange() {
@@ -498,7 +569,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
 
             serviceContainer.classList.remove('hidden');
             mapPanel.classList.remove('hidden');
-            let cart = JSON.parse(localStorage.getItem('zc_cart') || '[]');
+            let cart = getCheckoutCart();
             let totalWeight = cart.reduce((sum, item) => sum + ((parseInt(item.berat) || 100) * (parseInt(item.qty) || 1)), 0);
             if (totalWeight <= 0) totalWeight = 1000;
 
@@ -570,8 +641,14 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             updateTotalsDisplay();
         }
 
-        function updateTotalsDisplay() {
+        function getCheckoutCart() {
             let cart = JSON.parse(localStorage.getItem('zc_cart') || '[]');
+            let selected = cart.filter(i => i.selected !== false);
+            return (selected.length > 0) ? selected : cart;
+        }
+
+        function updateTotalsDisplay() {
+            let cart = getCheckoutCart();
             let subtotal = cart.reduce((sum, i) => sum + ((parseFloat(i.harga) || 0) * (parseInt(i.qty) || 1)), 0);
             let totalWeight = cart.reduce((sum, i) => sum + ((parseInt(i.berat) || 100) * (parseInt(i.qty) || 1)), 0);
             let grandTotal = subtotal + currentOngkir;
@@ -609,7 +686,6 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             }
         }
 
-
         function removeCartItem(id) {
             let cart = JSON.parse(localStorage.getItem('zc_cart') || '[]');
             cart = cart.filter(i => (i.cartId || i.id) != id);
@@ -619,14 +695,14 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
         }
 
         function renderCartItems() {
-            let cart = JSON.parse(localStorage.getItem('zc_cart') || '[]');
+            let cart = getCheckoutCart();
             let container = document.getElementById('cart_summary_list');
 
             if (!Array.isArray(cart) || cart.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-6">
-                        <p class="text-xs text-zcMut mb-3">Keranjang belanja Anda kosong.</p>
-                        <a href="ecommerce/index.php" class="inline-block text-xs font-semibold px-4 py-2 bg-zc text-white rounded-xl">Lihat Produk</a>
+                        <p class="text-xs text-zcMut mb-3">Tidak ada produk yang dipilih untuk checkout.</p>
+                        <a href="ecommerce/cart.php" class="inline-block text-xs font-semibold px-4 py-2 bg-zc text-white rounded-xl">Buka Keranjang</a>
                     </div>
                 `;
                 document.getElementById('btn_checkout_nanti').disabled = true;
@@ -641,14 +717,24 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 let qty = parseInt(item.qty) || 1;
                 let weight = parseInt(item.berat) || 100;
                 let sub = price * qty;
-                let satLabel = item.satuan || item.satuan_label || item.satuan_besar || 'Pcs';
+                let satLabel = item.satuan || item.satuan_label || item.satuan_besar || 'Box';
                 let itemName = item.nama || item.name || 'Produk';
+                let maxStok = parseInt(item.max) || 0;
+
+                let rawImg = item.gambar || item.image || '';
+                let itemImg = rawImg.startsWith('http') ? rawImg : (rawImg.replace(/^\.\.\//, '') || 'assets/img/no-image.png');
 
                 html += `
-                    <div class="flex items-center justify-between text-xs border-b border-zcBrd/60 pb-2.5">
+                    <div class="flex items-center justify-between text-xs border-b border-zcBrd/60 pb-2.5 gap-2.5">
+                        <div class="w-11 h-11 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shrink-0 overflow-hidden">
+                            <img src="${itemImg}" class="w-full h-full object-contain mix-blend-multiply" alt="${itemName}" onerror="this.src='assets/img/no-image.png'">
+                        </div>
                         <div class="pr-2 min-w-0 flex-1">
                             <span class="font-bold text-zcTxt block truncate leading-snug">${itemName}</span>
                             <span class="text-zcMut text-[11px]">Rp ${price.toLocaleString('id-ID')} / ${satLabel} (${weight}g)</span>
+                            <span class="text-[10px] font-bold ${maxStok <= 0 ? 'text-rose-600' : (maxStok <= 5 ? 'text-amber-600' : 'text-emerald-600')} block">
+                                Sisa Stok: ${maxStok > 0 ? maxStok + ' ' + satLabel : 'Habis'}
+                            </span>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
                             <div class="flex items-center gap-1 bg-slate-100 border border-zcBrd rounded-lg px-1.5 py-0.5">
@@ -666,6 +752,17 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             updateTotalsDisplay();
         }
 
+        function clearPurchasedFromCart(purchasedItems) {
+            try {
+                let allCart = JSON.parse(localStorage.getItem('zc_cart') || '[]');
+                let purchasedKeys = new Set(purchasedItems.map(p => String(p.cartId || p.id || '')));
+                let remainingCart = allCart.filter(item => !purchasedKeys.has(String(item.cartId || item.id || '')));
+                localStorage.setItem('zc_cart', JSON.stringify(remainingCart));
+            } catch (e) {
+                console.error('Error clearing purchased cart items:', e);
+            }
+        }
+
         function prosesCheckout(isPayNow) {
             let nama = document.getElementById('nama_pembeli').value.trim();
             let phone = document.getElementById('phone').value.trim();
@@ -674,7 +771,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             let citySelect = document.getElementById('kota_select');
             let courier = document.getElementById('courier_select').value;
             let saveAddress = document.getElementById('save_profile_address')?.checked ?? false;
-            let cart = JSON.parse(localStorage.getItem('zc_cart') || '[]');
+            let cart = getCheckoutCart();
 
             if (!nama || !phone || !alamat) {
                 alert('Harap lengkapi nama penerima, nomor telepon, dan alamat pengiriman!');
@@ -735,34 +832,34 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                                 .then(res => res.json())
                                 .then(syncData => {
                                     alert('Pembayaran Berhasil! Order ID: ' + data.order_id);
-                                    localStorage.removeItem('zc_cart');
+                                    clearPurchasedFromCart(cart);
                                     window.location.href = 'ecommerce/profil.php';
                                 }).catch(err => {
                                     alert('Pembayaran Berhasil, namun gagal sinkronisasi ke server lokal. Harap hubungi admin.');
-                                    localStorage.removeItem('zc_cart');
+                                    clearPurchasedFromCart(cart);
                                     window.location.href = 'ecommerce/profil.php';
                                 });
                         },
                         onPending: function(result) {
                             alert('Menunggu Pembayaran. Order ID: ' + data.order_id);
-                            localStorage.removeItem('zc_cart');
+                            clearPurchasedFromCart(cart);
                             window.location.href = 'ecommerce/profil.php';
                         },
                         onError: function(result) {
                             alert('Transaksi Dibatalkan / Gagal.');
-                            localStorage.removeItem('zc_cart');
+                            clearPurchasedFromCart(cart);
                             window.location.href = 'ecommerce/profil.php';
                         },
                         onClose: function() {
                             alert('Anda menutup halaman pembayaran. Pesanan Anda tersimpan dan dapat dibayar nanti melalui menu Riwayat Pesanan.');
-                            localStorage.removeItem('zc_cart');
+                            clearPurchasedFromCart(cart);
                             window.location.href = 'ecommerce/profil.php';
                         }
                     });
                     } else {
                         // isPayNow === false
                         alert('Pesanan berhasil dibuat! Anda dapat membayarnya nanti melalui Profil Anda.');
-                        localStorage.removeItem('zc_cart');
+                        clearPurchasedFromCart(cart);
                         window.location.href = 'ecommerce/profil.php';
                     }
                 } else {
@@ -778,10 +875,61 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             });
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        async function validateLiveStock() {
+            let cart = JSON.parse(localStorage.getItem('zc_cart') || '[]');
+            if (!Array.isArray(cart) || cart.length === 0) return;
+            try {
+                let res = await fetch('api/cek_stok_keranjang.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cart: cart })
+                });
+                let data = await res.json();
+                if (data.status === 'success') {
+                    if (data.stock_map) {
+                        cart.forEach(item => {
+                            let itemKey = item.cartId || item.id;
+                            if (data.stock_map[itemKey]) {
+                                item.max = data.stock_map[itemKey].max_dus;
+                            }
+                        });
+                    }
+                    if (data.has_adjustments && data.adjusted_items.length > 0) {
+                        let msgList = [];
+                        data.adjusted_items.forEach(adj => {
+                            let idx = cart.findIndex(i => (i.cartId || i.id) == adj.id);
+                            if (idx > -1) {
+                                if (adj.new_qty <= 0) {
+                                    cart.splice(idx, 1);
+                                    msgList.push(`• <b>${adj.nama}</b>: Habis terjual di toko fisik, produk dihapus dari keranjang.`);
+                                } else {
+                                    cart[idx].qty = adj.new_qty;
+                                    cart[idx].max = adj.max_dus;
+                                    msgList.push(`• <b>${adj.nama}</b>: Stok fisik tersisa ${adj.max_dus} ${adj.satuan}. Jumlah disesuaikan menjadi ${adj.new_qty}.`);
+                                }
+                            }
+                        });
+                        localStorage.setItem('zc_cart', JSON.stringify(cart));
+                        let alertBox = document.getElementById('stock_sync_alert');
+                        let alertText = document.getElementById('stock_sync_text');
+                        if (alertBox && alertText) {
+                            alertText.innerHTML = `<strong>Penyesuaian Stok Terkini:</strong><br>${msgList.join('<br>')}`;
+                            alertBox.classList.remove('hidden');
+                        }
+                        renderCartItems();
+                        calculateShippingCost();
+                    }
+                }
+            } catch (e) {
+                console.warn('Gagal sinkronisasi stok live:', e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
             initLeafletMap();
             renderCartItems();
             loadProvincesAPI();
+            await validateLiveStock();
         });
     </script>
 </body>

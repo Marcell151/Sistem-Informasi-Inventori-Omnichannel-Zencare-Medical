@@ -125,7 +125,7 @@ try {
         $idVariasi = intval($cartItem['id']);
         $qty = intval($cartItem['qty']);
         
-        $stmtP = $pdo->prepare("SELECT pv.harga_jual_besar, pv.rasio_konversi, pi.kategori 
+        $stmtP = $pdo->prepare("SELECT pv.harga_jual_besar, pv.rasio_konversi, pv.satuan_besar, pv.satuan_kecil, pi.kategori 
                                 FROM produk_variasi pv 
                                 JOIN produk_induk pi ON pv.id_produk_induk = pi.id 
                                 WHERE pv.id = ?");
@@ -133,6 +133,8 @@ try {
         $rowP = $stmtP->fetch();
         $harga = $rowP['harga_jual_besar'] ?? 0;
         $rasio = max(1, intval($rowP['rasio_konversi'] ?: 1));
+        $satBesar = $rowP['satuan_besar'] ?? 'Karton';
+        $satKecil = $rowP['satuan_kecil'] ?? 'Botol';
         $kategori = $rowP['kategori'] ?? '';
 
         // Potong stok fisik cabang (satuan kecil = qty Box * rasio)
@@ -141,7 +143,7 @@ try {
         
         // FEFO Logic untuk Obat (E-Commerce khusus Grosir/Box, jadi wajib Batch Induk, abaikan Sub-Batch eceran)
         if ($kategori === 'Obat') {
-            $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 AND no_batch NOT LIKE '%.%' ORDER BY tgl_exp ASC FOR UPDATE");
+            $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 AND no_batch NOT LIKE '%.%' AND tgl_exp >= CURDATE() ORDER BY tgl_exp ASC FOR UPDATE");
             $stmtBatch->execute([$idVariasi]);
             $batches = $stmtBatch->fetchAll();
             
@@ -152,11 +154,16 @@ try {
                 $potongBatch = min($b['stok_sisa'], $sisaPotong);
                 $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$potongBatch, $b['id']]);
                 
-                $catatanLogistik[] = $b['no_batch'] . " ({$potongBatch}x)";
+                if ($rasio > 1 && $potongBatch >= $rasio) {
+                    $dusCount = floor($potongBatch / $rasio);
+                    $catatanLogistik[] = $b['no_batch'] . " ({$dusCount} {$satBesar} = {$potongBatch} {$satKecil})";
+                } else {
+                    $catatanLogistik[] = $b['no_batch'] . " ({$potongBatch}x)";
+                }
                 $sisaPotong -= $potongBatch;
             }
             if ($sisaPotong > 0) {
-                throw new Exception("Stok Batch Obat tidak mencukupi untuk dipotong FEFO secara berurutan.");
+                throw new Exception("Stok batch obat yang masih aktif / belum kadaluarsa tidak mencukupi untuk dipotong FEFO.");
             }
         }
 

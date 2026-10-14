@@ -96,8 +96,8 @@ layoutHeader('Gudang Karantina Barang Cacat', 'Isolasi barang defect/retur garan
             <form method="POST" class="space-y-4" onsubmit="return confirm('Pindahkan barang ke karantina? Stok akan dikurangi.')">
                 <div>
                     <label class="block text-xs font-bold text-zcText mb-1.5">Pilih Produk *</label>
-                    <select name="id_variasi" required class="w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
-                        <option value="">-- Pilih Barang --</option>
+                    <select name="id_variasi" required class="select2 w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
+                        <option value="">-- Cari & Pilih Barang --</option>
                         <?php foreach ($produkList as $p): ?>
                             <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['label']) ?> (Stok: <?= $p['stok'] ?>)</option>
                         <?php endforeach; ?>

@@ -5,6 +5,12 @@ require_once __DIR__ . '/env_loader.php';
 // Load environmental variables from root workspace directory
 loadEnv(__DIR__ . '/../.env');
 
+// Timezone Configuration (WIB / GMT+7)
+date_default_timezone_set('Asia/Jakarta');
+
+// Cooldown Reservasi Stok E-Commerce (Standar: 120 Menit / 2 Jam)
+define('RESERVASI_COOLDOWN_MENIT', 120);
+
 // 1. DATABASE CONFIGURATION
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
 define('DB_NAME', getenv('DB_NAME') ?: 'db_inventory'); // db_inventory = database baru Final TA

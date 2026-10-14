@@ -80,8 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $satKecil = trim($_POST['satuan_kecil'] ?? 'Pcs');
         $satBesar = trim($_POST['satuan_besar'] ?? 'Box');
         $rasio    = intval($_POST['rasio_konversi'] ?? 1) ?: 1;
-        $hrgKecil = floatval($_POST['harga_jual_kecil'] ?? 0);
-        $hrgBesar = floatval($_POST['harga_jual_besar'] ?? 0);
+        $hrgKecil = floatval(preg_replace('/[^0-9]/', '', (string)($_POST['harga_jual_kecil'] ?? 0)));
+        $hrgBesar = floatval(preg_replace('/[^0-9]/', '', (string)($_POST['harga_jual_besar'] ?? 0)));
 
         $berat    = intval($_POST['berat'] ?? 100);
         $minStokKecil  = intval($_POST['stok_minimum_kecil'] ?? 0);
@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($idInduk && $sku && $namaVar && $hrgKecil > 0) {
             try {
                 $pdo->prepare("INSERT INTO produk_variasi (id_produk_induk,sku_variasi,nama_variasi,satuan_kecil,satuan_besar,rasio_konversi,harga_jual_kecil,harga_jual_besar,berat,stok_minimum_kecil,stok_minimum_besar,gambar,tampil_di_online,is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,1)")
-                    ->execute([$idInduk,$sku,$namaVar,$satKecil,$satBesar,$rasio,$hrgKecil,$hrgBesar,$berat,$minStok,$gambar,$tampil]);
+                    ->execute([$idInduk,$sku,$namaVar,$satKecil,$satBesar,$rasio,$hrgKecil,$hrgBesar,$berat,$minStokKecil,$minStokBesar,$gambar,$tampil]);
                 
                 // Auto-init stok 0
                 $newVarId  = $pdo->lastInsertId();
@@ -132,8 +132,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $satKecil = trim($_POST['satuan_kecil'] ?? 'Pcs');
         $satBesar = trim($_POST['satuan_besar'] ?? 'Box');
         $rasio    = intval($_POST['rasio_konversi'] ?? 1) ?: 1;
-        $hrgKecil = floatval($_POST['harga_jual_kecil'] ?? 0);
-        $hrgBesar = floatval($_POST['harga_jual_besar'] ?? 0);
+        $hrgKecil = floatval(preg_replace('/[^0-9]/', '', (string)($_POST['harga_jual_kecil'] ?? 0)));
+        $hrgBesar = floatval(preg_replace('/[^0-9]/', '', (string)($_POST['harga_jual_besar'] ?? 0)));
         $berat = intval($_POST['berat'] ?? 100);
         $minStokKecil  = intval($_POST['stok_minimum_kecil'] ?? 0);
         $minStokBesar  = intval($_POST['stok_minimum_besar'] ?? 0);
@@ -174,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($idVal && $sku && $nama && $hrgKecil > 0) {
             try {
                 $pdo->prepare("UPDATE produk_variasi SET sku_variasi=?, nama_variasi=?, satuan_kecil=?, satuan_besar=?, rasio_konversi=?, harga_jual_kecil=?, harga_jual_besar=?, berat=?, stok_minimum_kecil=?, stok_minimum_besar=?, gambar=?, tampil_di_online=? WHERE id=?")
-                    ->execute([$sku, $nama, $satKecil, $satBesar, $rasio, $hrgKecil, $hrgBesar, $berat, $minStok, $gambar, $tampil, $idVal]);
+                    ->execute([$sku, $nama, $satKecil, $satBesar, $rasio, $hrgKecil, $hrgBesar, $berat, $minStokKecil, $minStokBesar, $gambar, $tampil, $idVal]);
                 $msg = "Variasi '$nama' berhasil diperbarui."; $msgType = 'success';
             } catch (Exception $e) { $msg = "Error: " . $e->getMessage(); $msgType = 'error'; }
         } else { $msg = "Semua field variasi wajib diisi!"; $msgType = 'error'; }
@@ -274,8 +274,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch data
-$produkInduk = $pdo->query("SELECT * FROM produk_induk ORDER BY id DESC")->fetchAll();
+// Fetch data with Category Filter and Sorting: Obat (A-Z) first, then Alkes (A-Z)
+$katFilter = $_GET['kategori'] ?? 'semua';
+$searchQ   = trim($_GET['q'] ?? '');
+
+$sqlInduk = "SELECT * FROM produk_induk WHERE 1=1";
+$paramsInduk = [];
+
+if ($katFilter === 'Obat') {
+    $sqlInduk .= " AND kategori = 'Obat'";
+} elseif ($katFilter === 'Alat Kesehatan') {
+    $sqlInduk .= " AND kategori = 'Alat Kesehatan'";
+}
+
+if ($searchQ !== '') {
+    $sqlInduk .= " AND (nama_produk LIKE ? OR sku_induk LIKE ?)";
+    $paramsInduk[] = "%$searchQ%";
+    $paramsInduk[] = "%$searchQ%";
+}
+
+$sqlInduk .= " ORDER BY 
+    CASE WHEN kategori = 'Obat' THEN 1 WHEN kategori = 'Alat Kesehatan' THEN 2 ELSE 3 END ASC,
+    nama_produk ASC";
+
+$stmtIndukAll = $pdo->prepare($sqlInduk);
+$stmtIndukAll->execute($paramsInduk);
+$produkIndukAll = $stmtIndukAll->fetchAll();
+
+$countObat  = $pdo->query("SELECT COUNT(*) FROM produk_induk WHERE kategori = 'Obat'")->fetchColumn();
+$countAlkes = $pdo->query("SELECT COUNT(*) FROM produk_induk WHERE kategori = 'Alat Kesehatan'")->fetchColumn();
+$countTotal = $pdo->query("SELECT COUNT(*) FROM produk_induk")->fetchColumn();
+
+// Pagination (15 items per page)
+$perPage = 15;
+$page = max(1, intval($_GET['page'] ?? 1));
+$totalInduk = count($produkIndukAll);
+$totalPages = max(1, (int)ceil($totalInduk / $perPage));
+if ($page > $totalPages) $page = $totalPages;
+$produkInduk = array_slice($produkIndukAll, ($page - 1) * $perPage, $perPage);
 
 layoutHead('Master Produk');
 layoutBodyOpen();
@@ -289,11 +325,24 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
     </div>
 <?php endif; ?>
 
+<!-- CATEGORY FILTER TABS -->
+<div class="flex items-center gap-2 mb-4 flex-wrap">
+    <a href="?kategori=semua<?= $searchQ ? '&q=' . urlencode($searchQ) : '' ?>" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition <?= $katFilter === 'semua' ? 'bg-zc text-white shadow-xs' : 'bg-white border border-zcBrd text-zcTxt hover:bg-slate-50' ?>">
+        Semua Produk (<?= $countTotal ?>)
+    </a>
+    <a href="?kategori=Obat<?= $searchQ ? '&q=' . urlencode($searchQ) : '' ?>" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition <?= $katFilter === 'Obat' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white border border-zcBrd text-indigo-700 hover:bg-indigo-50/50' ?>">
+        Obat (<?= $countObat ?>)
+    </a>
+    <a href="?kategori=Alat+Kesehatan<?= $searchQ ? '&q=' . urlencode($searchQ) : '' ?>" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition <?= $katFilter === 'Alat Kesehatan' ? 'bg-teal-600 text-white shadow-xs' : 'bg-white border border-zcBrd text-teal-700 hover:bg-teal-50/50' ?>">
+        Alat Kesehatan (<?= $countAlkes ?>)
+    </a>
+</div>
+
 <!-- ACTION HEADER -->
 <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
     <div>
         <h2 class="text-base font-bold text-zcTxt">Daftar Produk Induk</h2>
-        <p class="text-xs text-zcMut mt-0.5">Total: <?= count($produkInduk) ?> produk &bull; Klik &blacktriangledown; untuk lihat variasi & tambah variasi</p>
+        <p class="text-xs text-zcMut mt-0.5">Total: <?= $totalInduk ?> produk <?= $katFilter !== 'semua' ? "($katFilter)" : '' ?> &bull; Klik &blacktriangledown; untuk lihat variasi & tambah variasi</p>
     </div>
     <div class="flex flex-wrap gap-2 items-center justify-end w-full md:w-auto">
         <!-- Search Input -->
@@ -330,7 +379,13 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
         <div class="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-slate-50 transition"
              onclick="toggleAcc('acc_<?= $pi['id'] ?>')">
             <div class="flex items-center gap-3 min-w-0">
-                <span class="text-zcMut"><?= icon('pill') ?></span>
+                <div class="w-10 h-10 rounded-xl <?= $pi['kategori'] === 'Obat' ? 'bg-indigo-50 border border-indigo-100 text-indigo-600' : 'bg-teal-50 border border-teal-100 text-teal-600' ?> flex items-center justify-center shrink-0">
+                    <?php if ($pi['kategori'] === 'Obat'): ?>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                    <?php else: ?>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <?php endif; ?>
+                </div>
                 <div class="min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
                         <span class="text-sm font-bold text-zcTxt"><?= htmlspecialchars($pi['nama_produk']) ?></span>
@@ -374,7 +429,7 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                         <table class="w-full text-xs">
                             <thead class="text-zcMut uppercase tracking-wider font-bold border-b border-zcBrd">
                                 <tr>
-                                    <th class="py-2 px-3 text-left">SKU / Nama</th>
+                                    <th class="py-2 px-3 text-left">Foto &bull; SKU / Nama</th>
                                     <th class="py-2 px-3 text-center">UOM Konversi</th>
                                     <th class="py-2 px-3 text-right">Harga Ecer (POS)</th>
                                     <th class="py-2 px-3 text-right">Harga Grosir (Online)</th>
@@ -387,8 +442,15 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                                 <?php foreach ($variasiList as $v): ?>
                                     <tr class="<?= !$v['is_active'] ? 'opacity-50' : '' ?>">
                                         <td class="py-2.5 px-3">
-                                            <div class="font-mono text-zcMut text-[10px]"><?= htmlspecialchars($v['sku_variasi']) ?></div>
-                                            <div class="font-semibold text-zcTxt text-xs"><?= htmlspecialchars($v['nama_variasi']) ?></div>
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 p-0.5">
+                                                    <img src="../<?= htmlspecialchars($v['gambar'] ?: 'assets/img/no-image.png') ?>" class="w-full h-full object-contain mix-blend-multiply" onerror="this.src='../assets/img/no-image.png'">
+                                                </div>
+                                                <div>
+                                                    <div class="font-mono text-zcMut text-[10px]"><?= htmlspecialchars($v['sku_variasi']) ?></div>
+                                                    <div class="font-semibold text-zcTxt text-xs"><?= htmlspecialchars($v['nama_variasi']) ?></div>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td class="py-2.5 px-3 text-center">
                                             <div class="text-[10px] text-zcMut">1 <?= htmlspecialchars($v['satuan_besar']) ?> = <?= $v['rasio_konversi'] ?> <?= htmlspecialchars($v['satuan_kecil']) ?></div>
@@ -431,7 +493,43 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
         </div>
     </div>
 <?php endforeach; ?>
+<?php if (empty($produkInduk)): ?>
+    <div class="p-12 text-center bg-white rounded-2xl border border-zcBrd text-zcMut">
+        <p class="text-sm font-semibold mb-1">Tidak ada produk ditemukan.</p>
+        <p class="text-xs text-slate-400">Silakan sesuaikan filter kategori atau kata kunci pencarian Anda.</p>
+    </div>
+<?php endif; ?>
 </div>
+
+<!-- Pagination Produk Induk -->
+<?php if ($totalInduk > 0): ?>
+<div class="mt-4 p-4 bg-white rounded-2xl border border-zcBrd flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-xs">
+    <span class="text-zcMut font-medium">
+        Menampilkan <?= ($page - 1) * $perPage + 1 ?> – <?= min($page * $perPage, $totalInduk) ?> dari <?= $totalInduk ?> produk induk
+    </span>
+    <div class="flex items-center gap-1.5 flex-wrap">
+        <?php if ($page > 1): ?>
+            <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" class="px-3 py-1.5 rounded-lg border border-zcBrd bg-white text-zcTxt hover:bg-slate-50 font-semibold transition">&larr; Sebelumnya</a>
+        <?php else: ?>
+            <span class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-100 text-slate-400 font-semibold cursor-not-allowed">&larr; Sebelumnya</span>
+        <?php endif; ?>
+
+        <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+            <?php if ($p == 1 || $p == $totalPages || ($p >= $page - 2 && $p <= $page + 2)): ?>
+                <a href="?<?= http_build_query(array_merge($_GET, ['page' => $p])) ?>" class="w-8 h-8 flex items-center justify-center rounded-lg border text-xs font-bold transition <?= $p == $page ? 'bg-zc border-zc text-white shadow-xs' : 'border-zcBrd bg-white text-zcTxt hover:bg-slate-50' ?>"><?= $p ?></a>
+            <?php elseif ($p == 2 || $p == $totalPages - 1): ?>
+                <span class="px-1 text-slate-400 font-bold">...</span>
+            <?php endif; ?>
+        <?php endfor; ?>
+
+        <?php if ($page < $totalPages): ?>
+            <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>" class="px-3 py-1.5 rounded-lg border border-zcBrd bg-white text-zcTxt hover:bg-slate-50 font-semibold transition">Selanjutnya &rarr;</a>
+        <?php else: ?>
+            <span class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-100 text-slate-400 font-semibold cursor-not-allowed">Selanjutnya &rarr;</span>
+        <?php endif; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- ============================================================ -->
 <!-- MODAL: Cetak Barcode                                          -->
@@ -580,11 +678,17 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-zcTxt mb-1.5">Harga Jual Kecil (Ecer) *</label>
-                    <input type="number" name="harga_jual_kecil" required min="0" step="500" placeholder="5000" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-xs font-bold text-slate-400">Rp</span>
+                        <input type="text" inputmode="numeric" name="harga_jual_kecil" id="tambah_harga_jual_kecil" required oninput="formatRupiahInput(this)" placeholder="0" class="w-full pl-9 text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50 font-semibold">
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-zcTxt mb-1.5">Harga Jual Besar (Grosir) *</label>
-                    <input type="number" name="harga_jual_besar" required min="0" step="500" placeholder="450000" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-xs font-bold text-slate-400">Rp</span>
+                        <input type="text" inputmode="numeric" name="harga_jual_besar" id="tambah_harga_jual_besar" required oninput="formatRupiahInput(this)" placeholder="0" class="w-full pl-9 text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50 font-semibold">
+                    </div>
                 </div>
             </div>
 
@@ -620,10 +724,11 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                     <input type="text" name="gambar" placeholder="contoh1.jpg, contoh2.png" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                     <span class="text-[9px] text-zcMut mt-1 block">Pisahkan dengan koma jika multi-gambar</span>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Atau Upload File (Bisa pilih banyak)</label>
-                    <input type="file" name="gambar_file[]" multiple accept="image/*" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2 focus:outline-none bg-slate-50 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-zc file:text-white hover:file:bg-zcHv">
-                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Atau Upload File (Bisa pilih banyak)</label>
+                <input type="file" name="gambar_file[]" multiple accept="image/*" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 focus:outline-none bg-slate-50 cursor-pointer file:mr-3 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-zc file:text-white hover:file:bg-zcHv transition">
             </div>
 
             <div class="flex justify-end gap-3 pt-2">
@@ -675,13 +780,19 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-zcTxt mb-1.5 flex justify-between">Harga Jual Kecil (Ecer) * <?= $_SESSION['role'] !== 'superadmin' ? '<span class="text-[9px] text-rose-500 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Terkunci</span>' : '' ?></label>
-                    <input type="number" name="harga_jual_kecil" id="edit_harga_jual_kecil" required min="0" step="500" 
-                        <?= $_SESSION['role'] !== 'superadmin' ? 'readonly class="w-full text-xs border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-100 text-slate-500 cursor-not-allowed focus:outline-none"' : 'class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50"' ?>>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-xs font-bold text-slate-400">Rp</span>
+                        <input type="text" inputmode="numeric" name="harga_jual_kecil" id="edit_harga_jual_kecil" required oninput="formatRupiahInput(this)" 
+                            <?= $_SESSION['role'] !== 'superadmin' ? 'readonly class="w-full pl-9 text-xs border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-100 text-slate-500 cursor-not-allowed focus:outline-none font-semibold"' : 'class="w-full pl-9 text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50 font-semibold"' ?>>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-zcTxt mb-1.5 flex justify-between">Harga Jual Besar (Grosir) * <?= $_SESSION['role'] !== 'superadmin' ? '<span class="text-[9px] text-rose-500 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Terkunci</span>' : '' ?></label>
-                    <input type="number" name="harga_jual_besar" id="edit_harga_jual_besar" required min="0" step="500" 
-                        <?= $_SESSION['role'] !== 'superadmin' ? 'readonly class="w-full text-xs border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-100 text-slate-500 cursor-not-allowed focus:outline-none"' : 'class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50"' ?>>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-xs font-bold text-slate-400">Rp</span>
+                        <input type="text" inputmode="numeric" name="harga_jual_besar" id="edit_harga_jual_besar" required oninput="formatRupiahInput(this)" 
+                            <?= $_SESSION['role'] !== 'superadmin' ? 'readonly class="w-full pl-9 text-xs border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-100 text-slate-500 cursor-not-allowed focus:outline-none font-semibold"' : 'class="w-full pl-9 text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50 font-semibold"' ?>>
+                    </div>
                 </div>
             </div>
 
@@ -704,7 +815,7 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mt-4">
+            <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-zcTxt mb-1.5">Tampilkan di E-Commerce?</label>
                     <label class="inline-flex items-center mt-2.5">
@@ -712,17 +823,16 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                         <span class="ml-2 text-xs font-medium text-slate-700">Tampilkan Online</span>
                     </label>
                 </div>
-
-            <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-zcTxt mb-1.5">Teks URL/Nama Gambar</label>
                     <input type="text" name="gambar" id="edit_gambar_variasi" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                     <span class="text-[9px] text-zcMut mt-1 block">Pisahkan dengan koma jika multi-gambar</span>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Atau Upload File Tambahan</label>
-                    <input type="file" name="gambar_file[]" multiple accept="image/*" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2 focus:outline-none bg-slate-50 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-zc file:text-white hover:file:bg-zcHv">
-                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Atau Upload File Tambahan</label>
+                <input type="file" name="gambar_file[]" multiple accept="image/*" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 focus:outline-none bg-slate-50 cursor-pointer file:mr-3 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-zc file:text-white hover:file:bg-zcHv transition">
             </div>
 
             <div class="flex justify-end gap-3 pt-2">
@@ -774,6 +884,16 @@ function openTambahVariasi(idInduk, namaInduk) {
     document.getElementById('var_parent_name').innerText = namaInduk;
     document.getElementById('modal_tambah_variasi').classList.remove('hidden');
 }
+function formatRupiahInput(el) {
+    if (!el) return;
+    let clean = el.value.replace(/[^0-9]/g, '');
+    if (clean === '') {
+        el.value = '';
+        return;
+    }
+    el.value = parseInt(clean, 10).toLocaleString('id-ID');
+}
+
 function openEditVariasi(id, sku, nama, satKecil, satBesar, rasio, hrgKecil, hrgBesar, berat, minStokKecil, minStokBesar, gambar, tampil) {
     document.getElementById('edit_id_variasi').value = id;
     document.getElementById('edit_sku_variasi').value = sku;
@@ -781,8 +901,8 @@ function openEditVariasi(id, sku, nama, satKecil, satBesar, rasio, hrgKecil, hrg
     document.getElementById('edit_satuan_kecil').value = satKecil;
     document.getElementById('edit_satuan_besar').value = satBesar;
     document.getElementById('edit_rasio_konversi').value = rasio;
-    document.getElementById('edit_harga_jual_kecil').value = hrgKecil;
-    document.getElementById('edit_harga_jual_besar').value = hrgBesar;
+    document.getElementById('edit_harga_jual_kecil').value = parseInt(hrgKecil || 0).toLocaleString('id-ID');
+    document.getElementById('edit_harga_jual_besar').value = parseInt(hrgBesar || 0).toLocaleString('id-ID');
     document.getElementById('edit_berat_variasi').value = berat;
     document.getElementById('edit_stok_minimum_kecil').value = minStokKecil;
     document.getElementById('edit_stok_minimum_besar').value = minStokBesar;

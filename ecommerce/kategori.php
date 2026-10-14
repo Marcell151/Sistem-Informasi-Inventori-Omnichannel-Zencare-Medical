@@ -9,8 +9,14 @@ $kategori = trim($_GET['kategori'] ?? '');
 $sql = "
     SELECT v.id, i.nama_produk AS nama_induk, v.nama_variasi, i.kategori,
            v.harga_jual_besar AS harga_jual, v.harga_jual_kecil AS harga_eceran,
-           v.berat AS berat_gram, i.gambar, v.sku_variasi, i.deskripsi,
+           v.berat AS berat_gram, v.gambar AS gambar, v.sku_variasi, i.deskripsi,
            COALESCE(sc.stok, 0) AS stok_sistem,
+           (SELECT COALESCE(SUM(sb.stok_sisa), 0) 
+            FROM stok_batch sb 
+            WHERE sb.id_variasi = v.id 
+              AND sb.no_batch NOT LIKE '%.%' 
+              AND sb.tgl_exp >= CURDATE()
+           ) AS stok_batch_utuh,
            v.satuan_besar, v.satuan_kecil, v.rasio_konversi
     FROM produk_variasi v
     JOIN produk_induk i ON v.id_produk_induk = i.id
@@ -106,7 +112,7 @@ $allCat = $pdo->query("SELECT DISTINCT kategori FROM produk_induk WHERE is_activ
                 </div>
                 <div>
                     <span class="text-sm font-bold text-[#1e293b] block">Menampilkan <?= count($products) ?> Produk</span>
-                    <span class="text-[11px] text-slate-500">Cabang: <?= htmlspecialchars($activeCabangInfo['nama'] ?? 'Semua') ?></span>
+                    <span class="text-[11px] text-slate-500">Katalog Resmi ZenCare Medical</span>
                 </div>
             </div>
             
@@ -125,9 +131,10 @@ $allCat = $pdo->query("SELECT DISTINCT kategori FROM produk_induk WHERE is_activ
         <!-- PRODUCT GRID (Identical to Home) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="product-grid">
             <?php foreach ($products as $p):
-                $stokPcs  = intval($p['stok_sistem']);
                 $rasio    = intval($p['rasio_konversi']) ?: 1;
-                $stokBox  = floor($stokPcs / $rasio);
+                $stokBox  = ($p['kategori'] === 'Obat')
+                    ? (int) floor(intval($p['stok_batch_utuh']) / $rasio)
+                    : (int) floor(intval($p['stok_sistem']) / $rasio);
                 $harga    = floatval($p['harga_jual']);
                 $hargaEcr = floatval($p['harga_eceran']);
                 $satB     = htmlspecialchars($p['satuan_besar'] ?: 'Box');
@@ -240,7 +247,7 @@ $allCat = $pdo->query("SELECT DISTINCT kategori FROM produk_induk WHERE is_activ
                 </div>
                 <h3 class="text-xl font-extrabold text-[#1e293b] mb-2">Produk Tidak Ditemukan</h3>
                 <p class="text-sm text-slate-500 max-w-sm mx-auto">
-                    Maaf, tidak ada produk yang cocok dengan pencarian atau filter Anda di cabang ini.
+                    Maaf, tidak ada produk yang cocok dengan pencarian atau filter yang Anda pilih.
                 </p>
                 <div class="mt-6 flex justify-center gap-3">
                     <a href="kategori.php" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-50 transition">Reset Filter</a>

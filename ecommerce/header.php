@@ -207,22 +207,23 @@ $namaPelanggan = $isLoggedIn ? $_SESSION['nama_lengkap'] : '';
                     </div>
                     <div class="w-[240px] bg-blue-50 rounded-xl p-4 border border-blue-100 flex flex-col justify-end relative overflow-hidden group">
                         <div class="absolute -right-4 -top-4 w-24 h-24 bg-[#1a75d2]/10 rounded-full"></div>
-                        <h4 class="text-sm font-black text-[#0f2d5a] mb-1 relative z-10">Promo Alat Kesehatan</h4>
-                        <p class="text-xs text-blue-600 mb-4 relative z-10">Diskon khusus untuk pembelian alat kesehatan klinik.</p>
-                        <a href="kategori.php?kategori=Alat+Kesehatan" class="text-xs font-bold bg-[#1a75d2] text-white py-2 px-4 rounded-lg text-center hover:bg-[#0f2d5a] transition relative z-10">Lihat Promo</a>
+                        <h4 class="text-sm font-black text-[#0f2d5a] mb-1 relative z-10">Katalog Alat Kesehatan</h4>
+                        <p class="text-xs text-blue-600 mb-4 relative z-10">Produk bergaransi resmi untuk kebutuhan klinik & pasien.</p>
+                        <a href="kategori.php?kategori=Alat+Kesehatan" class="text-xs font-bold bg-[#1a75d2] text-white py-2 px-4 rounded-lg text-center hover:bg-[#0f2d5a] transition relative z-10">Lihat Katalog</a>
                     </div>
                 </div>
             </div>
             
-            <a href="kategori.php?q=promo" class="text-sm font-bold text-rose-500 hover:text-rose-600 flex items-center gap-1.5 transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Promo Spesial
+            <a href="cara_pembelian.php" class="text-sm font-bold text-slate-600 hover:text-[#1a75d2] transition">
+                Cara Pembelian
             </a>
-            <a href="https://wa.me/6281234567890?text=Halo%20Apoteker%20ZenCare,%20saya%20ingin%20konsultasi%20mengenai%20produk%20kesehatan" target="_blank" class="text-sm font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1.5 transition">
+            <a href="tentang_kami.php" class="text-sm font-bold text-slate-600 hover:text-[#1a75d2] transition">
+                Tentang Kami
+            </a>
+            <a href="https://wa.me/6281234567890?text=Halo%20ZenCare%20Medical,%20saya%20ingin%20bertanya%20mengenai%20produk%20kesehatan" target="_blank" class="text-sm font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1.5 transition">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a5.225 5.225 0 00-.571-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 21a8.96 8.96 0 01-4.588-1.257l-.329-.195-3.411.895.912-3.326-.214-.341A8.961 8.961 0 013 12c0-4.97 4.03-9 9-9s9 4.03 9-9 9-4.03 9-9 9zm0-10.706C8.869 1.294 6.327.031 3.515.031.703.031-1.839 1.294-1.839 4.106c0 2.812 2.542 4.075 5.354 4.075s5.354-1.263 5.354-4.075zM12 2C6.477 2 2 6.477 2 12c0 1.755.454 3.412 1.254 4.856L2 22l5.293-1.189A9.96 9.96 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
-                Konsultasi Apoteker
+                Hubungi Kami
             </a>
-            <a href="tentang_kami.php" class="text-sm font-bold text-slate-600 hover:text-[#1a75d2] transition">Cara Pembelian</a>
         </div>
     </div>
 </header>
@@ -238,6 +239,8 @@ $namaPelanggan = $isLoggedIn ? $_SESSION['nama_lengkap'] : '';
     <div class="space-y-2 font-bold text-slate-700">
         <a href="index.php" class="block py-2">Beranda</a>
         <a href="kategori.php" class="block py-2">Semua Kategori</a>
+        <a href="cara_pembelian.php" class="block py-2">Cara Pembelian</a>
+        <a href="tentang_kami.php" class="block py-2">Tentang Kami</a>
         <?php if ($isLoggedIn): ?>
             <a href="../login_customer.php?logout=1" class="block py-2 text-rose-500">Keluar (<?= htmlspecialchars($namaPelanggan) ?>)</a>
         <?php else: ?>

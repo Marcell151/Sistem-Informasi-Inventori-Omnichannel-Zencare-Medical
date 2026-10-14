@@ -16,6 +16,8 @@ function layoutHead(string $title = 'Dashboard') {
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   tailwind.config = {
     theme: {
@@ -51,6 +53,134 @@ function layoutHead(string $title = 'Dashboard') {
   .sidebar-link.active svg{opacity:1}
   .sidebar-link.active{border-left:3px solid #1a75d2;padding-left:9px}
   .sidebar-section{font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;padding:14px 12px 6px}
+
+  /* ── Modern Minimalist Select2 Theme (Ecommerce-Grade) ────────────────── */
+  .select2-container--default .select2-selection--single {
+    min-height: 40px !important;
+    height: 40px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.75rem !important;
+    padding: 6px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    background-color: #ffffff !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03) !important;
+  }
+  .select2-container--default.select2-container--open .select2-selection--single,
+  .select2-container--default .select2-selection--single:focus {
+    border-color: #1a75d2 !important;
+    box-shadow: 0 0 0 3px rgba(26, 117, 210, 0.12) !important;
+    outline: none !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #1e293b !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    padding-left: 0 !important;
+    padding-right: 20px !important;
+    line-height: normal !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #94a3b8 !important;
+    font-size: 0.8125rem !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 100% !important;
+    right: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #94a3b8 transparent transparent transparent !important;
+    border-width: 5px 4px 0 4px !important;
+  }
+  .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-color: transparent transparent #1a75d2 transparent !important;
+    border-width: 0 4px 5px 4px !important;
+  }
+  .select2-dropdown {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.875rem !important;
+    box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.04) !important;
+    overflow: hidden !important;
+    z-index: 9999 !important;
+    margin-top: 4px !important;
+    background-color: #ffffff !important;
+    padding: 4px !important;
+  }
+  .select2-search--dropdown {
+    padding: 6px !important;
+  }
+  .select2-search--dropdown .select2-search__field {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.5rem !important;
+    padding: 7px 10px !important;
+    font-size: 0.8125rem !important;
+    background-color: #f8fafc !important;
+    color: #1e293b !important;
+    outline: none !important;
+    transition: all 0.15s ease !important;
+  }
+  .select2-search--dropdown .select2-search__field:focus {
+    border-color: #1a75d2 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(26, 117, 210, 0.1) !important;
+  }
+  .select2-results__option {
+    font-size: 0.8125rem !important;
+    padding: 8px 12px !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 2px !important;
+    color: #334155 !important;
+    transition: all 0.1s ease !important;
+  }
+  .select2-results__option--highlighted {
+    background-color: #eff6ff !important;
+    color: #1a75d2 !important;
+    font-weight: 600 !important;
+  }
+  .select2-results__option[aria-selected="true"] {
+    background-color: #1a75d2 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+  }
+  .select2-results__options {
+    max-height: 250px !important;
+    overflow-y: auto !important;
+  }
+  .select2-container--default .select2-results__message {
+    color: #94a3b8 !important;
+    font-size: 0.75rem !important;
+    padding: 12px !important;
+    text-align: center !important;
+  }
+  /* Table context compact select2 */
+  table .select2-container--default .select2-selection--single {
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 4px 8px !important;
+    border-radius: 0.5rem !important;
+  }
+  table .select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-size: 0.75rem !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  table .select2-container--default .select2-selection--single .select2-selection__arrow {
+    right: 6px !important;
+  }
 </style>';
 }
 
@@ -75,7 +205,7 @@ function icon(string $name, string $cls = 'w-4 h-4'): string {
         'users'        => '<path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',
         'report_sale'  => '<path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/>',
         'report_stock' => '<path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2z"/><path d="M7 7h.01"/>',
-        'report_med'   => '<path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/>',
+        'report_med'   => '<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><path d="M12 11v6M9 14h6"/>',
         'settings'     => '<path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/>',
         'logout'       => '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>',
         'truck'        => '<path d="M14 18V6a2 2 0 00-2-2H4a2 2 0 00-2 2v11a1 1 0 001 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 001-1v-3.65a1 1 0 00-.22-.624l-3.48-4.35A1 1 0 0017.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
@@ -98,7 +228,7 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
     };
 
     $link = function(string $href, string $iconName, string $label, string $key) use ($activeMenu) {
-        $active = $activeMenu === $key ? ' active' : '';
+        $active = ($activeMenu === $key || ($key === 'mutasi' && in_array($activeMenu, ['mutasi', 'mutasi_stok']))) ? ' active' : '';
         echo '<a href="' . $href . '" class="sidebar-link' . $active . '">';
         echo icon($iconName);
         echo '<span>' . $label . '</span></a>';
@@ -147,15 +277,21 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
             $link('/inventory_zencare/inventori/konversi_uom.php', 'uom', 'Konversi (UOM)', 'konversi_uom');
             $link('/inventory_zencare/inventori/histori_konversi.php', 'report_sale', 'Histori Konversi', 'histori_konversi');
             $link('/inventory_zencare/laporan/kartu_stok.php', 'kartu', 'Kartu Stok', 'laporan_kartu_stok');
+            if ($role === 'admin') {
+                $link('/inventory_zencare/inventori/logistik_medis.php', 'report_med', 'Logistik Medis', 'logistik_medis_admin');
+            }
         }
     }
 
-    // ── LAPORAN — SUPERADMIN ONLY ────────────────────────────────────────
+    // ── LAPORAN (KHUSUS SUPERADMIN / OWNER) ───────────────────────────
     if ($isSuperadmin) {
         echo '<p class="sidebar-section">Laporan</p>';
         $link('/inventory_zencare/laporan/penjualan.php', 'report_sale', 'Lap. Penjualan Barang', 'laporan_penjualan');
         $link('/inventory_zencare/laporan/ketersediaan_stok.php', 'report_stock', 'Lap. Persediaan', 'laporan_ketersediaan');
         $link('/inventory_zencare/laporan/logistik_medis.php', 'report_med', 'Lap. Logistik Medis', 'laporan_logistik');
+    }
+
+    if ($isSuperadmin) {
 
         // ── MANAJEMEN & SISTEM ────────────────────────────────────────────
         echo '<p class="sidebar-section">Manajemen & Sistem</p>';
@@ -233,12 +369,12 @@ function layoutEnd() {
     echo '</main></div>
     <script>
       $(document).ready(function() {
-          if ($(".select2").length > 0) {
-              $(".select2").select2({ width: "100%" });
-              $(".select2").on("select2:select", function(e) {
+          $("select.select2:not(.select2-hidden-accessible)").each(function() {
+              $(this).select2({ width: "100%" });
+              $(this).on("select2:select", function(e) {
                   this.dispatchEvent(new Event("change", { bubbles: true }));
               });
-          }
+          });
       });
     </script>
     </body></html>';
