@@ -199,7 +199,7 @@ $related = $stmtRelated->fetchAll();
                         <span class="text-[9px] text-zcMut">Produk Asli</span>
                     </div>
                     <div class="p-2 bg-slate-50 border border-slate-100 rounded-xl">
-                        <span class="block text-slate-700 font-bold text-xs">Grosir B2B</span>
+                        <span class="block text-slate-700 font-bold text-xs">Grosir</span>
                         <span class="text-[9px] text-zcMut">Kemasan Box</span>
                     </div>
                 </div>

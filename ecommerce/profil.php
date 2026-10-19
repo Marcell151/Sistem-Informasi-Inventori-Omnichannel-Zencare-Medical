@@ -105,8 +105,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     $stmtSisa->execute([$idVar]);
                     $sisaStok = $stmtSisa->fetchColumn();
 
-                    $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'kecil', 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)");
-                    $stmtKartu->execute([$idVar, $selesaiInvoice, $qtyPotong, $sisaStok, "Konfirmasi Pengambilan di Toko (Pick-up)", $userId]);
+                    $satuanTipe = ($rasio > 1) ? 'besar' : 'kecil';
+                    $qtyKartu = ($rasio > 1) ? $qtyBox : $qtyPotong;
+                    $sisaStokTampil = ($rasio > 1) ? floor($sisaStok / $rasio) : $sisaStok;
+
+                    $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)");
+                    $stmtKartu->execute([$idVar, $satuanTipe, $selesaiInvoice, $qtyKartu, $sisaStokTampil, "Konfirmasi Pengambilan di Toko (Pick-up)", $userId]);
                 }
             }
             

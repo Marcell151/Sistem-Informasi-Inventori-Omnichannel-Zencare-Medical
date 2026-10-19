@@ -290,13 +290,19 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                         </div>
                     </div>
 
-                    <div class="flex flex-col sm:flex-row gap-3 mt-6">
-                        <button onclick="prosesCheckout(false)" id="btn_checkout_nanti" class="w-full sm:w-1/2 bg-white hover:bg-slate-50 text-zcTxt border border-zcBrd font-semibold text-xs py-3.5 px-2 rounded-xl transition shadow-sm">
+                    <div class="mt-6 space-y-2">
+                        <!-- Opsi "Bayar Nanti" disembunyikan (Feature Toggle) untuk mencegah Dead Stock / Penimbunan Stok Fiktif -->
+                        <button onclick="prosesCheckout(false)" id="btn_checkout_nanti" style="display: none;" class="w-full bg-white hover:bg-slate-50 text-zcTxt border border-zcBrd font-semibold text-xs py-3.5 px-2 rounded-xl transition shadow-sm">
                             Buat Pesanan (Bayar Nanti)
                         </button>
-                        <button onclick="prosesCheckout(true)" id="btn_checkout_sekarang" class="w-full sm:w-1/2 bg-zc hover:bg-zcHv text-white font-semibold text-xs py-3.5 px-2 rounded-xl transition shadow-sm">
-                            Bayar Sekarang
+                        <button onclick="prosesCheckout(true)" id="btn_checkout_sekarang" class="w-full bg-zc hover:bg-zcHv text-white font-bold text-sm py-4 px-4 rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[.99]">
+                            <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                            <span>Bayar Sekarang</span>
                         </button>
+                        <div class="flex items-center justify-center gap-1.5 text-[11px] text-zcMut pt-1">
+                            <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            <span>Transaksi tertutup: Pembayaran instan mengamankan stok Anda seketika.</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -785,12 +791,14 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
 
             let btnNanti = document.getElementById('btn_checkout_nanti');
             let btnSekarang = document.getElementById('btn_checkout_sekarang');
-            btnNanti.disabled = true;
-            btnSekarang.disabled = true;
-            
-            if (isPayNow) {
-                btnSekarang.innerText = 'Meminta Token...';
-            } else {
+            if (btnNanti) btnNanti.disabled = true;
+            if (btnSekarang) {
+                btnSekarang.disabled = true;
+                if (isPayNow) {
+                    btnSekarang.innerHTML = '<svg class="w-5 h-5 shrink-0 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Meminta Token Pembayaran...</span>';
+                }
+            }
+            if (btnNanti && !isPayNow) {
                 btnNanti.innerText = 'Memproses...';
             }
 
@@ -818,10 +826,14 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             })
             .then(res => res.json())
             .then(data => {
-                btnNanti.disabled = false;
-                btnSekarang.disabled = false;
-                btnNanti.innerText = 'Buat Pesanan (Bayar Nanti)';
-                btnSekarang.innerText = 'Bayar Sekarang';
+                if (btnNanti) {
+                    btnNanti.disabled = false;
+                    btnNanti.innerText = 'Buat Pesanan (Bayar Nanti)';
+                }
+                if (btnSekarang) {
+                    btnSekarang.disabled = false;
+                    btnSekarang.innerHTML = '<svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span>Bayar Sekarang</span>';
+                }
 
                 if (data.status === 'success' && data.token) {
                     if (isPayNow) {
@@ -851,7 +863,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                             window.location.href = 'ecommerce/profil.php';
                         },
                         onClose: function() {
-                            alert('Anda menutup halaman pembayaran. Pesanan Anda tersimpan dan dapat dibayar nanti melalui menu Riwayat Pesanan.');
+                            alert('Anda menutup halaman pembayaran. Pesanan Anda tersimpan dan dapat diselesaikan melalui menu Riwayat Pesanan di Akun Saya.');
                             clearPurchasedFromCart(cart);
                             window.location.href = 'ecommerce/profil.php';
                         }
@@ -867,10 +879,14 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 }
             })
             .catch(err => {
-                btnNanti.disabled = false;
-                btnSekarang.disabled = false;
-                btnNanti.innerText = 'Buat Pesanan (Bayar Nanti)';
-                btnSekarang.innerText = 'Bayar Sekarang';
+                if (btnNanti) {
+                    btnNanti.disabled = false;
+                    btnNanti.innerText = 'Buat Pesanan (Bayar Nanti)';
+                }
+                if (btnSekarang) {
+                    btnSekarang.disabled = false;
+                    btnSekarang.innerHTML = '<svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span>Bayar Sekarang/span>';
+                }
                 alert('Terjadi kesalahan jaringan: ' + err);
             });
         }
@@ -901,7 +917,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                             if (idx > -1) {
                                 if (adj.new_qty <= 0) {
                                     cart.splice(idx, 1);
-                                    msgList.push(`• <b>${adj.nama}</b>: Habis terjual di toko fisik, produk dihapus dari keranjang.`);
+                                    msgList.push(`• <b>${adj.nama}</b>: Habis terjual, produk dihapus dari keranjang.`);
                                 } else {
                                     cart[idx].qty = adj.new_qty;
                                     cart[idx].max = adj.max_dus;

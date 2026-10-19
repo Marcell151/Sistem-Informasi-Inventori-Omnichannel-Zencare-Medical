@@ -500,17 +500,17 @@ $shopeeOn = false;
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-zc uppercase tracking-wider flex items-center gap-1.5">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                            Dynamic QRIS Midtrans
+                            QRIS
                         </span>
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800" id="qris_status_badge">Siap Dimunculkan</span>
                     </div>
 
-                    <p class="text-xs text-slate-600">Klik tombol di bawah untuk membuka QRIS dinamis Midtrans dengan nominal presisi tagihan kasir.</p>
+                    <p class="text-xs text-slate-600">Klik tombol di bawah untuk membuka QRIS dengan nominal presisi tagihan kasir.</p>
 
                     <div class="pt-1">
                         <button type="button" id="btn_open_snap_qris" onclick="triggerMidtransPosQRIS()" class="w-full py-3 px-4 rounded-xl font-bold text-xs bg-zc hover:bg-zcHv text-white shadow-md shadow-zc/30 transition flex items-center justify-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                            ⚡ Buka QRIS Midtrans (Pop-up Kasir)
+                            QRIS
                         </button>
                     </div>
 

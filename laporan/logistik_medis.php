@@ -163,7 +163,7 @@ layoutHeader('Laporan Logistik Medis', 'Batch Obat Aktif & Jejak Serial Number A
     aside, header, nav, .sidebar { display: none !important; }
     @page { 
         size: A4 portrait; 
-        margin: 15mm 12mm 18mm 12mm; 
+        margin: 0; 
     }
     body, main, .flex-1, .min-w-0 { 
         display: block !important;
@@ -173,7 +173,7 @@ layoutHeader('Laporan Logistik Medis', 'Batch Obat Aktif & Jejak Serial Number A
         min-height: auto !important;
         overflow: visible !important;
         margin: 0 !important;
-        padding: 0 !important;
+        padding: 12mm 15mm !important;
         background: #ffffff !important; 
         color: #0f172a !important; 
         font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important; 
@@ -452,7 +452,7 @@ layoutHeader('Laporan Logistik Medis', 'Batch Obat Aktif & Jejak Serial Number A
     <!-- Footer Dokumen Resmi Cetak -->
     <div style="margin-top: 14px; display: flex; justify-content: space-between; font-size: 7.5pt; color: #64748b; border-top: 1px solid #cbd5e1; padding-top: 4px; page-break-inside: avoid;">
         <span>ZenCare Medical Inventory &bull; Laporan Logistik Medis (Batch Obat)</span>
-        <span>Dokumen Resmi Sistem Inventori ZenCare Medical</span>
+        <span>Halaman 1 / 1 &bull; Dokumen Resmi Sistem Inventori ZenCare Medical</span>
     </div>
 </div>
 

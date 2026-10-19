@@ -68,9 +68,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
                         $qtyPotong = $qtyBox * $rasio;
 
                         $sisaStok = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVar")->fetchColumn();
+                        $satuanTipe = ($rasio > 1) ? 'besar' : 'kecil';
+                        $qtyKartu = ($rasio > 1) ? $qtyBox : $qtyPotong;
+                        $sisaStokTampil = ($rasio > 1) ? floor($sisaStok / $rasio) : $sisaStok;
 
-                        $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
-                            ->execute([$idVar, $noInvoice, $qtyPotong, $sisaStok, 'Konfirmasi Pengambilan di Toko (Pick-up)', $_SESSION['id_user'] ?? 1]);
+                        $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
+                            ->execute([$idVar, $satuanTipe, $noInvoice, $qtyKartu, $sisaStokTampil, 'Konfirmasi Pengambilan di Toko (Pick-up)', $_SESSION['id_user'] ?? 1]);
                     }
                 }
 
@@ -92,9 +95,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
                         $qtyPotong = $qtyBox * $rasio;
 
                         $sisaStok = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVar")->fetchColumn();
+                        $satuanTipe = ($rasio > 1) ? 'besar' : 'kecil';
+                        $qtyKartu = ($rasio > 1) ? $qtyBox : $qtyPotong;
+                        $sisaStokTampil = ($rasio > 1) ? floor($sisaStok / $rasio) : $sisaStok;
 
-                        $pdo->prepare("INSERT INTO kartu_stok (id_variasi, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
-                            ->execute([$idVar, $noInvoice, $qtyPotong, $sisaStok, 'Pengiriman via Ekspedisi (Kurir)', $_SESSION['id_user'] ?? 1]);
+                        $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
+                            ->execute([$idVar, $satuanTipe, $noInvoice, $qtyKartu, $sisaStokTampil, 'Pengiriman via Ekspedisi (Kurir)', $_SESSION['id_user'] ?? 1]);
                     }
                 }
                 // Jika status diubah menjadi Dibatalkan (dan sebelumnya bukan Dibatalkan), kembalikan stok

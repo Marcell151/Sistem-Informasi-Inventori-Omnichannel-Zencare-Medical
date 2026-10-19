@@ -118,7 +118,7 @@ require_once __DIR__ . '/header.php';
                     <div class="flex-1">
                         <h3 class="text-base md:text-lg font-bold text-[#1e293b] mb-1.5">Selesaikan Pembayaran & Sistem Reservasi Stok (Cooldown 2 Jam)</h3>
                         <p class="text-xs md:text-sm text-slate-600 leading-relaxed mb-3">
-                            Pilih metode pembayaran yang tersedia melalui payment gateway resmi Midtrans (BCA Virtual Account, Mandiri, QRIS, GoPay, Kartu Kredit) atau pilih opsi <strong>Bayar Nanti</strong>.
+                            Selesaikan pembayaran secara instan melalui payment gateway resmi Midtrans (BCA Virtual Account, Mandiri, QRIS, GoPay, ShopeePay, Kartu Kredit) untuk langsung memproses dan mengamankan pesanan Anda.
                         </p>
                         <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-900 leading-relaxed space-y-2">
                             <div class="flex items-center gap-2 font-bold text-amber-800">
