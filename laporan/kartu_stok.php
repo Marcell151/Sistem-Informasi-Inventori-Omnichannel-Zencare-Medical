@@ -281,22 +281,22 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
 </div>
 
 <?php if ($id_variasi > 0 && $produkData && $filterKonversi): ?>
-<!-- BANNER AUDIT KHUSUS PEMBONGKARAN DUS -->
+<!-- BANNER AUDIT KHUSUS PEMBONGKARAN SATUAN BESAR -->
 <div class="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm print:hidden">
     <div class="flex items-center gap-3">
         <div>
-            <h4 class="text-sm font-black uppercase tracking-wide">Khusus Pembongkaran Kardus (Konversi UOM)</h4>
-            <p class="text-xs text-amber-800 mt-0.5">Memfilter mutasi hanya pada aktivitas pemecahan dus utuh menjadi eceran.</p>
+            <h4 class="text-sm font-black uppercase tracking-wide">Khusus Konversi Satuan (Bongkar Satuan Besar)</h4>
+            <p class="text-xs text-amber-800 mt-0.5">Memfilter mutasi hanya pada aktivitas pemecahan Satuan Besar menjadi Satuan Kecil.</p>
         </div>
     </div>
     <div class="flex items-center gap-2 self-stretch sm:self-auto">
         <div class="bg-white px-4 py-2 rounded-xl border border-amber-200 text-center shadow-xs flex-1 sm:flex-initial">
-            <span class="block text-[10px] uppercase font-bold text-slate-500">Total Dus Dibongkar</span>
-            <span class="text-base font-black text-rose-600">-<?= $totalDusDibongkar ?> <?= htmlspecialchars($produkData['satuan_besar'] ?? 'Dus') ?></span>
+            <span class="block text-[10px] uppercase font-bold text-slate-500">Total Dibongkar (Satuan Besar)</span>
+            <span class="text-base font-black text-rose-600">-<?= $totalDusDibongkar ?> <?= htmlspecialchars($produkData['satuan_besar'] ?? 'Besar') ?></span>
         </div>
         <div class="bg-white px-4 py-2 rounded-xl border border-amber-200 text-center shadow-xs flex-1 sm:flex-initial">
-            <span class="block text-[10px] uppercase font-bold text-slate-500">Total Eceran Tercipta</span>
-            <span class="text-base font-black text-emerald-600">+<?= $totalPcsHasilBongkar ?> <?= htmlspecialchars($produkData['satuan_kecil'] ?? 'Pcs') ?></span>
+            <span class="block text-[10px] uppercase font-bold text-slate-500">Total Tercipta (Satuan Kecil)</span>
+            <span class="text-base font-black text-emerald-600">+<?= $totalPcsHasilBongkar ?> <?= htmlspecialchars($produkData['satuan_kecil'] ?? 'Kecil') ?></span>
         </div>
     </div>
 </div>

@@ -121,10 +121,10 @@ $produkList = $pdo->query("
     ORDER BY pi.nama_produk ASC
 ")->fetchAll();
 
-layoutHead('Konversi UOM (Pemecahan Box)');
+layoutHead('Konversi Satuan (UOM)');
 layoutBodyOpen();
 layoutSidebar('konversi_uom');
-layoutHeader('Konversi UOM', 'Pemecahan Box Kardus Utuh ke Satuan Eceran (Sub-Batch)');
+layoutHeader('Konversi Satuan (UOM)', 'Pemecahan kemasan Satuan Besar (Gudang/Grosir) ke Satuan Kecil (Etalase/Eceran)');
 ?>
 
 <?php if ($msg): ?>
@@ -145,8 +145,8 @@ layoutHeader('Konversi UOM', 'Pemecahan Box Kardus Utuh ke Satuan Eceran (Sub-Ba
 <div class="max-w-3xl mx-auto">
     <div class="bg-white border border-zcBrd rounded-2xl p-6 shadow-sm">
         <div class="mb-6 pb-4 border-b border-zcBrd">
-            <h3 class="text-lg font-extrabold text-zcTxt mb-1">Form Pemecahan Box (Konversi UOM)</h3>
-            <p class="text-xs text-zcMut">Fitur ini digunakan saat Anda membuka segel kardus/box utuh (Batch Induk) untuk diecer menjadi satuan kecil (Sub-Batch) untuk di-display di etalase / apotek.</p>
+            <h3 class="text-lg font-extrabold text-zcTxt mb-1">Form Konversi Satuan (Bongkar Satuan Besar)</h3>
+            <p class="text-xs text-zcMut">Fitur ini digunakan saat Anda membuka segel kemasan Satuan Besar (Batch Induk) untuk dipecah menjadi Satuan Kecil (Sub-Batch) siap pajang di etalase apotek.</p>
         </div>
 
         <form method="POST" class="space-y-5">
@@ -163,30 +163,30 @@ layoutHeader('Konversi UOM', 'Pemecahan Box Kardus Utuh ke Satuan Eceran (Sub-Ba
             </div>
             
             <div id="batch_container" class="hidden">
-                <label class="block text-sm font-semibold text-zcTxt mb-1.5">Pilih Batch Asal (Kardus Utuh) *</label>
+                <label class="block text-sm font-semibold text-zcTxt mb-1.5">Pilih Batch Asal (Satuan Besar) *</label>
                 <select name="no_batch_asal" id="no_batch_asal" required class="select2 w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-white">
                     <option value="">-- Memuat Batch... --</option>
                 </select>
             </div>
             
             <div id="qty_container" class="hidden">
-                <label class="block text-sm font-semibold text-zcTxt mb-1.5">Jumlah Box yang Akan Dipecah *</label>
+                <label class="block text-sm font-semibold text-zcTxt mb-1.5">Jumlah Satuan Besar yang Akan Dipecah *</label>
                 <div class="flex items-center gap-3">
                     <input type="number" name="qty_box" id="qty_box" required min="1" placeholder="Contoh: 1" class="w-32 text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
-                    <span id="satuan_besar_lbl" class="text-sm font-bold text-zcTxt bg-slate-100 px-3 py-2 rounded-lg border border-slate-200">Box</span>
+                    <span id="satuan_besar_lbl" class="text-sm font-bold text-zcTxt bg-slate-100 px-3 py-2 rounded-lg border border-slate-200">Satuan Besar</span>
                     <span class="text-zcMut mx-1">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </span>
                     <input type="text" id="hasil_konversi" readonly class="w-32 text-sm border border-transparent bg-emerald-50 text-emerald-700 font-bold rounded-xl px-3.5 py-2.5" placeholder="0">
-                    <span id="satuan_kecil_lbl" class="text-sm font-bold text-emerald-700">Pcs</span>
+                    <span id="satuan_kecil_lbl" class="text-sm font-bold text-emerald-700">Satuan Kecil</span>
                 </div>
-                <p class="text-[10px] text-slate-500 mt-2 italic">* Sistem otomatis akan mengurangi stok dari Batch asal dan membuat Sub-Batch baru (akhiran .A / .B dst) dengan isi satuan kecil.</p>
+                <p class="text-[10px] text-slate-500 mt-2 italic">* Sistem otomatis akan mengurangi stok dari Batch Asal (Gudang) dan membuat Sub-Batch baru (akhiran .A / .B dst) dengan isi satuan kecil.</p>
             </div>
 
             <div class="pt-2">
                 <button type="submit" class="w-full bg-zc hover:bg-zcHv text-white font-bold text-sm py-3 px-4 rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-[.98]">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                    <span>Proses Pemecahan (Mutasi Konversi)</span>
+                    <span>Proses Konversi (Mutasi Satuan)</span>
                 </button>
             </div>
         </form>
