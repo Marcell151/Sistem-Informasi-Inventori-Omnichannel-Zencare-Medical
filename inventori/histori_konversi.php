@@ -7,8 +7,56 @@ require_once __DIR__ . '/../config/layout.php';
 
 requireRole(['superadmin', 'admin']);
 
-// Ambil data histori konversi
-$stmt = $pdo->query("
+// Parameter Filter & Batasan (Default: 30 Hari Terakhir, Maks 20 Data Terbaru)
+$periode = $_GET['periode'] ?? '30_hari';
+$limit   = $_GET['limit'] ?? '20';
+$q       = trim($_GET['q'] ?? '');
+
+$whereClauses = [];
+$params = [];
+
+// Filter Periode Waktu
+if ($periode === '7_hari') {
+    $whereClauses[] = "hk.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
+    $labelPeriode = "7 Hari Terakhir";
+} elseif ($periode === '30_hari') {
+    $whereClauses[] = "hk.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
+    $labelPeriode = "30 Hari Terakhir";
+} elseif ($periode === 'bulan_ini') {
+    $whereClauses[] = "MONTH(hk.created_at) = MONTH(CURDATE()) AND YEAR(hk.created_at) = YEAR(CURDATE())";
+    $labelPeriode = "Bulan Ini (" . date('F Y') . ")";
+} else {
+    $periode = 'semua';
+    $labelPeriode = "Semua Waktu";
+}
+
+// Filter Pencarian Teks
+if ($q !== '') {
+    $whereClauses[] = "(pi.nama_produk LIKE :q1 OR pv.nama_variasi LIKE :q2 OR hk.batch_asal LIKE :q3 OR hk.batch_hasil LIKE :q4 OR u.nama_lengkap LIKE :q5)";
+    $params[':q1'] = '%' . $q . '%';
+    $params[':q2'] = '%' . $q . '%';
+    $params[':q3'] = '%' . $q . '%';
+    $params[':q4'] = '%' . $q . '%';
+    $params[':q5'] = '%' . $q . '%';
+}
+
+$whereSql = !empty($whereClauses) ? "WHERE " . implode(" AND ", $whereClauses) : "";
+
+// Batasan Jumlah Baris
+$limitSql = "";
+if ($limit === '20') {
+    $limitSql = "LIMIT 20";
+    $labelLimit = "20 Terakhir";
+} elseif ($limit === '50') {
+    $limitSql = "LIMIT 50";
+    $labelLimit = "50 Terakhir";
+} else {
+    $limit = 'semua';
+    $labelLimit = "Semua Data";
+}
+
+// Ambil data histori konversi sesuai filter
+$sql = "
     SELECT hk.*, 
            pi.nama_produk, 
            pv.nama_variasi, 
@@ -22,8 +70,12 @@ $stmt = $pdo->query("
     JOIN produk_induk pi ON pv.id_produk_induk = pi.id
     LEFT JOIN users u ON hk.dibuat_oleh = u.id
     LEFT JOIN stok_batch sb ON sb.no_batch COLLATE utf8mb4_unicode_ci = hk.batch_hasil COLLATE utf8mb4_unicode_ci AND sb.id_variasi = hk.id_variasi
+    $whereSql
     ORDER BY hk.created_at DESC
-");
+    $limitSql
+";
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
 $histori = $stmt->fetchAll();
 
 $totalKonversi = count($histori);
@@ -40,7 +92,10 @@ layoutHeader('Histori Konversi Satuan', 'Laporan jejak audit (Audit Trail) pemec
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
     <div class="bg-white border border-zcBrd rounded-2xl p-4 shadow-sm flex items-center justify-between">
         <div>
-            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Aktivitas Konversi</div>
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                <span>Aktivitas Ditampilkan</span>
+                <span class="text-[10px] text-slate-400 font-normal">(<?= htmlspecialchars($labelPeriode) ?>)</span>
+            </div>
             <div class="text-2xl font-black text-slate-800 mt-1"><?= number_format($totalKonversi) ?> <span class="text-xs font-semibold text-slate-400">kali</span></div>
         </div>
         <div class="w-11 h-11 rounded-xl bg-blue-50 text-zc flex items-center justify-center">
@@ -67,11 +122,75 @@ layoutHeader('Histori Konversi Satuan', 'Laporan jejak audit (Audit Trail) pemec
     </div>
 </div>
 
-<div class="mb-6 flex justify-end">
-    <a href="konversi_uom.php" class="bg-zc hover:bg-zcHv text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm transition flex items-center gap-2 cursor-pointer active:scale-95">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-        Konversi Satuan Manual
-    </a>
+<!-- Toolbar Filter & Aksi Cepat -->
+<div class="bg-white border border-zcBrd rounded-2xl p-4 mb-4 shadow-sm">
+    <form method="GET" action="histori_konversi.php" class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        
+        <!-- Filter Controls -->
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- Dropdown Periode -->
+            <div class="flex items-center gap-1.5">
+                <label for="periode" class="text-xs font-bold text-slate-600 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>Periode:</span>
+                </label>
+                <select name="periode" id="periode" onchange="this.form.submit()" class="text-xs border border-zcBrd rounded-xl px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc font-semibold text-slate-700 cursor-pointer">
+                    <option value="30_hari" <?= $periode === '30_hari' ? 'selected' : '' ?>>30 Hari Terakhir (Default)</option>
+                    <option value="bulan_ini" <?= $periode === 'bulan_ini' ? 'selected' : '' ?>>Bulan Ini</option>
+                    <option value="7_hari" <?= $periode === '7_hari' ? 'selected' : '' ?>>7 Hari Terakhir</option>
+                    <option value="semua" <?= $periode === 'semua' ? 'selected' : '' ?>>Semua Waktu</option>
+                </select>
+            </div>
+
+            <!-- Dropdown Limit -->
+            <div class="flex items-center gap-1.5">
+                <label for="limit" class="text-xs font-bold text-slate-600 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+                    <span>Tampilkan:</span>
+                </label>
+                <select name="limit" id="limit" onchange="this.form.submit()" class="text-xs border border-zcBrd rounded-xl px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc font-semibold text-slate-700 cursor-pointer">
+                    <option value="20" <?= $limit === '20' ? 'selected' : '' ?>>20 Terbaru</option>
+                    <option value="50" <?= $limit === '50' ? 'selected' : '' ?>>50 Terbaru</option>
+                    <option value="semua" <?= $limit === 'semua' ? 'selected' : '' ?>>Semua Data</option>
+                </select>
+            </div>
+
+            <!-- Input Pencarian -->
+            <div class="relative min-w-[220px]">
+                <input type="text" name="q" value="<?= htmlspecialchars($q) ?>" placeholder="Cari obat, batch, operator..." class="w-full text-xs border border-zcBrd rounded-xl pl-8 pr-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc">
+                <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+
+            <!-- Tombol Cari -->
+            <button type="submit" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                <span>Cari</span>
+            </button>
+
+            <!-- Reset Filter Link jika ada filter aktif selain default -->
+            <?php if ($periode !== '30_hari' || $limit !== '20' || $q !== ''): ?>
+                <a href="histori_konversi.php" class="text-xs text-rose-600 hover:text-rose-800 font-semibold underline ml-1">Reset Filter</a>
+            <?php endif; ?>
+        </div>
+
+        <!-- Tombol Aksi Konversi Manual -->
+        <div class="flex items-center gap-2 self-end lg:self-auto">
+            <a href="konversi_uom.php" class="bg-zc hover:bg-zcHv text-white px-4 py-2 rounded-xl font-bold text-xs shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95 whitespace-nowrap">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span>Konversi Satuan Baru</span>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Info Status Filter Aktif -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-500 mb-3 px-1 gap-1">
+    <div>
+        Menampilkan <b class="text-slate-800"><?= count($histori) ?></b> aktivitas konversi 
+        <span class="text-slate-400">(Periode: <span class="font-medium text-slate-600"><?= htmlspecialchars($labelPeriode) ?></span> &bull; Limit: <span class="font-medium text-slate-600"><?= htmlspecialchars($labelLimit) ?></span>)</span>
+    </div>
+    <?php if ($q !== ''): ?>
+    <div>Hasil pencarian kata kunci: "<b class="text-zc"><?= htmlspecialchars($q) ?></b>"</div>
+    <?php endif; ?>
 </div>
 
 <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden mb-8">
