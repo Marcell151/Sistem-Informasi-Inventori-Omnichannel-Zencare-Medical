@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../config/koneksi.php';
-$stmt = $pdo->query("SELECT pv.id, pi.nama_produk, pv.nama_variasi, sc.stok, pv.rasio_konversi, FLOOR(sc.stok/pv.rasio_konversi) as dus FROM produk_variasi pv JOIN produk_induk pi ON pi.id=pv.id_produk_induk LEFT JOIN stok_toko sc ON sc.id_variasi=pv.id WHERE FLOOR(sc.stok/pv.rasio_konversi) BETWEEN 50 AND 65 OR sc.stok BETWEEN 50 AND 65");
-print_r($stmt->fetchAll(PDO::FETCH_ASSOC));
-
-
+require __DIR__ . '/../config/koneksi.php';
+$q = $pdo->query('SELECT v.id, v.sku_variasi, pi.nama_produk, v.nama_variasi, v.is_active, pi.kategori FROM produk_variasi v JOIN produk_induk pi ON v.id_produk_induk = pi.id');
+foreach ($q as $r) {
+    echo "{$r['id']}: {$r['sku_variasi']} - {$r['nama_produk']} ({$r['nama_variasi']}) [kat: {$r['kategori']}, active: {$r['is_active']}]\n";
+}

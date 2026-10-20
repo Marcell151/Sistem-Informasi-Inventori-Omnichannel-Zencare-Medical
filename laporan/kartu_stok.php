@@ -75,22 +75,44 @@ if ($id_variasi > 0) {
         else $allLogsKecil[] = $log;
     }
     
-    // Helper function untuk mengekstrak atau mencari nomor batch
-    $getBatchForLog = function($log) use ($pdo, $id_variasi) {
+    // Helper function untuk memformat tampilan batch pada tabel kartu stok (MURNI NOMOR BATCH SAJA, TANPA KURUNG / SATUAN)
+    function formatKartuStokBatch($batchStr) {
+        if (empty($batchStr) || $batchStr === '-') return '-';
+        $parts = is_array($batchStr) ? $batchStr : array_map('trim', explode(',', $batchStr));
+        $cleanBatches = [];
+        foreach ($parts as $p) {
+            $c = trim(preg_replace('/\s*\(.*?\)/', '', $p));
+            if ($c !== '' && !in_array($c, $cleanBatches)) {
+                $cleanBatches[] = $c;
+            }
+        }
+        if (empty($cleanBatches)) return '-';
+        if (count($cleanBatches) > 1) {
+            $htmlParts = array_map(function($p) {
+                return '<div class="whitespace-nowrap font-mono text-xs font-bold text-slate-800">' . htmlspecialchars($p) . '</div>';
+            }, $cleanBatches);
+            return '<div class="space-y-0.5">' . implode('', $htmlParts) . '</div>';
+        } else {
+            return '<span class="font-mono text-xs font-bold text-slate-800">' . htmlspecialchars($cleanBatches[0]) . '</span>';
+        }
+    }
+
+    // Helper function untuk mengekstrak atau mencari nomor batch serta rincian logistik
+    $getBatchForLog = function(&$log) use ($pdo, $id_variasi) {
         $desc = $log['deskripsi'] ?? '';
-        $batch = '';
+        $batchDetail = '';
         
-        // 1. Ekstrak dari teks deskripsi [Batch: XXX] atau Sub-Batch XXX atau SN: XXX
-        if (preg_match('/(?:Batch|Sub-Batch|SN)[:\s]+([A-Za-z0-9\-\.\,\s]+?)(?:\]|\)|$)/i', $desc, $m)) {
-            $batch = trim($m[1]);
-        } elseif (preg_match('/(?:Batch|Sub-Batch|SN)[:\s]+([A-Za-z0-9\-\.]+)/i', $desc, $m)) {
-            $batch = trim($m[1]);
+        // 1. Ekstrak dari teks deskripsi [Batch: ...] atau [SN: ...] atau Sub-Batch ...
+        if (preg_match('/\[(?:Batch|SN)[:\s]+(.*?)\]/i', $desc, $m)) {
+            $batchDetail = trim($m[1]);
+        } elseif (preg_match('/(?:Lahir Sub-Batch|Sub-Batch|Bongkar Dus|Batch|SN)[:\s]+([A-Za-z0-9\-\.]+)/i', $desc, $m)) {
+            $batchDetail = trim($m[1]);
         }
         
         // 2. Fallback: Cari dari detail_penjualan (POS / E-Commerce) jika kosong
-        if (empty($batch)) {
+        if (empty($batchDetail)) {
             $invoiceNo = $log['no_ref_dokumen'] ?? '';
-            if (empty($invoiceNo) && preg_match('/(POS-\d+-\d+|INV-\d+-\d+|ZEN-\d+-\d+)/i', $desc, $mInv)) {
+            if (empty($invoiceNo) && preg_match('/(POS-\d+-\d+|INV-\d+-\d+|ZEN-\d+-\d+|WEB-\d+-\d+)/i', $desc, $mInv)) {
                 $invoiceNo = $mInv[1];
             }
             if (!empty($invoiceNo)) {
@@ -102,12 +124,12 @@ if ($id_variasi > 0) {
                 ");
                 $qLogistik->execute([$invoiceNo, $id_variasi]);
                 $val = $qLogistik->fetchColumn();
-                if ($val) $batch = $val;
+                if ($val) $batchDetail = $val;
             }
         }
         
         // 3. Fallback: Cari dari penerimaan_detail jika dokumen penerimaan
-        if (empty($batch)) {
+        if (empty($batchDetail)) {
             $refPO = $log['no_ref_dokumen'] ?? '';
             if (empty($refPO) && preg_match('/Ref:\s*([A-Za-z0-9\-\_]+)/i', $desc, $mRef)) {
                 $refPO = $mRef[1];
@@ -121,11 +143,18 @@ if ($id_variasi > 0) {
                 ");
                 $qPO->execute([$refPO, $id_variasi]);
                 $val = $qPO->fetchColumn();
-                if ($val) $batch = $val;
+                if ($val) $batchDetail = $val;
             }
         }
         
-        return $batch;
+        // Rincian Aktivitas: Jika deskripsi belum memiliki [Batch: ...], tambahkan rincian batch + satuan di dalam kurung
+        if (!empty($batchDetail) && stripos($desc, '[Batch:') === false && stripos($desc, '[SN:') === false && stripos($desc, 'Sub-Batch') === false) {
+            $log['deskripsi_tampil'] = $desc . ' [Batch: ' . $batchDetail . ']';
+        } else {
+            $log['deskripsi_tampil'] = $desc;
+        }
+
+        return $batchDetail;
     };
 
     // Proses Besar (Mundur dari stok sekarang)
@@ -135,8 +164,6 @@ if ($id_variasi > 0) {
     
     foreach ($allLogsBesar as $log) {
         $q = intval($log['qty']);
-        $q = floor($q / $produkData['rasio_konversi']);
-        if ($q == 0) $q = 1;
         
         $log['qty_calc'] = $q;
         $log['sisa_stok_calc'] = $currentBalanceBesar; 
@@ -308,7 +335,7 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
             <thead class="bg-amber-600 text-white border-b-2 border-slate-900">
                 <tr>
                     <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-24">Tanggal</th>
-                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-24">No. Batch</th>
+                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-36">No. Batch</th>
                     <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle">Jenis Mutasi & Aktivitas</th>
                     <th colspan="3" class="border border-slate-900 px-3 py-1.5 text-center">Kuantitas</th>
                     <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-32">Penanggung Jawab</th>
@@ -329,8 +356,8 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
                     <?php foreach ($logDataBesar as $log): ?>
                     <tr class="hover:bg-slate-50 print:hover:bg-transparent">
                         <td class="border border-slate-900 px-2 py-1.5 text-center whitespace-nowrap"><?= date('d/m/Y H:i', strtotime($log['tanggal'])) ?></td>
-                        <td class="border border-slate-900 px-2 py-1.5 text-center font-mono text-xs"><?= htmlspecialchars($log['no_batch'] ?? '-') ?></td>
-                        <td class="border border-slate-900 px-3 py-1.5"><b><?= htmlspecialchars($log['jenis_mutasi']) ?></b> - <?= htmlspecialchars($log['deskripsi'] ?? '-') ?></td>
+                        <td class="border border-slate-900 px-2 py-1.5 text-center"><?= formatKartuStokBatch($log['no_batch'] ?? '-') ?></td>
+                        <td class="border border-slate-900 px-3 py-1.5"><b><?= htmlspecialchars($log['jenis_mutasi']) ?></b> - <?= htmlspecialchars($log['deskripsi_tampil'] ?? $log['deskripsi'] ?? '-') ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-bold <?= $log['jenis_mutasi']=='Masuk'?'text-emerald-700':'' ?>"><?= $log['jenis_mutasi']=='Masuk' ? number_format($log['qty_calc']) : '' ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-bold <?= $log['jenis_mutasi']=='Keluar'?'text-rose-700':'' ?>"><?= $log['jenis_mutasi']=='Keluar' ? number_format($log['qty_calc']) : '' ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-black bg-slate-50"><?= number_format($log['sisa_stok_calc']) ?></td>
@@ -376,7 +403,7 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
             <thead class="bg-emerald-600 text-white border-b-2 border-slate-900">
                 <tr>
                     <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-24">Tanggal</th>
-                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-28"><?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Serial Number' : 'No. Batch' ?></th>
+                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-36"><?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Serial Number' : 'No. Batch' ?></th>
                     <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle">Jenis Mutasi & Aktivitas</th>
                     <th colspan="3" class="border border-slate-900 px-3 py-1.5 text-center">Kuantitas</th>
                     <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-32">Penanggung Jawab</th>
@@ -397,8 +424,8 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
                     <?php foreach ($logDataKecil as $log): ?>
                     <tr class="hover:bg-slate-50 print:hover:bg-transparent">
                         <td class="border border-slate-900 px-2 py-1.5 text-center whitespace-nowrap"><?= date('d/m/Y H:i', strtotime($log['tanggal'])) ?></td>
-                        <td class="border border-slate-900 px-2 py-1.5 text-center font-mono text-xs"><?= htmlspecialchars($log['no_batch'] ?? '-') ?></td>
-                        <td class="border border-slate-900 px-3 py-1.5"><b><?= htmlspecialchars($log['jenis_mutasi']) ?></b> - <?= htmlspecialchars($log['deskripsi'] ?? '-') ?></td>
+                        <td class="border border-slate-900 px-2 py-1.5 text-center"><?= formatKartuStokBatch($log['no_batch'] ?? '-') ?></td>
+                        <td class="border border-slate-900 px-3 py-1.5"><b><?= htmlspecialchars($log['jenis_mutasi']) ?></b> - <?= htmlspecialchars($log['deskripsi_tampil'] ?? $log['deskripsi'] ?? '-') ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-bold <?= $log['jenis_mutasi']=='Masuk'?'text-emerald-700':'' ?>"><?= $log['jenis_mutasi']=='Masuk' ? number_format($log['qty_calc']) : '' ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-bold <?= $log['jenis_mutasi']=='Keluar'?'text-rose-700':'' ?>"><?= $log['jenis_mutasi']=='Keluar' ? number_format($log['qty_calc']) : '' ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-black bg-slate-50"><?= number_format($log['sisa_stok_calc']) ?></td>

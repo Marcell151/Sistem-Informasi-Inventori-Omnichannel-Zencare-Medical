@@ -50,10 +50,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                 $scannedCode = $item['scanned_code'] ?? null;
                 $isAnomaly = !empty($item['is_anomaly']);
                 $batchSeharusnya = $item['batch_seharusnya'] ?? null;
+                $allocations = $item['allocations'] ?? [];
+                $alkesAllocations = $item['alkes_allocations'] ?? [];
 
                 // FEFO / Batch Logic untuk Obat
                 if ($kategori === 'Obat') {
-                    if ($scannedCode) {
+                    if (!empty($allocations) && is_array($allocations)) {
+                        // Multi-batch allocation handling (Single unified cart row with multi-batch allocations)
+                        foreach ($allocations as $al) {
+                            $alBatch = trim($al['scanned_batch'] ?? $al['batch'] ?? '');
+                            $alQtySatuan = intval($al['qty'] ?? 0);
+                            if (empty($alBatch) || $alQtySatuan <= 0) continue;
+                            
+                            $alQtyPotong = ($satuanTipe === 'besar') ? ($alQtySatuan * $rasio) : $alQtySatuan;
+                            
+                            $stmtCheck = $pdo->prepare("SELECT id, no_batch, tgl_exp, stok_sisa FROM stok_batch WHERE id_variasi = ? AND no_batch = ? FOR UPDATE");
+                            $stmtCheck->execute([$idVar, $alBatch]);
+                            $b = $stmtCheck->fetch();
+                            if (!$b || $b['stok_sisa'] < $alQtyPotong) {
+                                throw new Exception("Stok Batch $alBatch tidak mencukupi untuk Obat ID $idVar. (Dibutuhkan: $alQtyPotong, Tersedia: " . ($b['stok_sisa'] ?? 0) . ")");
+                            }
+                            if ($b['tgl_exp'] < date('Y-m-d')) {
+                                throw new Exception("Batch $alBatch sudah KADALUARSA (Expired: {$b['tgl_exp']}). Obat kadaluarsa dilarang dijual!");
+                            }
+                            $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$alQtyPotong, $b['id']]);
+
+                            if (!empty($al['is_anomaly']) && !empty($al['batch_seharusnya'])) {
+                                $pdo->prepare("INSERT INTO log_anomali_fefo (id_penjualan, id_user, id_variasi, batch_diambil, batch_seharusnya, qty) VALUES (?, ?, ?, ?, ?, ?)")
+                                    ->execute([$idPenjualan, $_SESSION['user_id'], $idVar, $alBatch, $al['batch_seharusnya'], $alQtyPotong]);
+                            }
+
+                            $satLableItem = ($satuanTipe === 'besar') ? $varData['satuan_besar'] : $varData['satuan_kecil'];
+                            $catatanLogistik[] = "$alBatch ({$alQtySatuan} $satLableItem)";
+                        }
+                    } else if ($scannedCode) {
                         // Pakai batch spesifik yang di-scan
                         $stmtCheck = $pdo->prepare("SELECT id, no_batch, tgl_exp, stok_sisa FROM stok_batch WHERE id_variasi = ? AND no_batch = ? FOR UPDATE");
                         $stmtCheck->execute([$idVar, $scannedCode]);
@@ -71,7 +101,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                                 ->execute([$idPenjualan, $_SESSION['user_id'], $idVar, $scannedCode, $batchSeharusnya, $qtyPotong]);
                         }
 
-                        $catatanLogistik[] = $scannedCode . " ({$qtyPotong}x)";
+                        $satLableItem = ($satuanTipe === 'besar') ? $varData['satuan_besar'] : $varData['satuan_kecil'];
+                        $catatanLogistik[] = $scannedCode . " ({$qtyInput} $satLableItem)";
                     } else {
                         // Auto FEFO fallback (HANYA batch yang belum expired)
                         $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 AND tgl_exp >= CURDATE() ORDER BY tgl_exp ASC, no_batch ASC FOR UPDATE");
@@ -92,7 +123,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
 
                 // SN Auto-Pick / Scan untuk Alkes
                 if ($kategori === 'Alat Kesehatan') {
-                    if ($scannedCode) {
+                    if (!empty($alkesAllocations) && is_array($alkesAllocations)) {
+                        foreach ($alkesAllocations as $u) {
+                            $snStr = trim($u['sn'] ?? '');
+                            if (empty($snStr)) continue;
+                            $stmtUpdateSN = $pdo->prepare("UPDATE unit_serial SET status = 'Terjual', id_penjualan = ? WHERE serial_number = ? AND id_variasi = ? AND status = 'Tersedia'");
+                            $stmtUpdateSN->execute([$idPenjualan, $snStr, $idVar]);
+                            if ($stmtUpdateSN->rowCount() === 0) throw new Exception("SN $snStr tidak valid/tersedia.");
+                            $catatanLogistik[] = $snStr;
+                        }
+                    } else if ($scannedCode) {
                         $stmtUpdateSN = $pdo->prepare("UPDATE unit_serial SET status = 'Terjual', id_penjualan = ? WHERE serial_number = ? AND id_variasi = ? AND status = 'Tersedia'");
                         $stmtUpdateSN->execute([$idPenjualan, $scannedCode, $idVar]);
                         if ($stmtUpdateSN->rowCount() === 0) throw new Exception("SN $scannedCode tidak valid/tersedia.");
@@ -126,9 +166,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                 $batchStr = !empty($catatanLogistik) ? " [Batch: " . implode(', ', $catatanLogistik) . "]" : "";
                 $deskripsi = "Penjualan Luring $invoiceNo$batchStr";
                 $kasirUserId = $_SESSION['user_id'] ?? null;
+                $qtyKartu = ($satuanTipe === 'besar') ? $qtyInput : $qtyPotong;
+                $sisaKartu = ($satuanTipe === 'besar') ? floor($sisa / $rasio) : $sisa;
 
                 $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Keluar', 'POS', 'Penjualan POS', ?, ?, ?, ?, ?)")
-                    ->execute([$idVar, $satuanTipe, $invoiceNo, $qtyPotong, $sisa, $deskripsi, $kasirUserId]);
+                    ->execute([$idVar, $satuanTipe, $invoiceNo, $qtyKartu, $sisaKartu, $deskripsi, $kasirUserId]);
                 $totalHarga += $effPrice * $qtyInput;
             }
 
@@ -277,6 +319,7 @@ $shopeeOn = false;
                         $stok = intval($item['stok']); 
                         ?>
                         <div class="product-card bg-slate-50 border border-zcBrd rounded-2xl p-3.5 hover:border-zc transition flex flex-col"
+                             data-id="<?= intval($item['id']) ?>"
                              data-search="<?= strtolower($item['nama'] . ' ' . $item['sku_variasi']) ?>"
                              data-sn="<?= strtolower($item['sn_list'] ?? '') ?>"
                              data-batch="<?= strtolower($item['batch_list'] ?? '') ?>"
@@ -345,7 +388,7 @@ $shopeeOn = false;
                                 </div>
 
                                 <!-- Sisa Stok Terpisah (Besar vs Kecil) -->
-                                <div class="p-1.5 rounded-lg border text-[10px] <?= $stok > 0 ? 'bg-emerald-50/60 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-700' ?> flex items-center justify-between">
+                                <div class="sisa-stok-container p-1.5 rounded-lg border text-[10px] <?= $stok > 0 ? 'bg-emerald-50/60 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-700' ?> flex items-center justify-between">
                                     <span class="font-bold">Sisa Stok:</span>
                                     <div class="flex items-center gap-1 font-extrabold text-[10px]">
                                         <?php if ($item['rasio_konversi'] > 1): ?>
@@ -411,7 +454,7 @@ $shopeeOn = false;
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             <span>Scan Kamera</span>
                         </button>
-                        <input type="text" id="manual_barcode_input" placeholder="Scan / Ketik Barcode..." autocomplete="off" onkeypress="handleManualBarcode(event)" class="text-xs border border-zcBrd rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-zc focus:ring-1 focus:ring-zc bg-slate-50 w-32 sm:w-40 shadow-inner transition-colors">
+                        <input type="text" id="manual_barcode_input" placeholder="Scan / Ketik Barcode..." autocomplete="off" onkeydown="handleManualBarcode(event)" class="text-xs border border-zcBrd rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-zc focus:ring-1 focus:ring-zc bg-slate-50 w-32 sm:w-40 shadow-inner transition-colors">
                     </div>
                 </div>
 
@@ -618,6 +661,104 @@ $shopeeOn = false;
     <script>
     let cart = [];
 
+    function computeAllocations(item, targetQty) {
+        if (!item.needs_verification) {
+            item.allocations = [];
+            item.alkes_allocations = [];
+            return;
+        }
+
+        if (item.kategori === 'Alat Kesehatan') {
+            var currentAlkes = item.alkes_allocations || [];
+            var newAlkes = [];
+            for (var k = 0; k < targetQty; k++) {
+                if (currentAlkes[k] && currentAlkes[k].verified) {
+                    newAlkes.push(currentAlkes[k]);
+                } else {
+                    newAlkes.push({
+                        unit_index: k + 1,
+                        sn: (currentAlkes[k] && currentAlkes[k].sn) ? currentAlkes[k].sn : null,
+                        verified: false,
+                        is_anomaly: false,
+                        sn_seharusnya: null
+                    });
+                }
+            }
+            item.alkes_allocations = newAlkes;
+            return;
+        }
+
+        if (item.kategori === 'Obat') {
+            var rawList = item.batch_list || '';
+            var entries = rawList ? rawList.split(',').map(function(s) {
+                var p = s.split('|');
+                return { code: p[0].trim(), stockPcs: parseInt(p[1]) || 0 };
+            }) : [];
+
+            var relevant = entries.filter(function(b) {
+                var isEceran = b.code.includes('.');
+                return (item.satuan_tipe === 'kecil' && isEceran) || (item.satuan_tipe === 'besar' && !isEceran);
+            });
+
+            relevant.forEach(function(b) {
+                b.stockUom = (item.satuan_tipe === 'besar') ? Math.floor(b.stockPcs / (item.rasio || 1)) : b.stockPcs;
+            });
+
+            var prevAllocations = item.allocations || [];
+            var verifiedAllocations = prevAllocations.filter(function(al) { return al.verified; });
+
+            var newAllocations = [];
+            var remainingNeeded = targetQty;
+
+            // Retain verified allocations up to targetQty
+            for (var v = 0; v < verifiedAllocations.length; v++) {
+                var val = verifiedAllocations[v];
+                if (remainingNeeded <= 0) break;
+                var takeVer = Math.min(val.qty, remainingNeeded);
+                newAllocations.push({
+                    batch: val.batch,
+                    qty: takeVer,
+                    verified: true,
+                    scanned_batch: val.scanned_batch || val.batch,
+                    is_anomaly: val.is_anomaly || false,
+                    batch_seharusnya: val.batch_seharusnya || null
+                });
+                remainingNeeded -= takeVer;
+            }
+
+            // If more qty is needed, allocate from available batches in FEFO order
+            if (remainingNeeded > 0) {
+                var batchUsedMap = {};
+                newAllocations.forEach(function(al) {
+                    var bKey = (al.scanned_batch || al.batch).toLowerCase();
+                    batchUsedMap[bKey] = (batchUsedMap[bKey] || 0) + al.qty;
+                });
+
+                for (var bIdx = 0; bIdx < relevant.length; bIdx++) {
+                    if (remainingNeeded <= 0) break;
+                    var b = relevant[bIdx];
+                    var used = batchUsedMap[b.code.toLowerCase()] || 0;
+                    var avail = b.stockUom - used;
+                    if (avail > 0) {
+                        var take = Math.min(avail, remainingNeeded);
+                        newAllocations.push({
+                            batch: b.code,
+                            qty: take,
+                            verified: false,
+                            scanned_batch: null,
+                            is_anomaly: false,
+                            batch_seharusnya: null
+                        });
+                        remainingNeeded -= take;
+                        batchUsedMap[b.code.toLowerCase()] = used + take;
+                    }
+                }
+            }
+
+            item.allocations = newAllocations;
+        }
+    }
+
     function addToPos(btnElement, scannedCode = null) {
         try {
             var card = btnElement.closest('.product-card');
@@ -628,12 +769,10 @@ $shopeeOn = false;
             var name = btnElement.getAttribute('data-nama');
             var hargaKecil = parseFloat(btnElement.getAttribute('data-hk'));
             var hargaBesar = parseFloat(btnElement.getAttribute('data-hb'));
-            var rawTotalStock = parseInt(btnElement.getAttribute('data-stok')); // Stok total
+            var rawTotalStock = parseInt(btnElement.getAttribute('data-stok'));
             var rasio = parseInt(btnElement.getAttribute('data-rasio'));
             var kat = btnElement.getAttribute('data-kat');
             
-            // Ambil batasan stok presisi dari parent card
-            var card = btnElement.closest('.product-card');
             var rawEceran = card ? card.getAttribute('data-stok-eceran') : null;
             var rawDus = card ? card.getAttribute('data-stok-dus') : null;
             var stokEceran = rawEceran ? parseInt(rawEceran) : rawTotalStock;
@@ -641,55 +780,24 @@ $shopeeOn = false;
 
             var needsVerification = (kat === 'Obat' || kat === 'Alat Kesehatan');
 
-            // === PENENTUAN UOM (SATUAN) ===
             var sel = document.getElementById('uom_' + id);
             var uomType = sel ? sel.value : 'kecil';
             var isScannedSubBatch = scannedCode ? scannedCode.includes('.') : false;
 
             if (scannedCode) {
-                // 1. Deteksi UOM dari fisik barcode (Hanya berlaku untuk barang ber-batch)
                 var detectedUom = uomType;
                 if (rawBatch) {
                     detectedUom = isScannedSubBatch ? 'kecil' : 'besar';
                 }
 
-                // 2. SPECIFIC IDENTITY SEARCH:
-                // Cek status baris keranjang untuk produk ini secara komprehensif (Fleksibel scan acak)
-                var exactUnverifiedItem = null;
-                var otherUnverifiedItem = null;
-
-                for (var i = 0; i < cart.length; i++) {
-                    if (parseInt(cart[i].id) === id && cart[i].needs_verification && !cart[i].scanned_code) {
-                        if (cart[i].satuan_tipe === detectedUom) {
-                            exactUnverifiedItem = cart[i];
-                            break; // Prioritas utama: temukan baris yang menunggu verifikasi dengan UOM yang sama
-                        } else if (!otherUnverifiedItem) {
-                            otherUnverifiedItem = cart[i]; // Simpan baris unverified satuan lain sebagai pembanding
-                        }
-                    }
-                }
-
-                // Cek apakah ada baris keranjang yang SUDAH TERVERIFIKASI dengan UOM yang sama
-                var verifiedItemSameUom = null;
-                for (var i = 0; i < cart.length; i++) {
-                    if (parseInt(cart[i].id) === id && cart[i].satuan_tipe === detectedUom && cart[i].scanned_code) {
-                        verifiedItemSameUom = cart[i];
-                        break;
-                    }
-                }
-
-                if (exactUnverifiedItem) {
-                    // Kasus A: Ada baris di keranjang yang memang menunggu verifikasi satuan ini!
-                    uomType = exactUnverifiedItem.satuan_tipe;
-                } else if (verifiedItemSameUom) {
-                    // Kasus B: Baris satuan ini sudah ada & sudah terverifikasi sebelumnya.
-                    // Scan fisik kedua kali berarti menambah kuantitas (+1) satuan ini!
-                    uomType = detectedUom;
-                } else if (otherUnverifiedItem) {
-                    // Kasus C: Di keranjang HANYA ada pesanan satuan lain (misal hanya beli eceran),
-                    // dan sama sekali TIDAK ada pesanan grosir kardus (atau sebaliknya).
-                    // Ini adalah SAFETY GUARD murni: cegah karyawan salah ambil fisik!
-                    if (otherUnverifiedItem.satuan_tipe === 'kecil' && detectedUom === 'besar') {
+                // Cek keselamatan: HANYA peringatkan jika keranjang TIDAK memiliki satuan yang di-scan,
+                // tetapi memiliki satuan sebaliknya dari produk yang sama!
+                var matchingItem = cart.find(ci => parseInt(ci.id) === id && ci.satuan_tipe === detectedUom);
+                var oppositeUom = (detectedUom === 'kecil') ? 'besar' : 'kecil';
+                var oppositeItem = cart.find(ci => parseInt(ci.id) === id && ci.satuan_tipe === oppositeUom && ci.needs_verification);
+                
+                if (!matchingItem && oppositeItem) {
+                    if (detectedUom === 'besar' && oppositeItem.satuan_tipe === 'kecil') {
                         Swal.fire({
                             title: '❌ Salah Ambil Fisik!', 
                             html: 'Di keranjang pesanan adalah <b>ECERAN (Kecil)</b>, tetapi fisik yang Anda scan adalah <b>GROSIR / DUS (Besar)</b>.<br><br><span class="text-xs text-slate-500">Silakan ambil kemasan eceran (sub-batch bertitik) atau tambahkan kardus ke keranjang terlebih dahulu.</span>', 
@@ -697,7 +805,7 @@ $shopeeOn = false;
                         });
                         return;
                     }
-                    if (otherUnverifiedItem.satuan_tipe === 'besar' && detectedUom === 'kecil') {
+                    if (detectedUom === 'kecil' && oppositeItem.satuan_tipe === 'besar') {
                         Swal.fire({
                             title: '❌ Salah Ambil Fisik!', 
                             html: 'Di keranjang pesanan adalah <b>GROSIR / DUS (Besar)</b>, tetapi fisik yang Anda scan adalah <b>ECERAN (Kecil)</b>.<br><br><span class="text-xs text-slate-500">Silakan ambil kemasan kardus utuh atau tambahkan eceran ke keranjang terlebih dahulu.</span>', 
@@ -705,89 +813,20 @@ $shopeeOn = false;
                         });
                         return;
                     }
-                    uomType = detectedUom;
-                } else {
-                    // Kasus D: Direct Scan (kasir langsung scan tanpa klik katalog dulu)
-                    uomType = detectedUom;
-                    if (sel) sel.value = uomType; // Sinkronkan visual
                 }
-
-                // === DYNAMIC MAX STOCK CALCULATION ===
-                // Hitung batas maksimal berdasarkan UOM fisik yang ada
-                var maxUomAllowed = rawTotalStock;
-                var allBatches = [];
-                var eceranBatches = [];
-                var dusBatches = [];
-
-                if (rawBatch) {
-                    allBatches = rawBatch.split(',').map(b => b.split('|')[0]);
-                    eceranBatches = allBatches.filter(b => b.includes('.'));
-                    dusBatches = allBatches.filter(b => !b.includes('.'));
-                }
+                uomType = detectedUom;
+                if (sel && sel.value !== uomType) sel.value = uomType;
             }
 
-            // DYNAMIC MAX CALCULATION
-            var allBatchesManualRaw = rawBatch ? rawBatch.split(',') : [];
-            var allBatchesManual = allBatchesManualRaw.map(b => b.split('|')[0]);
-            var eceranBatchesManual = allBatchesManual.filter(b => b.includes('.'));
-            var dusBatchesManual = allBatchesManual.filter(b => !b.includes('.'));
-            
-            // Dapatkan stok presisi spesifik untuk batch yang dipilih/discan (atau rekomendasi FEFO jika belum)
-            var specificBatchStok = 0;
-            var targetBatchStr = scannedCode;
-            if (!targetBatchStr) {
-                targetBatchStr = (uomType === 'kecil') ? (eceranBatchesManual.length > 0 ? eceranBatchesManual[0] : null) : (dusBatchesManual.length > 0 ? dusBatchesManual[0] : null);
-            }
-            if (targetBatchStr) {
-                var targetRaw = allBatchesManualRaw.find(b => b.split('|')[0].toLowerCase() === targetBatchStr.toLowerCase());
-                if (targetRaw) specificBatchStok = parseInt(targetRaw.split('|')[1]);
-            }
-
-            var maxStockToPass = specificBatchStok || rawTotalStock; // Hard-lock max quantity to the specific batch!
-            
-            if (kat === 'Obat') {
-                if (uomType === 'kecil') {
-                    stokEceran = specificBatchStok;
-                } else if (uomType === 'besar') {
-                    stokDus = specificBatchStok;
-                }
-            }
-            
-            if (scannedCode) {
-                // === FEFO ANOMALY CHECKER ===
-                if (kat === 'Obat' && rawBatch) {
-                    var allBatches = rawBatch.split(',').map(b => b.split('|')[0]);
-                    var eceranBatches = allBatches.filter(b => b.includes('.'));
-                    var dusBatches = allBatches.filter(b => !b.includes('.'));
-                    var batches = uomType === 'besar' ? dusBatches : eceranBatches;
-                    
-                    if (batches.length > 0 && batches[0] !== scannedCode && batches.includes(scannedCode)) {
-                        Swal.fire({
-                            title: '&#9888;&#65039; ANOMALI FEFO TERDETEKSI!',
-                            html: `Anda men-scan Batch <b>${scannedCode.toUpperCase()}</b>.<br><br>
-                                   Terdapat Batch lain <b>(${batches[0].toUpperCase()})</b> yang akan kedaluwarsa lebih cepat.<br>
-                                   Sesuai sistem FEFO, Anda seharusnya mengeluarkan batch yang lebih cepat expired terlebih dahulu.`,
-                            icon: 'error',
-                            showCancelButton: true,
-                            confirmButtonText: 'Tetap Lanjutkan (Abaikan)',
-                            cancelButtonText: 'Batal',
-                            confirmButtonColor: '#d33',
-                            allowEnterKey: false,
-                            focusCancel: true
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                processAddToCart(id, name, hargaKecil, hargaBesar, maxStockToPass, rasio, scannedCode, rawSn, rawBatch, true, batches[0], needsVerification, uomType, stokEceran);
-                            }
-                        });
-                        return;
-                    }
-                }
-            }
+            var maxStockToPass = (kat === 'Obat') ? ((uomType === 'kecil') ? stokEceran : stokDus) : rawTotalStock;
 
             // === KONVERSI DARURAT CHECK (Berlaku untuk Klik Manual & Scan Umum) ===
             if (kat === 'Obat' && rawBatch && !scannedCode) {
+                var allBatchesManual = rawBatch.split(',').map(b => b.split('|')[0]);
+                var eceranBatchesManual = allBatchesManual.filter(b => b.includes('.'));
+                var dusBatchesManual = allBatchesManual.filter(b => !b.includes('.'));
+                
                 if (uomType === 'kecil' && eceranBatchesManual.length === 0 && dusBatchesManual.length > 0) {
-                    // ECERAN KOSONG, TAPI DUS ADA! MUNCULKAN POPUP KONVERSI!
                     Swal.fire({
                         title: 'Stok Eceran Kosong!',
                         html: '<div class="text-left text-sm mb-3">Sistem mendeteksi stok etalase (eceran) kosong, tetapi masih ada stok <b>Dus/Karton utuh</b> di gudang.<br><br>Apakah Anda ingin membuka 1 Dus untuk dijual eceran sekarang?</div><div class="bg-rose-50 text-rose-700 p-3 rounded text-xs font-bold border border-rose-200">⚠ KONFIRMASI: Pastikan Anda benar-benar akan merobek/membuka fisik kardus utuh! Aksi ini akan mencatat histori audit secara permanen.</div>',
@@ -802,145 +841,325 @@ $shopeeOn = false;
                             konversiCepat(id, name, hargaKecil, hargaBesar, rawTotalStock, rasio, scannedCode, rawSn, rawBatch, dusBatchesManual[0], needsVerification, uomType);
                         }
                     });
-                    return; // Jangan masukkan ke keranjang dulu
+                    return;
                 }
             }
 
-            // Lanjut ke pemrosesan normal
-            processAddToCart(id, name, hargaKecil, hargaBesar, maxStockToPass, rasio, scannedCode, rawSn, rawBatch, false, null, needsVerification, uomType, stokEceran);
-
+            processAddToCart(id, name, hargaKecil, hargaBesar, maxStockToPass, rasio, scannedCode, rawSn, rawBatch, false, null, needsVerification, uomType, stokEceran, kat);
         } catch(e) {
             alert("Terjadi Error Javascript di addToPos: " + e.message);
         }
     }
 
-    function processAddToCart(id, name, hargaKecil, hargaBesar, maxStockPcs, rasio, scannedCode, rawSn, rawBatch, isAnomaly = false, batchSeharusnya = null, needsVerification = false, passedUomType = null, stokEceranFisik = 0) {
+    function processAddToCart(id, name, hargaKecil, hargaBesar, maxStockPcs, rasio, scannedCode, rawSn, rawBatch, isAnomaly = false, batchSeharusnya = null, needsVerification = false, passedUomType = null, stokEceranFisik = 0, kat = null) {
+        if (!kat) {
+            var btnRef = document.querySelector('button[data-id="' + id + '"]');
+            kat = btnRef ? (btnRef.getAttribute('data-kat') || 'Obat') : 'Obat';
+        }
         var sel = document.getElementById('uom_' + id);
         var uomType = passedUomType ? passedUomType : (sel ? sel.value : 'kecil');
         var uomLabel = '';
         if (sel) {
             if (sel.tagName.toLowerCase() === 'select') {
-                uomLabel = sel.options[sel.selectedIndex].text;
+                uomLabel = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
             } else {
                 uomLabel = sel.getAttribute('data-label') || '';
             }
         }
+        if (!uomLabel) uomLabel = (uomType === 'besar') ? 'Karton' : 'Box';
         
         var price = (uomType === 'besar') ? hargaBesar : hargaKecil;
         var qtyMultiplier = (uomType === 'besar') ? rasio : 1;
-        var cartId = id + '_' + uomType + (scannedCode ? '_' + scannedCode : '');
+        var cartId = id + '_' + uomType; // SATU BARIS PER PRODUK + SATUAN!
 
-        var found = null;
+        var existingItem = cart.find(ci => ci.cartId === cartId);
 
-        // Validasi Fisik: Jika scan dilakukan, cari item di keranjang yang MENUNGGU VERIFIKASI DENGAN SATUAN YANG COCOK
-        if (scannedCode && needsVerification) {
-            var unverifiedIndex = -1;
-            for (var i = 0; i < cart.length; i++) {
-                if (parseInt(cart[i].id) === parseInt(id) && cart[i].needs_verification && !cart[i].scanned_code && cart[i].satuan_tipe === uomType) {
-                    unverifiedIndex = i;
-                    break;
-                }
-            }
+        if (scannedCode) {
+            scannedCode = scannedCode.trim();
+            var scannedCodeUpper = scannedCode.toUpperCase();
 
-            if (unverifiedIndex !== -1) {
-                var targetItem = cart[unverifiedIndex];
-                var qtyToValidate = rawSn ? 1 : targetItem.qty;
-                
-                var existingVerified = null;
-                for (var j = 0; j < cart.length; j++) {
-                    if (j !== unverifiedIndex && cart[j].cartId === cartId) {
-                        existingVerified = cart[j];
-                        break;
-                    }
-                }
-
-                if (existingVerified) {
-                    if (qtyToValidate === 1 && rawSn) {
-                        Swal.fire('Error', 'SN ' + scannedCode.toUpperCase() + ' sudah ada di keranjang!', 'error');
+            if (existingItem) {
+                // Item SUDAH ADA di keranjang
+                if (existingItem.kategori === 'Obat') {
+                    // 1. Cek apakah barcode cocok dengan salah satu alokasi batch yang BELUM diverifikasi
+                    var matchAlloc = existingItem.allocations.find(al => !al.verified && al.batch.toLowerCase() === scannedCode.toLowerCase());
+                    if (matchAlloc) {
+                        // Sesuai alokasi FEFO! Langsung tervalidasi jadi biru tanpa popup anomali
+                        matchAlloc.verified = true;
+                        matchAlloc.scanned_batch = scannedCodeUpper;
+                        matchAlloc.is_anomaly = false;
+                        matchAlloc.batch_seharusnya = null;
+                        
+                        Swal.fire({
+                            toast: true,
+                            position: 'top',
+                            icon: 'success',
+                            title: '✅ Fisik Tervalidasi (' + matchAlloc.qty + ' ' + existingItem.satuan_label + '): ' + scannedCodeUpper,
+                            showConfirmButton: false,
+                            timer: 1800,
+                            timerProgressBar: true
+                        });
+                        updateCameraModalCartPreview(name + ' (' + uomLabel + ')');
+                        renderCart();
                         return;
                     }
-                    if ((existingVerified.qty + qtyToValidate) * existingVerified.rasio > existingVerified.maxPcs) { 
-                        alert('Stok terbatas!'); return; 
+
+                    // 2. Cek apakah batch ini sudah tervalidasi sebelumnya di keranjang
+                    var alreadyVer = existingItem.allocations.find(al => al.verified && (al.scanned_batch || al.batch).toLowerCase() === scannedCode.toLowerCase());
+                    if (alreadyVer) {
+                        var remainingUnverified = existingItem.allocations.find(al => !al.verified);
+                        if (remainingUnverified) {
+                            Swal.fire({
+                                title: '⚠ ANOMALI FEFO TERDETEKSI!',
+                                html: `Anda men-scan kembali Batch <b>${scannedCodeUpper}</b>.<br><br>` +
+                                      `Terdapat alokasi batch lain yang belum diverifikasi: <b>${remainingUnverified.batch.toUpperCase()}</b> (${remainingUnverified.qty} ${existingItem.satuan_label}).<br><br>` +
+                                      `Apakah Anda ingin menukar sisa fisik tersebut menggunakan Batch <b>${scannedCodeUpper}</b>?`,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonText: 'Ya, Tukar Fisik',
+                                cancelButtonText: 'Batal',
+                                confirmButtonColor: '#d33',
+                                focusCancel: true
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    remainingUnverified.verified = true;
+                                    remainingUnverified.scanned_batch = scannedCodeUpper;
+                                    remainingUnverified.is_anomaly = true;
+                                    remainingUnverified.batch_seharusnya = remainingUnverified.batch;
+                                    Swal.fire({
+                                        toast: true,
+                                        position: 'top',
+                                        icon: 'success',
+                                        title: '✅ Fisik Ditukar: ' + scannedCodeUpper,
+                                        showConfirmButton: false,
+                                        timer: 1800
+                                    });
+                                    updateCameraModalCartPreview(name + ' (' + uomLabel + ')');
+                                    renderCart();
+                                }
+                            });
+                            return;
+                        } else {
+                            // Semua alokasi sudah tervalidasi, scan lagi berarti menambah Qty (+1)
+                            if ((existingItem.qty + 1) * existingItem.rasio > existingItem.maxPcs) {
+                                Swal.fire('Stok Terbatas', 'Stok fisik tidak mencukupi untuk ditambah.', 'warning');
+                                return;
+                            }
+                            existingItem.qty++;
+                            computeAllocations(existingItem, existingItem.qty);
+                            var newAlloc = existingItem.allocations.find(al => !al.verified && al.batch.toLowerCase() === scannedCode.toLowerCase());
+                            if (newAlloc) {
+                                newAlloc.verified = true;
+                                newAlloc.scanned_batch = scannedCodeUpper;
+                            }
+                            Swal.fire({
+                                toast: true,
+                                position: 'top',
+                                icon: 'success',
+                                title: '✅ Tambah Qty: ' + name + ' [' + scannedCodeUpper + ']',
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                            updateCameraModalCartPreview(name + ' (' + uomLabel + ')');
+                            renderCart();
+                            return;
+                        }
                     }
-                    existingVerified.qty += qtyToValidate;
-                    
-                    if (qtyToValidate === targetItem.qty) {
-                        cart.splice(unverifiedIndex, 1);
-                    } else {
-                        targetItem.qty -= qtyToValidate;
-                    }
-                } else {
-                    if (qtyToValidate === targetItem.qty) {
-                        targetItem.scanned_code = scannedCode;
-                        targetItem.cartId = cartId; // ubah cartId menjadi yang sudah di-scan
-                        targetItem.is_anomaly = isAnomaly;
-                        targetItem.batch_seharusnya = batchSeharusnya;
-                        targetItem.maxPcs = maxStockPcs; // Update maxPcs ke stok batch baru
-                        targetItem.stok_eceran_fisik = stokEceranFisik; // Update hint UI ke stok batch baru
-                    } else {
-                        targetItem.qty -= qtyToValidate;
-                        cart.push({
-                            id: id, cartId: cartId, nama: name, harga: price, qty: qtyToValidate, 
-                            satuan_tipe: uomType, satuan_label: uomLabel, maxPcs: maxStockPcs, rasio: qtyMultiplier,
-                            sn_list: rawSn, batch_list: rawBatch, scanned_code: scannedCode,
-                            is_anomaly: isAnomaly, batch_seharusnya: batchSeharusnya,
-                            needs_verification: needsVerification, stok_eceran_fisik: stokEceranFisik
+
+                    // 3. Batch tidak cocok dengan alokasi (Scan batch yang berbeda dari FEFO)
+                    var firstUnverified = existingItem.allocations.find(al => !al.verified);
+                    if (firstUnverified) {
+                        Swal.fire({
+                            title: '⚠ ANOMALI FEFO TERDETEKSI!',
+                            html: `Anda men-scan Batch <b>${scannedCodeUpper}</b>.<br><br>` +
+                                  `Batch yang dialokasikan sesuai FEFO adalah <b>${firstUnverified.batch.toUpperCase()}</b> (${firstUnverified.qty} ${existingItem.satuan_label}).<br><br>` +
+                                  `Apakah Anda yakin ingin menukar fisik batch ini?`,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Tetap Lanjutkan (Abaikan)',
+                            cancelButtonText: 'Batal',
+                            confirmButtonColor: '#d33',
+                            allowEnterKey: false,
+                            focusCancel: true
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                firstUnverified.verified = true;
+                                firstUnverified.scanned_batch = scannedCodeUpper;
+                                firstUnverified.is_anomaly = true;
+                                firstUnverified.batch_seharusnya = firstUnverified.batch;
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top',
+                                    icon: 'success',
+                                    title: '✅ Fisik Ditukar: ' + scannedCodeUpper,
+                                    showConfirmButton: false,
+                                    timer: 1800
+                                });
+                                updateCameraModalCartPreview(name + ' (' + uomLabel + ')');
+                                renderCart();
+                            }
                         });
+                        return;
+                    } else {
+                        // Semua sudah verified, tambah qty
+                        if ((existingItem.qty + 1) * existingItem.rasio > existingItem.maxPcs) {
+                            Swal.fire('Stok Terbatas', 'Stok fisik tidak mencukupi untuk ditambah.', 'warning');
+                            return;
+                        }
+                        existingItem.qty++;
+                        computeAllocations(existingItem, existingItem.qty);
+                        renderCart();
+                        updateCameraModalCartPreview(name + ' (' + uomLabel + ')');
+                        return;
+                    }
+                } else if (existingItem.kategori === 'Alat Kesehatan') {
+                    var unverifiedUnit = (existingItem.alkes_allocations || []).find(u => !u.verified);
+                    if (unverifiedUnit) {
+                        var snUsed = (existingItem.alkes_allocations || []).some(u => u.verified && u.sn.toUpperCase() === scannedCodeUpper);
+                        if (snUsed) {
+                            Swal.fire('Error', 'SN ' + scannedCodeUpper + ' sudah divalidasi di keranjang!', 'error');
+                            return;
+                        }
+                        unverifiedUnit.verified = true;
+                        unverifiedUnit.sn = scannedCodeUpper;
+                        Swal.fire({
+                            toast: true,
+                            position: 'top',
+                            icon: 'success',
+                            title: '✅ SN Tervalidasi: ' + scannedCodeUpper,
+                            showConfirmButton: false,
+                            timer: 1800
+                        });
+                        updateCameraModalCartPreview(name + ' (' + uomLabel + ')');
+                        renderCart();
+                        return;
+                    } else {
+                        if ((existingItem.qty + 1) * existingItem.rasio > existingItem.maxPcs) {
+                            Swal.fire('Stok Terbatas', 'Stok fisik tidak mencukupi untuk ditambah.', 'warning');
+                            return;
+                        }
+                        existingItem.qty++;
+                        computeAllocations(existingItem, existingItem.qty);
+                        var newUnit = existingItem.alkes_allocations.find(u => !u.verified);
+                        if (newUnit) {
+                            newUnit.verified = true;
+                            newUnit.sn = scannedCodeUpper;
+                        }
+                        renderCart();
+                        updateCameraModalCartPreview(name + ' (' + uomLabel + ')');
+                        return;
                     }
                 }
-                
-                Swal.fire({
-                    toast: true,
-                    position: 'top',
-                    icon: 'success',
-                    title: '✅ Tervalidasi: ' + name + ' [' + scannedCode.toUpperCase() + ']',
-                    showConfirmButton: false,
-                    timer: 1800,
-                    timerProgressBar: true
+            } else {
+                // Item BELUM ADA di keranjang (Direct Scan dari Rak)
+                var allBatchesRaw = rawBatch ? rawBatch.split(',') : [];
+                var relevantBatches = allBatchesRaw.filter(function(b) {
+                    var code = b.split('|')[0].trim();
+                    var isEceran = code.includes('.');
+                    return (uomType === 'kecil' && isEceran) || (uomType === 'besar' && !isEceran);
                 });
+                var expectedFefoBatch = (relevantBatches.length > 0) ? relevantBatches[0].split('|')[0].trim() : null;
+                
+                var doAddDirect = function(isAnom, batchSeh) {
+                    if (qtyMultiplier > maxStockPcs) { Swal.fire('Stok Terbatas', 'Stok tidak cukup untuk satuan ini!', 'warning'); return; }
+                    var newItem = {
+                        id: id,
+                        cartId: cartId,
+                        nama: name,
+                        harga: price,
+                        qty: 1,
+                        satuan_tipe: uomType,
+                        satuan_label: uomLabel,
+                        maxPcs: maxStockPcs,
+                        rasio: qtyMultiplier,
+                        kategori: kat,
+                        sn_list: rawSn,
+                        batch_list: rawBatch,
+                        needs_verification: needsVerification,
+                        stok_eceran_fisik: stokEceranFisik
+                    };
+                    computeAllocations(newItem, 1);
+                    if (newItem.kategori === 'Obat' && newItem.allocations && newItem.allocations.length > 0) {
+                        newItem.allocations[0].verified = true;
+                        newItem.allocations[0].scanned_batch = scannedCodeUpper;
+                        newItem.allocations[0].is_anomaly = isAnom;
+                        newItem.allocations[0].batch_seharusnya = batchSeh;
+                    } else if (newItem.kategori === 'Alat Kesehatan' && newItem.alkes_allocations && newItem.alkes_allocations.length > 0) {
+                        newItem.alkes_allocations[0].verified = true;
+                        newItem.alkes_allocations[0].sn = scannedCodeUpper;
+                    }
+                    cart.push(newItem);
+                    Swal.fire({
+                        toast: true,
+                        position: 'top',
+                        icon: 'success',
+                        title: '✅ Masuk Keranjang: ' + name + ' [' + scannedCodeUpper + ']',
+                        showConfirmButton: false,
+                        timer: 1800
+                    });
+                    updateCameraModalCartPreview(name + ' (' + uomLabel + ')');
+                    renderCart();
+                };
 
-                updateCameraModalCartPreview(name + ' (' + uomLabel + ')');
-                renderCart();
-                return; // PASTI RETURN, TIDAK AKAN NAMBAH BARU
+                if (kat === 'Obat' && expectedFefoBatch && expectedFefoBatch.toLowerCase() !== scannedCode.toLowerCase()) {
+                    Swal.fire({
+                        title: '⚠ ANOMALI FEFO TERDETEKSI!',
+                        html: `Anda men-scan Batch <b>${scannedCodeUpper}</b>.<br><br>` +
+                              `Terdapat Batch lain <b>(${expectedFefoBatch.toUpperCase()})</b> yang akan kedaluwarsa lebih cepat.<br>` +
+                              `Sesuai sistem FEFO, Anda seharusnya mengeluarkan batch yang lebih cepat expired terlebih dahulu.`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Tetap Lanjutkan (Abaikan)',
+                        cancelButtonText: 'Batal',
+                        confirmButtonColor: '#d33',
+                        allowEnterKey: false,
+                        focusCancel: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            doAddDirect(true, expectedFefoBatch);
+                        }
+                    });
+                    return;
+                } else {
+                    doAddDirect(false, null);
+                    return;
+                }
             }
         }
 
-        // Jika tidak ada scan ATAU tidak ada item unverified yang bisa divalidasi, lakukan penambahan normal
-        for (var i = 0; i < cart.length; i++) {
-            if (cart[i].cartId === cartId) { found = cart[i]; break; }
+        // Penambahan Normal (Klik manual dari Katalog tanpa scan)
+        if (existingItem) {
+            if ((existingItem.qty + 1) * existingItem.rasio > existingItem.maxPcs) {
+                Swal.fire('Stok Terbatas', 'Sisa stok tidak mencukupi untuk ditambah!', 'warning');
+                return;
+            }
+            existingItem.qty++;
+            computeAllocations(existingItem, existingItem.qty);
+        } else {
+            if (qtyMultiplier > maxStockPcs) {
+                Swal.fire('Stok Terbatas', 'Stok tidak cukup untuk satuan ini!', 'warning');
+                return;
+            }
+            var newItem = {
+                id: id,
+                cartId: cartId,
+                nama: name,
+                harga: price,
+                qty: 1,
+                satuan_tipe: uomType,
+                satuan_label: uomLabel,
+                maxPcs: maxStockPcs,
+                rasio: qtyMultiplier,
+                kategori: kat,
+                sn_list: rawSn,
+                batch_list: rawBatch,
+                needs_verification: needsVerification,
+                stok_eceran_fisik: stokEceranFisik
+            };
+            computeAllocations(newItem, 1);
+            cart.push(newItem);
         }
 
-        if (found) {
-            if ((found.qty + 1) * found.rasio > found.maxPcs) { alert('Stok terbatas!'); return; }
-            found.qty++;
-            // Update anomaly status if it was re-added manually (override)
-            if (isAnomaly) {
-                found.is_anomaly = true;
-                found.batch_seharusnya = batchSeharusnya;
-            }
-        } else { 
-            if (qtyMultiplier > maxStockPcs) { alert('Stok tidak cukup untuk satuan ini!'); return; }
-            cart.push({
-                id: id, cartId: cartId, nama: name, harga: price, qty: 1, 
-                satuan_tipe: uomType, satuan_label: uomLabel, maxPcs: maxStockPcs, rasio: qtyMultiplier,
-                sn_list: rawSn, batch_list: rawBatch, scanned_code: scannedCode,
-                is_anomaly: isAnomaly, batch_seharusnya: batchSeharusnya,
-                needs_verification: needsVerification, stok_eceran_fisik: stokEceranFisik
-            }); 
-        }
-        
-        if (scannedCode) {
-            Swal.fire({
-                toast: true,
-                position: 'top',
-                icon: 'success',
-                title: '✅ Masuk Keranjang: ' + name + ' (' + uomLabel + ')',
-                showConfirmButton: false,
-                timer: 1800,
-                timerProgressBar: true
-            });
-        }
-        
         updateCameraModalCartPreview(name + ' (' + uomLabel + ')');
         renderCart();
     }
@@ -986,61 +1205,108 @@ $shopeeOn = false;
                     showConfirmButton: false,
                     timer: 2000
                 });
-                // Update atribut DOM card secara dinamis agar kalau kasir klik lagi tidak error
-                var newRawBatch = (rawBatch ? rawBatch + ',' : '') + data.new_batch;
-                var newMaxStock = maxStockPcs + data.qty_pcs;
                 
-                // Panggil addToCart langsung dengan batch yang baru lahir!
-                // Perbarui nilai stokEceran dan stokDus secara presisi (Fix scoping issue)
-                var currentStokEceran = 0;
+                // Update atribut DOM card secara dinamis agar realtime tanpa reload manual
                 var buttonCard = document.querySelector('button[data-id="'+idVariasi+'"]');
-                if (buttonCard) {
-                    var card = buttonCard.closest('.product-card');
-                    if (card) {
-                        currentStokEceran = parseInt(card.getAttribute('data-stok-eceran')) || 0;
-                        var currentStokDus = parseInt(card.getAttribute('data-stok-dus')) || 0;
-                        card.setAttribute('data-stok-eceran', currentStokEceran + data.qty_pcs);
-                        card.setAttribute('data-stok-dus', currentStokDus - data.qty_pcs); // wait, it's 1 box, not qty_pcs boxes! No, actually I don't need to update stokDus correctly since we reload soon anyway, but let's be safe.
-                        
-                        // Update button text
-                        var bongkarBtn = card.querySelector('.bg-rose-50');
-                        if (bongkarBtn) {
-                            bongkarBtn.innerHTML = '&#128230; Bongkar (Sisa: ' + (currentStokEceran + data.qty_pcs) + ' Pcs)';
+                var card = buttonCard ? buttonCard.closest('.product-card') : null;
+                var updatedBatchList = data.batch_list || ((rawBatch ? rawBatch + ',' : '') + data.new_batch + '|' + data.qty_pcs);
+                var updatedEceran = (data.stok_eceran !== undefined) ? data.stok_eceran : (maxStockPcs + data.qty_pcs);
+                var updatedDus = (data.stok_dus !== undefined) ? data.stok_dus : 0;
+                var updatedTotal = (data.stok_total !== undefined) ? data.stok_total : (maxStockPcs + data.qty_pcs);
+
+                if (card) {
+                    card.setAttribute('data-batch', updatedBatchList.toLowerCase());
+                    card.setAttribute('data-stok-eceran', updatedEceran);
+                    card.setAttribute('data-stok-dus', updatedDus);
+                    
+                    if (buttonCard) {
+                        buttonCard.setAttribute('data-stok', updatedTotal);
+                        buttonCard.setAttribute('data-batch', updatedBatchList);
+                        buttonCard.setAttribute('data-stok-eceran', updatedEceran);
+                        buttonCard.setAttribute('data-stok-dus', updatedDus);
+                    }
+                    
+                    // Update tampilan badge batch pada kartu
+                    var badgeContainer = card.querySelector('.mt-2.flex.flex-wrap.gap-1\\.5');
+                    if (badgeContainer && updatedBatchList) {
+                        var bItems = updatedBatchList.split(',').slice(0, 3);
+                        var bHtml = '';
+                        bItems.forEach(function(b) {
+                            var bCode = b.split('|')[0];
+                            var bStok = b.split('|')[1] || '';
+                            bHtml += '<span class="inline-block px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold shadow-sm">B: ' + bCode + (bStok ? ' | ' + bStok : '') + '</span> ';
+                        });
+                        if (updatedBatchList.split(',').length > 3) {
+                            bHtml += '<span class="inline-block px-2 py-1 bg-slate-50 text-slate-500 border border-slate-200 rounded text-[10px] font-bold shadow-sm">...</span>';
+                        }
+                        badgeContainer.innerHTML = bHtml;
+                    }
+                    
+                    // Update tampilan sisa stok kartu (spesifik pada sisa-stok-container agar tidak menimpa kotak harga)
+                    var sisaContainer = card.querySelector('.sisa-stok-container');
+                    if (sisaContainer) {
+                        var dusUtuh = Math.floor(updatedDus / rasio);
+                        sisaContainer.innerHTML = '<span class="font-bold">Sisa Stok:</span><div class="flex items-center gap-1 font-extrabold text-[10px]">' +
+                            '<span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700">' + dusUtuh + ' ' + (data.satuan_besar || 'Karton') + '</span>' +
+                            '<span class="text-slate-400">•</span>' +
+                            '<span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700">' + updatedEceran + ' ' + (data.satuan_kecil || 'Box') + '</span>' +
+                            '</div>';
+                        sisaContainer.className = 'sisa-stok-container p-1.5 rounded-lg border text-[10px] bg-emerald-50/60 border-emerald-200 text-emerald-800 flex items-center justify-between';
+                    }
+
+                    // Update tombol bongkar
+                    var bongkarBtn = card.querySelector('.bg-rose-50, .bg-rose-100');
+                    if (bongkarBtn) {
+                        if (updatedDus <= 0) {
+                            bongkarBtn.style.display = 'none';
+                        } else {
+                            bongkarBtn.innerHTML = '📦 Bongkar Box (Tersisa: ' + updatedEceran + ' ' + (data.satuan_kecil || 'Box') + ')';
                         }
                     }
                 }
                 
-                processAddToCart(idVariasi, name, hargaKecil, hargaBesar, newMaxStock, rasio, scannedCode, rawSn, newRawBatch, false, null, needsVerification, uomType, currentStokEceran + data.qty_pcs);
+                // Update batch_list & maxPcs pada keranjang jika ada item produk ini
+                cart.forEach(function(ci) {
+                    if (parseInt(ci.id) === parseInt(idVariasi)) {
+                        ci.batch_list = updatedBatchList;
+                        ci.maxPcs = (ci.satuan_tipe === 'kecil') ? updatedEceran : updatedDus;
+                        computeAllocations(ci, ci.qty);
+                    }
+                });
+                
+                // Lanjutkan memasukkan item ke keranjang
+                processAddToCart(idVariasi, name, hargaKecil, hargaBesar, updatedEceran, rasio, scannedCode, rawSn, updatedBatchList, false, null, needsVerification, uomType, updatedEceran, 'Obat');
             } else {
                 Swal.fire('Gagal', data.message, 'error');
             }
         })
         .catch(err => {
-            Swal.fire('Error', 'Terjadi kesalahan sistem saat konversi', 'error');
+            Swal.fire('Error', 'Terjadi kesalahan sistem saat konversi: ' + err.message, 'error');
         });
     }
 
     function changeQty(cartId, d) {
-        var item = null;
-        for (var i = 0; i < cart.length; i++) {
-            if (cart[i].cartId === cartId) { item = cart[i]; break; }
-        }
+        var item = cart.find(i => i.cartId === cartId);
         if (!item) return;
-        if (d > 0 && (item.qty + d) * item.rasio > item.maxPcs) { Swal.fire('Stok Terbatas', 'Sisa stok fisik tidak mencukupi untuk ditambah.', 'warning'); return; }
+        if (d > 0 && (item.qty + d) * item.rasio > item.maxPcs) {
+            Swal.fire('Stok Terbatas', 'Sisa stok fisik tidak mencukupi untuk ditambah.', 'warning');
+            return;
+        }
         item.qty += d;
-        if (item.qty <= 0) cart = cart.filter(function(i) { return i.cartId !== cartId; });
+        if (item.qty <= 0) {
+            cart = cart.filter(i => i.cartId !== cartId);
+        } else {
+            computeAllocations(item, item.qty);
+        }
         renderCart();
     }
 
     function setQtyManual(cartId, val) {
-        var item = null;
-        for (var i = 0; i < cart.length; i++) {
-            if (cart[i].cartId === cartId) { item = cart[i]; break; }
-        }
+        var item = cart.find(i => i.cartId === cartId);
         if (!item) return;
         var newQty = parseInt(val) || 0;
         if (newQty <= 0) {
-            cart = cart.filter(function(i) { return i.cartId !== cartId; });
+            cart = cart.filter(i => i.cartId !== cartId);
             renderCart();
             return;
         }
@@ -1051,11 +1317,19 @@ $shopeeOn = false;
         } else {
             item.qty = newQty;
         }
+        computeAllocations(item, item.qty);
         renderCart();
     }
 
-    function removeItem(cartId) { cart = cart.filter(function(i) { return i.cartId !== cartId; }); renderCart(); }
-    function clearCart() { cart = []; renderCart(); }
+    function removeItem(cartId) { 
+        cart = cart.filter(function(i) { return i.cartId !== cartId; }); 
+        renderCart(); 
+    }
+    function clearCart() { 
+        cart = []; 
+        try { sessionStorage.removeItem('zencare_pos_cart'); } catch(e) {}
+        renderCart(); 
+    }
 
     function renderCart() {
         var tbody = document.getElementById('pos_cart_body');
@@ -1069,56 +1343,75 @@ $shopeeOn = false;
             btn.disabled = true;
             btn.className = 'w-full py-3.5 rounded-xl text-xs font-bold bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed';
             inp.value = '[]';
+            try { sessionStorage.removeItem('zencare_pos_cart'); } catch(e) {}
             updateCameraModalCartPreview();
             return;
         }
 
         var total = 0, html = '';
         cart.forEach(function(i) {
-            var sub = i.harga * i.qty; total += sub;
-            var fefoText = '';
-            
-            if (i.scanned_code) {
-                fefoText = '<span class="block text-[9px] text-blue-600 font-bold mt-1 rounded bg-blue-50 px-1.5 py-0.5 inline-block border border-blue-200 shadow-sm">&#10004;&#65039; Fisik Tervalidasi: ' + i.scanned_code.toUpperCase() + '</span>';
-            } else if (i.needs_verification) {
-                if (i.batch_list) {
-                    let allBatches = i.batch_list.split(',').map(b => b.split('|')[0]);
-                      let targetBatches = [];
-                      if (i.satuan_tipe === 'besar') {
-                          targetBatches = allBatches.filter(b => !b.includes('.'));
-                      } else {
-                          targetBatches = allBatches.filter(b => b.includes('.'));
-                      }
-                      var batches = targetBatches.length > 0 ? targetBatches.slice(0, 1).join(', ') : (i.satuan_tipe === 'besar' ? '&#10060; Box Utuh Habis!' : '&#10060; Eceran Habis!');
-                    fefoText = '<span class="block text-[9px] text-rose-600 font-bold mt-1 rounded bg-rose-50 border border-rose-200 px-1.5 py-0.5 inline-block animate-pulse shadow-sm">&#9888;&#65039; Belum diverifikasi! (Ambil Batch: ' + batches + ')</span>';
-                } else if (i.sn_list) {
-                    fefoText = '<span class="block text-[9px] text-rose-600 font-bold mt-1 rounded bg-rose-50 border border-rose-200 px-1.5 py-0.5 inline-block animate-pulse shadow-sm">&#9888;&#65039; Belum diverifikasi! (Ambil SN Tersedia)</span>';
+            var sub = i.harga * i.qty;
+            total += sub;
+
+            var badgesHtml = '';
+            if (i.needs_verification) {
+                if (i.allocations && i.allocations.length > 0) {
+                    badgesHtml += '<div class="mt-1.5 space-y-1">';
+                    i.allocations.forEach(function(al) {
+                        if (al.verified) {
+                            var displayBatch = (al.scanned_batch || al.batch).toUpperCase();
+                            var swappedTag = al.is_anomaly ? '<span class="ml-1 px-1.5 py-0.2 bg-amber-200 text-amber-900 rounded text-[8px] font-extrabold uppercase">DITUKAR</span>' : '';
+                            badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold shadow-xs">' +
+                                '<span class="text-blue-600 font-extrabold">✔</span>' +
+                                '<span>Fisik Tervalidasi: <b class="font-mono text-blue-900">' + displayBatch + '</b> (' + al.qty + ' ' + i.satuan_label + ')</span>' +
+                                swappedTag +
+                            '</div>';
+                        } else {
+                            var expectedBatch = (al.batch || '').toUpperCase();
+                            badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold animate-pulse shadow-xs">' +
+                                '<span class="text-rose-600 font-extrabold">⚠</span>' +
+                                '<span>Ambil Fisik: <b class="font-mono text-rose-900">' + expectedBatch + '</b> (' + al.qty + ' ' + i.satuan_label + ')</span>' +
+                            '</div>';
+                        }
+                    });
+                    badgesHtml += '</div>';
+                } else if (i.alkes_allocations && i.alkes_allocations.length > 0) {
+                    badgesHtml += '<div class="mt-1.5 space-y-1">';
+                    i.alkes_allocations.forEach(function(u, idx) {
+                        if (u.verified) {
+                            badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold shadow-xs">' +
+                                '<span class="text-blue-600 font-extrabold">✔</span>' +
+                                '<span>SN Tervalidasi: <b class="font-mono text-blue-900">' + u.sn.toUpperCase() + '</b> (Unit ' + (idx + 1) + ')</span>' +
+                            '</div>';
+                        } else {
+                            badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold animate-pulse shadow-xs">' +
+                                '<span class="text-rose-600 font-extrabold">⚠</span>' +
+                                '<span>Ambil Unit ' + (idx + 1) + ': <b class="font-mono text-rose-900">Scan SN Fisik</b></span>' +
+                            '</div>';
+                        }
+                    });
+                    badgesHtml += '</div>';
                 }
             }
 
-            var stokInfo = '';
             var maxAllowed = Math.floor(i.maxPcs / i.rasio);
-            if (i.batch_list) {
-                stokInfo = (i.satuan_tipe === 'besar') ? '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Fisik Box: ' + maxAllowed + '</span>' : '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Batch Spesifik (Utama): ' + i.stok_eceran_fisik + ' Pcs</span>';
-            } else {
-                stokInfo = '<span class="block text-[9px] text-slate-500 font-medium mt-1">&#128230; Sisa Stok: ' + i.maxPcs + ' ' + i.satuan_label + '</span>';
-            }
+            var stokInfo = '<span class="block text-[9px] text-slate-500 font-medium mt-1">📦 Total Tersedia: ' + maxAllowed + ' ' + i.satuan_label + '</span>';
 
-            html += '<tr class="hover:bg-slate-50/60">' +
-                '<td class="px-4 py-3 font-semibold text-zcTxt text-xs">' +
-                    i.nama +
-                    '<span class="block text-[9px] text-zcEm mt-0.5">' + i.satuan_label + ' (Rp ' + i.harga.toLocaleString('id-ID') + ')</span>' +
-                    fefoText + stokInfo +
+            html += '<tr class="hover:bg-slate-50/60 transition-colors">' +
+                '<td class="px-4 py-3 font-semibold text-zcTxt text-xs align-top">' +
+                    '<div class="font-bold text-slate-800">' + i.nama + '</div>' +
+                    '<span class="inline-block text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 font-bold mt-0.5">' + i.satuan_label + ' @ Rp ' + i.harga.toLocaleString('id-ID') + '</span>' +
+                    badgesHtml + stokInfo +
                 '</td>' +
-                '<td class="px-4 py-3 text-center">' +
-                    '<div class="flex items-center justify-center gap-1.5">' +
-                        '<button type="button" onclick="changeQty(\'' + i.cartId + '\',-1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition flex items-center justify-center">-</button>' +
+                '<td class="px-4 py-3 text-center align-top">' +
+                    '<div class="flex items-center justify-center gap-1.5 pt-1">' +
+                        '<button type="button" onclick="changeQty(\'' + i.cartId + '\',-1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition flex items-center justify-center cursor-pointer">-</button>' +
                         '<input type="number" min="1" max="' + maxAllowed + '" value="' + i.qty + '" onchange="setQtyManual(\'' + i.cartId + '\', this.value)" class="w-12 text-center font-bold text-xs border border-zcBrd rounded-lg py-1 px-1 focus:outline-none focus:border-zc bg-white shadow-xs">' +
-                        '<button type="button" onclick="changeQty(\'' + i.cartId + '\',1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition flex items-center justify-center">+</button>' +
+                        '<button type="button" onclick="changeQty(\'' + i.cartId + '\',1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition flex items-center justify-center cursor-pointer">+</button>' +
                     '</div>' +
                 '</td>' +
-                '<td class="px-4 py-3 text-right font-bold text-xs">Rp ' + sub.toLocaleString('id-ID') + '</td>' +
-                '<td class="px-4 py-3 text-center"><button type="button" onclick="removeItem(\'' + i.cartId + '\')" class="text-rose-500 hover:text-rose-700 text-xs font-bold transition">[X]</button></td>' +
+                '<td class="px-4 py-3 text-right font-black text-xs text-slate-800 align-top pt-2.5">Rp ' + sub.toLocaleString('id-ID') + '</td>' +
+                '<td class="px-4 py-3 text-center align-top pt-2"><button type="button" onclick="removeItem(\'' + i.cartId + '\')" class="text-rose-500 hover:text-rose-700 text-xs font-bold transition p-1 hover:bg-rose-50 rounded cursor-pointer">[X]</button></td>' +
             '</tr>';
         });
 
@@ -1127,6 +1420,9 @@ $shopeeOn = false;
         btn.disabled = false;
         btn.className = 'w-full py-3.5 rounded-xl text-xs font-bold bg-zc hover:bg-zcHv text-white transition shadow-sm cursor-pointer';
         inp.value = JSON.stringify(cart);
+        try {
+            sessionStorage.setItem('zencare_pos_cart', JSON.stringify(cart));
+        } catch(e) {}
         updateCameraModalCartPreview();
     }
 
@@ -1142,17 +1438,37 @@ $shopeeOn = false;
         if (!cart.length) return;
         
         // Blokir jika ada item yang belum divalidasi fisik (di-scan)
-        var hasUnverified = false;
+        var unverifiedBatches = [];
         cart.forEach(function(i) {
-            if (i.needs_verification && !i.scanned_code) hasUnverified = true;
+            if (i.needs_verification) {
+                if (i.allocations && i.allocations.length > 0) {
+                    i.allocations.forEach(function(al) {
+                        if (!al.verified) {
+                            unverifiedBatches.push(al.batch + ' (' + al.qty + ' ' + i.satuan_label + ')');
+                        }
+                    });
+                }
+                if (i.alkes_allocations && i.alkes_allocations.length > 0) {
+                    i.alkes_allocations.forEach(function(u, idx) {
+                        if (!u.verified) {
+                            unverifiedBatches.push(i.nama + ' (Unit ' + (idx + 1) + ')');
+                        }
+                    });
+                }
+            }
         });
 
-        if (hasUnverified) {
+        if (unverifiedBatches.length > 0) {
             Swal.fire({
                 title: 'Validasi Fisik Belum Selesai!',
-                text: 'Ada produk Obat/Alkes di keranjang yang belum diverifikasi. Harap ambil fisik barang di rak dan SCAN barcode-nya untuk mencocokkan sebelum memproses pembayaran!',
+                html: '<div class="text-left text-sm"><p class="mb-2">Terdapat batch fisik obat/alkes di keranjang yang <b>belum diverifikasi</b> melalui scan barcode:</p>' +
+                      '<ul class="list-disc pl-5 font-mono text-xs text-rose-700 bg-rose-50 p-2.5 rounded-lg border border-rose-200 space-y-1">' +
+                      unverifiedBatches.map(b => '<li><b>' + b + '</b></li>').join('') +
+                      '</ul>' +
+                      '<p class="mt-3 text-xs text-slate-500">Harap ambil fisik barang di rak sesuai batch yang tertera dan SCAN barcode-nya untuk mencocokkan sebelum memproses pembayaran!</p></div>',
                 icon: 'warning',
-                confirmButtonText: 'Mengerti'
+                confirmButtonText: 'Saya Mengerti',
+                confirmButtonColor: '#1a75d2'
             });
             return;
         }
@@ -1784,6 +2100,158 @@ $shopeeOn = false;
             alert("Error JS di filterPos: " + e.message);
         }
     }
+
+    // =========================================================================
+    // REALTIME LIVE STOCK SYNC DARI E-COMMERCE & MULTI-TERMINAL
+    // =========================================================================
+    var isSyncingLive = false;
+    function syncPosCatalogLive() {
+        if (isSyncingLive) return;
+        isSyncingLive = true;
+        
+        fetch('../api/pos_sync_catalog.php')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            isSyncingLive = false;
+            if (data.status !== 'success' || !data.items) return;
+            
+            data.items.forEach(function(item) {
+                var card = document.querySelector('.product-card[data-id="' + item.id + '"]');
+                var btn = card ? card.querySelector('button[data-id="' + item.id + '"]') : null;
+                if (!card || !btn) return;
+                
+                var oldStokDus = parseInt(card.getAttribute('data-stok-dus') || 0);
+                var oldStokEceran = parseInt(card.getAttribute('data-stok-eceran') || 0);
+                var oldBatch = card.getAttribute('data-batch') || '';
+                
+                var newStokDus = parseInt(item.stok_dus || 0);
+                var newStokEceran = parseInt(item.stok_eceran || 0);
+                var newTotalStok = parseInt(item.stok || 0);
+                var newBatch = (item.batch_list || '').toLowerCase();
+                var rasio = parseInt(item.rasio_konversi) || 1;
+                
+                // Cek apakah ada perubahan stok atau batch
+                if (oldStokDus !== newStokDus || oldStokEceran !== newStokEceran || oldBatch !== newBatch) {
+                    card.setAttribute('data-stok-dus', newStokDus);
+                    card.setAttribute('data-stok-eceran', newStokEceran);
+                    card.setAttribute('data-batch', newBatch);
+                    if (item.sn_list) card.setAttribute('data-sn', (item.sn_list || '').toLowerCase());
+                    
+                    btn.setAttribute('data-stok', newTotalStok);
+                    btn.setAttribute('data-stok-dus', newStokDus);
+                    btn.setAttribute('data-stok-eceran', newStokEceran);
+                    btn.setAttribute('data-batch', item.batch_list || '');
+                    
+                    var sel = document.getElementById('uom_' + item.id);
+                    if (newTotalStok <= 0) {
+                        btn.disabled = true;
+                        btn.className = 'w-1/2 text-[11px] font-bold px-2 py-1.5 rounded-lg border transition bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed';
+                        if (sel) sel.disabled = true;
+                    } else {
+                        btn.disabled = false;
+                        btn.className = 'w-1/2 text-[11px] font-bold px-2 py-1.5 rounded-lg border transition bg-zc hover:bg-zcHv text-white border-zc shadow-xs';
+                        if (sel) sel.disabled = false;
+                    }
+                    
+                    // Update tampilan badge batch pada kartu
+                    var badgeContainer = card.querySelector('.mt-2.flex.flex-wrap.gap-1\\.5');
+                    if (badgeContainer) {
+                        if (item.batch_list) {
+                            var bItems = item.batch_list.split(',').slice(0, 2);
+                            var bHtml = '';
+                            bItems.forEach(function(b) {
+                                bHtml += '<span class="inline-block px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold shadow-sm">B: ' + b + '</span> ';
+                            });
+                            if (item.batch_list.split(',').length > 2) {
+                                bHtml += '<span class="inline-block px-2 py-1 bg-slate-50 text-slate-500 border border-slate-200 rounded text-[10px] font-bold shadow-sm">...</span>';
+                            }
+                            badgeContainer.innerHTML = bHtml;
+                        } else {
+                            badgeContainer.innerHTML = '';
+                        }
+                    }
+                    
+                    // Update Sisa Stok Terpisah (spesifik pada sisa-stok-container)
+                    var sisaContainer = card.querySelector('.sisa-stok-container');
+                    if (sisaContainer) {
+                        var dusUtuh = (item.kategori === 'Obat') ? Math.floor(newStokDus / rasio) : Math.floor(newTotalStok / rasio);
+                        var eceranSisa = (item.kategori === 'Obat') ? newStokEceran : (newTotalStok % rasio);
+                        
+                        var stokContent = '';
+                        if (rasio > 1) {
+                            stokContent = '<span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700">' + dusUtuh + ' ' + (item.satuan_besar || 'Karton') + '</span>' +
+                                          '<span class="text-slate-400">•</span>' +
+                                          '<span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700">' + eceranSisa + ' ' + (item.satuan_kecil || 'Box') + '</span>';
+                        } else {
+                            stokContent = '<span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700">' + newTotalStok + ' ' + (item.satuan_kecil || 'Pcs') + '</span>';
+                        }
+                        
+                        sisaContainer.innerHTML = '<span class="font-bold">Sisa Stok:</span><div class="flex items-center gap-1 font-extrabold text-[10px]">' + stokContent + '</div>';
+                        sisaContainer.className = 'sisa-stok-container p-1.5 rounded-lg border text-[10px] ' + (newTotalStok > 0 ? 'bg-emerald-50/60 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-700') + ' flex items-center justify-between';
+                    }
+                    
+                    // Update tombol bongkar
+                    var bongkarBtn = card.querySelector('.bg-rose-50, .bg-rose-100');
+                    if (bongkarBtn) {
+                        if (item.kategori === 'Obat' && newStokDus > 0) {
+                            bongkarBtn.style.display = 'block';
+                            bongkarBtn.innerHTML = '📦 Bongkar Box (Tersisa: ' + newStokEceran + ' ' + (item.satuan_kecil || 'Box') + ')';
+                        } else {
+                            bongkarBtn.style.display = 'none';
+                        }
+                    }
+                    
+                    // Update keranjang belanja jika ada produk ini
+                    var cartChanged = false;
+                    cart.forEach(function(ci) {
+                        if (parseInt(ci.id) === parseInt(item.id)) {
+                            ci.batch_list = item.batch_list;
+                            var maxAvail = (ci.satuan_tipe === 'kecil') ? newStokEceran : newStokDus;
+                            ci.maxPcs = maxAvail;
+                            computeAllocations(ci, ci.qty);
+                            if (ci.qty * ci.rasio > maxAvail) {
+                                ci.qty = Math.max(1, Math.floor(maxAvail / ci.rasio));
+                                computeAllocations(ci, ci.qty);
+                                cartChanged = true;
+                            }
+                        }
+                    });
+                    if (cartChanged) {
+                        renderCart();
+                        const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+                        Toast.fire({ icon: 'info', title: `Stok ${item.nama} telah diperbarui (Sinkron E-Commerce)` });
+                    }
+                }
+            });
+        })
+        .catch(function() {
+            isSyncingLive = false;
+        });
+    }
+
+    // Interval background sync setiap 4 detik & saat window tab aktif
+    setInterval(syncPosCatalogLive, 4000);
+    window.addEventListener('focus', syncPosCatalogLive);
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) syncPosCatalogLive();
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        <?php if (!empty($msg) && $msgType === 'success'): ?>
+            try { sessionStorage.removeItem('zencare_pos_cart'); } catch(e) {}
+        <?php else: ?>
+            try {
+                var savedCart = sessionStorage.getItem('zencare_pos_cart');
+                if (savedCart) {
+                    var parsed = JSON.parse(savedCart);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        cart = parsed;
+                        renderCart();
+                    }
+                }
+            } catch(e) {}
+        <?php endif; ?>
+    });
     </script>
 </body>
 </html>

@@ -203,6 +203,9 @@ if (!empty($orderIds)) {
                 WHERE sb.id_variasi = dp.id_variasi 
                   AND sb.no_batch = SUBSTRING_INDEX(dp.catatan_logistik, ' ', 1) 
                 LIMIT 1) AS exp_info,
+               (SELECT GROUP_CONCAT(CONCAT(sb.no_batch, '::', DATE_FORMAT(sb.tgl_exp, '%d/%m/%Y'), '|', DATEDIFF(sb.tgl_exp, CURDATE())) SEPARATOR ';;') 
+                FROM stok_batch sb 
+                WHERE sb.id_variasi = dp.id_variasi) AS all_exp_info,
                (SELECT GROUP_CONCAT(CONCAT(sb.no_batch, '|', sb.tgl_exp) SEPARATOR ',') 
                 FROM stok_batch sb 
                 WHERE sb.id_variasi = dp.id_variasi AND sb.tgl_exp < CURDATE()) AS expired_batches,
@@ -368,43 +371,79 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                             $cleanBarcodeInstruksi = $rawLogistik ? explode(' ', $rawLogistik)[0] : '';
                                             $cleanBarcodeInstruksi = trim(explode('(', $cleanBarcodeInstruksi)[0]);
 
-                                            // Ekstrak semua kode batch bersih tanpa embel-embel keterangan satuan
-                                            $cleanBatchesList = [];
-                                            if (!empty($rawLogistik)) {
-                                                foreach (explode(',', $rawLogistik) as $rb) {
-                                                    $cb = trim(preg_replace('/\s*\(.*?\)/', '', $rb));
-                                                    $cb = trim(preg_replace('/\[.*?\]/', '', $cb));
-                                                    if ($cb) $cleanBatchesList[] = $cb;
+                                            // Bangun map expiry per no_batch
+                                            $expMap = [];
+                                            if (!empty($it['all_exp_info'])) {
+                                                foreach (explode(';;', $it['all_exp_info']) as $expRow) {
+                                                    $expPair = explode('::', $expRow);
+                                                    if (count($expPair) === 2) {
+                                                        $expMap[strtoupper(trim($expPair[0]))] = trim($expPair[1]);
+                                                    }
                                                 }
                                             }
-                                            $cleanBatchesAttr = implode(',', $cleanBatchesList);
 
+                                            // Ekstrak semua kode batch bersih tanpa embel-embel keterangan satuan
+                                            $cleanBatchesList = [];
+                                            $packItems = [];
                                             if (!empty($rawLogistik)) {
                                                 $parts = array_map('trim', explode(',', $rawLogistik));
                                                 $formattedParts = [];
                                                 foreach ($parts as $pPart) {
+                                                    $bCode = '';
+                                                    $qtyTxt = '';
                                                     if (preg_match('/^([^\(]+)\s*\((\d+)x\)$/i', $pPart, $mLog)) {
                                                         $bCode = trim($mLog[1]);
                                                         $pcsVal = intval($mLog[2]);
                                                         if ($isEcommerce && $rasio > 1 && $pcsVal >= $rasio) {
                                                             $dusVal = floor($pcsVal / $rasio);
-                                                            $formattedParts[] = $bCode . " ({$dusVal} {$satBesar} = {$pcsVal} {$satKecil})";
+                                                            $qtyTxt = "{$dusVal} {$satBesar} = {$pcsVal} {$satKecil}";
+                                                            $formattedParts[] = $bCode . " ({$qtyTxt})";
                                                         } else {
-                                                            $formattedParts[] = $bCode . " ({$pcsVal} {$satKecil})";
+                                                            $qtyTxt = "{$pcsVal} {$satKecil}";
+                                                            $formattedParts[] = $bCode . " ({$qtyTxt})";
                                                         }
-                                                    } elseif (preg_match('/^([^\(]+)\s*\((.*?)\)$/i', $pPart)) {
+                                                    } elseif (preg_match('/^([^\(]+)\s*\((.*?)\)$/i', $pPart, $mLog)) {
+                                                        $bCode = trim($mLog[1]);
+                                                        $qtyTxt = trim($mLog[2]);
                                                         $formattedParts[] = $pPart;
                                                     } else {
+                                                        $bCode = trim($pPart);
                                                         if ($isEcommerce && $rasio > 1) {
                                                             $totalPcs = $it['qty'] * $rasio;
-                                                            $formattedParts[] = $pPart . " ({$it['qty']} {$satBesar} = {$totalPcs} {$satKecil})";
+                                                            $qtyTxt = "{$it['qty']} {$satBesar} = {$totalPcs} {$satKecil}";
+                                                            $formattedParts[] = $pPart . " ({$qtyTxt})";
                                                         } else {
+                                                            $qtyTxt = "{$it['qty']} {$satKecil}";
                                                             $formattedParts[] = $pPart;
                                                         }
+                                                    }
+
+                                                    $cb = trim(preg_replace('/\s*\(.*?\)/', '', $bCode));
+                                                    $cb = trim(preg_replace('/\[.*?\]/', '', $cb));
+                                                    if ($cb) {
+                                                        $cleanBatchesList[] = $cb;
+                                                        $bExp = $expMap[strtoupper($cb)] ?? ($it['exp_info'] ?? '');
+                                                        $packItems[] = [
+                                                            'batch' => $cb,
+                                                            'qtyText' => $qtyTxt,
+                                                            'instruksi' => $cb . ($qtyTxt ? " ({$qtyTxt})" : ""),
+                                                            'expInfo' => $bExp
+                                                        ];
                                                     }
                                                 }
                                                 $displayLogistik = implode(', ', $formattedParts);
                                             }
+
+                                            if (empty($packItems) && !empty($cleanBarcodeInstruksi)) {
+                                                $bExp = $expMap[strtoupper($cleanBarcodeInstruksi)] ?? ($it['exp_info'] ?? '');
+                                                $packItems[] = [
+                                                    'batch' => $cleanBarcodeInstruksi,
+                                                    'qtyText' => '',
+                                                    'instruksi' => $cleanBarcodeInstruksi,
+                                                    'expInfo' => $bExp
+                                                ];
+                                            }
+                                            $cleanBatchesAttr = implode(',', $cleanBatchesList);
                                         ?>
                                             <li class="item-packing flex flex-col bg-white p-2.5 rounded-lg border border-zcBrd shadow-sm" 
                                                 data-id-variasi="<?= $it['id_variasi'] ?>" 
@@ -414,7 +453,8 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                                 data-instruksi="<?= htmlspecialchars($displayLogistik ?: $cleanBarcodeInstruksi) ?>"
                                                 data-clean-batches="<?= htmlspecialchars(strtolower($cleanBatchesAttr ?: $cleanBarcodeInstruksi)) ?>"
                                                 data-expired-batches="<?= htmlspecialchars(strtolower($it['expired_batches'] ?? '')) ?>"
-                                                data-exp-info="<?= htmlspecialchars($it['exp_info'] ?? '') ?>">
+                                                data-exp-info="<?= htmlspecialchars($it['exp_info'] ?? '') ?>"
+                                                data-pack-items="<?= htmlspecialchars(json_encode($packItems)) ?>">
                                                 <div class="flex justify-between items-center">
                                                     <span class="font-bold text-slate-700"><?= htmlspecialchars($it['nama_produk'] . ' - ' . $it['nama_variasi']) ?></span>
                                                     <span class="font-semibold text-slate-700 <?= ($isEcommerce && $rasio > 1) ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-slate-100 border-slate-200 text-slate-600' ?> px-2.5 py-0.5 rounded border"><?= htmlspecialchars($qtyLabel) ?></span>
@@ -632,28 +672,64 @@ function handleStatusChange(selectEl, orderId) {
         var lis = ul.querySelectorAll('li.item-packing');
         lis.forEach(function(li) {
             var nama = li.querySelector('span.font-bold.text-slate-700').innerText;
-            var instruksi = li.getAttribute('data-instruksi') || '';
-            var cleanBatches = (li.getAttribute('data-clean-batches') || '').toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
-            if (!instruksi) {
-                var insSpan = li.querySelector('span.text-rose-700');
-                if (insSpan) {
-                    instruksi = insSpan.innerText.replace(/\(AMBIL FISIK:|\(INSTRUKSI AMBIL FISIK:|AMBIL FISIK:/gi, '').replace(/\)/g, '').trim();
-                }
+            var packItemsAttr = li.getAttribute('data-pack-items');
+            var packItemsData = [];
+            if (packItemsAttr) {
+                try {
+                    packItemsData = JSON.parse(packItemsAttr);
+                } catch(e) {}
             }
             
-            pendingItems.push({
-                id_variasi: li.getAttribute('data-id-variasi'),
-                qty: li.getAttribute('data-qty'),
-                nama: nama,
-                instruksi: instruksi,
-                cleanBatches: cleanBatches,
-                expiredBatches: (li.getAttribute('data-expired-batches') || '').toLowerCase().split(',').filter(Boolean),
-                expInfo: li.getAttribute('data-exp-info') || '',
-                validBatches: (li.getAttribute('data-batches') || "").split(","),
-                kategori: li.getAttribute('data-kategori') || "",
-                verified: false,
-                scannedBatch: null
-            });
+            var id_variasi = li.getAttribute('data-id-variasi');
+            var totalQty = li.getAttribute('data-qty');
+            var validBatches = (li.getAttribute('data-batches') || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+            var expiredBatches = (li.getAttribute('data-expired-batches') || '').toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
+            var kategori = li.getAttribute('data-kategori') || "";
+            
+            if (packItemsData && packItemsData.length > 0) {
+                packItemsData.forEach(function(pi) {
+                    var cb = (pi.batch || '').trim();
+                    pendingItems.push({
+                        id_variasi: id_variasi,
+                        qty: totalQty,
+                        nama: nama,
+                        instruksi: pi.instruksi || cb,
+                        cleanBatch: cb,
+                        cleanBatches: cb ? [cb.toLowerCase()] : [],
+                        qtyText: pi.qtyText || '',
+                        expiredBatches: expiredBatches,
+                        expInfo: pi.expInfo || '',
+                        validBatches: validBatches,
+                        kategori: kategori,
+                        verified: false,
+                        scannedBatch: null
+                    });
+                });
+            } else {
+                var instruksi = li.getAttribute('data-instruksi') || '';
+                var cleanBatches = (li.getAttribute('data-clean-batches') || '').toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
+                if (!instruksi) {
+                    var insSpan = li.querySelector('span.text-rose-700');
+                    if (insSpan) {
+                        instruksi = insSpan.innerText.replace(/\(AMBIL FISIK:|\(INSTRUKSI AMBIL FISIK:|AMBIL FISIK:/gi, '').replace(/\)/g, '').trim();
+                    }
+                }
+                pendingItems.push({
+                    id_variasi: id_variasi,
+                    qty: totalQty,
+                    nama: nama,
+                    instruksi: instruksi,
+                    cleanBatch: cleanBatches[0] || '',
+                    cleanBatches: cleanBatches,
+                    qtyText: '',
+                    expiredBatches: expiredBatches,
+                    expInfo: li.getAttribute('data-exp-info') || '',
+                    validBatches: validBatches,
+                    kategori: kategori,
+                    verified: false,
+                    scannedBatch: null
+                });
+            }
         });
         
         showPackingModal(newStatus);
@@ -688,17 +764,16 @@ function showPackingModal(targetStatus) {
              
     html += `<div class="space-y-3 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar mb-5">`;
     
-    pendingItems.forEach((it) => {
+    pendingItems.forEach((it, idx) => {
         let isVerified = it.verified;
         let borderCls = isVerified ? "border-emerald-500 bg-emerald-50/30" : "border-slate-200 bg-white shadow-sm";
         let iconHtml = isVerified 
             ? `<div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></div>`
-            : `<div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0"><span class="text-slate-400 text-xs font-bold">?</span></div>`;
+            : `<div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0"><span class="text-slate-400 text-xs font-bold">${idx + 1}</span></div>`;
             
         // Pisahkan nama instruksi dan keterangan Qty
-        let cleanInstruksi = it.instruksi.split('(')[0].replace(/\[.*?\]/g, "").trim(); 
-        let qtyMatch = it.instruksi.match(/\((.*?)\)/);
-        let qtyText = qtyMatch ? `<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[10px] ml-1 font-bold">${qtyMatch[1]}</span>` : "";
+        let cleanInstruksi = it.cleanBatch || it.instruksi.split('(')[0].replace(/\[.*?\]/g, "").trim(); 
+        let qtyText = it.qtyText ? `<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[10px] ml-1 font-bold">${it.qtyText}</span>` : "";
         
         let expBadge = "";
         if (it.expInfo) {
@@ -810,7 +885,8 @@ function updatePackCameraItemsList() {
         if (it.verified) verifiedCount++;
         let icon = it.verified ? '✅' : '⏳';
         let cls = it.verified ? 'text-emerald-800 font-bold bg-emerald-50 border-emerald-300' : 'text-slate-700 bg-white border-slate-200';
-        let detail = it.verified ? `[Selesai: ${it.scannedBatch}]` : `[Target: ${it.instruksi || 'Batch/SN'}]`;
+        let targetLabel = it.cleanBatch ? (it.cleanBatch + (it.qtyText ? ' [' + it.qtyText + ']' : '')) : (it.instruksi || 'Batch/SN');
+        let detail = it.verified ? `[Selesai: ${it.scannedBatch}]` : `[Target: ${targetLabel}]`;
         html += `<div class="p-2 rounded-lg border flex items-center justify-between gap-2 ${cls}">
             <span class="truncate flex-1 font-semibold">${icon} ${it.nama}</span>
             <span class="font-mono text-[10.5px] ml-2 shrink-0 font-bold">${detail}</span>
@@ -1054,15 +1130,35 @@ function proceedPackingMatch(val, targetStatus, fromCamera = false) {
     // PASS 1: Cari target FEFO / clean batch yang cocok pada SEMUA item yang belum diverifikasi (Bisa scan acak)
     for (let i = 0; i < pendingItems.length; i++) {
         if (!pendingItems[i].verified) {
-            let instruksiRaw = pendingItems[i].instruksi.toLowerCase();
-            let pureBatches = instruksiRaw.split(',').map(b => b.replace(/\(.*?\)/g, "").replace(/\[.*?\]/g, "").trim());
+            let pureBatch = (pendingItems[i].cleanBatch || '').toLowerCase();
             let cleanBatches = pendingItems[i].cleanBatches || [];
-            let allExpected = pureBatches.concat(cleanBatches).filter(Boolean);
+            let allExpected = [pureBatch].concat(cleanBatches).filter(Boolean);
             
             if (allExpected.includes(val)) {
                 matchIdx = i;
                 break;
             }
+        }
+    }
+
+    // Jika barcode ini sudah selesai diverifikasi sebelumnya di item lain
+    if (matchIdx === -1) {
+        let alreadyVerified = pendingItems.find(i => i.verified && (
+            (i.scannedBatch && i.scannedBatch.toLowerCase() === val) || 
+            (i.cleanBatch && i.cleanBatch.toLowerCase() === val)
+        ));
+        if (alreadyVerified) {
+            let nextPending = pendingItems.find(i => !i.verified);
+            let nextTarget = nextPending ? (nextPending.cleanBatch || nextPending.instruksi) : '';
+            Swal.fire({
+                title: "ℹ️ Sudah Terverifikasi",
+                html: `Batch/SN <b>${val.toUpperCase()}</b> sudah selesai Anda scan sebelumnya.<br><br>Silakan lanjutkan men-scan batch berikutnya: <b>${nextTarget}</b>.`,
+                icon: "info",
+                confirmButtonColor: "#3b82f6"
+            }).then(() => {
+                if (!fromCamera) showPackingModal(targetStatus);
+            });
+            return;
         }
     }
 
@@ -1124,7 +1220,7 @@ function proceedPackingMatch(val, targetStatus, fromCamera = false) {
             let h = document.createElement("input");
             h.type = "hidden";
             h.name = "anomali_log[]";
-            h.value = pendingItems[anomalyIdx].id_variasi + "|" + pendingItems[anomalyIdx].instruksi + "|" + val.toUpperCase() + "|" + pendingItems[anomalyIdx].qty + "|" + pendingItems[anomalyIdx].kategori;
+            h.value = pendingItems[anomalyIdx].id_variasi + "|" + (pendingItems[anomalyIdx].cleanBatch || pendingItems[anomalyIdx].instruksi) + "|" + val.toUpperCase() + "|" + pendingItems[anomalyIdx].qty + "|" + pendingItems[anomalyIdx].kategori;
             activeForm.appendChild(h);
 
             let allDone = pendingItems.every(i => i.verified);
@@ -1147,7 +1243,7 @@ function proceedPackingMatch(val, targetStatus, fromCamera = false) {
             
         Swal.fire({
             title: titleAnomali,
-            html: `Anda men-scan fisik <b>${val.toUpperCase()}</b>.<br><br>Padahal pesanan tercatat untuk: <b>${pendingItems[anomalyIdx].instruksi}</b>.<br><br>${warnAnomali}`,
+            html: `Anda men-scan fisik <b>${val.toUpperCase()}</b>.<br><br>Padahal pesanan tercatat untuk: <b>${pendingItems[anomalyIdx].cleanBatch || pendingItems[anomalyIdx].instruksi}</b>.<br><br>${warnAnomali}`,
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: "Tetap Lanjutkan (Abaikan)",
@@ -1163,7 +1259,7 @@ function proceedPackingMatch(val, targetStatus, fromCamera = false) {
                 let h = document.createElement("input");
                 h.type = "hidden";
                 h.name = "anomali_log[]";
-                h.value = pendingItems[anomalyIdx].id_variasi + "|" + pendingItems[anomalyIdx].instruksi + "|" + val.toUpperCase() + "|" + pendingItems[anomalyIdx].qty;
+                h.value = pendingItems[anomalyIdx].id_variasi + "|" + (pendingItems[anomalyIdx].cleanBatch || pendingItems[anomalyIdx].instruksi) + "|" + val.toUpperCase() + "|" + pendingItems[anomalyIdx].qty;
                 activeForm.appendChild(h);
 
                 let allDone = pendingItems.every(i => i.verified);

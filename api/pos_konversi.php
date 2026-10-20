@@ -87,14 +87,37 @@ try {
     $stmtHist->execute([$idVariasi, $noBatchAsal, $newBatchName, $qtyPcs, $sisaStokDus, $userId]);
     
     $pdo->commit();
+
+    // Query data variasi terkini agar POS frontend bisa update DOM realtime tanpa reload
+    $qBatches = $pdo->prepare("SELECT GROUP_CONCAT(CONCAT(no_batch, '|', stok_sisa) ORDER BY tgl_exp ASC, no_batch ASC SEPARATOR ',') FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 AND tgl_exp >= CURDATE()");
+    $qBatches->execute([$idVariasi]);
+    $updatedBatchList = $qBatches->fetchColumn() ?: '';
+
+    $qEceran = $pdo->prepare("SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = ? AND no_batch LIKE '%.%' AND tgl_exp >= CURDATE()");
+    $qEceran->execute([$idVariasi]);
+    $updatedStokEceran = intval($qEceran->fetchColumn());
+
+    $qDus = $pdo->prepare("SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = ? AND no_batch NOT LIKE '%.%' AND tgl_exp >= CURDATE()");
+    $qDus->execute([$idVariasi]);
+    $updatedStokDus = intval($qDus->fetchColumn());
+
     echo json_encode([
         "status" => "success", 
         "message" => "Berhasil memecah box!",
         "new_batch" => $newBatchName,
-        "qty_pcs" => $qtyPcs
+        "qty_pcs" => $qtyPcs,
+        "batch_list" => $updatedBatchList,
+        "stok_eceran" => $updatedStokEceran,
+        "stok_dus" => $updatedStokDus,
+        "stok_total" => intval($sisaStokEceran),
+        "satuan_kecil" => $var["satuan_kecil"],
+        "satuan_besar" => $var["satuan_besar"],
+        "rasio" => $rasio
     ]);
 } catch (Exception $e) {
-    $pdo->rollBack();
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     echo json_encode(["status" => "error", "message" => $e->getMessage()]);
 }
 ?>

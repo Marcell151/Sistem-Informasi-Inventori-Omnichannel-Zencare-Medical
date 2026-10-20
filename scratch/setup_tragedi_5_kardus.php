@@ -48,6 +48,7 @@ if ($action === 'reset_5_kardus') {
         // 1. Bersihkan stok toko & stok batch lama untuk variasi ini
         $pdo->prepare("DELETE FROM stok_batch WHERE id_variasi = ?")->execute([$idVariasi]);
         $pdo->prepare("DELETE FROM histori_konversi WHERE id_variasi = ?")->execute([$idVariasi]);
+        $pdo->prepare("DELETE FROM kartu_stok WHERE id_variasi = ?")->execute([$idVariasi]);
         
         // 2. Set stok_toko persis 50 unit kecil (= 5 Karton x 10 Box)
         $chkStok = $pdo->prepare("SELECT id FROM stok_toko WHERE id_variasi = ?");
@@ -72,9 +73,9 @@ if ($action === 'reset_5_kardus') {
                        VALUES (?, 'BATCH-DOSEN-B', ?, 30, NOW())")
             ->execute([$idVariasi, $expBatch2]);
 
-        // 4. Catat ke kartu stok
+        // 4. Catat ke kartu stok Gudang (Satuan Besar: 5 Karton Utuh)
         $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh, tanggal) 
-                       VALUES (?, 'kecil', 'Masuk', 'Gudang', 'Penerimaan', 'INIT-5BOX', 50, 50, 'Reset Skenario Dosen: Saldo Awal 5 Karton Utuh (50 Box)', 1, NOW())")
+                       VALUES (?, 'besar', 'Masuk', 'Gudang', 'Penerimaan', 'INIT-5BOX', 5, 5, 'Reset Skenario Dosen: Saldo Awal 5 Karton Utuh (Gudang)', 1, NOW())")
             ->execute([$idVariasi]);
 
         $pdo->commit();
