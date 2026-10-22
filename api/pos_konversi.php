@@ -69,8 +69,15 @@ try {
     $stmtNew->execute([$idVariasi, $newBatchName, $batchAsal["tgl_exp"], $qtyPcs, $qtyPcs]);
     
     // Catat di kartu stok secara terpisah (Keluar Dus, Masuk Pcs)
-    $sisaStokEceran = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVariasi")->fetchColumn();
-    $sisaStokDus = floor($sisaStokEceran / $rasio);
+    // Sisa Dus Utuh di Gudang setelah pembongkaran
+    $qDusSisa = $pdo->prepare("SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = ? AND no_batch NOT LIKE '%.%'");
+    $qDusSisa->execute([$idVariasi]);
+    $sisaStokDus = floor(intval($qDusSisa->fetchColumn()) / $rasio);
+    
+    // Sisa Eceran di Etalase setelah pembongkaran
+    $qEceranSisa = $pdo->prepare("SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = ? AND no_batch LIKE '%.%'");
+    $qEceranSisa->execute([$idVariasi]);
+    $sisaStokEceran = intval($qEceranSisa->fetchColumn());
     
     // 1. Kartu Stok DUS (Keluar)
     $catatanKeluar = "Bongkar 1 " . $var["satuan_besar"] . " (Rp0 - Konversi POS) [Batch: $noBatchAsal]";

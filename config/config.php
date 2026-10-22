@@ -8,7 +8,7 @@ loadEnv(__DIR__ . '/../.env');
 // Timezone Configuration (WIB / GMT+7)
 date_default_timezone_set('Asia/Jakarta');
 
-// Cooldown Reservasi Stok E-Commerce (Standar: 120 Menit / 2 Jam)
+// Cooldown Reservasi Stok E-Commerce & Expiry Midtrans (120 Menit / 2 Jam)
 define('RESERVASI_COOLDOWN_MENIT', 120);
 
 // 1. DATABASE CONFIGURATION

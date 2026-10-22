@@ -62,7 +62,7 @@ if (!function_exists('batalkanSatuPesananInternal')) {
 if (!function_exists('batalkanPesananKadaluarsa')) {
     /**
      * Membatalkan semua pesanan e-commerce dengan status 'Menunggu Pembayaran'
-     * yang telah melebihi batas waktu cooldown reservasi (mengacu ke RESERVASI_COOLDOWN_MENIT atau default 120 menit / 2 jam).
+     * yang telah melebihi batas waktu cooldown reservasi (mengacu ke RESERVASI_COOLDOWN_MENIT atau default 120 menit / 2 jam sesuai durasi Midtrans).
      * Mengembalikan reserved stok ke stok fisik dan stok batch FEFO.
      */
     function batalkanPesananKadaluarsa($pdo, $batasMenit = null) {

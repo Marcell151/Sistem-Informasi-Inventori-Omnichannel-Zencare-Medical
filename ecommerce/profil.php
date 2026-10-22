@@ -372,12 +372,17 @@ if (!empty($orderIds)) {
                         </div>
 
                         <?php if ($status === 'Menunggu Pembayaran'): 
-                            $cooldownDetik = (defined('RESERVASI_COOLDOWN_MENIT') ? RESERVASI_COOLDOWN_MENIT : 120) * 60;
+                            $cooldownMenit = defined('RESERVASI_COOLDOWN_MENIT') ? RESERVASI_COOLDOWN_MENIT : 120;
+                            $cooldownDetik = $cooldownMenit * 60;
                             $expireTime = strtotime($ord['created_at']) + $cooldownDetik;
                             $sisaDetik = max(0, $expireTime - time());
-                            $cooldownLabel = defined('RESERVASI_COOLDOWN_MENIT') && RESERVASI_COOLDOWN_MENIT < 60 
-                                ? RESERVASI_COOLDOWN_MENIT . ' Menit (Mode Uji Coba)' 
-                                : round($cooldownDetik / 3600) . ' Jam';
+                            if ($cooldownMenit < 60) {
+                                $cooldownLabel = $cooldownMenit . ' Menit (Mode Uji Coba)';
+                            } elseif ($cooldownMenit >= 1440) {
+                                $cooldownLabel = round($cooldownMenit / 1440) . ' Hari (' . round($cooldownMenit / 60) . ' Jam)';
+                            } else {
+                                $cooldownLabel = round($cooldownMenit / 60) . ' Jam';
+                            }
                         ?>
                         <div class="mt-2.5 mb-1 p-2.5 rounded-xl bg-amber-50/90 border border-amber-200 text-amber-900 text-[11px] flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 shadow-2xs">
                             <div class="flex items-center gap-1.5 font-medium">

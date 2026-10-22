@@ -200,6 +200,7 @@ try {
     }
 
     // 4. Request Midtrans Snap
+    $cooldownMenit = defined('RESERVASI_COOLDOWN_MENIT') ? RESERVASI_COOLDOWN_MENIT : 120;
     $midtransPayload = [
         'transaction_details' => [
             'order_id' => $orderId,
@@ -210,6 +211,11 @@ try {
             'phone' => $phone,
         ],
         'item_details' => $itemDetails,
+        'expiry' => [
+            'start_time' => date('Y-m-d H:i:s O'),
+            'unit' => 'minute',
+            'duration' => $cooldownMenit,
+        ],
     ];
 
     $ch = curl_init(MIDTRANS_API_URL . '/snap/v1/transactions');

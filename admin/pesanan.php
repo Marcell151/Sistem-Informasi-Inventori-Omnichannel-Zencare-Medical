@@ -17,9 +17,8 @@ $msg = ''; $msgType = '';
 // Auto-cancel pesanan e-commerce 'Menunggu Pembayaran' yang kadaluarsa & kembalikan stok
 $autoCancelled = batalkanPesananKadaluarsa($pdo);
 if ($autoCancelled > 0) {
-    $cooldownText = defined('RESERVASI_COOLDOWN_MENIT') && RESERVASI_COOLDOWN_MENIT < 60 
-        ? RESERVASI_COOLDOWN_MENIT . ' menit' 
-        : '2 jam';
+    $cooldownMenit = defined('RESERVASI_COOLDOWN_MENIT') ? RESERVASI_COOLDOWN_MENIT : 1440;
+    $cooldownText = ($cooldownMenit < 60) ? ($cooldownMenit . ' menit') : (round($cooldownMenit / 60) . ' jam');
     $msg = "$autoCancelled pesanan e-commerce 'Menunggu Pembayaran' telah dibatalkan otomatis karena melebihi batas waktu $cooldownText, stok fisik & batch FEFO telah dipulihkan.";
     $msgType = 'info';
 }
@@ -53,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
                 // Jika status diubah menjadi Selesai dan metode Pick-up, catat sebagai Keluar di Kartu Stok
                 if ($oldStatus !== 'Selesai' && $newStatus === 'Selesai' && $metodePengambilan === 'Pick-up') {
                     $stmtItems = $pdo->prepare("
-                        SELECT d.id_variasi, d.qty, v.rasio_konversi, v.satuan_besar 
+                        SELECT d.id_variasi, d.qty, d.catatan_logistik, v.rasio_konversi, v.satuan_besar, v.satuan_kecil 
                         FROM detail_penjualan d 
                         JOIN produk_variasi v ON d.id_variasi = v.id 
                         WHERE d.id_penjualan = ?
@@ -66,21 +65,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
                         $qtyBox = intval($item['qty']);
                         $rasio = intval($item['rasio_konversi']) ?: 1;
                         $qtyPotong = $qtyBox * $rasio;
+                        $satBesar = $item['satuan_besar'] ?? 'Karton';
+                        $satKecil = $item['satuan_kecil'] ?? 'Unit';
 
                         $sisaStok = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVar")->fetchColumn();
                         $satuanTipe = ($rasio > 1) ? 'besar' : 'kecil';
                         $qtyKartu = ($rasio > 1) ? $qtyBox : $qtyPotong;
+                        $satLabel = ($satuanTipe === 'besar') ? $satBesar : $satKecil;
                         $sisaStokTampil = ($rasio > 1) ? floor($sisaStok / $rasio) : $sisaStok;
 
-                        $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
-                            ->execute([$idVar, $satuanTipe, $noInvoice, $qtyKartu, $sisaStokTampil, 'Konfirmasi Pengambilan di Toko (Pick-up)', $_SESSION['id_user'] ?? 1]);
+                        $catatan = trim($item['catatan_logistik'] ?? '');
+                        $batchList = [];
+                        if (!empty($catatan)) {
+                            $parts = array_map('trim', explode(',', $catatan));
+                            foreach ($parts as $p) {
+                                if (preg_match('/^([^\(]+)(?:\((?:(\d+)\s*(?:[A-Za-z]+)?\s*=\s*)?(\d+)(?:x|[^\)]*)?\))?/i', $p, $m)) {
+                                    $bName = trim($m[1]);
+                                    $bQty = !empty($m[2]) ? intval($m[2]) : (!empty($m[3]) ? intval($m[3]) : 0);
+                                    if ($bQty <= 0) $bQty = ($satuanTipe === 'besar') ? $qtyBox : $qtyPotong;
+                                    $batchList[] = ['batch' => $bName, 'qty' => $bQty];
+                                }
+                            }
+                        }
+
+                        if (!empty($batchList)) {
+                            foreach ($batchList as $b) {
+                                $bName = $b['batch'];
+                                $bQty  = $b['qty'];
+                                $deskripsi = "Konfirmasi Pengambilan di Toko (Pick-up) [Batch: $bName ($bQty $satLabel)]";
+                                $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
+                                    ->execute([$idVar, $satuanTipe, $noInvoice, $bQty, $sisaStokTampil, $deskripsi, $_SESSION['id_user'] ?? 1]);
+                            }
+                        } else {
+                            $deskripsi = 'Konfirmasi Pengambilan di Toko (Pick-up)';
+                            $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
+                                ->execute([$idVar, $satuanTipe, $noInvoice, $qtyKartu, $sisaStokTampil, $deskripsi, $_SESSION['id_user'] ?? 1]);
+                        }
                     }
                 }
 
                 // Jika status diubah menjadi Dikirim dan metode Kurir, catat sebagai Keluar di Kartu Stok
                 if ($oldStatus !== 'Dikirim' && $newStatus === 'Dikirim' && $metodePengambilan === 'Kurir') {
                     $stmtItems = $pdo->prepare("
-                        SELECT d.id_variasi, d.qty, v.rasio_konversi, v.satuan_besar 
+                        SELECT d.id_variasi, d.qty, d.catatan_logistik, v.rasio_konversi, v.satuan_besar, v.satuan_kecil 
                         FROM detail_penjualan d 
                         JOIN produk_variasi v ON d.id_variasi = v.id 
                         WHERE d.id_penjualan = ?
@@ -93,14 +120,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
                         $qtyBox = intval($item['qty']);
                         $rasio = intval($item['rasio_konversi']) ?: 1;
                         $qtyPotong = $qtyBox * $rasio;
+                        $satBesar = $item['satuan_besar'] ?? 'Karton';
+                        $satKecil = $item['satuan_kecil'] ?? 'Unit';
 
                         $sisaStok = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVar")->fetchColumn();
                         $satuanTipe = ($rasio > 1) ? 'besar' : 'kecil';
                         $qtyKartu = ($rasio > 1) ? $qtyBox : $qtyPotong;
+                        $satLabel = ($satuanTipe === 'besar') ? $satBesar : $satKecil;
                         $sisaStokTampil = ($rasio > 1) ? floor($sisaStok / $rasio) : $sisaStok;
 
-                        $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
-                            ->execute([$idVar, $satuanTipe, $noInvoice, $qtyKartu, $sisaStokTampil, 'Pengiriman via Ekspedisi (Kurir)', $_SESSION['id_user'] ?? 1]);
+                        $catatan = trim($item['catatan_logistik'] ?? '');
+                        $batchList = [];
+                        if (!empty($catatan)) {
+                            $parts = array_map('trim', explode(',', $catatan));
+                            foreach ($parts as $p) {
+                                if (preg_match('/^([^\(]+)(?:\((?:(\d+)\s*(?:[A-Za-z]+)?\s*=\s*)?(\d+)(?:x|[^\)]*)?\))?/i', $p, $m)) {
+                                    $bName = trim($m[1]);
+                                    $bQty = !empty($m[2]) ? intval($m[2]) : (!empty($m[3]) ? intval($m[3]) : 0);
+                                    if ($bQty <= 0) $bQty = ($satuanTipe === 'besar') ? $qtyBox : $qtyPotong;
+                                    $batchList[] = ['batch' => $bName, 'qty' => $bQty];
+                                }
+                            }
+                        }
+
+                        if (!empty($batchList)) {
+                            foreach ($batchList as $b) {
+                                $bName = $b['batch'];
+                                $bQty  = $b['qty'];
+                                $deskripsi = "Pengiriman via Ekspedisi (Kurir) [Batch: $bName ($bQty $satLabel)]";
+                                $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
+                                    ->execute([$idVar, $satuanTipe, $noInvoice, $bQty, $sisaStokTampil, $deskripsi, $_SESSION['id_user'] ?? 1]);
+                            }
+                        } else {
+                            $deskripsi = 'Pengiriman via Ekspedisi (Kurir)';
+                            $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
+                                ->execute([$idVar, $satuanTipe, $noInvoice, $qtyKartu, $sisaStokTampil, $deskripsi, $_SESSION['id_user'] ?? 1]);
+                        }
                     }
                 }
                 // Jika status diubah menjadi Dibatalkan (dan sebelumnya bukan Dibatalkan), kembalikan stok

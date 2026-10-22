@@ -53,6 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                 $allocations = $item['allocations'] ?? [];
                 $alkesAllocations = $item['alkes_allocations'] ?? [];
 
+                $catatanLogistik = [];
+                $kartuStokBatches = [];
+
                 // FEFO / Batch Logic untuk Obat
                 if ($kategori === 'Obat') {
                     if (!empty($allocations) && is_array($allocations)) {
@@ -82,6 +85,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
 
                             $satLableItem = ($satuanTipe === 'besar') ? $varData['satuan_besar'] : $varData['satuan_kecil'];
                             $catatanLogistik[] = "$alBatch ({$alQtySatuan} $satLableItem)";
+                            $kartuStokBatches[] = [
+                                'batch' => $alBatch,
+                                'qty'   => $alQtySatuan
+                            ];
                         }
                     } else if ($scannedCode) {
                         // Pakai batch spesifik yang di-scan
@@ -103,6 +110,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
 
                         $satLableItem = ($satuanTipe === 'besar') ? $varData['satuan_besar'] : $varData['satuan_kecil'];
                         $catatanLogistik[] = $scannedCode . " ({$qtyInput} $satLableItem)";
+                        $kartuStokBatches[] = [
+                            'batch' => $scannedCode,
+                            'qty'   => $qtyInput
+                        ];
                     } else {
                         // Auto FEFO fallback (HANYA batch yang belum expired)
                         $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 AND tgl_exp >= CURDATE() ORDER BY tgl_exp ASC, no_batch ASC FOR UPDATE");
@@ -110,11 +121,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                         $batches = $stmtBatch->fetchAll();
                         
                         $sisaPotong = $qtyPotong;
+                        $satLableItem = ($satuanTipe === 'besar') ? $varData['satuan_besar'] : $varData['satuan_kecil'];
                         foreach ($batches as $b) {
                             if ($sisaPotong <= 0) break;
                             $potongBatch = min($b['stok_sisa'], $sisaPotong);
                             $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$potongBatch, $b['id']]);
-                            $catatanLogistik[] = $b['no_batch'] . " ({$potongBatch}x)";
+                            
+                            $qtyBatchSatuan = ($satuanTipe === 'besar') ? floor($potongBatch / $rasio) : $potongBatch;
+                            $catatanLogistik[] = $b['no_batch'] . " ({$qtyBatchSatuan} $satLableItem)";
+                            $kartuStokBatches[] = [
+                                'batch' => $b['no_batch'],
+                                'qty'   => $qtyBatchSatuan
+                            ];
                             $sisaPotong -= $potongBatch;
                         }
                         if ($sisaPotong > 0) throw new Exception("Stok Batch Obat yang masih aktif/belum expired tidak mencukupi untuk dipotong FEFO.");
@@ -131,12 +149,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                             $stmtUpdateSN->execute([$idPenjualan, $snStr, $idVar]);
                             if ($stmtUpdateSN->rowCount() === 0) throw new Exception("SN $snStr tidak valid/tersedia.");
                             $catatanLogistik[] = $snStr;
+                            $kartuStokBatches[] = [
+                                'batch' => $snStr,
+                                'qty'   => 1
+                            ];
                         }
                     } else if ($scannedCode) {
                         $stmtUpdateSN = $pdo->prepare("UPDATE unit_serial SET status = 'Terjual', id_penjualan = ? WHERE serial_number = ? AND id_variasi = ? AND status = 'Tersedia'");
                         $stmtUpdateSN->execute([$idPenjualan, $scannedCode, $idVar]);
                         if ($stmtUpdateSN->rowCount() === 0) throw new Exception("SN $scannedCode tidak valid/tersedia.");
                         $catatanLogistik[] = $scannedCode;
+                        $kartuStokBatches[] = [
+                            'batch' => $scannedCode,
+                            'qty'   => 1
+                        ];
                     } else {
                         $stmtSn = $pdo->prepare("SELECT serial_number FROM unit_serial WHERE id_variasi = ? AND status = 'Tersedia' LIMIT ? FOR UPDATE");
                         $stmtSn->bindValue(1, $idVar, PDO::PARAM_INT);
@@ -148,6 +174,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                         foreach ($snList as $snStr) {
                             $pdo->prepare("UPDATE unit_serial SET status = 'Terjual', id_penjualan = ? WHERE serial_number = ?")->execute([$idPenjualan, $snStr]);
                             $catatanLogistik[] = $snStr;
+                            $kartuStokBatches[] = [
+                                'batch' => $snStr,
+                                'qty'   => 1
+                            ];
                         }
                     }
                 }
@@ -163,14 +193,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_p
                 $sisaQ->execute([$idVar]);
                 $sisa = $sisaQ->fetchColumn();
                 $satLable = ($satuanTipe === 'besar') ? $varData['satuan_besar'] : $varData['satuan_kecil'];
-                $batchStr = !empty($catatanLogistik) ? " [Batch: " . implode(', ', $catatanLogistik) . "]" : "";
-                $deskripsi = "Penjualan Luring $invoiceNo$batchStr";
                 $kasirUserId = $_SESSION['user_id'] ?? null;
-                $qtyKartu = ($satuanTipe === 'besar') ? $qtyInput : $qtyPotong;
                 $sisaKartu = ($satuanTipe === 'besar') ? floor($sisa / $rasio) : $sisa;
 
-                $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Keluar', 'POS', 'Penjualan POS', ?, ?, ?, ?, ?)")
-                    ->execute([$idVar, $satuanTipe, $invoiceNo, $qtyKartu, $sisaKartu, $deskripsi, $kasirUserId]);
+                if (!empty($kartuStokBatches)) {
+                    foreach ($kartuStokBatches as $kb) {
+                        $kbBatch = $kb['batch'];
+                        $kbQty   = intval($kb['qty']);
+                        if ($kbQty <= 0) continue;
+                        $tagPrefix = ($kategori === 'Alat Kesehatan') ? 'SN' : 'Batch';
+                        $deskripsi = "Penjualan Luring $invoiceNo [$tagPrefix: $kbBatch ($kbQty $satLable)]";
+                        $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Keluar', 'POS', 'Penjualan POS', ?, ?, ?, ?, ?)")
+                            ->execute([$idVar, $satuanTipe, $invoiceNo, $kbQty, $sisaKartu, $deskripsi, $kasirUserId]);
+                    }
+                } else {
+                    $qtyKartu = ($satuanTipe === 'besar') ? $qtyInput : $qtyPotong;
+                    $deskripsi = "Penjualan Luring $invoiceNo";
+                    $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Keluar', 'POS', 'Penjualan POS', ?, ?, ?, ?, ?)")
+                        ->execute([$idVar, $satuanTipe, $invoiceNo, $qtyKartu, $sisaKartu, $deskripsi, $kasirUserId]);
+                }
                 $totalHarga += $effPrice * $qtyInput;
             }
 

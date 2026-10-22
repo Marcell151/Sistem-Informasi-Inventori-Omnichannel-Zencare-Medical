@@ -884,7 +884,7 @@ $kartuStok = [
         'tanggal' => '2026-10-14 10:15:20'
     ],
 
-    // 5. Penjualan Transaksi 2 (POS: 2 Sub-Batch dari batch induk yg sama Paracetamol)
+    // 5. Penjualan Transaksi 2 (POS: 2 Sub-Batch dari batch induk yg sama Paracetamol - Masing-masing 1 baris)
     [
         'id' => 19,
         'id_variasi' => 10,
@@ -893,14 +893,28 @@ $kartuStok = [
         'kanal' => 'POS',
         'alasan_mutasi' => 'Penjualan POS',
         'no_ref_dokumen' => 'POS-20261016-1002',
-        'qty' => 5,
+        'qty' => 3,
+        'sisa_stok' => 17,
+        'keterangan' => 'Penjualan Luring POS-20261016-1002 [Batch: PCT-500-26.A (3 Tablet)]',
+        'dibuat_oleh' => 4,
+        'tanggal' => '2026-10-16 14:22:10'
+    ],
+    [
+        'id' => 30,
+        'id_variasi' => 10,
+        'satuan_tipe' => 'kecil',
+        'jenis_mutasi' => 'Keluar',
+        'kanal' => 'POS',
+        'alasan_mutasi' => 'Penjualan POS',
+        'no_ref_dokumen' => 'POS-20261016-1002',
+        'qty' => 2,
         'sisa_stok' => 15,
-        'keterangan' => 'Penjualan Luring POS-20261016-1002 [Batch: PCT-500-26.A (3x), PCT-500-26.B (2x)]',
+        'keterangan' => 'Penjualan Luring POS-20261016-1002 [Batch: PCT-500-26.B (2 Tablet)]',
         'dibuat_oleh' => 4,
         'tanggal' => '2026-10-16 14:22:10'
     ],
 
-    // 6. Penjualan Transaksi 3 (POS: 2 Sub-Batch beda induk + 1 Satuan Besar Hufagrip)
+    // 6. Penjualan Transaksi 3 (POS: 2 Sub-Batch beda induk + 1 Satuan Besar Hufagrip - Masing-masing 1 baris)
     [
         'id' => 20,
         'id_variasi' => 6,
@@ -909,9 +923,23 @@ $kartuStok = [
         'kanal' => 'POS',
         'alasan_mutasi' => 'Penjualan POS',
         'no_ref_dokumen' => 'POS-20261017-1003',
-        'qty' => 5,
+        'qty' => 2,
+        'sisa_stok' => 98,
+        'keterangan' => 'Penjualan Luring POS-20261017-1003 [Batch: HUF-TMP-26.A (2 Botol)]',
+        'dibuat_oleh' => 4,
+        'tanggal' => '2026-10-17 11:40:05'
+    ],
+    [
+        'id' => 31,
+        'id_variasi' => 6,
+        'satuan_tipe' => 'kecil',
+        'jenis_mutasi' => 'Keluar',
+        'kanal' => 'POS',
+        'alasan_mutasi' => 'Penjualan POS',
+        'no_ref_dokumen' => 'POS-20261017-1003',
+        'qty' => 3,
         'sisa_stok' => 95,
-        'keterangan' => 'Penjualan Luring POS-20261017-1003 [Batch: HUF-TMP-26.A (2x), HUF-TMP-27.A (3x)]',
+        'keterangan' => 'Penjualan Luring POS-20261017-1003 [Batch: HUF-TMP-27.A (3 Botol)]',
         'dibuat_oleh' => 4,
         'tanggal' => '2026-10-17 11:40:05'
     ],
@@ -924,7 +952,7 @@ $kartuStok = [
         'alasan_mutasi' => 'Penjualan POS',
         'no_ref_dokumen' => 'POS-20261017-1003',
         'qty' => 1,
-        'sisa_stok' => 8,
+        'sisa_stok' => 15,
         'keterangan' => 'Penjualan Luring POS-20261017-1003 [Batch: HUF-TMP-27 (1 Karton = 50 Botol)]',
         'dibuat_oleh' => 4,
         'tanggal' => '2026-10-17 11:40:05'

@@ -120,11 +120,28 @@ if ($id_variasi > 0) {
                     SELECT dp.catatan_logistik 
                     FROM detail_penjualan dp 
                     JOIN penjualan p ON p.id = dp.id_penjualan 
-                    WHERE p.no_invoice = ? AND dp.id_variasi = ? LIMIT 1
+                    WHERE p.no_invoice = ? AND dp.id_variasi = ?
                 ");
                 $qLogistik->execute([$invoiceNo, $id_variasi]);
-                $val = $qLogistik->fetchColumn();
-                if ($val) $batchDetail = $val;
+                $allLogistik = $qLogistik->fetchAll(PDO::FETCH_COLUMN);
+
+                $tipeTarget = $log['satuan_tipe'] ?? '';
+                $picked = '';
+                foreach ($allLogistik as $cStr) {
+                    if (empty($cStr)) continue;
+                    if ($tipeTarget === 'besar') {
+                        if (preg_match('/(Karton|Dus|Box)/i', $cStr) || !preg_match('/\.[A-Za-z0-9]/i', $cStr)) {
+                            $picked = $cStr;
+                            break;
+                        }
+                    } elseif ($tipeTarget === 'kecil') {
+                        if (preg_match('/(Botol|Strip|Pcs|Tablet|\.[A-Za-z0-9])/i', $cStr)) {
+                            $picked = $cStr;
+                            break;
+                        }
+                    }
+                }
+                $batchDetail = $picked ?: ($allLogistik[0] ?? '');
             }
         }
         
