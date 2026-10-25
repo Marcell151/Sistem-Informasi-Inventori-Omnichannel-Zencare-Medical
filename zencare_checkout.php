@@ -290,7 +290,44 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                         </div>
                     </div>
 
-                    <div class="mt-6 space-y-2">
+                    <!-- Pilihan Kategori Pembayaran Midtrans (QRIS 15 Menit vs Virtual Account 2 Jam) -->
+                    <div class="mt-4 pt-4 border-t border-zcBrd">
+                        <label class="block text-xs font-bold text-zcTxt mb-2 flex items-center justify-between">
+                            <span>Kategori Pembayaran Midtrans:</span>
+                            <span class="text-[10px] text-zc font-semibold">Batas Waktu Sinkron</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-2" id="group_metode_bayar">
+                            <div class="cursor-pointer border-2 border-zc rounded-xl p-2.5 flex flex-col gap-1 transition bg-blue-50/50 shadow-xs" id="card_pay_qris" onclick="selectPayCategory('qris')">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-zcTxt flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 text-zc" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                                        QRIS / E-Wallet
+                                    </span>
+                                </div>
+                                <span class="text-[10px] text-zcMut">GoPay, ShopeePay, QRIS</span>
+                                <div class="mt-1 flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100/90 px-1.5 py-0.5 rounded self-start">
+                                    <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    <span>Batas: 15 Menit</span>
+                                </div>
+                            </div>
+
+                            <div class="cursor-pointer border-2 border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 transition hover:border-slate-300" id="card_pay_va" onclick="selectPayCategory('va')">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-zcTxt flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                                        Transfer Virtual Account
+                                    </span>
+                                </div>
+                                <span class="text-[10px] text-zcMut">BCA, BNI, BRI, Mandiri</span>
+                                <div class="mt-1 flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-100/90 px-1.5 py-0.5 rounded self-start">
+                                    <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    <span>Batas: 2 Jam</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 space-y-2">
                         <!-- Opsi "Bayar Nanti" disembunyikan (Feature Toggle) untuk mencegah Dead Stock / Penimbunan Stok Fiktif -->
                         <button onclick="prosesCheckout(false)" id="btn_checkout_nanti" style="display: none;" class="w-full bg-white hover:bg-slate-50 text-zcTxt border border-zcBrd font-semibold text-xs py-3.5 px-2 rounded-xl transition shadow-sm">
                             Buat Pesanan (Bayar Nanti)
@@ -769,6 +806,20 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             }
         }
 
+        let selectedPayCategory = 'qris';
+        function selectPayCategory(cat) {
+            selectedPayCategory = cat;
+            let cardQris = document.getElementById('card_pay_qris');
+            let cardVa = document.getElementById('card_pay_va');
+            if (cat === 'qris') {
+                if (cardQris) cardQris.className = 'cursor-pointer border-2 border-zc rounded-xl p-2.5 flex flex-col gap-1 transition bg-blue-50/50 shadow-xs';
+                if (cardVa) cardVa.className = 'cursor-pointer border-2 border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 transition hover:border-slate-300';
+            } else {
+                if (cardVa) cardVa.className = 'cursor-pointer border-2 border-zc rounded-xl p-2.5 flex flex-col gap-1 transition bg-blue-50/50 shadow-xs';
+                if (cardQris) cardQris.className = 'cursor-pointer border-2 border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 transition hover:border-slate-300';
+            }
+        }
+
         function prosesCheckout(isPayNow) {
             let nama = document.getElementById('nama_pembeli').value.trim();
             let phone = document.getElementById('phone').value.trim();
@@ -816,7 +867,8 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 cart: cart,
                 kurir: courier,
                 layanan: selectedServiceLabel,
-                ongkir: currentOngkir
+                ongkir: currentOngkir,
+                kategori_pembayaran: selectedPayCategory
             };
 
             fetch('api/checkout.php', {
@@ -839,8 +891,9 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                     if (isPayNow) {
                         snap.pay(data.token, {
                         onSuccess: function(result) {
+                            let pType = result && result.payment_type ? result.payment_type : '';
                             // Sinkronisasi paksa dari frontend (karena localhost tidak bisa terima webhook)
-                            fetch('api/sync_payment.php?order_id=' + data.order_id)
+                            fetch('api/sync_payment.php?order_id=' + encodeURIComponent(data.order_id) + '&payment_type=' + encodeURIComponent(pType))
                                 .then(res => res.json())
                                 .then(syncData => {
                                     alert('Pembayaran Berhasil! Order ID: ' + data.order_id);
@@ -853,9 +906,13 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                                 });
                         },
                         onPending: function(result) {
-                            alert('Menunggu Pembayaran. Order ID: ' + data.order_id);
-                            clearPurchasedFromCart(cart);
-                            window.location.href = 'ecommerce/profil.php';
+                            let pType = result && result.payment_type ? result.payment_type : '';
+                            fetch('api/sync_payment.php?order_id=' + encodeURIComponent(data.order_id) + '&payment_type=' + encodeURIComponent(pType))
+                                .finally(() => {
+                                    alert('Menunggu Pembayaran. Order ID: ' + data.order_id + (pType ? ' (' + pType.toUpperCase() + ')' : ''));
+                                    clearPurchasedFromCart(cart);
+                                    window.location.href = 'ecommerce/profil.php';
+                                });
                         },
                         onError: function(result) {
                             alert('Transaksi Dibatalkan / Gagal.');

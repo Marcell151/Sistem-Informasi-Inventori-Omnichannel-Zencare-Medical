@@ -205,6 +205,7 @@ foreach ($rawRows as $r) {
             'total_box_utuh'         => 0,
             'total_eceran_konversi'  => 0,
             'has_kritis'             => false,
+            'min_pcs'                => 999999999,
             'variasi_list'           => []
         ];
     }
@@ -213,6 +214,9 @@ foreach ($rawRows as $r) {
     $parentProducts[$idInduk]['total_box_utuh'] += $boxUtuh;
     $parentProducts[$idInduk]['total_eceran_konversi'] += $eceranKonversi;
     if ($pcs < 10) $parentProducts[$idInduk]['has_kritis'] = true;
+    if ($pcs < $parentProducts[$idInduk]['min_pcs']) {
+        $parentProducts[$idInduk]['min_pcs'] = $pcs;
+    }
     $parentProducts[$idInduk]['variasi_list'][] = $r;
 
     $totalPcsAll += $pcs;
@@ -222,6 +226,46 @@ foreach ($rawRows as $r) {
 }
 
 $parents = array_values($parentProducts);
+
+// Urutkan Produk: Prioritaskan produk dengan stok kritis / habis di paling atas
+usort($parents, function($a, $b) {
+    $critA = $a['has_kritis'] ? 1 : 2;
+    $critB = $b['has_kritis'] ? 1 : 2;
+    if ($critA !== $critB) {
+        return $critA <=> $critB;
+    }
+    // Jika sama-sama kritis, urutkan dari yang stok terkecil (habis 0 pcs lebih dulu)
+    if ($a['has_kritis']) {
+        if ($a['min_pcs'] !== $b['min_pcs']) {
+            return $a['min_pcs'] <=> $b['min_pcs'];
+        }
+        if ($a['total_pcs'] !== $b['total_pcs']) {
+            return $a['total_pcs'] <=> $b['total_pcs'];
+        }
+    }
+    // Urutan normal: Kategori lalu Nama Produk
+    $katOrderA = $a['kategori'] === 'Obat' ? 1 : ($a['kategori'] === 'Alat Kesehatan' ? 2 : 3);
+    $katOrderB = $b['kategori'] === 'Obat' ? 1 : ($b['kategori'] === 'Alat Kesehatan' ? 2 : 3);
+    if ($katOrderA !== $katOrderB) {
+        return $katOrderA <=> $katOrderB;
+    }
+    return strcasecmp($a['nama_produk'], $b['nama_produk']);
+});
+
+// Urutkan variasi di dalam setiap produk agar variasi yang kritis (< 10) muncul paling atas
+foreach ($parents as &$p) {
+    usort($p['variasi_list'], function($va, $vb) {
+        $stokA = intval($va['stok_pcs']);
+        $stokB = intval($vb['stok_pcs']);
+        $critA = $stokA < 10 ? 1 : 2;
+        $critB = $stokB < 10 ? 1 : 2;
+        if ($critA !== $critB) return $critA <=> $critB;
+        if ($critA === 1 && $stokA !== $stokB) return $stokA <=> $stokB;
+        return strcasecmp($va['nama_variasi'], $vb['nama_variasi']);
+    });
+}
+unset($p);
+
 $totalInduk = count($parents);
 
 // Pagination per Produk Induk (15 Induk per page pada layar)

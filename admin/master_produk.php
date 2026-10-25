@@ -10,7 +10,7 @@ require_once __DIR__ . '/../config/layout.php';
 // --- AJAX Handler for Cetak Barcode ---
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'get_barcode_list') {
     $idVariasi = intval($_GET['id_variasi'] ?? 0);
-    $batches = $pdo->prepare("SELECT id, no_batch, tgl_exp FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC");
+    $batches = $pdo->prepare("SELECT id, no_batch, tgl_exp, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 ORDER BY tgl_exp ASC");
     $batches->execute([$idVariasi]);
     $batchList = $batches->fetchAll(PDO::FETCH_ASSOC);
     
@@ -29,8 +29,8 @@ $msg = ''; $msgType = '';
 
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (($_SESSION['role'] ?? '') !== 'superadmin') {
-        die("Hanya Superadmin yang dapat mengubah data master produk dan harga.");
+    if (!in_array($_SESSION['role'] ?? '', ['superadmin', 'admin'])) {
+        die("Hanya Superadmin dan Admin yang dapat mengubah data master produk dan harga.");
     }
 
     $aksi = $_POST['aksi'] ?? '';
@@ -96,9 +96,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             foreach ($_FILES['gambar_file']['tmp_name'] as $key => $tmpName) {
                 if ($_FILES['gambar_file']['error'][$key] === UPLOAD_ERR_OK) {
                     $ext = strtolower(pathinfo($_FILES['gambar_file']['name'][$key], PATHINFO_EXTENSION));
-                    $newName = 'var_' . time() . '_' . rand(100,999) . '.' . $ext;
-                    if (move_uploaded_file($tmpName, $targetDir . $newName)) {
-                        $uploadedFiles[] = $newName;
+                    $filenameOnly = 'var_' . time() . '_' . rand(100,999) . '.' . $ext;
+                    if (move_uploaded_file($tmpName, $targetDir . $filenameOnly)) {
+                        $uploadedFiles[] = 'assets/img/produk/' . $filenameOnly;
                     }
                 }
             }
@@ -157,9 +157,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             foreach ($_FILES['gambar_file']['tmp_name'] as $key => $tmpName) {
                 if ($_FILES['gambar_file']['error'][$key] === UPLOAD_ERR_OK) {
                     $ext = strtolower(pathinfo($_FILES['gambar_file']['name'][$key], PATHINFO_EXTENSION));
-                    $newName = 'var_' . time() . '_' . rand(100,999) . '.' . $ext;
-                    if (move_uploaded_file($tmpName, $targetDir . $newName)) {
-                        $uploadedFiles[] = $newName;
+                    $filenameOnly = 'var_' . time() . '_' . rand(100,999) . '.' . $ext;
+                    if (move_uploaded_file($tmpName, $targetDir . $filenameOnly)) {
+                        $uploadedFiles[] = 'assets/img/produk/' . $filenameOnly;
                     }
                 }
             }
@@ -354,6 +354,12 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                    class="pl-9 pr-4 py-2.5 bg-white border border-zcBrd rounded-xl text-xs focus:outline-none focus:border-zc shadow-sm min-w-[220px]">
         </div>
         
+        <a href="../inventori/logistik_medis.php?tab=batch"
+            class="flex items-center gap-2 px-3.5 py-2.5 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 text-xs font-bold rounded-xl transition shadow-sm"
+            title="Cetak stiker barcode massal lintas berbagai produk berbeda sekaligus">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Cetak Lintas Produk
+        </a>
         <button onclick="document.getElementById('modal_import_csv').classList.remove('hidden')"
             class="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-xl transition shadow-sm">
             <?= icon('download', 'w-4 h-4') ?> Import CSV
@@ -398,19 +404,24 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                     </div>
                 </div>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex items-center gap-2 shrink-0" onclick="event.stopPropagation()">
                 <!-- Edit -->
-                <button onclick="event.stopPropagation(); openEditInduk(<?= $pi['id'] ?>, '<?= addslashes($pi['nama_produk']) ?>', '<?= addslashes($pi['kategori']) ?>', '<?= addslashes($pi['deskripsi'] ?? '') ?>', <?= intval($pi['batas_hari_expired'] ?? 0) ?>)"
+                <button type="button" onclick="openEditIndukBtn(this)"
+                    data-id="<?= $pi['id'] ?>"
+                    data-nama="<?= htmlspecialchars($pi['nama_produk'], ENT_QUOTES) ?>"
+                    data-kat="<?= htmlspecialchars($pi['kategori'], ENT_QUOTES) ?>"
+                    data-desc="<?= htmlspecialchars($pi['deskripsi'] ?? '', ENT_QUOTES) ?>"
+                    data-bhe="<?= intval($pi['batas_hari_expired'] ?? 0) ?>"
                     class="px-3 py-1.5 text-[11px] font-bold bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl transition">Edit</button>
                 <!-- Toggle -->
-                <form method="POST" onsubmit="return confirm('<?= $aktif ? 'Nonaktifkan' : 'Aktifkan' ?> produk ini?')" class="inline">
+                <form method="POST" onsubmit="return handleToggleSubmit(this, event, '<?= $aktif ? 'Nonaktifkan' : 'Aktifkan' ?>', 'produk induk')" class="inline">
                     <input type="hidden" name="aksi" value="toggle_induk">
                     <input type="hidden" name="id_induk" value="<?= $pi['id'] ?>">
-                    <button type="submit" onclick="event.stopPropagation();" class="px-3 py-1.5 text-[11px] font-bold <?= $aktif ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200' ?> border rounded-xl transition">
+                    <button type="submit" class="px-3 py-1.5 text-[11px] font-bold <?= $aktif ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200' ?> border rounded-xl transition cursor-pointer">
                         <?= $aktif ? 'Nonaktifkan' : 'Aktifkan' ?>
                     </button>
                 </form>
-                <span class="text-zcMut text-lg">&#9660;</span>
+                <span class="text-zcMut text-lg cursor-pointer" onclick="toggleAcc('acc_<?= $pi['id'] ?>')">&#9660;</span>
             </div>
         </div>
 
@@ -419,8 +430,8 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
             <div class="p-4">
                 <div class="flex items-center justify-between mb-3">
                     <span class="text-xs font-bold text-zcTxt">Daftar Variasi</span>
-                    <button onclick="openTambahVariasi(<?= $pi['id'] ?>, '<?= addslashes($pi['nama_produk']) ?>')"
-                        class="text-[11px] font-bold px-3 py-1.5 bg-zc hover:bg-zcHv text-white rounded-xl transition">+ Tambah Variasi</button>
+                    <button type="button" data-id="<?= $pi['id'] ?>" data-nama="<?= htmlspecialchars($pi['nama_produk'], ENT_QUOTES) ?>" onclick="openTambahVariasiBtn(this)"
+                        class="text-[11px] font-bold px-3 py-1.5 bg-zc hover:bg-zcHv text-white rounded-xl transition cursor-pointer">+ Tambah Variasi</button>
                 </div>
                 <?php if (empty($variasiList)): ?>
                     <p class="text-xs text-zcMut italic py-4 text-center">Belum ada variasi. Tambahkan variasi untuk produk ini.</p>
@@ -439,12 +450,23 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-zcBorder/50">
-                                <?php foreach ($variasiList as $v): ?>
+                                <?php foreach ($variasiList as $v): 
+                                    $gbrRaw = $v['gambar'] ?? '';
+                                    $arrGbr = $gbrRaw ? array_filter(array_map('trim', explode(',', $gbrRaw))) : [];
+                                    $firstGbr = !empty($arrGbr) ? $arrGbr[0] : 'assets/img/no-image.png';
+                                    $firstSrc = (str_starts_with($firstGbr, 'http')) ? $firstGbr : (str_contains($firstGbr, '/') ? '../' . $firstGbr : '../assets/img/produk/' . $firstGbr);
+                                    $totalGbr = count($arrGbr);
+                                ?>
                                     <tr class="<?= !$v['is_active'] ? 'opacity-50' : '' ?>">
                                         <td class="py-2.5 px-3">
                                             <div class="flex items-center gap-2.5">
-                                                <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 p-0.5">
-                                                    <img src="../<?= htmlspecialchars($v['gambar'] ?: 'assets/img/no-image.png') ?>" class="w-full h-full object-contain mix-blend-multiply" onerror="this.src='../assets/img/no-image.png'">
+                                                <div class="relative w-9 h-9 rounded-lg bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 p-0.5 group shadow-2xs">
+                                                    <img src="<?= htmlspecialchars($firstSrc) ?>" class="w-full h-full object-contain mix-blend-multiply" onerror="this.src='../assets/img/no-image.png'">
+                                                    <?php if ($totalGbr > 1): ?>
+                                                        <span class="absolute bottom-0 right-0 bg-slate-900/80 text-[8px] text-white font-bold px-1 rounded-tl leading-tight" title="<?= $totalGbr ?> Foto">
+                                                            <?= $totalGbr ?>
+                                                        </span>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <div>
                                                     <div class="font-mono text-zcMut text-[10px]"><?= htmlspecialchars($v['sku_variasi']) ?></div>
@@ -470,15 +492,15 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                                             </span>
                                         </td>
                                         <td class="py-2.5 px-3 text-center space-x-1">
-                                            <button onclick="openEditVariasi(<?= $v['id'] ?>, '<?= htmlspecialchars($v['sku_variasi']) ?>', '<?= htmlspecialchars($v['nama_variasi']) ?>', '<?= htmlspecialchars($v['satuan_kecil']) ?>', '<?= htmlspecialchars($v['satuan_besar']) ?>', <?= $v['rasio_konversi'] ?>, <?= $v['harga_jual_kecil'] ?>, <?= $v['harga_jual_besar'] ?>, <?= $v['berat'] ?>, <?= intval($v['stok_minimum_kecil'] ?? 0) ?>, <?= intval($v['stok_minimum_besar'] ?? 0) ?>, '<?= htmlspecialchars($v['gambar'] ?? '') ?>', <?= $v['tampil_di_online'] ?>)" 
-                                                    class="text-[10px] font-bold px-2 py-1 bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 rounded-lg">
+                                            <button type="button" onclick='openEditVariasiBtn(<?= htmlspecialchars(json_encode($v), ENT_QUOTES) ?>)' 
+                                                    class="text-[10px] font-bold px-2 py-1 bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 rounded-lg transition">
                                                 Edit
                                             </button>
-                                            <button type="button" onclick="openCetakModal(<?= $v['id'] ?>, '<?= htmlspecialchars($v['nama_variasi']) ?>')" class="text-[10px] font-bold px-2 py-1 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 rounded-lg transition">Cetak</button>
-                                            <form method="POST" class="inline" onsubmit="return confirm('Toggle status variasi ini?')">
+                                            <button type="button" data-id="<?= $v['id'] ?>" data-nama="<?= htmlspecialchars($v['nama_variasi'], ENT_QUOTES) ?>" onclick="openCetakModal(this.getAttribute('data-id'), this.getAttribute('data-nama'))" class="text-[10px] font-bold px-2 py-1 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 rounded-lg transition cursor-pointer">Cetak</button>
+                                            <form method="POST" class="inline" onsubmit="return handleToggleSubmit(this, event, '<?= $v['is_active'] ? 'Nonaktifkan' : 'Aktifkan' ?>', 'variasi produk')">
                                                 <input type="hidden" name="aksi" value="toggle_variasi">
                                                 <input type="hidden" name="id_variasi" value="<?= $v['id'] ?>">
-                                                <button type="submit" class="text-[10px] font-bold px-2 py-1 <?= $v['is_active'] ? 'text-rose-600 bg-rose-50 border-rose-200' : 'text-emerald-600 bg-emerald-50 border-emerald-200' ?> border rounded-lg transition">
+                                                <button type="submit" class="text-[10px] font-bold px-2 py-1 <?= $v['is_active'] ? 'text-rose-600 bg-rose-50 border-rose-200' : 'text-emerald-600 bg-emerald-50 border-emerald-200' ?> border rounded-lg transition cursor-pointer">
                                                     <?= $v['is_active'] ? 'Nonaktif' : 'Aktif' ?>
                                                 </button>
                                             </form>
@@ -535,22 +557,46 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
 <!-- MODAL: Cetak Barcode                                          -->
 <!-- ============================================================ -->
 <div id="modal_cetak_barcode" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[80vh]">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]">
         <div class="flex items-center justify-between px-6 py-4 border-b border-zcBrd bg-slate-50">
-            <h3 class="text-sm font-bold text-zcTxt">Cetak Label Batch/SN</h3>
+            <div>
+                <h3 class="text-sm font-bold text-zcTxt">Cetak Label Batch / Serial Number</h3>
+                <p class="text-[11px] text-zcMut">Cetak massal di kertas stiker A4 (Grid 4x10) atau Printer Thermal Roll</p>
+            </div>
             <button onclick="document.getElementById('modal_cetak_barcode').classList.add('hidden')" class="text-zcMut hover:text-zcTxt text-lg">&times;</button>
         </div>
+        
         <div class="p-6 overflow-y-auto">
-            <h4 id="cetak_nama_produk" class="font-bold text-zcTxt mb-4 text-center"></h4>
+            <h4 id="cetak_nama_produk" class="font-bold text-zcTxt mb-3 text-center text-sm"></h4>
+
+            <!-- Selection Toolbar -->
+            <div id="cetak_toolbar" class="hidden mb-3 p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                <label class="inline-flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none">
+                    <input type="checkbox" id="check_all_barcode" onchange="toggleSelectAllBarcode(this.checked)" class="rounded text-zc focus:ring-zc h-4 w-4">
+                    <span>Pilih Semua Batch / SN</span>
+                </label>
+                <span id="cetak_selected_count" class="text-[11px] font-semibold text-zc">0 item dipilih</span>
+            </div>
+
+            <!-- Helpful Hint -->
+            <div class="mb-3 px-3 py-2 bg-blue-50/70 border border-blue-200/80 rounded-xl text-[11px] text-blue-800 flex items-center justify-between">
+                <span>💡 Atur <strong>Jml</strong> untuk mencetak beberapa stiker batch yang sama.</span>
+                <a href="../inventori/logistik_medis.php?tab=batch" target="_blank" class="font-bold underline text-blue-700 hover:text-blue-900 shrink-0">Cetak Lintas Produk &rarr;</a>
+            </div>
             
-            <div id="cetak_loading" class="text-center text-xs font-semibold text-zcMut">Memuat daftar Batch/SN aktif...</div>
-            <div id="cetak_empty" class="hidden text-center text-xs font-semibold text-rose-500 bg-rose-50 p-3 rounded-xl border border-rose-200">Tidak ada stok fisik aktif (Batch/SN) untuk produk ini.</div>
+            <div id="cetak_loading" class="text-center text-xs font-semibold text-zcMut py-6">Memuat daftar Batch/SN aktif...</div>
+            <div id="cetak_empty" class="hidden text-center text-xs font-semibold text-rose-500 bg-rose-50 p-4 rounded-xl border border-rose-200">Tidak ada stok fisik aktif (Batch/SN) untuk produk ini.</div>
             
-            <div id="cetak_list_container" class="space-y-3 hidden">
+            <div id="cetak_list_container" class="space-y-2.5 hidden">
                 <!-- Injected via JS -->
             </div>
         </div>
-        <div class="px-6 py-4 border-t border-zcBrd flex justify-end bg-slate-50">
+
+        <div class="px-6 py-3.5 border-t border-zcBrd flex items-center justify-between bg-slate-50">
+            <button type="button" onclick="submitBatchPrint()" class="px-4 py-2 text-xs font-bold bg-zc hover:bg-zcHv text-white rounded-xl transition shadow-sm flex items-center gap-1.5">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                <span>🖨️ Cetak Massal (A4 Grid)</span>
+            </button>
             <button type="button" onclick="document.getElementById('modal_cetak_barcode').classList.add('hidden')" class="px-4 py-2 text-xs font-semibold bg-white border border-zcBrd hover:bg-slate-100 text-slate-700 rounded-xl transition shadow-sm">Tutup</button>
         </div>
     </div>
@@ -722,13 +768,14 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                 <div>
                     <label class="block text-xs font-bold text-zcTxt mb-1.5">Teks URL/Nama Gambar</label>
                     <input type="text" name="gambar" placeholder="contoh1.jpg, contoh2.png" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
-                    <span class="text-[9px] text-zcMut mt-1 block">Pisahkan dengan koma jika multi-gambar</span>
+                    <span class="text-[9px] text-zcMut mt-1 block">Pisahkan dengan koma jika multi-gambar (bisa URL atau path)</span>
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-zcTxt mb-1.5">Atau Upload File (Bisa pilih banyak)</label>
-                <input type="file" name="gambar_file[]" multiple accept="image/*" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 focus:outline-none bg-slate-50 cursor-pointer file:mr-3 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-zc file:text-white hover:file:bg-zcHv transition">
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Upload File Gambar (Bisa pilih banyak foto)</label>
+                <input type="file" name="gambar_file[]" multiple accept="image/*" onchange="previewSelectedFiles(this, 'tambah_variasi_file_preview')" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 focus:outline-none bg-slate-50 cursor-pointer file:mr-3 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-zc file:text-white hover:file:bg-zcHv transition">
+                <div id="tambah_variasi_file_preview"></div>
             </div>
 
             <div class="flex justify-end gap-3 pt-2">
@@ -824,15 +871,28 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                     </label>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Teks URL/Nama Gambar</label>
-                    <input type="text" name="gambar" id="edit_gambar_variasi" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
-                    <span class="text-[9px] text-zcMut mt-1 block">Pisahkan dengan koma jika multi-gambar</span>
+                    <label class="block text-xs font-bold text-zcTxt mb-1.5">Teks URL / Path Gambar</label>
+                    <input type="text" name="gambar" id="edit_gambar_variasi" oninput="renderEditImageThumbnails(this.value)" class="w-full text-xs border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50 font-mono text-[11px]">
+                    <span class="text-[9px] text-zcMut mt-1 block">Pisahkan dengan koma jika multi-gambar. Edit langsung atau gunakan tombol hapus foto di bawah.</span>
                 </div>
             </div>
 
+            <!-- Visual Preview & Gallery Strip of Current Images -->
+            <div class="bg-slate-50/70 border border-slate-200/80 rounded-xl p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                        Galeri Foto Aktif (Karusel E-Commerce)
+                    </label>
+                    <span class="text-[10px] text-slate-400">Klik tanda [×] untuk menghapus foto</span>
+                </div>
+                <div id="edit_gambar_thumbnails_box"></div>
+            </div>
+
             <div>
-                <label class="block text-xs font-bold text-zcTxt mb-1.5">Atau Upload File Tambahan</label>
-                <input type="file" name="gambar_file[]" multiple accept="image/*" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 focus:outline-none bg-slate-50 cursor-pointer file:mr-3 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-zc file:text-white hover:file:bg-zcHv transition">
+                <label class="block text-xs font-bold text-zcTxt mb-1.5">Tambah File Foto Baru (Bisa pilih banyak)</label>
+                <input type="file" name="gambar_file[]" multiple accept="image/*" onchange="previewSelectedFiles(this, 'edit_variasi_file_preview')" class="w-full text-xs border border-zcBrd rounded-xl px-3 py-2 focus:outline-none bg-slate-50 cursor-pointer file:mr-3 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-zc file:text-white hover:file:bg-zcHv transition">
+                <div id="edit_variasi_file_preview"></div>
             </div>
 
             <div class="flex justify-end gap-3 pt-2">
@@ -879,6 +939,71 @@ function openEditInduk(id, nama, kat, desc, bhe) {
     document.getElementById('edit_batas_hari_expired').value = bhe;
     document.getElementById('modal_edit_induk').classList.remove('hidden');
 }
+
+function openEditIndukBtn(btn) {
+    if (!btn) return;
+    openEditInduk(
+        btn.getAttribute('data-id'),
+        btn.getAttribute('data-nama'),
+        btn.getAttribute('data-kat'),
+        btn.getAttribute('data-desc'),
+        btn.getAttribute('data-bhe')
+    );
+}
+
+function openTambahVariasiBtn(btn) {
+    if (!btn) return;
+    openTambahVariasi(btn.getAttribute('data-id'), btn.getAttribute('data-nama'));
+}
+
+function openEditVariasiBtn(v) {
+    if (!v) return;
+    openEditVariasi(
+        v.id,
+        v.sku_variasi || '',
+        v.nama_variasi || '',
+        v.satuan_kecil || 'Pcs',
+        v.satuan_besar || 'Box',
+        v.rasio_konversi || 1,
+        v.harga_jual_kecil || 0,
+        v.harga_jual_besar || 0,
+        v.berat || 100,
+        v.stok_minimum_kecil || 0,
+        v.stok_minimum_besar || 0,
+        v.gambar || '',
+        v.tampil_di_online || 0
+    );
+}
+
+function handleToggleSubmit(form, e, actionText, itemType = 'item') {
+    if (form.dataset.confirmed === 'true') {
+        return true;
+    }
+    if (e) e.preventDefault();
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: actionText + ' ' + (itemType.charAt(0).toUpperCase() + itemType.slice(1)) + '?',
+            text: 'Apakah Anda yakin ingin ' + actionText.toLowerCase() + ' ' + itemType + ' ini?',
+            icon: actionText.toLowerCase().includes('nonaktif') ? 'warning' : 'question',
+            showCancelButton: true,
+            confirmButtonColor: actionText.toLowerCase().includes('nonaktif') ? '#e11d48' : '#059669',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Ya, ' + actionText,
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.dataset.confirmed = 'true';
+                form.submit();
+            }
+        });
+    } else {
+        if (confirm(actionText + ' ' + itemType + ' ini?')) {
+            form.dataset.confirmed = 'true';
+            form.submit();
+        }
+    }
+    return false;
+}
 function openTambahVariasi(idInduk, namaInduk) {
     document.getElementById('var_id_induk').value = idInduk;
     document.getElementById('var_parent_name').innerText = namaInduk;
@@ -908,7 +1033,63 @@ function openEditVariasi(id, sku, nama, satKecil, satBesar, rasio, hrgKecil, hrg
     document.getElementById('edit_stok_minimum_besar').value = minStokBesar;
     document.getElementById('edit_gambar_variasi').value = gambar;
     document.getElementById('edit_tampil_di_online').checked = (tampil == 1);
+    renderEditImageThumbnails(gambar);
+    const editFilePreview = document.getElementById('edit_variasi_file_preview');
+    if (editFilePreview) editFilePreview.innerHTML = '';
     document.getElementById('modal_edit_variasi').classList.remove('hidden');
+}
+
+function renderEditImageThumbnails(gambarStr) {
+    const container = document.getElementById('edit_gambar_thumbnails_box');
+    if (!container) return;
+    
+    let images = gambarStr ? gambarStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+    
+    if (images.length === 0) {
+        container.innerHTML = '<div class="text-[11px] text-slate-400 italic py-1.5">Belum ada foto untuk variasi ini. Silakan upload file atau ketik tautan di atas.</div>';
+        return;
+    }
+    
+    let html = '<div class="flex flex-wrap gap-2.5">';
+    images.forEach((img, idx) => {
+        let src = img.startsWith('http') ? img : (img.includes('/') ? ('../' + img) : ('../assets/img/produk/' + img));
+        html += `
+            <div class="relative group/thumb w-14 h-14 rounded-xl border border-slate-200 bg-white p-1 shadow-2xs flex items-center justify-center overflow-hidden">
+                <img src="${src}" class="w-full h-full object-contain mix-blend-multiply" onerror="this.src='../assets/img/no-image.png'">
+                ${idx === 0 ? '<span class="absolute bottom-0 inset-x-0 bg-blue-600/90 text-[8px] font-bold text-white text-center py-0.5 leading-none">Utama</span>' : ''}
+                <button type="button" onclick="removeEditImage(${idx})" class="absolute top-1 right-1 w-4 h-4 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center text-[10px] font-bold shadow opacity-80 group-hover/thumb:opacity-100 transition" title="Hapus foto ini">×</button>
+            </div>
+        `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function removeEditImage(idx) {
+    const input = document.getElementById('edit_gambar_variasi');
+    let images = input.value ? input.value.split(',').map(s => s.trim()).filter(Boolean) : [];
+    images.splice(idx, 1);
+    input.value = images.join(',');
+    renderEditImageThumbnails(input.value);
+}
+
+function previewSelectedFiles(inputEl, previewContainerId) {
+    const container = document.getElementById(previewContainerId);
+    if (!container) return;
+    container.innerHTML = '';
+    if (!inputEl.files || inputEl.files.length === 0) return;
+    
+    let html = '<div class="mt-2 text-[10px] font-semibold text-emerald-700 mb-1 flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span> ' + inputEl.files.length + ' file baru dipilih:</div><div class="flex flex-wrap gap-2">';
+    Array.from(inputEl.files).forEach(file => {
+        let objUrl = URL.createObjectURL(file);
+        html += `
+            <div class="relative w-12 h-12 rounded-lg border border-emerald-300 bg-white p-1 flex items-center justify-center overflow-hidden shadow-2xs">
+                <img src="${objUrl}" class="w-full h-full object-contain mix-blend-multiply">
+            </div>
+        `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
 }
 
 async function openCetakModal(id, nama) {
@@ -918,10 +1099,14 @@ async function openCetakModal(id, nama) {
     const loading = document.getElementById('cetak_loading');
     const empty = document.getElementById('cetak_empty');
     const list = document.getElementById('cetak_list_container');
+    const toolbar = document.getElementById('cetak_toolbar');
+    const checkAll = document.getElementById('check_all_barcode');
     
+    if (checkAll) checkAll.checked = false;
     loading.classList.remove('hidden');
     empty.classList.add('hidden');
     list.classList.add('hidden');
+    if (toolbar) toolbar.classList.add('hidden');
     list.innerHTML = '';
     
     try {
@@ -936,39 +1121,115 @@ async function openCetakModal(id, nama) {
         }
         
         list.classList.remove('hidden');
+        if (toolbar) toolbar.classList.remove('hidden');
         
         data.batch.forEach(b => {
             const dateStr = new Date(b.tgl_exp).toLocaleDateString('id-ID');
+            const stokSisa = b.stok_sisa ? `${b.stok_sisa} pcs` : '';
             list.innerHTML += `
-                <div class="flex items-center justify-between p-3 bg-white border border-zcBrd rounded-xl shadow-sm">
-                    <div>
-                        <div class="font-bold text-zcTxt font-mono text-xs">${b.no_batch}</div>
-                        <div class="text-[10px] text-zcMut">EXP: ${dateStr}</div>
+                <div class="barcode-row flex items-center justify-between p-3 bg-white border border-zcBrd rounded-xl shadow-sm hover:border-slate-300 transition">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" class="barcode-item-check rounded text-zc focus:ring-zc h-4 w-4 cursor-pointer" data-tipe="batch" data-id="${b.id}" onchange="updateBarcodeSelectedCount()">
+                        <div>
+                            <div class="font-bold text-zcTxt font-mono text-xs flex items-center gap-2">
+                                <span>${b.no_batch}</span>
+                                ${stokSisa ? `<span class="text-[9px] font-sans px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">Sisa ${stokSisa}</span>` : ''}
+                            </div>
+                            <div class="text-[10px] text-zcMut">EXP: ${dateStr}</div>
+                        </div>
                     </div>
-                    <button type="button" onclick="window.open('../inventori/cetak_stiker.php?tipe=batch&id=${b.id}', '_blank')" class="px-3 py-1.5 bg-zc hover:bg-zcHv text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Cetak
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200">
+                            <span>Jml:</span>
+                            <input type="number" min="1" max="100" value="1" class="barcode-item-qty w-12 text-center text-xs font-bold border border-slate-300 rounded bg-white py-0.5 focus:outline-none focus:border-zc">
+                        </div>
+                        <button type="button" onclick="printSingleBarcodeRow(this, 'batch', '${b.id}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs" title="Cetak label batch ini saja">
+                            <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                            Cetak
+                        </button>
+                    </div>
                 </div>
             `;
         });
         
         data.sn.forEach(sn => {
             list.innerHTML += `
-                <div class="flex items-center justify-between p-3 bg-white border border-zcBrd rounded-xl shadow-sm">
-                    <div>
-                        <div class="font-bold text-purple-700 font-mono text-xs">${sn.serial_number}</div>
-                        <div class="text-[10px] text-purple-700/60 font-semibold uppercase">Serial Number</div>
+                <div class="barcode-row flex items-center justify-between p-3 bg-white border border-zcBrd rounded-xl shadow-sm hover:border-slate-300 transition">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" class="barcode-item-check rounded text-zc focus:ring-zc h-4 w-4 cursor-pointer" data-tipe="sn" data-id="${sn.serial_number}" onchange="updateBarcodeSelectedCount()">
+                        <div>
+                            <div class="font-bold text-purple-700 font-mono text-xs">${sn.serial_number}</div>
+                            <div class="text-[10px] text-purple-700/60 font-semibold uppercase">Unit Alkes (1:1 SN)</div>
+                        </div>
                     </div>
-                    <button type="button" onclick="window.open('../inventori/cetak_stiker.php?tipe=sn&id=${sn.serial_number}', '_blank')" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Cetak
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <input type="hidden" class="barcode-item-qty" value="1">
+                        <button type="button" onclick="printSingleBarcodeRow(this, 'sn', '${sn.serial_number}')" class="px-2.5 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs" title="Cetak label SN ini saja">
+                            <svg class="w-3.5 h-3.5 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                            Cetak
+                        </button>
+                    </div>
                 </div>
             `;
         });
-        
+        updateBarcodeSelectedCount();
     } catch (e) {
         alert("Gagal mengambil data dari server.");
     }
+}
+
+function toggleSelectAllBarcode(checked) {
+    const checks = document.querySelectorAll('.barcode-item-check');
+    checks.forEach(c => c.checked = checked);
+    updateBarcodeSelectedCount();
+}
+
+function updateBarcodeSelectedCount() {
+    const checked = document.querySelectorAll('.barcode-item-check:checked');
+    const badge = document.getElementById('cetak_selected_count');
+    if (badge) badge.innerText = `${checked.length} item dipilih`;
+}
+
+function printSingleBarcodeRow(btn, tipe, id) {
+    const row = btn.closest('.barcode-row');
+    const qtyInp = row ? row.querySelector('.barcode-item-qty') : null;
+    const qty = qtyInp ? Math.max(1, parseInt(qtyInp.value, 10) || 1) : 1;
+    window.open(`../inventori/cetak_batch_stiker.php?tipe=${tipe}&id=${encodeURIComponent(id)}&qty=${qty}`, '_blank');
+}
+
+function submitBatchPrint() {
+    const checked = document.querySelectorAll('.barcode-item-check:checked');
+    if (checked.length === 0) {
+        alert('Silakan centang minimal 1 nomor batch atau serial number untuk dicetak massal.');
+        return;
+    }
+    const items = [];
+    checked.forEach(chk => {
+        const row = chk.closest('.barcode-row');
+        const qtyInp = row ? row.querySelector('.barcode-item-qty') : null;
+        const qty = qtyInp ? Math.max(1, parseInt(qtyInp.value, 10) || 1) : 1;
+        items.push({
+            tipe: chk.dataset.tipe,
+            id: chk.dataset.id,
+            qty: qty
+        });
+    });
+    
+    // Kirim via dynamic form POST ke cetak_batch_stiker.php
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '../inventori/cetak_batch_stiker.php?mode=a4';
+    form.target = '_blank';
+    
+    const inp = document.createElement('input');
+    inp.type = 'hidden';
+    inp.name = 'selected_items';
+    inp.value = JSON.stringify(items);
+    
+    form.appendChild(inp);
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
 }
 
 function filterProduk() {

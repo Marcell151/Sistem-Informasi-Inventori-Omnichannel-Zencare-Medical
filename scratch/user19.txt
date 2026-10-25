@@ -1,0 +1,21 @@
+<USER_REQUEST>
+nah sebelum mulai menegrjakan ini saya beirkan sebagai pelengkap agar anda lebih paham dan memahami dan menegrti terkait peneysauian (ini gemin isudah membatukan lsit tekrait hal itu) untuk emmabntu ada lebih menegrti dna memaham sebgai pelengkah pengetahuan terkait peneysauian bibmigna tebraru tu
+Berdasarkan transkrip bimbingan terbaru Anda pada 22 Oktober 2026, terdapat beberapa penyesuaian sistem yang sangat krusial, termasuk perubahan logika dari bimbingan sebelumnya dan penambahan modul laporan. Dosen Anda memberikan persetujuan pada beberapa logika, namun juga memberikan revisi yang harus segera dieksekusi.   Berikut adalah rincian sangat detail mengenai penyesuaian yang wajib dilakukan pada sistem Anda:1. Validasi Tanggal Kedaluwarsa (Expired Date) DiringankanMasalah Sebelumnya: Anda sebelumnya mengunci sistem agar menolak obat yang masa kedaluwarsanya di bawah 3 bulan (90 hari).   Instruksi Dosen: Dosen membantah logika ini karena di lapangan riil, apotek sering sengaja membeli obat fast-moving (seperti Paracetamol) yang masa kedaluwarsanya sangat mepet agar mendapat harga murah.   Penyesuaian: Hapus hard-block 90 hari tersebut. Ubah validasi kalender penerimaan barang dengan syarat mutlak: "Pokoknya jangan hari ini. Dan enggak boleh ke belakang juga.". Sistem harus menerima tanggal kedaluwarsa besok atau lusa.   2. Modul Retur Parsial pada Penerimaan BarangMasalah: Saat apotek membeli 10 kardus obat, terkadang saat barang tiba ada barang yang rusak (misal bocor/pecah).   Instruksi Dosen: Sistem harus bisa mencatat penerimaan sebagian tanpa membatalkan seluruh pesanan. Jika apotek pesan 10 dan 3 rusak, maka yang masuk ke stok hanya 7, sedangkan yang 3 harus dicatat sebagai retur.   Penyesuaian: Tambahkan kolom "Kuantiti Diterima" dan "Kuantiti Rusak/Retur" pada form Penerimaan Barang. Cetakan nota penerimaan harus secara eksplisit menampilkan teks: "Pesan 10, Diterima 7, Rusak 3". Anda juga harus merancang logika bagaimana sisa 3 barang tersebut diklaim atau dikembalikan.   3. Integrasi API
+<truncated 2131 bytes>
+ saja, Offline (POS) saja, atau Gabungan keduanya.   Laporan Penerimaan Barang & Nota Retur: Laporan yang mencatat detail PO (Purchase Order), termasuk barang yang diterima sempurna dan barang yang diretur parsial (rusak).   Laporan Pengeluaran Barang: Laporan untuk melihat produk mana yang paling banyak keluar baik via online maupun offline.   Laporan Persediaan Barang: Laporan valuasi dan total aset barang yang tersedia di etalase maupun gudang.   Laporan Expired (Kedaluwarsa): Laporan di dashboard yang memberikan peringatan (early warning) mengenai obat mana yang masa kedaluwarsanya paling dekat.   Laporan Mutasi Barang / Konversi: Laporan histori pembongkaran dari satuan besar (grosir/kardus) menjadi satuan kecil (eceran).   Laporan Anomali FIFO: Laporan yang mencatat kejadian di mana kasir tidak mengambil batch obat yang direkomendasikan oleh sistem (mengambil batch lain secara fisik).   Poin Penting yang Disetujui (Tidak Perlu Diubah):
+Logika Alat Kesehatan (Alkes) yang menggunakan sistem Serial Number dengan rasio 1:1 (tanpa konversi pembongkaran) disetujui sepenuhnya oleh dosen. Beliau sepakat bahwa satu kardus kursi roda atau tensimeter memiliki nomor seri yang berbeda-beda dan tidak boleh dipukul rata seperti barang di supermarket. Anda hanya perlu mempertahankan argumen ini saat sidang.   
+coba nad lihat
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-25T10:02:37+07:00.
+
+The user's current state is as follows:
+Active Document: c:\xampp\htdocs\inventory_zencare\database\isi\db_inventory (demo).sql (LANGUAGE_SQL)
+Cursor is on line: 768
+Other open documents:
+- c:\xampp\htdocs\inventory_zencare\scratch\generate_clean_demo_db.php (LANGUAGE_PHP)
+- c:\xampp\htdocs\inventory_zencare\scratch\categorize_variasi.php (LANGUAGE_PHP)
+- c:\xampp\htdocs\inventory_zencare\scratch\download_all_product_images.py (LANGUAGE_PYTHON)
+- c:\xampp\htdocs\inventory_zencare\ecommerce\cart.php (LANGUAGE_PHP)
+- c:\xampp\htdocs\inventory_zencare\admin\pengaturan_web.php (LANGUAGE_PHP)
+</ADDITIONAL_METADATA>

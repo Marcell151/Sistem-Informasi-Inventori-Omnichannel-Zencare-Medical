@@ -14,12 +14,10 @@ if (isset($_GET['cabang'])) $_SESSION['id_cabang'] = $activeCabang = intval($_GE
 
 $msg = ''; $msgType = '';
 
-// Auto-cancel pesanan e-commerce 'Menunggu Pembayaran' yang kadaluarsa & kembalikan stok
+// Auto-cancel pesanan 'Menunggu Pembayaran' yang kadaluarsa & kembalikan stok
 $autoCancelled = batalkanPesananKadaluarsa($pdo);
 if ($autoCancelled > 0) {
-    $cooldownMenit = defined('RESERVASI_COOLDOWN_MENIT') ? RESERVASI_COOLDOWN_MENIT : 1440;
-    $cooldownText = ($cooldownMenit < 60) ? ($cooldownMenit . ' menit') : (round($cooldownMenit / 60) . ' jam');
-    $msg = "$autoCancelled pesanan e-commerce 'Menunggu Pembayaran' telah dibatalkan otomatis karena melebihi batas waktu $cooldownText, stok fisik & batch FEFO telah dipulihkan.";
+    $msg = "$autoCancelled pesanan 'Menunggu Pembayaran' telah dibatalkan otomatis karena melebihi batas waktu pembayaran (POS: 5 menit / QRIS: 15 menit / Virtual Account: 2 jam). Seluruh stok fisik & batch FEFO telah dipulihkan.";
     $msgType = 'info';
 }
 

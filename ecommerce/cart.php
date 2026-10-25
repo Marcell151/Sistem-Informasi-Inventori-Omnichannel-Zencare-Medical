@@ -155,7 +155,10 @@ function renderCartPage() {
 
         const maxStok = parseInt(item.max) || 0;
         const sat = item.satuan || 'Box';
-        const rawImg = item.gambar || item.image || '';
+        let rawImg = item.gambar || item.image || '';
+        if (typeof rawImg === 'string' && rawImg.includes(',')) {
+            rawImg = rawImg.split(',')[0].trim();
+        }
         const imgPath = rawImg ? (rawImg.startsWith('http') || rawImg.startsWith('../') ? rawImg : `../${rawImg}`) : '../assets/img/no-image.png';
 
         // Stock status badge

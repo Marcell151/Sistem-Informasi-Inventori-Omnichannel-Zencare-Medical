@@ -153,11 +153,22 @@ $allCat = $pdo->query("SELECT DISTINCT kategori FROM produk_induk WHERE is_activ
                  data-id="<?= $p['id'] ?>">
 
                 <!-- Image -->
+                <?php
+                $rawGbr = $p['gambar'] ?? '';
+                $arrGbr = array_filter(array_map('trim', explode(',', $rawGbr)));
+                $firstGbr = $arrGbr[0] ?? '';
+                $firstSrc = '';
+                if (!empty($firstGbr)) {
+                    if (str_starts_with($firstGbr, 'http')) $firstSrc = $firstGbr;
+                    else if (str_contains($firstGbr, '/')) $firstSrc = '../' . $firstGbr;
+                    else $firstSrc = '../assets/img/produk/' . $firstGbr;
+                }
+                ?>
                 <a href="produk.php?id=<?= $p['id'] ?>" class="card-img relative block bg-gradient-to-br from-slate-50 to-blue-50/30 overflow-hidden" style="height:210px;">
-                    <?php if (!empty($p['gambar'])): ?>
-                        <img src="../<?= htmlspecialchars($p['gambar']) ?>" alt="<?= htmlspecialchars($p['nama_induk']) ?>"
-                             class="w-full h-full object-contain p-5"
-                             onerror="this.onerror=null; this.classList.add('opacity-30');">
+                    <?php if (!empty($firstSrc)): ?>
+                        <img src="<?= htmlspecialchars($firstSrc) ?>" alt="<?= htmlspecialchars($p['nama_induk']) ?>"
+                             class="w-full h-full object-contain p-4 mix-blend-multiply transition-transform duration-300 hover:scale-105"
+                             onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
                     <?php else: ?>
                         <div class="w-full h-full flex items-center justify-center">
                             <svg class="w-20 h-20 text-slate-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12h6M12 9v6"/></svg>

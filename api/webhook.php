@@ -52,10 +52,17 @@ try {
     }
 
     $oldStatus = $order['status_pesanan'];
+    $paymentType = $input['payment_type'] ?? '';
 
-    // Update status penjualan
-    $stmtUpdate = $pdo->prepare("UPDATE penjualan SET status_pesanan = ? WHERE no_invoice = ?");
-    $stmtUpdate->execute([$newStatus, $orderId]);
+    // Update status penjualan, metode pembayaran, dan waktu bayar
+    $stmtUpdate = $pdo->prepare("
+        UPDATE penjualan 
+        SET status_pesanan = ?,
+            payment_method_ecommerce = COALESCE(NULLIF(?, ''), payment_method_ecommerce),
+            paid_at = CASE WHEN ? IN ('Diproses', 'Selesai') THEN COALESCE(paid_at, NOW()) ELSE paid_at END
+        WHERE no_invoice = ?
+    ");
+    $stmtUpdate->execute([$newStatus, $paymentType, $newStatus, $orderId]);
 
     // Ambil detail item dan rasio konversi beserta catatan logistik
     $stmtItems = $pdo->prepare("SELECT d.id_variasi, d.qty, d.catatan_logistik, v.rasio_konversi, v.satuan_besar, pi.kategori 

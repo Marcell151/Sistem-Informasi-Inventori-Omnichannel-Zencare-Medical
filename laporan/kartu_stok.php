@@ -12,6 +12,13 @@ $id_variasi = intval($_GET['id_variasi'] ?? 0);
 $dari       = $_GET['dari'] ?? date('Y-m-01');
 $sampai     = $_GET['sampai'] ?? date('Y-m-d');
 $filterKonversi = isset($_GET['filter_konversi']) && $_GET['filter_konversi'] == '1';
+$filterKanal = trim($_GET['kanal'] ?? 'semua');
+if ($filterKonversi) {
+    // Aktivitas konversi UOM merupakan pergerakan internal inventori (tidak terikat kanal penjualan)
+    $filterKanal = 'semua';
+} elseif (!in_array($filterKanal, ['semua', 'POS', 'E-Commerce'])) {
+    $filterKanal = 'semua';
+}
 
 $variasiList = $pdo->query("
     SELECT pv.id, pv.sku_variasi, CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS label 
@@ -95,6 +102,21 @@ if ($id_variasi > 0) {
         } else {
             return '<span class="font-mono text-xs font-bold text-slate-800">' . htmlspecialchars($cleanBatches[0]) . '</span>';
         }
+    }
+
+    // Helper function untuk memformat badge kanal penjualan / mutasi (Omnichannel)
+    function formatKanalBadge($kanal) {
+        $k = trim($kanal ?? '');
+        if ($k === 'POS') {
+            return '<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-300 mr-1.5 print:border-none print:bg-transparent print:p-0">POS</span>';
+        } elseif ($k === 'E-Commerce') {
+            return '<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 mr-1.5 print:border-none print:bg-transparent print:p-0">E-COMMERCE</span>';
+        } elseif ($k === 'Penerimaan' || $k === 'PO') {
+            return '<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300 mr-1.5 print:border-none print:bg-transparent print:p-0">INBOUND</span>';
+        } elseif ($k === 'Manual') {
+            return '<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-black bg-slate-100 text-slate-700 border border-slate-300 mr-1.5 print:border-none print:bg-transparent print:p-0">MANUAL</span>';
+        }
+        return '';
     }
 
     // Helper function untuk mengekstrak atau mencari nomor batch serta rincian logistik
@@ -246,6 +268,23 @@ if ($id_variasi > 0) {
             return $isHasil;
         }));
     }
+
+    // Filter berdasarkan Kanal Transaksi (Omnichannel)
+    if ($filterKanal === 'POS') {
+        $logDataBesar = array_values(array_filter($logDataBesar, function($l) {
+            return ($l['kanal'] === 'POS' || stripos($l['alasan_mutasi'], 'POS') !== false || stripos($l['deskripsi'], 'POS-') !== false || stripos($l['deskripsi'], 'Penjualan Luring') !== false);
+        }));
+        $logDataKecil = array_values(array_filter($logDataKecil, function($l) {
+            return ($l['kanal'] === 'POS' || stripos($l['alasan_mutasi'], 'POS') !== false || stripos($l['deskripsi'], 'POS-') !== false || stripos($l['deskripsi'], 'Penjualan Luring') !== false);
+        }));
+    } elseif ($filterKanal === 'E-Commerce') {
+        $logDataBesar = array_values(array_filter($logDataBesar, function($l) {
+            return ($l['kanal'] === 'E-Commerce' || stripos($l['alasan_mutasi'], 'E-Commerce') !== false || stripos($l['deskripsi'], 'E-Commerce') !== false || stripos($l['deskripsi'], 'INV-') !== false || stripos($l['deskripsi'], 'ZEN-') !== false || stripos($l['deskripsi'], 'WEB-') !== false);
+        }));
+        $logDataKecil = array_values(array_filter($logDataKecil, function($l) {
+            return ($l['kanal'] === 'E-Commerce' || stripos($l['alasan_mutasi'], 'E-Commerce') !== false || stripos($l['deskripsi'], 'E-Commerce') !== false || stripos($l['deskripsi'], 'INV-') !== false || stripos($l['deskripsi'], 'ZEN-') !== false || stripos($l['deskripsi'], 'WEB-') !== false);
+        }));
+    }
 }
 
 layoutHead('Kartu Stok');
@@ -255,7 +294,7 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
 ?>
 
 <div class="bg-white border border-zcBrd rounded-2xl p-6 shadow-sm mb-6">
-    <form method="GET" class="flex flex-wrap items-end gap-4">
+    <form method="GET" onsubmit="var sk = document.getElementById('select_kanal'); if(sk) sk.disabled = false;" class="flex flex-wrap items-end gap-4">
         <div class="flex-1 min-w-[250px]">
             <label class="block text-xs font-semibold text-zcTxt mb-1.5">Pilih Barang *</label>
             <select name="id_variasi" required class="select2 w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
@@ -276,8 +315,17 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
             <input type="date" name="sampai" value="<?= htmlspecialchars($sampai) ?>" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
         </div>
         <div>
+            <label class="block text-xs font-semibold text-zcTxt mb-1.5">Kanal Transaksi</label>
+            <select name="kanal" id="select_kanal" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50 font-bold transition <?= $filterKonversi ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : '' ?>" <?= $filterKonversi ? 'disabled' : '' ?>>
+                <option value="semua" <?= $filterKanal === 'semua' ? 'selected' : '' ?>>Semua Kanal (Omnichannel)</option>
+                <option value="POS" <?= $filterKanal === 'POS' ? 'selected' : '' ?>>Hanya POS (Kasir Offline)</option>
+                <option value="E-Commerce" <?= $filterKanal === 'E-Commerce' ? 'selected' : '' ?>>Hanya E-Commerce (Online)</option>
+            </select>
+            <div id="hint_kanal_disabled" class="text-[10px] text-amber-700 font-semibold mt-1 <?= $filterKonversi ? '' : 'hidden' ?>"></div>
+        </div>
+        <div>
             <label class="block text-xs font-semibold text-zcTxt mb-1.5">Kategori Aktivitas</label>
-            <select name="filter_konversi" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50 font-bold">
+            <select name="filter_konversi" id="select_konversi" onchange="handleKonversiChange(this.value)" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50 font-bold">
                 <option value="0" <?= !$filterKonversi ? 'selected' : '' ?>>Semua Aktivitas</option>
                 <option value="1" <?= $filterKonversi ? 'selected' : '' ?>>Semua Aktivitas Konversi</option>
             </select>
@@ -296,6 +344,26 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
         </div>
     </form>
 </div>
+
+<?php if ($id_variasi > 0 && $produkData && $filterKanal !== 'semua'): ?>
+<!-- BANNER FILTER KANAL OMNICHANNEL -->
+<div class="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-300 text-blue-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm print:hidden">
+    <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-xs">
+            <?= $filterKanal === 'POS' ? 'POS' : 'WEB' ?>
+        </div>
+        <div>
+            <h4 class="text-sm font-black uppercase tracking-wide">Filter Kanal Aktif: <?= $filterKanal === 'POS' ? 'Kasir Offline (POS)' : 'Penjualan Daring (E-Commerce)' ?></h4>
+            <p class="text-xs text-blue-800 mt-0.5">Menampilkan pergerakan audit stok khusus yang keluar melalui kanal <strong><?= htmlspecialchars($filterKanal) ?></strong>.</p>
+        </div>
+    </div>
+    <div class="flex items-center gap-2 self-stretch sm:self-auto">
+        <a href="kartu_stok.php?id_variasi=<?= $id_variasi ?>&dari=<?= urlencode($dari) ?>&sampai=<?= urlencode($sampai) ?>&filter_konversi=<?= $filterKonversi ? '1' : '0' ?>&kanal=semua" class="px-3.5 py-1.5 bg-white hover:bg-slate-100 border border-blue-200 text-blue-700 text-xs font-bold rounded-xl transition shadow-2xs">
+            ✕ Tampilkan Semua Kanal
+        </a>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php if ($id_variasi > 0 && $produkData && $filterKonversi): ?>
 <!-- BANNER AUDIT KHUSUS PEMBONGKARAN SATUAN BESAR -->
@@ -327,22 +395,38 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
     <?php endif; ?>
     <button onclick="switchTab('kecil')" id="tab_btn_kecil" class="px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition"><?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Kartu Stok Alat Kesehatan (Unit Fisik)' : 'Kartu Stok Etalase (Satuan Kecil)' ?></button>
 </div>
-<div id="print-container" class="space-y-8 print:space-y-0">
+<div id="print-container" class="space-y-8 print:space-y-0 w-full">
     <?php if ($produkData['kategori'] !== 'Alat Kesehatan'): ?>
     <!-- TABEL KARTU STOK GROSIR (BESAR) -->
     <div id="tab_content_besar" class="bg-white p-8 md:p-12 shadow-sm rounded-none border border-slate-300 w-full max-w-5xl mx-auto font-sans print:m-0 print:border-none print:shadow-none print:p-0 print:block page-break-after">
-        <h1 class="text-center text-xl md:text-2xl font-black mb-10 tracking-wide text-black">Kartu Stok Gudang (Satuan Besar)</h1>
+        <!-- Kop Surat Resmi Bersama Logo ZenCare (Khusus Print) -->
+        <div class="hidden print:flex border-b-2 border-slate-900 pb-2 mb-4 justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="/inventory_zencare/gambar/Logo.png" alt="Logo ZenCare" style="height: 44px; width: auto; object-fit: contain;" onerror="this.src='../gambar/Logo.png'">
+                <div>
+                    <h1 style="font-size: 15pt; font-weight: 800; color: #0f2d5a; margin: 0; line-height: 1.1;">ZENCARE MEDICAL</h1>
+                    <p style="font-size: 8.5pt; color: #475569; margin: 2px 0 0 0; font-weight: 600;">Distributor Alat Kesehatan dan Obat Omnichannel</p>
+                </div>
+            </div>
+            <div style="text-align: right; font-size: 8pt; color: #475569; line-height: 1.4;">
+                <div style="font-weight: bold; color: #0f2d5a;">Dokumen Resmi Kartu Stok Gudang</div>
+                <div>Dicetak: <?= date('d/m/Y H:i') ?> WIB</div>
+                <div>Oleh: <?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Superadmin') ?></div>
+            </div>
+        </div>
+
+        <h1 class="text-center text-xl md:text-2xl font-black mb-6 tracking-wide text-black uppercase">Kartu Stok Gudang (Satuan Besar)</h1>
         
         <!-- Informasi Header Kartu -->
         <div class="grid grid-cols-2 gap-x-12 mb-6 text-sm font-semibold text-black">
             <div class="grid grid-cols-[130px_10px_auto] gap-y-1">
                 <div>Nama Barang</div><div>:</div><div><?= htmlspecialchars($produkData['nama_produk'] . ' - ' . $produkData['nama_variasi']) ?></div>
                 <div>Kode Barang</div><div>:</div><div><?= htmlspecialchars($produkData['sku_variasi']) ?></div>
-                <div>Satuan (Grosir)</div><div>:</div><div class="font-black text-amber-700 uppercase"><?= htmlspecialchars($produkData['satuan_besar'] ?? '-') ?></div>
+                <div>Satuan (Grosir)</div><div>:</div><div class="font-black text-amber-700 print:text-black uppercase"><?= htmlspecialchars($produkData['satuan_besar'] ?? '-') ?></div>
             </div>
             <div class="grid grid-cols-[130px_10px_auto] gap-y-1">
                 <div>Minimum Stok</div><div>:</div><div><?= htmlspecialchars($produkData['stok_minimum_besar']) ?> <?= htmlspecialchars($produkData['satuan_besar']) ?></div>
-                <div>Stok Riil (Sisa)</div><div>:</div><div class="text-rose-600 font-bold"><?= htmlspecialchars($produkData['stok_riil_besar']) ?></div>
+                <div>Stok Riil (Sisa)</div><div>:</div><div class="text-rose-600 print:text-black font-bold"><?= htmlspecialchars($produkData['stok_riil_besar']) ?></div>
                 <div>Lokasi (Toko)</div><div>:</div><div>Pusat (Muharto)</div>
             </div>
         </div>
@@ -374,7 +458,7 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
                     <tr class="hover:bg-slate-50 print:hover:bg-transparent">
                         <td class="border border-slate-900 px-2 py-1.5 text-center whitespace-nowrap"><?= date('d/m/Y H:i', strtotime($log['tanggal'])) ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center"><?= formatKartuStokBatch($log['no_batch'] ?? '-') ?></td>
-                        <td class="border border-slate-900 px-3 py-1.5"><b><?= htmlspecialchars($log['jenis_mutasi']) ?></b> - <?= htmlspecialchars($log['deskripsi_tampil'] ?? $log['deskripsi'] ?? '-') ?></td>
+                        <td class="border border-slate-900 px-3 py-1.5"><?= formatKanalBadge($log['kanal']) ?><b><?= htmlspecialchars($log['jenis_mutasi']) ?></b> - <?= htmlspecialchars($log['deskripsi_tampil'] ?? $log['deskripsi'] ?? '-') ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-bold <?= $log['jenis_mutasi']=='Masuk'?'text-emerald-700':'' ?>"><?= $log['jenis_mutasi']=='Masuk' ? number_format($log['qty_calc']) : '' ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-bold <?= $log['jenis_mutasi']=='Keluar'?'text-rose-700':'' ?>"><?= $log['jenis_mutasi']=='Keluar' ? number_format($log['qty_calc']) : '' ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-black bg-slate-50"><?= number_format($log['sisa_stok_calc']) ?></td>
@@ -399,18 +483,34 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
     <?php endif; ?>
     
     <div id="tab_content_kecil" class="hidden bg-white p-8 md:p-12 shadow-sm rounded-none border border-slate-300 w-full max-w-5xl mx-auto font-sans print:m-0 print:border-none print:shadow-none print:p-0 print:block">
-        <h1 class="text-center text-xl md:text-2xl font-black mb-10 tracking-wide text-black"><?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Kartu Stok Alat Kesehatan (Unit Fisik)' : 'Kartu Stok Etalase (Satuan Kecil)' ?></h1>
+        <!-- Kop Surat Resmi Bersama Logo ZenCare (Khusus Print) -->
+        <div class="hidden print:flex border-b-2 border-slate-900 pb-2 mb-4 justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="/inventory_zencare/gambar/Logo.png" alt="Logo ZenCare" style="height: 44px; width: auto; object-fit: contain;" onerror="this.src='../gambar/Logo.png'">
+                <div>
+                    <h1 style="font-size: 15pt; font-weight: 800; color: #0f2d5a; margin: 0; line-height: 1.1;">ZENCARE MEDICAL</h1>
+                    <p style="font-size: 8.5pt; color: #475569; margin: 2px 0 0 0; font-weight: 600;">Distributor Alat Kesehatan dan Obat Omnichannel</p>
+                </div>
+            </div>
+            <div style="text-align: right; font-size: 8pt; color: #475569; line-height: 1.4;">
+                <div style="font-weight: bold; color: #0f2d5a;">Dokumen Resmi Kartu Stok Etalase</div>
+                <div>Dicetak: <?= date('d/m/Y H:i') ?> WIB</div>
+                <div>Oleh: <?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Superadmin') ?></div>
+            </div>
+        </div>
+
+        <h1 class="text-center text-xl md:text-2xl font-black mb-6 tracking-wide text-black uppercase"><?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Kartu Stok Alat Kesehatan (Unit Fisik)' : 'Kartu Stok Etalase (Satuan Kecil)' ?></h1>
         
         <!-- Informasi Header Kartu -->
         <div class="grid grid-cols-2 gap-x-12 mb-6 text-sm font-semibold text-black">
             <div class="grid grid-cols-[130px_10px_auto] gap-y-1">
                 <div>Nama Barang</div><div>:</div><div><?= htmlspecialchars($produkData['nama_produk'] . ' - ' . $produkData['nama_variasi']) ?></div>
                 <div>Kode Barang</div><div>:</div><div><?= htmlspecialchars($produkData['sku_variasi']) ?></div>
-                <div>Satuan (<?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Alkes' : 'Eceran' ?>)</div><div>:</div><div class="font-black text-emerald-700 uppercase"><?= htmlspecialchars($produkData['satuan_kecil'] ?? '-') ?></div>
+                <div>Satuan (<?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Alkes' : 'Eceran' ?>)</div><div>:</div><div class="font-black text-emerald-700 print:text-black uppercase"><?= htmlspecialchars($produkData['satuan_kecil'] ?? '-') ?></div>
             </div>
             <div class="grid grid-cols-[130px_10px_auto] gap-y-1">
                 <div>Minimum Stok</div><div>:</div><div><?= htmlspecialchars($produkData['stok_minimum_kecil']) ?> <?= htmlspecialchars($produkData['satuan_kecil']) ?></div>
-                <div>Stok Riil (Sisa)</div><div>:</div><div class="text-rose-600 font-bold"><?= htmlspecialchars($produkData['stok_riil_kecil']) ?></div>
+                <div>Stok Riil (Sisa)</div><div>:</div><div class="text-rose-600 print:text-black font-bold"><?= htmlspecialchars($produkData['stok_riil_kecil']) ?></div>
                 <div>Lokasi (Toko)</div><div>:</div><div>Pusat (Muharto)</div>
             </div>
         </div>
@@ -442,7 +542,7 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
                     <tr class="hover:bg-slate-50 print:hover:bg-transparent">
                         <td class="border border-slate-900 px-2 py-1.5 text-center whitespace-nowrap"><?= date('d/m/Y H:i', strtotime($log['tanggal'])) ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center"><?= formatKartuStokBatch($log['no_batch'] ?? '-') ?></td>
-                        <td class="border border-slate-900 px-3 py-1.5"><b><?= htmlspecialchars($log['jenis_mutasi']) ?></b> - <?= htmlspecialchars($log['deskripsi_tampil'] ?? $log['deskripsi'] ?? '-') ?></td>
+                        <td class="border border-slate-900 px-3 py-1.5"><?= formatKanalBadge($log['kanal']) ?><b><?= htmlspecialchars($log['jenis_mutasi']) ?></b> - <?= htmlspecialchars($log['deskripsi_tampil'] ?? $log['deskripsi'] ?? '-') ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-bold <?= $log['jenis_mutasi']=='Masuk'?'text-emerald-700':'' ?>"><?= $log['jenis_mutasi']=='Masuk' ? number_format($log['qty_calc']) : '' ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-bold <?= $log['jenis_mutasi']=='Keluar'?'text-rose-700':'' ?>"><?= $log['jenis_mutasi']=='Keluar' ? number_format($log['qty_calc']) : '' ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-black bg-slate-50"><?= number_format($log['sisa_stok_calc']) ?></td>
@@ -471,17 +571,19 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
         position: absolute; 
         left: 0; 
         top: 0; 
-        width: 100%; 
-        padding: 10mm;
+        width: 100% !important; 
+        padding: 0 !important;
+        margin: 0 !important;
         box-sizing: border-box;
     }
     
     /* Force BOTH tabs to display, overriding the Tailwind 'hidden' class */
     #tab_content_besar, #tab_content_kecil {
         display: block !important;
-        margin: 0 !important;
+        margin: 0 0 15mm 0 !important;
         border: none !important;
         box-shadow: none !important;
+        width: 100% !important;
     }
     
     /* Break page after the first table */
@@ -503,10 +605,27 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
         margin: 0 !important;
         padding: 0 !important;
         background: #ffffff !important;
-        color: #0f172a !important;
+        color: #000000 !important;
     }
     
-    table thead { display: table-header-group !important; }
+    table thead { 
+        display: table-header-group !important; 
+        background-color: #f1f5f9 !important;
+    }
+    table thead th { 
+        background-color: #f1f5f9 !important;
+        color: #000000 !important;
+        font-weight: 800 !important;
+        border: 1px solid #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        padding: 5px 6px !important;
+    }
+    table tbody td {
+        color: #000000 !important;
+        border: 1px solid #334155 !important;
+        padding: 4px 6px !important;
+    }
     table tfoot { display: table-row-group !important; }
     table tr, table th, table td { break-inside: avoid !important; page-break-inside: avoid !important; }
     table td > *, table th > * { break-inside: avoid !important; page-break-inside: avoid !important; }
@@ -529,8 +648,26 @@ function switchTab(tab) {
     }
 }
 
+function handleKonversiChange(val) {
+    var selKanal = document.getElementById('select_kanal');
+    var hint = document.getElementById('hint_kanal_disabled');
+    if (!selKanal) return;
+    if (val === '1') {
+        selKanal.value = 'semua';
+        selKanal.disabled = true;
+        selKanal.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+        selKanal.classList.remove('bg-slate-50', 'text-zcTxt');
+        if (hint) hint.classList.remove('hidden');
+    } else {
+        selKanal.disabled = false;
+        selKanal.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+        selKanal.classList.add('bg-slate-50', 'text-zcTxt');
+        if (hint) hint.classList.add('hidden');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    <?php if ($produkData['kategori'] === 'Alat Kesehatan'): ?>
+    <?php if (!empty($produkData) && ($produkData['kategori'] ?? '') === 'Alat Kesehatan'): ?>
     switchTab('kecil');
     <?php endif; ?>
     

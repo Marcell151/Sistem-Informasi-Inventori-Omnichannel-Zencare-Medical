@@ -112,10 +112,10 @@ layoutHeader('Pengaturan Integrasi API System', 'Kontrol status ON/OFF dan kunci
                         </span>
                     </div>
 
-                    <form method="POST">
+                    <form method="POST" onsubmit="handleToggleSubmit(this, event, '<?= $isOn ? 'Matikan' : 'Aktifkan' ?>', 'API <?= htmlspecialchars(addslashes($meta['label'])) ?>')">
                         <input type="hidden" name="aksi" value="toggle_api">
                         <input type="hidden" name="platform" value="<?= $pKey ?>">
-                        <button type="submit" onclick="return confirm('Ubah status API <?= $meta['label'] ?>?')"
+                        <button type="submit"
                             class="text-xs font-semibold px-3.5 py-1.5 rounded-xl border transition
                                 <?= $isOn
                                     ? 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
@@ -174,6 +174,37 @@ layoutHeader('Pengaturan Integrasi API System', 'Kontrol status ON/OFF dan kunci
 function toggleKeyForm(id) {
     const el = document.getElementById(id);
     el.classList.toggle('hidden');
+}
+
+function handleToggleSubmit(form, e, actionText, itemType) {
+    if (e) {
+        e.preventDefault();
+    }
+    
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Konfirmasi ' + actionText,
+            text: 'Apakah Anda yakin ingin ' + actionText.toLowerCase() + ' ' + itemType + '?',
+            icon: actionText.toLowerCase().includes('matikan') ? 'warning' : 'question',
+            showCancelButton: true,
+            confirmButtonColor: actionText.toLowerCase().includes('matikan') ? '#e11d48' : '#2563eb',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Lanjutkan',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+        return false;
+    }
+
+    if (confirm(actionText + ' ' + itemType + '?')) {
+        form.submit();
+        return true;
+    }
+    return false;
 }
 </script>
 

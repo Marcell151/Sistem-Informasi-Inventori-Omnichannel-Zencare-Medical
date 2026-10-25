@@ -81,12 +81,12 @@ try {
     
     // 1. Kartu Stok DUS (Keluar)
     $catatanKeluar = "Bongkar 1 " . $var["satuan_besar"] . " (Rp0 - Konversi POS) [Batch: $noBatchAsal]";
-    $stmtKartu1 = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'besar', 'Keluar', 'POS', 'Bongkar Dus', 1, ?, ?, ?)");
+    $stmtKartu1 = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'besar', 'Keluar', 'Manual', 'Bongkar Dus', 1, ?, ?, ?)");
     $stmtKartu1->execute([$idVariasi, $sisaStokDus, $catatanKeluar, $userId]);
     
     // 2. Kartu Stok ECERAN (Masuk)
     $catatanMasuk = "Lahir Sub-Batch $newBatchName (Masuk $qtyPcs " . $var["satuan_kecil"] . ")";
-    $stmtKartu2 = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'kecil', 'Masuk', 'POS', 'Hasil Bongkar', ?, ?, ?, ?)");
+    $stmtKartu2 = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'kecil', 'Masuk', 'Manual', 'Hasil Bongkar', ?, ?, ?, ?)");
     $stmtKartu2->execute([$idVariasi, $qtyPcs, $sisaStokEceran, $catatanMasuk, $userId]);
     
     // 3. Histori Konversi

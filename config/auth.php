@@ -3,6 +3,10 @@
 // Auth Guard Functions – ZenCare Medical System (Final TA v3.0)
 // Role baru: superadmin | admin | pelanggan
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 define('BASE_URL', '/inventory_zencare');
 
 function requireLogin() {

@@ -372,17 +372,18 @@ if (!empty($orderIds)) {
                         </div>
 
                         <?php if ($status === 'Menunggu Pembayaran'): 
-                            $cooldownMenit = defined('RESERVASI_COOLDOWN_MENIT') ? RESERVASI_COOLDOWN_MENIT : 120;
+                            $payMethod = strtolower($ord['payment_method_ecommerce'] ?? '');
+                            $isQris = in_array($payMethod, ['qris', 'gopay', 'shopeepay']);
+                            if ($isQris) {
+                                $cooldownMenit = defined('MIDTRANS_EXPIRY_ECOMMERCE_QRIS_MENIT') ? MIDTRANS_EXPIRY_ECOMMERCE_QRIS_MENIT : 15;
+                                $cooldownLabel = '15 Menit (QRIS / E-Wallet)';
+                            } else {
+                                $cooldownMenit = defined('MIDTRANS_EXPIRY_ECOMMERCE_VA_MENIT') ? MIDTRANS_EXPIRY_ECOMMERCE_VA_MENIT : 120;
+                                $cooldownLabel = '2 Jam (Transfer Bank / Virtual Account)';
+                            }
                             $cooldownDetik = $cooldownMenit * 60;
                             $expireTime = strtotime($ord['created_at']) + $cooldownDetik;
                             $sisaDetik = max(0, $expireTime - time());
-                            if ($cooldownMenit < 60) {
-                                $cooldownLabel = $cooldownMenit . ' Menit (Mode Uji Coba)';
-                            } elseif ($cooldownMenit >= 1440) {
-                                $cooldownLabel = round($cooldownMenit / 1440) . ' Hari (' . round($cooldownMenit / 60) . ' Jam)';
-                            } else {
-                                $cooldownLabel = round($cooldownMenit / 60) . ' Jam';
-                            }
                         ?>
                         <div class="mt-2.5 mb-1 p-2.5 rounded-xl bg-amber-50/90 border border-amber-200 text-amber-900 text-[11px] flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 shadow-2xs">
                             <div class="flex items-center gap-1.5 font-medium">
@@ -486,8 +487,9 @@ if (!empty($orderIds)) {
         }
         snap.pay(token, {
             onSuccess: function(result) {
+                let pType = result && result.payment_type ? result.payment_type : '';
                 // Sinkronisasi paksa dari frontend (karena localhost tidak bisa terima webhook)
-                fetch('../api/sync_payment.php?order_id=' + orderId)
+                fetch('../api/sync_payment.php?order_id=' + encodeURIComponent(orderId) + '&payment_type=' + encodeURIComponent(pType))
                     .then(res => res.json())
                     .then(data => {
                         alert('Pembayaran Berhasil! Pesanan akan segera diproses.');
@@ -498,7 +500,12 @@ if (!empty($orderIds)) {
                     });
             },
             onPending: function(result) {
-                alert('Menunggu Pembayaran.');
+                let pType = result && result.payment_type ? result.payment_type : '';
+                fetch('../api/sync_payment.php?order_id=' + encodeURIComponent(orderId) + '&payment_type=' + encodeURIComponent(pType))
+                    .finally(() => {
+                        alert('Menunggu Pembayaran' + (pType ? ' (' + pType.toUpperCase() + ')' : '') + '.');
+                        window.location.reload();
+                    });
             },
             onError: function(result) {
                 alert('Transaksi Dibatalkan / Gagal.');

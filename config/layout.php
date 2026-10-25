@@ -206,6 +206,7 @@ function icon(string $name, string $cls = 'w-4 h-4'): string {
         'report_sale'  => '<path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/>',
         'report_stock' => '<path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2z"/><path d="M7 7h.01"/>',
         'report_med'   => '<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><path d="M12 11v6M9 14h6"/>',
+        'report_fefo'  => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
         'settings'     => '<path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/>',
         'logout'       => '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>',
         'truck'        => '<path d="M14 18V6a2 2 0 00-2-2H4a2 2 0 00-2 2v11a1 1 0 001 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 001-1v-3.65a1 1 0 00-.22-.624l-3.48-4.35A1 1 0 0017.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
@@ -289,6 +290,9 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
         $link('/inventory_zencare/laporan/penjualan.php', 'report_sale', 'Lap. Penjualan Barang', 'laporan_penjualan');
         $link('/inventory_zencare/laporan/ketersediaan_stok.php', 'report_stock', 'Lap. Persediaan', 'laporan_ketersediaan');
         $link('/inventory_zencare/laporan/logistik_medis.php', 'report_med', 'Lap. Logistik Medis', 'laporan_logistik');
+        $link('/inventory_zencare/laporan/penerimaan_barang.php', 'receive', 'Lap. Penerimaan Barang', 'laporan_penerimaan');
+        $link('/inventory_zencare/laporan/mutasi_konversi.php', 'swap', 'Lap. Mutasi & Konversi', 'laporan_mutasi_konversi');
+        $link('/inventory_zencare/laporan/anomali_fefo.php', 'report_fefo', 'Lap. Anomali FEFO', 'laporan_anomali_fefo');
     }
 
     if ($isSuperadmin) {

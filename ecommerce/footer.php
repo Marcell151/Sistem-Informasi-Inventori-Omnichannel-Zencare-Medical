@@ -353,6 +353,9 @@
         let isEcommerce = window.location.pathname.includes('/ecommerce/');
         let placeholder = isEcommerce ? '../assets/img/no-image.png' : 'assets/img/no-image.png';
         if (!gbr) return placeholder;
+        if (typeof gbr === 'string' && gbr.includes(',')) {
+            gbr = gbr.split(',')[0].trim();
+        }
         if (gbr.startsWith('http')) return gbr;
         let clean = gbr.replace(/^\.\.\//, '');
         return isEcommerce ? ('../' + clean) : clean;

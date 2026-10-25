@@ -1,10 +1,15 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../config/config.php';
 require_once '../config/koneksi.php';
-require_once '../config/auth.php'; // Pastikan hanya user yang login yang bisa cetak
+require_once '../config/auth.php';
 
-$tipe = $_GET['tipe'] ?? '';
-$id = $_GET['id'] ?? '';
+// Teruskan secara seamless ke mesin cetak batch stiker baru (A4 Grid + Thermal)
+$query = http_build_query($_GET);
+header("Location: cetak_batch_stiker.php?" . $query);
+exit;
 
 $nama_produk = '';
 $kode = '';

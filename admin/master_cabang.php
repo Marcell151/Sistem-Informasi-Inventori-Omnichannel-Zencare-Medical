@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // File: admin/master_cabang.php
 // Master Cabang – Super Admin Only
 session_start();
@@ -120,9 +120,9 @@ layoutHeader('Master Cabang', 'Kelola data cabang fisik ZenCare Medical (2 Caban
                         </td>
                         <td class="px-5 py-3.5">
                             <div class="flex items-center justify-center gap-2">
-                                <button onclick="openEdit(<?= $c['id'] ?>, '<?= addslashes($c['nama']) ?>', '<?= addslashes($c['alamat']) ?>', <?= $c['kota_id'] ?>)"
+                                <button onclick='openEditCabangBtn(<?= htmlspecialchars(json_encode($c), ENT_QUOTES) ?>)'
                                     class="px-2.5 py-1 text-[11px] font-bold bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl transition">Edit</button>
-                                <form method="POST" class="inline" onsubmit="return confirm('Toggle status cabang ini?')">
+                                <form method="POST" class="inline" onsubmit="handleToggleSubmit(this, event, '<?= $c['is_active'] ? 'Nonaktifkan' : 'Aktifkan' ?>', 'cabang')">
                                     <input type="hidden" name="aksi" value="toggle">
                                     <input type="hidden" name="id" value="<?= $c['id'] ?>">
                                     <button type="submit" class="px-2.5 py-1 text-[11px] font-bold <?= $c['is_active'] ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200' ?> border rounded-xl transition">
@@ -186,12 +186,52 @@ layoutHeader('Master Cabang', 'Kelola data cabang fisik ZenCare Medical (2 Caban
 </div>
 
 <script>
+function openEditCabangBtn(c) {
+    if (!c) return;
+    document.getElementById('ec_id').value = c.id || '';
+    document.getElementById('ec_nama').value = c.nama || '';
+    document.getElementById('ec_alamat').value = c.alamat || '';
+    document.getElementById('ec_kota').value = c.kota_id || '';
+    document.getElementById('modal_edit').classList.remove('hidden');
+}
+
 function openEdit(id, nama, alamat, kotaId) {
     document.getElementById('ec_id').value = id;
     document.getElementById('ec_nama').value = nama;
     document.getElementById('ec_alamat').value = alamat;
     document.getElementById('ec_kota').value = kotaId;
     document.getElementById('modal_edit').classList.remove('hidden');
+}
+
+function handleToggleSubmit(form, e, actionText, itemType) {
+    if (e) {
+        e.preventDefault();
+    }
+    
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Konfirmasi ' + actionText,
+            text: 'Apakah Anda yakin ingin ' + actionText.toLowerCase() + ' ' + itemType + ' ini?',
+            icon: actionText.toLowerCase().includes('nonaktifkan') ? 'warning' : 'question',
+            showCancelButton: true,
+            confirmButtonColor: actionText.toLowerCase().includes('nonaktifkan') ? '#e11d48' : '#2563eb',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Lanjutkan',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+        return false;
+    }
+
+    if (confirm(actionText + ' ' + itemType + ' ini?')) {
+        form.submit();
+        return true;
+    }
+    return false;
 }
 </script>
 

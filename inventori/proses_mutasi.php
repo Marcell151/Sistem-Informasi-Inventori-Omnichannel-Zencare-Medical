@@ -49,11 +49,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Penambahan Batch
                     $tglExp = $_POST['tgl_exp'] ?? '';
                     if (!$tglExp) throw new Exception("Tanggal Kedaluwarsa wajib diisi untuk penambahan Obat.");
-                    $minExpLimit = date('Y-m-d', strtotime('+90 days'));
+                    $minExpLimit = date('Y-m-d', strtotime('+1 day'));
                     if ($tglExp < $minExpLimit) {
                         $tglMinFmt = date('d/m/Y', strtotime($minExpLimit));
                         $tglExpFmt = date('d/m/Y', strtotime($tglExp));
-                        throw new Exception("Masa kedaluwarsa Batch '$noBatch' ($tglExpFmt) ditolak! Standar SOP Logistik Farmasi mewajibkan masa kedaluwarsa minimal 3 bulan (90 hari) ke depan (Minimal tanggal $tglMinFmt).");
+                        throw new Exception("Tanggal kedaluwarsa Batch '$noBatch' ($tglExpFmt) ditolak! Tanggal kedaluwarsa tidak boleh hari ini atau tanggal lampau (minimal besok H+1 / $tglMinFmt).");
                     }
                     
                     $pdo->prepare("INSERT INTO stok_batch (id_variasi, no_batch, tgl_exp, stok_sisa) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE stok_sisa = stok_sisa + ?")->execute([$idVariasi, $noBatch, $tglExp, $qty, $qty]);
@@ -351,8 +351,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-zcTxt mb-1">Tgl Kedaluwarsa *</label>
-                                        <input type="date" name="tgl_exp" min="<?= date('Y-m-d', strtotime('+90 days')) ?>" required class="w-full text-sm border border-zcBrd rounded-lg px-3 py-2 bg-white">
-                                        <div class="text-[9px] text-amber-700 mt-1">Min. +90 Hari (3 Bulan)</div>
+                                        <input type="date" name="tgl_exp" min="<?= date('Y-m-d', strtotime('+1 day')) ?>" required class="w-full text-sm border border-zcBrd rounded-lg px-3 py-2 bg-white">
+                                        <div class="text-[9px] text-amber-700 mt-1">Min. Besok (H+1)</div>
                                     </div>
                                  </div>`;
                     }

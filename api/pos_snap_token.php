@@ -52,17 +52,33 @@ try {
         ];
     }
 
+    $posExpiryMenit = defined('MIDTRANS_EXPIRY_POS_QRIS_MENIT') ? MIDTRANS_EXPIRY_POS_QRIS_MENIT : 5;
+
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $posReturnUrl = $protocol . $host . '/inventory_zencare/pos/pos.php';
+
     $midtransPayload = [
         'transaction_details' => [
             'order_id' => $invoiceNo,
             'gross_amount' => $total,
         ],
         'customer_details' => [
-            'first_name' => 'Pelanggan Walk-In',
+            'first_name' => 'Pelanggan Walk-In Kasir',
             'phone' => '081234567890',
         ],
         'item_details' => $itemDetails,
-        'enabled_payments' => ['gopay', 'qris', 'shopeepay', 'bank_transfer']
+        'enabled_payments' => ['qris', 'gopay', 'shopeepay'],
+        'expiry' => [
+            'start_time' => date('Y-m-d H:i:s O'),
+            'unit' => 'minute',
+            'duration' => $posExpiryMenit
+        ],
+        'callbacks' => [
+            'finish' => $posReturnUrl,
+            'unfinish' => $posReturnUrl,
+            'error' => $posReturnUrl
+        ]
     ];
 
     $ch = curl_init(MIDTRANS_API_URL . '/snap/v1/transactions');
@@ -95,7 +111,9 @@ try {
         'status' => 'success',
         'token' => $midtransData['token'],
         'redirect_url' => $midtransData['redirect_url'] ?? '',
-        'order_id' => $invoiceNo
+        'order_id' => $invoiceNo,
+        'expiry_duration_seconds' => $posExpiryMenit * 60,
+        'expiry_duration_minutes' => $posExpiryMenit
     ]);
 
 } catch (Exception $e) {

@@ -116,7 +116,7 @@ $related = $stmtRelated->fetchAll();
             <div class="lg:col-span-5 flex flex-col items-center">
                 <?php 
                 $rawGambar = $p['gambar'] ?? '';
-                $arrGambar = $rawGambar ? array_map('trim', explode(',', $rawGambar)) : [];
+                $arrGambar = $rawGambar ? array_filter(array_map('trim', explode(',', $rawGambar))) : [];
                 $mainGambar = !empty($arrGambar) ? $arrGambar[0] : '';
                 
                 function getProductImageSrc($gbr) {
@@ -125,12 +125,19 @@ $related = $stmtRelated->fetchAll();
                     if (str_contains($gbr, '/')) return '../' . $gbr;
                     return '../assets/img/produk/' . $gbr;
                 }
+
+                $formattedImages = array_values(array_map('getProductImageSrc', $arrGambar));
+                $totalImages = count($formattedImages);
                 ?>
-                <div class="relative w-full aspect-square rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/25 to-slate-100 border border-slate-100 flex items-center justify-center p-8 overflow-hidden shadow-xs">
-                    <?php if ($mainGambar): ?>
-                        <img id="main_product_image" src="<?= htmlspecialchars(getProductImageSrc($mainGambar)) ?>"
+
+                <!-- Main Carousel Viewport -->
+                <div class="relative w-full aspect-square rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 border border-slate-200/80 flex items-center justify-center p-6 overflow-hidden shadow-xs group select-none">
+                    <?php if ($totalImages > 0): ?>
+                        <img id="main_product_image" 
+                             src="<?= htmlspecialchars($formattedImages[0]) ?>"
                              alt="<?= htmlspecialchars($p['nama_lengkap']) ?>"
-                             class="w-full h-full object-contain transition-transform duration-300 hover:scale-105 mix-blend-multiply"
+                             onclick="openImageLightbox()"
+                             class="w-full h-full object-contain transition-all duration-300 hover:scale-105 mix-blend-multiply cursor-zoom-in"
                              onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
                     <?php else: ?>
                         <div class="flex flex-col items-center text-slate-300 gap-3">
@@ -142,7 +149,7 @@ $related = $stmtRelated->fetchAll();
                     <?php endif; ?>
 
                     <!-- Category Pill Top Left -->
-                    <div class="absolute top-3.5 left-3.5">
+                    <div class="absolute top-3.5 left-3.5 z-10">
                         <span class="px-2.5 py-1 bg-white/95 backdrop-blur-md text-zc text-[10px] font-extrabold rounded-lg border border-zc/20 uppercase tracking-wider shadow-xs">
                             <?= htmlspecialchars($p['kategori']) ?>
                         </span>
@@ -150,39 +157,172 @@ $related = $stmtRelated->fetchAll();
 
                     <!-- SKU Top Right -->
                     <?php if ($p['sku_variasi']): ?>
-                    <div class="absolute top-3.5 right-3.5">
+                    <div class="absolute top-3.5 right-3.5 z-10">
                         <span class="px-2.5 py-1 bg-slate-900/80 text-white text-[10px] font-mono rounded-lg tracking-wider shadow-xs">
                             SKU: <?= htmlspecialchars($p['sku_variasi']) ?>
                         </span>
                     </div>
                     <?php endif; ?>
+
+                    <?php if ($totalImages > 1): ?>
+                    <!-- Navigation Arrows -->
+                    <button type="button" onclick="prevProductSlide(event)" 
+                            class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-slate-800 shadow-md border border-slate-200 flex items-center justify-center transition opacity-90 group-hover:opacity-100 hover:scale-105 active:scale-95 z-20 cursor-pointer" 
+                            title="Foto Sebelumnya">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <button type="button" onclick="nextProductSlide(event)" 
+                            class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-slate-800 shadow-md border border-slate-200 flex items-center justify-center transition opacity-90 group-hover:opacity-100 hover:scale-105 active:scale-95 z-20 cursor-pointer" 
+                            title="Foto Selanjutnya">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+
+                    <!-- Slide Counter Badge -->
+                    <div class="absolute bottom-3 right-3 px-2.5 py-1 bg-slate-900/75 backdrop-blur-md text-white text-[10px] font-bold rounded-lg shadow-sm flex items-center gap-1 z-10">
+                        <svg class="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span id="curr_slide_number">1</span> / <span><?= $totalImages ?></span>
+                    </div>
+
+                    <!-- Zoom Hint Badge -->
+                    <div class="absolute bottom-3 left-3 px-2 py-1 bg-white/85 backdrop-blur-md text-slate-600 text-[10px] font-medium rounded-lg shadow-2xs hidden sm:flex items-center gap-1 z-10 pointer-events-none">
+                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                        Klik foto perbesar
+                    </div>
+                    <?php endif; ?>
                 </div>
 
-                <!-- Thumbnail Gallery Carousel -->
-                <?php if (count($arrGambar) > 1): ?>
-                <div class="w-full flex gap-3 mt-4 overflow-x-auto pb-2 scrollbar-hide snap-x">
-                    <?php foreach ($arrGambar as $idx => $gbr): 
-                        $thumbSrc = getProductImageSrc($gbr);
-                    ?>
-                        <div class="shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 <?= $idx === 0 ? 'border-zc' : 'border-slate-200' ?> cursor-pointer overflow-hidden bg-white snap-center thumbnail-img hover:border-zc transition p-1"
-                             onclick="changeMainImage(this, '<?= htmlspecialchars($thumbSrc) ?>')">
-                            <img src="<?= htmlspecialchars($thumbSrc) ?>" alt="thumb" class="w-full h-full object-contain mix-blend-multiply" onerror="this.src='../assets/img/no-image.png'">
-                        </div>
-                    <?php endforeach; ?>
+                <!-- Thumbnail Gallery Bar -->
+                <?php if ($totalImages > 1): ?>
+                <div class="w-full mt-4">
+                    <div class="flex items-center justify-between mb-1.5 px-1 text-xs">
+                        <span class="font-bold text-slate-600">Galeri Foto Produk</span>
+                        <span class="text-[10px] text-slate-400">Pilih untuk melihat sudut lain</span>
+                    </div>
+                    <div id="thumbnail_track" class="w-full flex gap-2.5 overflow-x-auto pb-2 pt-1 scrollbar-hide snap-x">
+                        <?php foreach ($formattedImages as $idx => $thumbSrc): ?>
+                            <button type="button" 
+                                 onclick="selectSlide(<?= $idx ?>)"
+                                 data-idx="<?= $idx ?>"
+                                 class="thumbnail-card shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 <?= $idx === 0 ? 'border-zc ring-2 ring-zc/25 shadow-sm' : 'border-slate-200 opacity-70 hover:opacity-100 hover:border-slate-300' ?> cursor-pointer overflow-hidden bg-white snap-center transition-all p-1.5 focus:outline-none flex items-center justify-center">
+                                <img src="<?= htmlspecialchars($thumbSrc) ?>" alt="Sudut <?= $idx + 1 ?>" class="w-full h-full object-contain mix-blend-multiply" onerror="this.src='../assets/img/no-image.png'">
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
+
+                <!-- Fullscreen Image Lightbox Modal -->
+                <div id="image_lightbox_modal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+                    <button type="button" onclick="closeImageLightbox()" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 hover:bg-white text-white hover:text-black flex items-center justify-center transition text-xl font-bold cursor-pointer z-50">&times;</button>
+                    
+                    <button type="button" onclick="prevProductSlide(event); syncLightboxImage();" class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 hover:bg-white text-white hover:text-black flex items-center justify-center transition text-2xl font-bold cursor-pointer z-50">‹</button>
+                    
+                    <button type="button" onclick="nextProductSlide(event); syncLightboxImage();" class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 hover:bg-white text-white hover:text-black flex items-center justify-center transition text-2xl font-bold cursor-pointer z-50">›</button>
+
+                    <div class="max-w-4xl max-h-[85vh] p-4 flex flex-col items-center">
+                        <img id="lightbox_image" src="<?= htmlspecialchars($formattedImages[0]) ?>" alt="Preview" class="max-w-full max-h-[75vh] object-contain rounded-xl bg-white p-4 shadow-2xl">
+                        <div class="mt-4 text-white text-xs font-semibold tracking-wide">
+                            <?= htmlspecialchars($p['nama_lengkap']) ?> — Foto <span id="lightbox_counter">1</span> dari <?= $totalImages ?>
+                        </div>
+                    </div>
+                </div>
+
                 <script>
-                    function changeMainImage(el, src) {
-                        document.getElementById('main_product_image').src = src;
-                        document.querySelectorAll('.thumbnail-img').forEach(t => {
-                            t.classList.remove('border-zc');
-                            t.classList.add('border-slate-200');
+                    const galleryImages = <?= json_encode($formattedImages) ?>;
+                    let currentSlide = 0;
+
+                    function selectSlide(idx) {
+                        if (!galleryImages.length) return;
+                        if (idx < 0) idx = galleryImages.length - 1;
+                        if (idx >= galleryImages.length) idx = 0;
+                        currentSlide = idx;
+
+                        const mainImg = document.getElementById('main_product_image');
+                        if (mainImg) {
+                            mainImg.style.opacity = '0.4';
+                            mainImg.style.transform = 'scale(0.96)';
+                            setTimeout(() => {
+                                mainImg.src = galleryImages[currentSlide];
+                                mainImg.style.opacity = '1';
+                                mainImg.style.transform = 'scale(1)';
+                            }, 100);
+                        }
+
+                        // Update counter
+                        const counter = document.getElementById('curr_slide_number');
+                        if (counter) counter.innerText = (currentSlide + 1);
+
+                        // Update thumbnails styling
+                        document.querySelectorAll('.thumbnail-card').forEach((card, i) => {
+                            if (i === currentSlide) {
+                                card.classList.remove('border-slate-200', 'opacity-70');
+                                card.classList.add('border-zc', 'ring-2', 'ring-zc/25', 'shadow-sm', 'opacity-100');
+                                card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                            } else {
+                                card.classList.remove('border-zc', 'ring-2', 'ring-zc/25', 'shadow-sm', 'opacity-100');
+                                card.classList.add('border-slate-200', 'opacity-70');
+                            }
                         });
-                        el.classList.remove('border-slate-200');
-                        el.classList.add('border-zc');
+
+                        syncLightboxImage();
+                    }
+
+                    function nextProductSlide(e) {
+                        if (e) e.stopPropagation();
+                        selectSlide(currentSlide + 1);
+                    }
+
+                    function prevProductSlide(e) {
+                        if (e) e.stopPropagation();
+                        selectSlide(currentSlide - 1);
+                    }
+
+                    function openImageLightbox() {
+                        const modal = document.getElementById('image_lightbox_modal');
+                        if (modal) {
+                            syncLightboxImage();
+                            modal.classList.remove('hidden');
+                        }
+                    }
+
+                    function closeImageLightbox() {
+                        const modal = document.getElementById('image_lightbox_modal');
+                        if (modal) modal.classList.add('hidden');
+                    }
+
+                    function syncLightboxImage() {
+                        const lbImg = document.getElementById('lightbox_image');
+                        const lbCounter = document.getElementById('lightbox_counter');
+                        if (lbImg && galleryImages[currentSlide]) {
+                            lbImg.src = galleryImages[currentSlide];
+                        }
+                        if (lbCounter) {
+                            lbCounter.innerText = (currentSlide + 1);
+                        }
+                    }
+
+                    // Keyboard arrow navigation
+                    document.addEventListener('keydown', function(e) {
+                        if (e.key === 'ArrowLeft') prevProductSlide();
+                        if (e.key === 'ArrowRight') nextProductSlide();
+                        if (e.key === 'Escape') closeImageLightbox();
+                    });
+
+                    // Touch swipe support on main image viewport
+                    let touchStartX = 0;
+                    let touchEndX = 0;
+                    const stage = document.getElementById('main_product_image');
+                    if (stage) {
+                        stage.addEventListener('touchstart', e => {
+                            touchStartX = e.changedTouches[0].screenX;
+                        }, {passive: true});
+                        stage.addEventListener('touchend', e => {
+                            touchEndX = e.changedTouches[0].screenX;
+                            if (touchStartX - touchEndX > 40) nextProductSlide();
+                            if (touchEndX - touchStartX > 40) prevProductSlide();
+                        }, {passive: true});
                     }
                 </script>
                 <style>
-                    /* Hides scrollbar for clean carousel */
                     .scrollbar-hide::-webkit-scrollbar { display: none; }
                     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
                 </style>
@@ -449,8 +589,12 @@ $related = $stmtRelated->fetchAll();
             <?php foreach ($related as $rel): ?>
             <a href="produk.php?id=<?= $rel['id'] ?>" class="p-3 bg-white rounded-2xl border border-slate-100 hover:border-zc/40 hover:shadow-md transition-all group flex flex-col">
                 <div class="h-32 rounded-xl bg-slate-50 p-2 flex items-center justify-center mb-2 overflow-hidden">
-                    <?php if (!empty($rel['gambar'])): ?>
-                        <img src="../<?= htmlspecialchars($rel['gambar']) ?>" alt="" class="w-full h-full object-contain group-hover:scale-105 transition" onerror="this.onerror=null; this.src='<?= htmlspecialchars($rel['gambar']) ?>';">
+                    <?php 
+                    $relGbr = !empty($rel['gambar']) ? trim(explode(',', $rel['gambar'])[0]) : '';
+                    $relSrc = getProductImageSrc($relGbr);
+                    ?>
+                    <?php if (!empty($relGbr)): ?>
+                        <img src="<?= htmlspecialchars($relSrc) ?>" alt="" class="w-full h-full object-contain group-hover:scale-105 transition mix-blend-multiply" onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
                     <?php else: ?>
                         <svg class="w-8 h-8 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     <?php endif; ?>

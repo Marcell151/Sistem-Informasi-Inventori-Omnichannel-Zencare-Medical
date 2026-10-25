@@ -100,9 +100,9 @@ layoutHeader('Master Supplier', 'Kelola data distributor & supplier alat kesehat
                         </td>
                         <td class="px-5 py-3.5">
                             <div class="flex items-center justify-center gap-2">
-                                <button onclick="openEdit(<?= $s['id'] ?>, '<?= addslashes($s['nama']) ?>', '<?= addslashes($s['kontak'] ?? '') ?>', '<?= addslashes($s['alamat'] ?? '') ?>')"
+                                <button onclick='openEditSupplierBtn(<?= htmlspecialchars(json_encode($s), ENT_QUOTES) ?>)'
                                     class="px-2.5 py-1 text-[11px] font-bold bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl transition">Edit</button>
-                                <form method="POST" class="inline" onsubmit="return confirm('Toggle status supplier ini?')">
+                                <form method="POST" class="inline" onsubmit="handleToggleSubmit(this, event, '<?= $s['is_active'] ? 'Nonaktifkan' : 'Aktifkan' ?>', 'supplier')">
                                     <input type="hidden" name="aksi" value="toggle">
                                     <input type="hidden" name="id" value="<?= $s['id'] ?>">
                                     <button type="submit" class="px-2.5 py-1 text-[11px] font-bold <?= $s['is_active'] ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200' ?> border rounded-xl transition">
@@ -166,12 +166,52 @@ layoutHeader('Master Supplier', 'Kelola data distributor & supplier alat kesehat
 </div>
 
 <script>
+function openEditSupplierBtn(s) {
+    if (!s) return;
+    document.getElementById('edit_sup_id').value = s.id || '';
+    document.getElementById('edit_sup_nama').value = s.nama || '';
+    document.getElementById('edit_sup_kontak').value = s.kontak || '';
+    document.getElementById('edit_sup_alamat').value = s.alamat || '';
+    document.getElementById('modal_edit').classList.remove('hidden');
+}
+
 function openEdit(id, nama, kontak, alamat) {
     document.getElementById('edit_sup_id').value = id;
     document.getElementById('edit_sup_nama').value = nama;
     document.getElementById('edit_sup_kontak').value = kontak;
     document.getElementById('edit_sup_alamat').value = alamat;
     document.getElementById('modal_edit').classList.remove('hidden');
+}
+
+function handleToggleSubmit(form, e, actionText, itemType) {
+    if (e) {
+        e.preventDefault();
+    }
+    
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Konfirmasi ' + actionText,
+            text: 'Apakah Anda yakin ingin ' + actionText.toLowerCase() + ' ' + itemType + ' ini?',
+            icon: actionText.toLowerCase().includes('nonaktifkan') ? 'warning' : 'question',
+            showCancelButton: true,
+            confirmButtonColor: actionText.toLowerCase().includes('nonaktifkan') ? '#e11d48' : '#2563eb',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Lanjutkan',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+        return false;
+    }
+
+    if (confirm(actionText + ' ' + itemType + ' ini?')) {
+        form.submit();
+        return true;
+    }
+    return false;
 }
 
 function filterSupplier() {

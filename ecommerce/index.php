@@ -61,6 +61,17 @@ foreach ($products as $p) {
 }
 usort($parentProducts, fn($a, $b) => strcmp($a['nama'], $b['nama']));
 
+// Helper untuk mengekstrak gambar pertama dari multi-gambar (koma)
+function getFirstProductImage($rawGambar) {
+    if (empty($rawGambar)) return '';
+    $arr = array_filter(array_map('trim', explode(',', $rawGambar)));
+    $first = $arr[0] ?? '';
+    if (empty($first)) return '';
+    if (str_starts_with($first, 'http')) return $first;
+    if (str_contains($first, '/')) return '../' . $first;
+    return '../assets/img/produk/' . $first;
+}
+
 // Ambil sampel produk bergambar untuk showcase slide
 $imgProds = array_values(array_filter($products, fn($p) => !empty($p['gambar'])));
 $alkesProd = array_values(array_filter($imgProds, fn($p) => $p['kategori'] === 'Alat Kesehatan'))[0] ?? ($imgProds[0] ?? null);
@@ -136,8 +147,11 @@ $initCategory = $_GET['kategori'] ?? 'all';
             </div>
             <div class="shrink-0 flex items-center justify-center md:w-80 lg:w-96 relative">
                 <div class="relative bg-white/10 backdrop-blur-md p-4 sm:p-6 rounded-3xl border border-white/20 shadow-2xl flex items-center justify-center">
-                    <?php if ($leadProd && !empty($leadProd['gambar'])): ?>
-                        <img src="../<?= htmlspecialchars($leadProd['gambar']) ?>" alt="<?= htmlspecialchars($leadProd['nama_induk']) ?>"
+                    <?php 
+                    $leadImg = $leadProd ? getFirstProductImage($leadProd['gambar']) : '';
+                    if (!empty($leadImg)): 
+                    ?>
+                        <img src="<?= htmlspecialchars($leadImg) ?>" alt="<?= htmlspecialchars($leadProd['nama_induk']) ?>"
                              class="h-44 sm:h-52 lg:h-60 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500">
                     <?php else: ?>
                         <div class="w-44 h-44 rounded-2xl bg-white/10 flex items-center justify-center text-white">
@@ -177,8 +191,11 @@ $initCategory = $_GET['kategori'] ?? 'all';
             </div>
             <div class="shrink-0 flex items-center justify-center md:w-80 lg:w-96 relative">
                 <div class="relative bg-white/10 backdrop-blur-md p-4 sm:p-6 rounded-3xl border border-white/20 shadow-2xl flex items-center justify-center">
-                    <?php if ($alkesProd && !empty($alkesProd['gambar'])): ?>
-                        <img src="../<?= htmlspecialchars($alkesProd['gambar']) ?>" alt="<?= htmlspecialchars($alkesProd['nama_induk']) ?>"
+                    <?php 
+                    $alkesImg = $alkesProd ? getFirstProductImage($alkesProd['gambar']) : '';
+                    if (!empty($alkesImg)): 
+                    ?>
+                        <img src="<?= htmlspecialchars($alkesImg) ?>" alt="<?= htmlspecialchars($alkesProd['nama_induk']) ?>"
                              class="h-44 sm:h-52 lg:h-60 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500">
                     <?php else: ?>
                         <div class="w-44 h-44 rounded-2xl bg-white/10 flex items-center justify-center text-white">
@@ -218,8 +235,11 @@ $initCategory = $_GET['kategori'] ?? 'all';
             </div>
             <div class="shrink-0 flex items-center justify-center md:w-80 lg:w-96 relative">
                 <div class="relative bg-white/10 backdrop-blur-md p-4 sm:p-6 rounded-3xl border border-white/20 shadow-2xl flex items-center justify-center">
-                    <?php if ($obatProd && !empty($obatProd['gambar'])): ?>
-                        <img src="../<?= htmlspecialchars($obatProd['gambar']) ?>" alt="<?= htmlspecialchars($obatProd['nama_induk']) ?>"
+                    <?php 
+                    $obatImg = $obatProd ? getFirstProductImage($obatProd['gambar']) : '';
+                    if (!empty($obatImg)): 
+                    ?>
+                        <img src="<?= htmlspecialchars($obatImg) ?>" alt="<?= htmlspecialchars($obatProd['nama_induk']) ?>"
                              class="h-44 sm:h-52 lg:h-60 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500">
                     <?php else: ?>
                         <div class="w-44 h-44 rounded-2xl bg-white/10 flex items-center justify-center text-white">
@@ -414,11 +434,16 @@ $initCategory = $_GET['kategori'] ?? 'all';
                      data-stok="<?= $stokBox ?>">
 
                     <!-- Product Image & Header Badges -->
+                    <?php 
+                        $firstImg = getFirstProductImage($p['gambar'] ?? '');
+                        $allImgs = array_filter(array_map('trim', explode(',', $p['gambar'] ?? '')));
+                        $totalImgs = count($allImgs);
+                    ?>
                     <a href="produk.php?id=<?= $p['id'] ?>" class="card-img relative block bg-slate-50/70 border-b border-slate-100 overflow-hidden" style="height:210px;">
-                        <?php if (!empty($p['gambar'])): ?>
-                            <img src="../<?= htmlspecialchars($p['gambar']) ?>" alt="<?= htmlspecialchars($p['nama_produk']) ?>"
-                                 class="w-full h-full object-contain p-5"
-                                 onerror="this.onerror=null; this.classList.add('opacity-30');">
+                        <?php if (!empty($firstImg)): ?>
+                            <img src="<?= htmlspecialchars($firstImg) ?>" alt="<?= htmlspecialchars($p['nama_produk']) ?>"
+                                 class="w-full h-full object-contain p-4 mix-blend-multiply transition-transform duration-300 hover:scale-105"
+                                 onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
                         <?php else: ?>
                             <div class="w-full h-full flex items-center justify-center">
                                 <svg class="w-16 h-16 text-slate-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12h6M12 9v6"/></svg>
@@ -434,6 +459,14 @@ $initCategory = $_GET['kategori'] ?? 'all';
                         <span class="absolute top-3 right-3 px-2.5 py-1 text-[10px] font-bold rounded-lg border shadow-2xs <?= $stokBadge ?>">
                             <?= $stokLbl ?>
                         </span>
+
+                        <!-- Multi-image indicator badge -->
+                        <?php if ($totalImgs > 1): ?>
+                            <span class="absolute bottom-2.5 right-2.5 px-2 py-0.5 bg-slate-900/75 backdrop-blur-sm text-white text-[9px] font-bold rounded-md flex items-center gap-1 shadow-2xs">
+                                <svg class="w-2.5 h-2.5 text-blue-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                                <?= $totalImgs ?> Foto
+                            </span>
+                        <?php endif; ?>
                     </a>
 
                     <!-- Card Body -->

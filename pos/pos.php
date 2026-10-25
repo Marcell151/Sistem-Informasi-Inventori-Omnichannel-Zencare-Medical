@@ -344,11 +344,11 @@ $shopeeOn = false;
                     <input type="text" id="pos_search" onkeyup="filterPos()" placeholder="Cari SKU / nama..."
                         class="text-xs border border-zcBrd rounded-xl px-3 py-2 w-52 focus:outline-none focus:border-zc bg-slate-50">
                 </div>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 max-h-[520px] overflow-y-auto" id="product_grid">
+                <div class="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-3.5 p-4 max-h-[640px] overflow-y-auto" id="product_grid">
                     <?php foreach ($katalog as $item): ?>
                         <?php 
                         $rawGambar = $item['gambar'] ?? '';
-                        $arrGambar = $rawGambar ? array_map('trim', explode(',', $rawGambar)) : [];
+                        $arrGambar = $rawGambar ? array_filter(array_map('trim', explode(',', $rawGambar))) : [];
                         $mainGambar = !empty($arrGambar) ? $arrGambar[0] : '';
                         
                         $imgSrc = '../assets/img/no-image.png';
@@ -359,7 +359,7 @@ $shopeeOn = false;
                         }
                         $stok = intval($item['stok']); 
                         ?>
-                        <div class="product-card bg-slate-50 border border-zcBrd rounded-2xl p-3.5 hover:border-zc transition flex flex-col"
+                        <div class="product-card group bg-white border border-zcBrd hover:border-zc rounded-2xl p-3 hover:shadow-md transition-all flex flex-col justify-between"
                              data-id="<?= intval($item['id']) ?>"
                              data-search="<?= strtolower($item['nama'] . ' ' . $item['sku_variasi']) ?>"
                              data-sn="<?= strtolower($item['sn_list'] ?? '') ?>"
@@ -367,36 +367,55 @@ $shopeeOn = false;
                              data-expired-batch="<?= htmlspecialchars(strtolower($item['expired_batch_list'] ?? '')) ?>"
                              data-stok-eceran="<?= isset($item['stok_eceran']) ? intval($item['stok_eceran']) : intval($item['stok']) ?>"
                              data-stok-dus="<?= isset($item['stok_dus']) ? intval($item['stok_dus']) : 0 ?>">
-                            <div class="flex gap-3 mb-3 flex-1 min-w-0">
-                                <div class="w-12 h-12 flex-shrink-0 bg-white rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center p-1">
-                                    <img src="<?= htmlspecialchars($imgSrc) ?>" alt="img" class="max-w-full max-h-full object-contain mix-blend-multiply" onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <span class="text-[9px] font-mono text-zcMut block"><?= htmlspecialchars($item['sku_variasi']) ?></span>
-                                    <span class="text-xs font-bold text-zcTxt block leading-snug mt-0.5 line-clamp-2"><?= htmlspecialchars($item['nama']) ?></span>
-                                    
-                                    <?php if (!empty($item['batch_list'])): ?>
-                                        <div class="mt-2 flex flex-wrap gap-1.5">
-                                            <?php foreach(array_slice(explode(',', $item['batch_list']), 0, 2) as $b): ?>
-                                                <span class="inline-block px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold shadow-sm">B: <?= htmlspecialchars($b) ?></span>
-                                            <?php endforeach; ?>
-                                            <?php if (count(explode(',', $item['batch_list'])) > 2): ?>
-                                                <span class="inline-block px-2 py-1 bg-slate-50 text-slate-500 border border-slate-200 rounded text-[10px] font-bold shadow-sm">...</span>
-                                            <?php endif; ?>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (!empty($item['sn_list'])): ?>
-                                        <div class="mt-2 flex flex-wrap gap-1.5">
-                                            <?php foreach(array_slice(explode(',', $item['sn_list']), 0, 2) as $sn): ?>
-                                                <span class="inline-block px-2 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded text-[10px] font-bold shadow-sm">SN: <?= htmlspecialchars($sn) ?></span>
-                                            <?php endforeach; ?>
-                                            <?php if (count(explode(',', $item['sn_list'])) > 2): ?>
-                                                <span class="inline-block px-2 py-1 bg-slate-50 text-slate-500 border border-slate-200 rounded text-[10px] font-bold shadow-sm">...</span>
-                                            <?php endif; ?>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
+                            
+                            <!-- Large High-Visibility Product Image Showcase -->
+                            <div class="relative w-full aspect-[4/3] bg-gradient-to-br from-slate-50 to-slate-100/70 rounded-xl border border-slate-200/80 p-2.5 overflow-hidden flex items-center justify-center mb-2.5 shadow-2xs group-hover:bg-blue-50/20 transition-colors">
+                                <img src="<?= htmlspecialchars($imgSrc) ?>" alt="img" 
+                                     class="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300" 
+                                     onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
+
+                                <!-- Category Badge -->
+                                <span class="absolute top-2 left-2 px-2 py-0.5 bg-white/95 text-[9px] font-extrabold rounded-md border shadow-2xs <?= $item['kategori'] === 'Obat' ? 'text-indigo-700 border-indigo-200/80' : 'text-teal-700 border-teal-200/80' ?>">
+                                    <?= htmlspecialchars($item['kategori']) ?>
+                                </span>
+
+                                <!-- Multi-photo badge if available -->
+                                <?php if (count($arrGambar) > 1): ?>
+                                    <span class="absolute bottom-2 right-2 px-1.5 py-0.5 bg-slate-900/75 text-white text-[8px] font-bold rounded shadow-2xs flex items-center gap-0.5">
+                                        <svg class="w-2.5 h-2.5 text-blue-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                                        <?= count($arrGambar) ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- Title, SKU & Batch/SN Tags -->
+                            <div class="mb-2.5">
+                                <span class="text-[9px] font-mono text-zcMut block uppercase tracking-wider"><?= htmlspecialchars($item['sku_variasi']) ?></span>
+                                <h4 class="text-xs font-extrabold text-zcTxt leading-snug line-clamp-2 mt-0.5 group-hover:text-zc transition-colors" title="<?= htmlspecialchars($item['nama']) ?>">
+                                    <?= htmlspecialchars($item['nama']) ?>
+                                </h4>
+                                
+                                <?php if (!empty($item['batch_list'])): ?>
+                                    <div class="mt-1.5 flex flex-wrap gap-1">
+                                        <?php foreach(array_slice(explode(',', $item['batch_list']), 0, 2) as $b): ?>
+                                            <span class="inline-block px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[9px] font-bold">B: <?= htmlspecialchars($b) ?></span>
+                                        <?php endforeach; ?>
+                                        <?php if (count(explode(',', $item['batch_list'])) > 2): ?>
+                                            <span class="inline-block px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-bold">+<?= count(explode(',', $item['batch_list'])) - 2 ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($item['sn_list'])): ?>
+                                    <div class="mt-1.5 flex flex-wrap gap-1">
+                                        <?php foreach(array_slice(explode(',', $item['sn_list']), 0, 2) as $sn): ?>
+                                            <span class="inline-block px-1.5 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded text-[9px] font-bold">SN: <?= htmlspecialchars($sn) ?></span>
+                                        <?php endforeach; ?>
+                                        <?php if (count(explode(',', $item['sn_list'])) > 2): ?>
+                                            <span class="inline-block px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-bold">+<?= count(explode(',', $item['sn_list'])) - 2 ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                             <?php 
                             $rasioItem = max(1, intval($item['rasio_konversi']));
@@ -584,22 +603,33 @@ $shopeeOn = false;
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-zc uppercase tracking-wider flex items-center gap-1.5">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                            QRIS
+                            QRIS KASIR LANGSUNG
                         </span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800" id="qris_status_badge">Siap Dimunculkan</span>
+                        <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800" id="qris_status_badge">Siap Dimunculkan</span>
                     </div>
 
-                    <p class="text-xs text-slate-600">Klik tombol di bawah untuk membuka QRIS dengan nominal presisi tagihan kasir.</p>
+                    <!-- Live Countdown Timer 5 Menit Kasir Walk-in -->
+                    <div id="qris_timer_box" class="hidden p-2.5 rounded-xl bg-amber-50/90 border border-amber-200 text-amber-900 text-xs flex items-center justify-between shadow-2xs">
+                        <div class="flex items-center gap-1.5 font-semibold text-slate-700">
+                            <svg class="w-4 h-4 text-amber-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <span>Batas Waktu Bayar Kasir:</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span id="qris_countdown_display" class="font-mono font-black text-xs px-2.5 py-0.5 rounded-lg bg-amber-200/80 text-amber-950">05:00</span>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-slate-600">Klik tombol di bawah untuk membuka QRIS dengan nominal presisi tagihan kasir (Batas bayar langsung di counter: <strong>5 Menit</strong>).</p>
 
                     <div class="pt-1">
                         <button type="button" id="btn_open_snap_qris" onclick="triggerMidtransPosQRIS()" class="w-full py-3 px-4 rounded-xl font-bold text-xs bg-zc hover:bg-zcHv text-white shadow-md shadow-zc/30 transition flex items-center justify-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                            QRIS
+                            Tampilkan QRIS Kasir
                         </button>
                     </div>
 
                     <div class="text-[10px] text-slate-400 flex items-center justify-center gap-1.5">
-                        <span>Mendukung GoPay, BCA, Mandiri, ShopeePay, DANA, dsb.</span>
+                        <span>Mendukung GoPay, BCA, Mandiri, ShopeePay, DANA, LinkAja, dsb.</span>
                     </div>
                 </div>
 
@@ -1533,6 +1563,7 @@ $shopeeOn = false;
     }
 
     function closePaymentModal() {
+        stopPosQrisTimer();
         var modal = document.getElementById('payment_modal');
         var content = document.getElementById('modal_content');
         
@@ -1600,6 +1631,56 @@ $shopeeOn = false;
 
     let currentPosSnapToken = null;
     let currentPosOrderId = null;
+    let posQrisTimerInterval = null;
+    let posQrisSecondsLeft = 300;
+
+    function stopPosQrisTimer() {
+        if (posQrisTimerInterval) {
+            clearInterval(posQrisTimerInterval);
+            posQrisTimerInterval = null;
+        }
+    }
+
+    function startPosQrisTimer(durationSeconds) {
+        stopPosQrisTimer();
+        posQrisSecondsLeft = durationSeconds || 300;
+        let timerBox = document.getElementById('qris_timer_box');
+        let timerDisplay = document.getElementById('qris_countdown_display');
+        let badge = document.getElementById('qris_status_badge');
+        let btn = document.getElementById('btn_open_snap_qris');
+        
+        if (timerBox) timerBox.classList.remove('hidden');
+
+        function renderTime() {
+            let m = Math.floor(posQrisSecondsLeft / 60).toString().padStart(2, '0');
+            let s = (posQrisSecondsLeft % 60).toString().padStart(2, '0');
+            if (timerDisplay) timerDisplay.innerText = `${m}:${s}`;
+        }
+        renderTime();
+
+        posQrisTimerInterval = setInterval(() => {
+            posQrisSecondsLeft--;
+            if (posQrisSecondsLeft <= 0) {
+                stopPosQrisTimer();
+                if (timerDisplay) timerDisplay.innerText = '00:00';
+                if (badge) {
+                    badge.innerText = '⚠️ Kadaluarsa (5 Menit)';
+                    badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800';
+                }
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '🔄 Buat Ulang QRIS Kasir (Waktu Habis)';
+                }
+                Swal.fire({
+                    title: 'Batas Waktu QRIS Habis',
+                    text: 'Batas waktu pembayaran QRIS di kasir (5 menit) telah habis. Silakan buat QRIS baru jika customer ingin scan ulang.',
+                    icon: 'warning'
+                });
+            } else {
+                renderTime();
+            }
+        }, 1000);
+    }
 
     function toggleNominalInput() {
         var metode = document.getElementById('modal_metode').value;
@@ -1608,6 +1689,7 @@ $shopeeOn = false;
         var qrisSec = document.getElementById('qris_dynamic_section');
         
         if (metode === 'Tunai') {
+            stopPosQrisTimer();
             nominalSec.classList.remove('hidden');
             infoSec.classList.add('hidden');
             if (qrisSec) qrisSec.classList.add('hidden');
@@ -1616,6 +1698,7 @@ $shopeeOn = false;
             infoSec.classList.add('hidden');
             if (qrisSec) qrisSec.classList.remove('hidden');
         } else {
+            stopPosQrisTimer();
             nominalSec.classList.add('hidden');
             infoSec.classList.remove('hidden');
             if (qrisSec) qrisSec.classList.add('hidden');
@@ -1627,7 +1710,7 @@ $shopeeOn = false;
         let btn = document.getElementById('btn_open_snap_qris');
         let badge = document.getElementById('qris_status_badge');
         btn.disabled = true;
-        btn.innerHTML = 'Membuat QRIS Midtrans...';
+        btn.innerHTML = 'Membuat QRIS Midtrans (5 Menit)...';
         badge.innerText = 'Menghubungkan...';
 
         let now = new Date();
@@ -1649,13 +1732,18 @@ $shopeeOn = false;
             if (data.status === 'success' && data.token) {
                 currentPosSnapToken = data.token;
                 currentPosOrderId = data.order_id;
-                badge.innerText = 'Menunggu Scan...';
+                badge.innerText = 'Menunggu Scan (5 Menit)...';
+                badge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800';
                 btn.innerHTML = '⚡ Tampilkan Ulang QRIS Midtrans';
                 btn.disabled = false;
+
+                // Mulai visual live countdown timer 5 menit di kasir
+                startPosQrisTimer(data.expiry_duration_seconds || 300);
 
                 if (typeof snap !== 'undefined' && snap.pay) {
                     snap.pay(data.token, {
                         onSuccess: function(result) {
+                            stopPosQrisTimer();
                             badge.innerText = '✅ Lunas';
                             badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800';
                             Swal.fire({
@@ -1675,16 +1763,17 @@ $shopeeOn = false;
                             badge.innerText = 'Menunggu Konfirmasi';
                             Swal.fire({
                                 title: 'Menunggu Pembayaran',
-                                text: 'QRIS telah ditampilkan kepada customer. Klik Selesaikan Transaksi jika customer sudah bayar.',
+                                text: 'QRIS telah ditampilkan kepada customer. Batas waktu pembayaran di kasir adalah 5 menit. Klik Selesaikan Transaksi jika customer sudah bayar.',
                                 icon: 'info'
                             });
                         },
                         onError: function(result) {
+                            stopPosQrisTimer();
                             badge.innerText = 'Gagal';
                             Swal.fire('Pembayaran Gagal', 'Transaksi QRIS gagal atau dibatalkan.', 'error');
                         },
                         onClose: function() {
-                            badge.innerText = 'QRIS Ditutup';
+                            badge.innerText = 'QRIS Ditutup (Timer Berjalan)';
                         }
                     });
                 } else {
@@ -1694,6 +1783,7 @@ $shopeeOn = false;
                 throw new Error(data.message || 'Gagal generate snap token');
             }
         } catch (err) {
+            stopPosQrisTimer();
             btn.disabled = false;
             btn.innerHTML = '⚡ Coba Lagi QRIS Midtrans';
             badge.innerText = 'Error API';
@@ -2278,6 +2368,29 @@ $shopeeOn = false;
     });
 
     document.addEventListener('DOMContentLoaded', function() {
+        // Deteksi jika kasir dialihkan kembali oleh Midtrans (misal waktu habis / tombol kembali)
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const returnedOrderId = urlParams.get('order_id');
+            const transStatus = urlParams.get('transaction_status');
+            if (returnedOrderId) {
+                if (transStatus === 'settlement' || transStatus === 'capture') {
+                    Swal.fire({
+                        title: 'Pembayaran Berhasil',
+                        text: 'Transaksi QRIS ' + returnedOrderId + ' telah berhasil dibayar.',
+                        icon: 'success'
+                    });
+                } else if (transStatus === 'expire' || transStatus === 'cancel' || transStatus === 'deny') {
+                    Swal.fire({
+                        title: 'Waktu QRIS Habis / Dibatalkan',
+                        text: 'Transaksi ' + returnedOrderId + ' telah kedaluwarsa. Kasir dapat membuat QRIS baru jika customer ingin scan ulang.',
+                        icon: 'warning'
+                    });
+                }
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        } catch(e) {}
+
         <?php if (!empty($msg) && $msgType === 'success'): ?>
             try { sessionStorage.removeItem('zencare_pos_cart'); } catch(e) {}
         <?php else: ?>

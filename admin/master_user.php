@@ -139,17 +139,17 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
                         </td>
                         <td class="px-5 py-3.5">
                             <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                                <button onclick="openEditUser(<?= $u['id'] ?>, '<?= addslashes($u['nama_lengkap']) ?>', '<?= $u['role'] ?>', '<?= addslashes($u['email'] ?? '') ?>', '<?= addslashes($u['telepon'] ?? '') ?>')"
+                                <button onclick='openEditUserBtn(<?= htmlspecialchars(json_encode($u), ENT_QUOTES) ?>)'
                                     class="px-2.5 py-1 text-[11px] font-bold bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl transition">Edit</button>
-                                <?php if ($u['id'] !== 1): ?>
-                                    <form method="POST" class="inline" onsubmit="return confirm('<?= $u['is_active'] ? 'Nonaktifkan' : 'Aktifkan' ?> user ini?')">
+                                <?php if ((int)$u['id'] !== 1): ?>
+                                    <form method="POST" class="inline" onsubmit="handleToggleSubmit(this, event, '<?= $u['is_active'] ? 'Nonaktifkan' : 'Aktifkan' ?>', 'user')">
                                         <input type="hidden" name="aksi" value="toggle_user">
                                         <input type="hidden" name="id_user" value="<?= $u['id'] ?>">
                                         <button type="submit" class="px-2.5 py-1 text-[11px] font-bold <?= $u['is_active'] ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200' ?> border rounded-xl transition">
                                             <?= $u['is_active'] ? 'Nonaktifkan' : 'Aktifkan' ?>
                                         </button>
                                     </form>
-                                    <form method="POST" class="inline" onsubmit="return confirm('Reset password user ini ke 123456?')">
+                                    <form method="POST" class="inline" onsubmit="handleToggleSubmit(this, event, 'Reset Password', 'password user ke 123456')">
                                         <input type="hidden" name="aksi" value="reset_pass">
                                         <input type="hidden" name="id_user" value="<?= $u['id'] ?>">
                                         <button type="submit" class="px-2.5 py-1 text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-xl transition">Reset Pass</button>
@@ -254,6 +254,16 @@ layoutHeader('Manajemen User & Hak Akses', 'Kelola akun kasir, admin, dan pelang
 </div>
 
 <script>
+function openEditUserBtn(u) {
+    if (!u) return;
+    document.getElementById('eu_id').value = u.id || '';
+    document.getElementById('eu_nama').value = u.nama_lengkap || '';
+    document.getElementById('eu_role').value = u.role || 'admin';
+    document.getElementById('eu_email').value = u.email || '';
+    document.getElementById('eu_telepon').value = u.telepon || '';
+    document.getElementById('modal_edit_user').classList.remove('hidden');
+}
+
 function openEditUser(id, nama, role, email, telepon) {
     document.getElementById('eu_id').value = id;
     document.getElementById('eu_nama').value = nama;
@@ -261,6 +271,37 @@ function openEditUser(id, nama, role, email, telepon) {
     document.getElementById('eu_email').value = email || '';
     document.getElementById('eu_telepon').value = telepon || '';
     document.getElementById('modal_edit_user').classList.remove('hidden');
+}
+
+function handleToggleSubmit(form, e, actionText, itemType) {
+    if (e) {
+        e.preventDefault();
+    }
+    
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Konfirmasi ' + actionText,
+            text: 'Apakah Anda yakin ingin ' + actionText.toLowerCase() + ' ' + itemType + ' ini?',
+            icon: actionText.toLowerCase().includes('nonaktifkan') ? 'warning' : 'question',
+            showCancelButton: true,
+            confirmButtonColor: actionText.toLowerCase().includes('nonaktifkan') ? '#e11d48' : '#2563eb',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Lanjutkan',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+        return false;
+    }
+
+    if (confirm(actionText + ' ' + itemType + ' ini?')) {
+        form.submit();
+        return true;
+    }
+    return false;
 }
 
 function toggleCabangField(rowId, role) {

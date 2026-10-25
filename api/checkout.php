@@ -109,13 +109,25 @@ try {
 
     $metodePengambilan = ($kurir === 'pickup') ? 'Pick-up' : 'Kurir';
     $statusPesanan = 'Menunggu Pembayaran';
+    
+    // Tentukan durasi & kanal pembayaran dinamis sesuai kategori yang dipilih pembeli di checkout
+    $kategoriPembayaran = strtolower(trim($input['kategori_pembayaran'] ?? 'qris'));
+    if ($kategoriPembayaran === 'va') {
+        $cooldownMenit = defined('MIDTRANS_EXPIRY_ECOMMERCE_VA_MENIT') ? MIDTRANS_EXPIRY_ECOMMERCE_VA_MENIT : 120;
+        $enabledPayments = ['bank_transfer', 'bca_va', 'bni_va', 'bri_va', 'echannel', 'permata_va'];
+        $paymentMethodDb = 'bank_transfer';
+    } else {
+        $cooldownMenit = defined('MIDTRANS_EXPIRY_ECOMMERCE_QRIS_MENIT') ? MIDTRANS_EXPIRY_ECOMMERCE_QRIS_MENIT : 15;
+        $enabledPayments = ['qris', 'gopay', 'shopeepay'];
+        $paymentMethodDb = 'qris';
+    }
 
     $stmtOrder = $pdo->prepare("INSERT INTO penjualan 
-        (no_invoice, id_user, tipe_transaksi, metode_pengambilan, status_pesanan, total_harga, ongkir, nama_penerima, telepon_penerima, alamat_lengkap, kota_tujuan, kurir, layanan) 
-        VALUES (?, ?, 'ecommerce', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        (no_invoice, id_user, tipe_transaksi, metode_pengambilan, status_pesanan, total_harga, ongkir, nama_penerima, telepon_penerima, alamat_lengkap, kota_tujuan, kurir, layanan, payment_method_ecommerce) 
+        VALUES (?, ?, 'ecommerce', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     
     $stmtOrder->execute([
-        $orderId, $idUser, $metodePengambilan, $statusPesanan, $grandTotal, $ongkir, $namaPembeli, $phone, $alamatLengkap, $kota, $kurir, $layanan
+        $orderId, $idUser, $metodePengambilan, $statusPesanan, $grandTotal, $ongkir, $namaPembeli, $phone, $alamatLengkap, $kota, $kurir, $layanan, $paymentMethodDb
     ]);
     $idPenjualan = $pdo->lastInsertId();
 
@@ -199,8 +211,11 @@ try {
 
     }
 
-    // 4. Request Midtrans Snap
-    $cooldownMenit = defined('RESERVASI_COOLDOWN_MENIT') ? RESERVASI_COOLDOWN_MENIT : 120;
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $ecomReturnUrl = $protocol . $host . '/inventory_zencare/ecommerce/profil.php';
+
+    // 4. Request Midtrans Snap sesuai kanal dan durasi dinamis yang dipilih
     $midtransPayload = [
         'transaction_details' => [
             'order_id' => $orderId,
@@ -211,11 +226,17 @@ try {
             'phone' => $phone,
         ],
         'item_details' => $itemDetails,
+        'enabled_payments' => $enabledPayments,
         'expiry' => [
             'start_time' => date('Y-m-d H:i:s O'),
             'unit' => 'minute',
             'duration' => $cooldownMenit,
         ],
+        'callbacks' => [
+            'finish' => $ecomReturnUrl,
+            'unfinish' => $ecomReturnUrl,
+            'error' => $ecomReturnUrl
+        ]
     ];
 
     $ch = curl_init(MIDTRANS_API_URL . '/snap/v1/transactions');

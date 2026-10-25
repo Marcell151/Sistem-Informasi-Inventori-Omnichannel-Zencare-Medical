@@ -99,7 +99,7 @@ layoutHeader('Gudang Karantina Barang Cacat', 'Isolasi barang defect/retur garan
                 <span class="font-bold text-amber-900 text-base"><?= number_format($totalKarantina) ?> unit</span>
             </div>
 
-            <form method="POST" class="space-y-4" onsubmit="return confirm('Pindahkan barang ke karantina? Stok akan dikurangi.')">
+            <form method="POST" class="space-y-4" onsubmit="handleToggleSubmit(this, event, 'Karantinakan Barang', 'barang ini ke gudang karantina (stok aktif akan otomatis dipotong)')">
                 <div>
                     <label class="block text-xs font-bold text-zcText mb-1.5">Pilih Produk *</label>
                     <select name="id_variasi" required class="select2 w-full text-xs border border-zcBorder rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zcNavy bg-slate-50">
@@ -172,5 +172,38 @@ layoutHeader('Gudang Karantina Barang Cacat', 'Isolasi barang defect/retur garan
         </div>
     </div>
 </div>
+
+<script>
+function handleToggleSubmit(form, e, actionText, itemType) {
+    if (e) {
+        e.preventDefault();
+    }
+    
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Konfirmasi ' + actionText,
+            text: 'Apakah Anda yakin ingin ' + actionText.toLowerCase() + ' ' + itemType + '?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d97706',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Pindahkan',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+        return false;
+    }
+
+    if (confirm(actionText + ' ' + itemType + '?')) {
+        form.submit();
+        return true;
+    }
+    return false;
+}
+</script>
 
 <?php layoutEnd(); ?>

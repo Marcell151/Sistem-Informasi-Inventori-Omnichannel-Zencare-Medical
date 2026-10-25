@@ -36,6 +36,8 @@ try {
 
     $midtransData = json_decode($response, true);
     $transactionStatus = $midtransData['transaction_status'] ?? '';
+    $pTypeParam = trim($_GET['payment_type'] ?? '');
+    $paymentType = $midtransData['payment_type'] ?? $pTypeParam;
 
     // Map status
     $newStatus = 'Menunggu Pembayaran';
@@ -46,7 +48,12 @@ try {
     }
 
     if ($newStatus === 'Menunggu Pembayaran') {
-        echo json_encode(['status' => 'success', 'message' => 'Masih Menunggu Pembayaran']);
+        // Tetap simpan metode pembayaran jika terdeteksi (agar timer profil.php & batalkanPesananKadaluarsa otomatis menyesuaikan)
+        if (!empty($paymentType)) {
+            $pdo->prepare("UPDATE penjualan SET payment_method_ecommerce = ? WHERE no_invoice = ?")
+                ->execute([$paymentType, $orderId]);
+        }
+        echo json_encode(['status' => 'success', 'message' => 'Masih Menunggu Pembayaran', 'payment_type' => $paymentType]);
         exit;
     }
 
@@ -65,14 +72,24 @@ try {
     $metodePengambilan = $order['metode_pengambilan'];
 
     if ($oldStatus === $newStatus) {
-        // Sudah terupdate
+        // Jika sudah sama, pastikan payment_method_ecommerce terisi
+        if (!empty($paymentType)) {
+            $pdo->prepare("UPDATE penjualan SET payment_method_ecommerce = COALESCE(payment_method_ecommerce, ?) WHERE no_invoice = ?")
+                ->execute([$paymentType, $orderId]);
+        }
         $pdo->rollBack();
         echo json_encode(['status' => 'success', 'message' => 'Status sudah tersinkronisasi']);
         exit;
     }
 
-    $stmtUpdate = $pdo->prepare("UPDATE penjualan SET status_pesanan = ? WHERE no_invoice = ?");
-    $stmtUpdate->execute([$newStatus, $orderId]);
+    $stmtUpdate = $pdo->prepare("
+        UPDATE penjualan 
+        SET status_pesanan = ?,
+            payment_method_ecommerce = COALESCE(NULLIF(?, ''), payment_method_ecommerce),
+            paid_at = CASE WHEN ? IN ('Diproses', 'Selesai') THEN COALESCE(paid_at, NOW()) ELSE paid_at END
+        WHERE no_invoice = ?
+    ");
+    $stmtUpdate->execute([$newStatus, $paymentType, $newStatus, $orderId]);
 
     // Ambil detail item
     $stmtItems = $pdo->prepare("SELECT d.id_variasi, d.qty, v.rasio_konversi, v.satuan_besar FROM detail_penjualan d JOIN produk_variasi v ON d.id_variasi = v.id WHERE d.id_penjualan = (SELECT id FROM penjualan WHERE no_invoice = ?)");

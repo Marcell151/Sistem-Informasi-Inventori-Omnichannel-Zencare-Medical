@@ -61,22 +61,47 @@ if (!function_exists('batalkanSatuPesananInternal')) {
 
 if (!function_exists('batalkanPesananKadaluarsa')) {
     /**
-     * Membatalkan semua pesanan e-commerce dengan status 'Menunggu Pembayaran'
-     * yang telah melebihi batas waktu cooldown reservasi (mengacu ke RESERVASI_COOLDOWN_MENIT atau default 120 menit / 2 jam sesuai durasi Midtrans).
+     * Membatalkan semua pesanan dengan status 'Menunggu Pembayaran' yang telah melebihi batas waktu cooldown:
+     * - POS Kasir Walk-In: 5 Menit (langsung di counter kasir)
+     * - E-Commerce QRIS / E-Wallet: 15 Menit (standar instan Midtrans)
+     * - E-Commerce Virtual Account / Bank Transfer: 120 Menit (2 Jam)
      * Mengembalikan reserved stok ke stok fisik dan stok batch FEFO.
      */
     function batalkanPesananKadaluarsa($pdo, $batasMenit = null) {
-        if ($batasMenit === null) {
-            $batasMenit = defined('RESERVASI_COOLDOWN_MENIT') ? RESERVASI_COOLDOWN_MENIT : 120;
-        }
         try {
-            $stmt = $pdo->prepare("
-                SELECT id, no_invoice 
-                FROM penjualan 
-                WHERE status_pesanan = 'Menunggu Pembayaran' 
-                  AND created_at < (NOW() - INTERVAL ? MINUTE)
-            ");
-            $stmt->execute([$batasMenit]);
+            if ($batasMenit !== null) {
+                // Manual override durasi menit jika disuplai parameter
+                $stmt = $pdo->prepare("
+                    SELECT id, no_invoice, tipe_transaksi, payment_method_ecommerce 
+                    FROM penjualan 
+                    WHERE status_pesanan = 'Menunggu Pembayaran' 
+                      AND created_at < (NOW() - INTERVAL ? MINUTE)
+                ");
+                $stmt->execute([intval($batasMenit)]);
+            } else {
+                // Durasi dinamis otomatis sesuai kanal & metode pembayaran Midtrans
+                $posMenit   = defined('MIDTRANS_EXPIRY_POS_QRIS_MENIT') ? MIDTRANS_EXPIRY_POS_QRIS_MENIT : 5;
+                $qrisMenit  = defined('MIDTRANS_EXPIRY_ECOMMERCE_QRIS_MENIT') ? MIDTRANS_EXPIRY_ECOMMERCE_QRIS_MENIT : 15;
+                $vaMenit    = defined('MIDTRANS_EXPIRY_ECOMMERCE_VA_MENIT') ? MIDTRANS_EXPIRY_ECOMMERCE_VA_MENIT : 120;
+
+                $stmt = $pdo->prepare("
+                    SELECT id, no_invoice, tipe_transaksi, payment_method_ecommerce 
+                    FROM penjualan 
+                    WHERE status_pesanan = 'Menunggu Pembayaran' 
+                      AND created_at < (NOW() - INTERVAL (
+                          CASE 
+                              WHEN tipe_transaksi = 'pos' THEN :pos_m
+                              WHEN LOWER(COALESCE(payment_method_ecommerce, '')) IN ('qris', 'gopay', 'shopeepay') THEN :qris_m
+                              ELSE :va_m
+                          END
+                      ) MINUTE)
+                ");
+                $stmt->execute([
+                    ':pos_m'  => $posMenit,
+                    ':qris_m' => $qrisMenit,
+                    ':va_m'   => $vaMenit
+                ]);
+            }
             $expiredOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             if (empty($expiredOrders)) {
