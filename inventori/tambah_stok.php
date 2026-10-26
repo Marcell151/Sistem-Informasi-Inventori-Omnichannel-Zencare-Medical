@@ -1009,11 +1009,16 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
                                             <span>Cetak (<?= $qtyBesar ?>x): <span class="font-mono"><?= htmlspecialchars($it['no_batch']) ?></span></span>
                                         </a>
                                     <?php elseif ($it['kategori'] === 'Alat Kesehatan'): ?>
-                                        <a href="../laporan/logistik_medis.php?tab=sn&id_variasi=<?= $it['id_variasi'] ?>" target="_blank"
-                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold transition shadow-2xs">
-                                            <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6v12M7 6v12M11 6v12M14 6v12M17 6v12M20 6v12"/></svg>
-                                            <span>Cetak Stiker SN</span>
-                                        </a>
+                                        <?php if ($qtyBesar > 0): ?>
+                                            <a href="cetak_batch_stiker.php?id_penerimaan=<?= $p['id'] ?>&id_variasi=<?= $it['id_variasi'] ?>" target="_blank"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold transition shadow-2xs"
+                                                title="Cetak <?= $qtyBesar ?> stiker barcode Serial Number (SN) unit alat kesehatan ini">
+                                                <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                                <span>Cetak (<?= $qtyBesar ?>x) Stiker SN</span>
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="text-slate-400 text-[11px] italic">Semua Diretur</span>
+                                        <?php endif; ?>
                                     <?php else: ?>
                                         <span class="text-slate-400 text-[11px]">—</span>
                                     <?php endif; ?>
@@ -2365,7 +2370,7 @@ function openNotaReturModal(doc) {
                 returTextLines.push(`• ${escapeHtml(item.nama)}: ${qR} ${escapeHtml(item.satuan)} diselesaikan via potong faktur.`);
             } else {
                 hasPendingRetur = true;
-                cellRusak = `<div>${qR} <span class="text-[10px] text-slate-500 font-normal">${escapeHtml(item.satuan)}</span></div><div class="text-[9px] text-amber-700 font-bold">⏳ Menunggu Ganti</div>`;
+                cellRusak = `<div>${qR} <span class="text-[10px] text-slate-500 font-normal">${escapeHtml(item.satuan)}</span></div><div class="text-[9px] text-amber-700 font-bold">Menunggu Ganti</div>`;
                 returTextLines.push(`• ${escapeHtml(item.nama)}: ${qR} ${escapeHtml(item.satuan)} menunggu unit pengganti supplier.`);
             }
         }

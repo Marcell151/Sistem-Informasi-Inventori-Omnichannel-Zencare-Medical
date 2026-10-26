@@ -26,20 +26,29 @@ if ($idPenerimaan > 0) {
     $stmtHead->execute([$idPenerimaan]);
     $docHeader = $stmtHead->fetch(PDO::FETCH_ASSOC);
 
-    // Ambil detail item penerimaan
-    $stmtDet = $pdo->prepare("
+    // Ambil detail item penerimaan (filter per variasi jika id_variasi disertakan)
+    $sqlDet = "
         SELECT pd.*, pi.nama_produk, pv.nama_variasi, pi.kategori, pv.satuan_besar, pv.satuan_kecil, pv.rasio_konversi
         FROM penerimaan_detail pd
         JOIN produk_variasi pv ON pv.id = pd.id_variasi
         JOIN produk_induk pi ON pi.id = pv.id_produk_induk
         WHERE pd.id_penerimaan = ?
-        ORDER BY pd.id ASC
-    ");
-    $stmtDet->execute([$idPenerimaan]);
+    ";
+    $paramsDet = [$idPenerimaan];
+    if ($idVariasi > 0) {
+        $sqlDet .= " AND pd.id_variasi = ?";
+        $paramsDet[] = $idVariasi;
+    }
+    $sqlDet .= " ORDER BY pd.id ASC";
+    $stmtDet = $pdo->prepare($sqlDet);
+    $stmtDet->execute($paramsDet);
     $details = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($details as $d) {
-        $qty = max(1, intval($d['qty_terima']));
+        $qty = intval($d['qty_terima']);
+        if ($qty <= 0) {
+            continue;
+        }
         $namaLengkap = $d['nama_produk'] . ' - ' . $d['nama_variasi'];
 
         if ($d['kategori'] === 'Obat' && !empty($d['no_batch'])) {
@@ -52,22 +61,48 @@ if ($idPenerimaan > 0) {
                 'tipe'  => 'Batch Obat'
             ];
         } elseif ($d['kategori'] === 'Alat Kesehatan') {
-            // Ambil SN yang terdaftar untuk variasi ini
-            $stmtSN = $pdo->prepare("
-                SELECT serial_number FROM unit_serial 
-                WHERE id_variasi = ? AND status = 'Tersedia' 
-                ORDER BY id DESC LIMIT ?
-            ");
-            $stmtSN->bindValue(1, $d['id_variasi'], PDO::PARAM_INT);
-            $stmtSN->bindValue(2, $qty, PDO::PARAM_INT);
-            $stmtSN->execute();
-            $snRows = $stmtSN->fetchAll(PDO::FETCH_ASSOC);
+            $foundSns = [];
 
-            if (!empty($snRows)) {
+            // Prioritas 1: Ambil SN spesifik yang dicatat pada dokumen penerimaan ini di kartu_stok jika ada
+            if (!empty($docHeader['no_referensi'])) {
+                $stmtKS = $pdo->prepare("
+                    SELECT keterangan FROM kartu_stok 
+                    WHERE no_ref_dokumen = ? AND id_variasi = ? AND jenis_mutasi = 'Masuk' 
+                    ORDER BY id DESC LIMIT 1
+                ");
+                $stmtKS->execute([$docHeader['no_referensi'], $d['id_variasi']]);
+                $ksKet = $stmtKS->fetchColumn();
+                if ($ksKet && preg_match('/\[SN:\s*([^\]]+)\]/', $ksKet, $matches)) {
+                    $snListRaw = array_filter(array_map('trim', explode(',', $matches[1])));
+                    foreach ($snListRaw as $snItem) {
+                        if ($snItem !== '') {
+                            $foundSns[] = $snItem;
+                        }
+                    }
+                }
+            }
+
+            // Prioritas 2: Jika tidak ada di keterangan riwayat penerimaan, ambil dari unit_serial berstatus Tersedia
+            if (empty($foundSns)) {
+                $stmtSN = $pdo->prepare("
+                    SELECT serial_number FROM unit_serial 
+                    WHERE id_variasi = ? AND status = 'Tersedia' 
+                    ORDER BY id DESC LIMIT ?
+                ");
+                $stmtSN->bindValue(1, $d['id_variasi'], PDO::PARAM_INT);
+                $stmtSN->bindValue(2, $qty, PDO::PARAM_INT);
+                $stmtSN->execute();
+                $snRows = $stmtSN->fetchAll(PDO::FETCH_ASSOC);
                 foreach ($snRows as $sn) {
+                    $foundSns[] = $sn['serial_number'];
+                }
+            }
+
+            if (!empty($foundSns)) {
+                foreach ($foundSns as $snCode) {
                     $itemsToPrint[] = [
                         'nama'  => $namaLengkap,
-                        'kode'  => $sn['serial_number'],
+                        'kode'  => $snCode,
                         'exp'   => 'Serial Number',
                         'qty'   => 1, // SN selalu 1:1
                         'tipe'  => 'Unit Alkes'
@@ -188,6 +223,59 @@ elseif (!empty($_GET['tipe']) && !empty($_GET['id'])) {
                 'exp'  => 'Serial Number',
                 'qty'  => 1,
                 'tipe' => 'Unit Alkes'
+            ];
+        }
+    }
+}
+// Skenario 4: Cetak Berdasarkan Variasi Alat Kesehatan Langsung (id_variasi)
+elseif ($idVariasi > 0) {
+    $qty = max(1, intval($_GET['qty'] ?? 1));
+    $stmtVar = $pdo->prepare("
+        SELECT pv.*, pi.nama_produk, pi.kategori 
+        FROM produk_variasi pv 
+        JOIN produk_induk pi ON pi.id = pv.id_produk_induk 
+        WHERE pv.id = ?
+    ");
+    $stmtVar->execute([$idVariasi]);
+    $varData = $stmtVar->fetch(PDO::FETCH_ASSOC);
+    if ($varData) {
+        $namaLengkap = $varData['nama_produk'] . ' - ' . $varData['nama_variasi'];
+        if ($varData['kategori'] === 'Alat Kesehatan') {
+            $stmtSN = $pdo->prepare("
+                SELECT serial_number FROM unit_serial 
+                WHERE id_variasi = ? AND status = 'Tersedia' 
+                ORDER BY id DESC LIMIT ?
+            ");
+            $stmtSN->bindValue(1, $idVariasi, PDO::PARAM_INT);
+            $stmtSN->bindValue(2, $qty, PDO::PARAM_INT);
+            $stmtSN->execute();
+            $snRows = $stmtSN->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($snRows)) {
+                foreach ($snRows as $sn) {
+                    $itemsToPrint[] = [
+                        'nama'  => $namaLengkap,
+                        'kode'  => $sn['serial_number'],
+                        'exp'   => 'Serial Number',
+                        'qty'   => 1,
+                        'tipe'  => 'Unit Alkes'
+                    ];
+                }
+            } else {
+                $itemsToPrint[] = [
+                    'nama'  => $namaLengkap,
+                    'kode'  => 'ALKES-' . str_pad($idVariasi, 4, '0', STR_PAD_LEFT),
+                    'exp'   => 'Unit Alkes',
+                    'qty'   => $qty,
+                    'tipe'  => 'Unit Alkes'
+                ];
+            }
+        } else {
+            $itemsToPrint[] = [
+                'nama'  => $namaLengkap,
+                'kode'  => 'PRD-' . $idVariasi,
+                'exp'   => 'ZenCare Item',
+                'qty'   => $qty,
+                'tipe'  => 'Produk Fisik'
             ];
         }
     }
