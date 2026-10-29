@@ -1,0 +1,41 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 473,
+            "name": "KOTA PADANG"
+        },
+        {
+            "id": 474,
+            "name": "KOTA BUKITTINGGI"
+        },
+        {
+            "id": 475,
+            "name": "KOTA PADANG PANJANG"
+        },
+        {
+            "id": 476,
+            "name": "KOTA PARIAMAN"
+        },
+        {
+            "id": 477,
+            "name": "KOTA PAYAKUMBUH"
+        },
+        {
+            "id": 478,
+            "name": "KABUPATEN AGAM"
+        },
+        {
+            "id": 479,
+            "name": "KABUPATEN PESISIR SELATAN"
+        },
+        {
+            "id": 480,
+            "name": "KABUPATEN TANAH DATAR"
+        }
+    ]
+}

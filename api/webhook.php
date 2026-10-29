@@ -4,6 +4,7 @@
 
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/order_helper.php';
 
 $rawInput = file_get_contents('php://input');
 $input = json_decode($rawInput, true);
@@ -43,7 +44,7 @@ try {
     $pdo->beginTransaction();
 
     // Cek status saat ini
-    $stmtSelect = $pdo->prepare("SELECT status_pesanan FROM penjualan WHERE no_invoice = ? FOR UPDATE");
+    $stmtSelect = $pdo->prepare("SELECT id, status_pesanan FROM penjualan WHERE no_invoice = ? FOR UPDATE");
     $stmtSelect->execute([$orderId]);
     $order = $stmtSelect->fetch(PDO::FETCH_ASSOC);
 
@@ -54,59 +55,32 @@ try {
     $oldStatus = $order['status_pesanan'];
     $paymentType = $input['payment_type'] ?? '';
 
-    // Update status penjualan, metode pembayaran, dan waktu bayar
-    $stmtUpdate = $pdo->prepare("
-        UPDATE penjualan 
-        SET status_pesanan = ?,
-            payment_method_ecommerce = COALESCE(NULLIF(?, ''), payment_method_ecommerce),
-            paid_at = CASE WHEN ? IN ('Diproses', 'Selesai') THEN COALESCE(paid_at, NOW()) ELSE paid_at END
-        WHERE no_invoice = ?
-    ");
-    $stmtUpdate->execute([$newStatus, $paymentType, $newStatus, $orderId]);
+    if ($oldStatus === 'Dibatalkan') {
+        // Pesanan sudah dibatalkan lokal karena melewati batas waktu.
+        // Jika pembayaran lunas masuk terlambat, JANGAN ubah status ke Diproses dan JANGAN potong stok fisik.
+        // Catat waktu bayar agar admin dapat melakukan proses pengembalian dana (refund) manual.
+        $pdo->prepare("UPDATE penjualan SET payment_method_ecommerce = COALESCE(payment_method_ecommerce, ?), paid_at = COALESCE(paid_at, NOW()) WHERE no_invoice = ?")
+            ->execute([$paymentType, $orderId]);
+        $pdo->commit();
+        echo json_encode(['status' => 'success', 'message' => 'Pesanan sudah dibatalkan lokal. Pembayaran terlambat dicatat untuk refund manual.']);
+        exit;
+    }
 
-    // Ambil detail item dan rasio konversi beserta catatan logistik
-    $stmtItems = $pdo->prepare("SELECT d.id_variasi, d.qty, d.catatan_logistik, v.rasio_konversi, v.satuan_besar, pi.kategori 
-                                FROM detail_penjualan d 
-                                JOIN produk_variasi v ON d.id_variasi = v.id 
-                                JOIN produk_induk pi ON v.id_produk_induk = pi.id
-                                WHERE d.id_penjualan = (SELECT id FROM penjualan WHERE no_invoice = ?)");
-    $stmtItems->execute([$orderId]);
-    $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
-
-    // Pengurangan Stok (TIDAK DILAKUKAN LAGI KARENA SUDAH DIPOTONG SAAT CHECKOUT)
-    // Pengembalian Stok (Jika dibatalkan)
-    if ($oldStatus !== 'Dibatalkan' && $newStatus === 'Dibatalkan') {
-        foreach ($items as $item) {
-            $idVar = $item['id_variasi'];
-            $qtyBox = intval($item['qty']);
-            $rasio = intval($item['rasio_konversi']) ?: 1;
-            $qtyPotong = $qtyBox * $rasio;
-            $satBesar = $item['satuan_besar'];
-
-            $stmtStok = $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi = ?");
-            $stmtStok->execute([$qtyPotong, $idVar]);
-
-            // Restorasi FEFO dan SN berdasarkan catatan_logistik
-            $catatan = trim($item['catatan_logistik'] ?? '');
-            if (!empty($catatan)) {
-                if ($item['kategori'] === 'Obat') {
-                    preg_match_all('/([^\(,\s]+)\s*\((?:.*=\s*)?(\d+)(?:x|[^\)]*)?\)/i', $catatan, $matches, PREG_SET_ORDER);
-                    if (empty($matches)) {
-                        preg_match_all('/(.+?)\s*\((\d+)x\)/', $catatan, $matches, PREG_SET_ORDER);
-                    }
-                    foreach ($matches as $match) {
-                        $batchNo = trim($match[1]);
-                        $batchQty = intval($match[2]);
-                        $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa + ? WHERE id_variasi = ? AND no_batch = ?")->execute([$batchQty, $idVar, $batchNo]);
-                    }
-                } elseif ($item['kategori'] === 'Alat Kesehatan') {
-                    $sns = array_filter(array_map('trim', explode(',', $catatan)));
-                    foreach ($sns as $snStr) {
-                        $pdo->prepare("UPDATE unit_serial SET status = 'Tersedia', id_penjualan = NULL WHERE id_variasi = ? AND serial_number = ?")->execute([$idVar, $snStr]);
-                    }
-                }
-            }
+    if ($newStatus === 'Dibatalkan') {
+        batalkanSatuPesananInternal($pdo, $order['id']);
+        if (!empty($paymentType)) {
+            $pdo->prepare("UPDATE penjualan SET payment_method_ecommerce = ? WHERE id = ?")->execute([$paymentType, $order['id']]);
         }
+    } else {
+        // Update status penjualan, metode pembayaran, dan waktu bayar
+        $stmtUpdate = $pdo->prepare("
+            UPDATE penjualan 
+            SET status_pesanan = ?,
+                payment_method_ecommerce = COALESCE(NULLIF(?, ''), payment_method_ecommerce),
+                paid_at = CASE WHEN ? IN ('Diproses', 'Selesai') THEN COALESCE(paid_at, NOW()) ELSE paid_at END
+            WHERE no_invoice = ?
+        ");
+        $stmtUpdate->execute([$newStatus, $paymentType, $newStatus, $orderId]);
     }
 
     $pdo->commit();

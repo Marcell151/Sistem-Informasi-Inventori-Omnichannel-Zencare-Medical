@@ -1,0 +1,112 @@
+<USER_REQUEST>
+terkait ini saya telah melakuka bimbingna, bsia nada liaht twerkati bimbingna terbaru itu, telah dirankumkan oleh gemin iseperit ini (ini saya beirkan tranksirpnya dulu dari audionya agar adna paham apa yang harus disueakan)
+Berikut adalah transkrip rekaman bimbingan dengan penyesuaian label pembicara yang sudah dikoreksi sesuai dengan konteks percakapan: 
+00:00 - 01:29
+•	Mahasiswa: Gambar di e-commerce itu sudah saya selesaikan. Ini Pak. Jadi, di e-commerce-nya itu sudah bentuknya bisa digeser, karek naruh gambare.
+•	Dosen: Oh, karusel. Ya, itu karusel. Kategori produk, iya. Ada obat, alat kesehatan. Lek obat itu lho, amoksisilin. Terus iku kok misale amoksisilinnya beda? Misal ditanya gitu. Ada 500, ada 250. Ya opo carane bedakno?
+•	Mahasiswa: Beda item.
+•	Dosen: Ya wis betul, ya iku iku lho, dinget-nget lho yo. Kamu sendiri yang nginget-inget lho ya.
+01:30 - 03:00
+•	Mahasiswa: Terus kemarin nyetak batch, di e-commerce, cetak batch label. Jadi kalau ada penerimaan barang di sini, nah, jadi itu cetak, barangnya itu per satu invoice kan beli banyak barang, nah itu kalau dicetak bisa langsung cetak banyak gitu Pak. Contohnya di sini kan ada pemasukan, penerimaan barang, setelah dicetak, semua stiker dokumen langsung jadi gini Pak, tinggal digunting apa ukurannya.
+•	Dosen: Kamu nanti kalau Semhas nyetak satu gitu, ya. Di stiker terus tunjukin nanti kayak gini. Tapi stiker sing wis karek kelentek iku lho. Nanti, oh kayak gini, nanti kayak gini ini ditempel gitu, ngerti?
+•	Mahasiswa: API data obat. API data itu saya sudah coba cari dan sudah coba tak masukkan. Itu, tapi masih gak tahu fungsine itu apa. Kalau di sini kan bisa ada cari data API obat pakai BPOM, fungsinya cuma menambahkan di sini gitu aja Pak.
+•	Dosen: Lha fungsinya apa, daftar, data obatnya itu bener-bener, itu bener. Ngerti? Verifikasi aja. Iyo, lha engko lho, nanti kalau salah input gitu misalnya.
+03:01 - 04:30
+•	Mahasiswa: Expired card sesuai pembayaran. Oh oke, ini. Kalau di e-commerce, nah ini kan setiap ini kan ada Midtrans, toh, Pak. Jadi setiap pembayaran di sini. Lho, kok error ya?
+•	Dosen: Midtrans-nya error?
+•	Mahasiswa: Lha ya, Midtrans-e error. Soalnya ada pergantian token dari Midtrans sendiri ada itu notif gitu, Pak.
+•	Dosen: Nah, kamu nanti jangan bergantung ke Midtrans. Kamu juga punya timer sendiri. Catetan, timer sendiri. Eh kalau ada di card, lebih dari nggak tau kamu berapa, ya durasi iku card-nya otomatis dikosongkan, stoknya kembali. Ngerti?
+•	Mahasiswa: Ngerti.
+04:31 - 06:00
+•	Mahasiswa: Ini laporannya, yang pertama ada kartu stok. Di kartu stok sini, itu saya jadikan satu karena ada transaksi pos, e-commerce, sama semua. Nah, di laporan FIFO ini anomali FIFO itu, ya, Pak. Sini ada, laporan baru saya buatlah anomali FIFO, yang di mana kalau ada perbedaan batch yang keluar, contohnya di sini saya sudah coba, jadi batch yang seharusnya itu ini Pak, lalu batch fisik yang diambil ini. Jadi akan terdetek di sini.
+•	Dosen: Nah, harusnya itu ada di dashboard. Anomalinya. Keluar di dashboard-nya, apa, admin apa kasir apa?
+•	Mahasiswa: Admin. Tapi kalau yang di kasir sama admin itu cuma dashboard. Kalau yang di super admin itu laporan bisa dicetak.
+•	Dosen: Kasir juga. Eh iki gurung dijupuk, gitu. Belum diambil ini. Kamu salah ngambil e, tadi. Ya? Ngambil sing mepet kene lho sing, bukannya itu. Ngerti? Kasih o di kasir, jadi kasirnya nggak salah ambil lagi.
+06:01 - 07:30
+•	Mahasiswa: Retur parsial, ini retur barang penerimaan ini. Ah, ini saya coba pikir-pikir, akhirnya, jadi kalau ada transaksi, lalu kalau ada barang terima baiknya, lalu ada barang rusak. Kalau di-input-kan nanti akan ada retur menunggu pengganti, nah, nanti ada terima oh unit pengganti, nanti di-inputkan batch-nya yang baru dimasukkan.
+•	Dosen: Berarti nanti ada penerimaan barang yang bener-bener finish ada yang belum, gitu.
+•	Mahasiswa: Iya.
+07:31 - 09:00
+•	Mahasiswa: Simulasi, kalau dicetak label pengiriman, belum ini. Karena kalau cetak label itu, kalau pakai POS atau JNE itu kan harus kehubung ke sananya.
+•	Dosen: Eh, sekarang kan nggak. JNT sudah nggak ngelayani Shopee. JNE juga sudah nggak. Jadi nyetak sendiri, cuma dia generate barcode kalau kita lewat aplikasi. JNE API-e nggak dibuka soalnya. Kalau JNT dibuka, kita bisa nge-print dari aplikasi. Kamu tetep ngentri label, kurir iku JNE, JNT, Shopee Express, segala macem iku, dia itu waktu di sistem kan berdasarkan barcode kalau kita nge-print dari aplikasi lho ya.
+09:01 - 10:30
+•	Dosen: Jadi begitu ada orang check out, itu sudah ada labelnya tinggal diprint kan? Langsung tak tempel, nah tapi itu kecil. Nah, mau nggak mau aku tak nempel dewe. Soale kurir iku kadang kurang ajar gitu memang. Kalau nggak pakai aplikasi, misalnya kesusu gitu ya, kan aku harus nge-print sendiri. Sering kali kalau JNT segala macam itu apa lagi Lion, itu pengirim itu nggak ada lho. Tulisan pengirimnya siapa itu bisa ketutup loh, kadang nek gini tok, Toko X gitu.
+•	Mahasiswa: Berarti label-nya buat sendiri, Pak?
+•	Dosen: Iya. Cuma kamu harus bisa meskipun e-commerce tetep bisa nge-print invoice.
+10:31 - 12:00
+•	Mahasiswa: Struk, adanya struk kayak gini Pak, invoice pembelian, gitu?
+•	Dosen: Nah, bisa di-print itu?
+•	Mahasiswa: Iya bisa diprint. Nah, itu nanti sama alamat kirim sekalian sama label kirim, di situ sekalian, jadi nge-printnya jadi satu. Jadi 2 stiker gitu kan Pak? 1 invoice kertas, 1 stiker label?
+•	Dosen: Invoice berarti sudah tinggal label kirim.
+12:01 - 13:30
+•	Mahasiswa: Laporan retur. Laporan retur itu termasuk ke penerimaan barang. Kalau di sini ada filter gitu Pak, jadi kalau misalnya nunggu pengganti, nanti otomatis keluar yang tunggu retur. Lalu pas dicetak, cuma cetak retur aja.
+•	Dosen: Terus? Dashboard admin, status retur yang belum dikirim. Di dashboardnya dicatetan.
+13:31 - 15:00
+•	Mahasiswa: Stok opname itu kan pake ini kan, Pak? Laporan anomali?
+•	Dosen: Stok opname itu admin. Admin, waktu stok opname semua transaksi dimatikan. Ndak ya, semua barang itu keluar, terus dientri angkanya. Udah selesai. Oke, clear, diklik. Nah baru, admin itu keluar, ini yang dientri, ini yang ada di sistem ini barang saat ini, nah terus nanti ada disebelahnya, selisih. Terus, ada tombol otomatis mutasi. Lha mutasinya itu, jadi barang rusak, barang expired, gitu. Ngerti?
+15:01 - 16:30
+•	Mahasiswa: Yang mematikan super admin. Nanti kalau sudah selesai stok opname, selesai klik, baru bisa transaksi lagi.
+•	Dosen: Itu tapi sudah harus mutasi yang selisih-selisih itu. Stok opname itu yang berat, simulasinya, kan banyak e barang-e. Berarti yang di-dashboard itu ada tambahan anomali FIFO-nya sama retur buat si admin.
+16:31 - 18:00
+•	Dosen: Iki minggu ke piro lak an. Kamu nek misale minggu ke 9 selese, ya, wis, tinggal opo namanya kulaihmu opo sih.
+•	Mahasiswa: Mmm, technopreneurship sama PPSI.
+•	Dosen: Kalau misale selesai kamu bisa, minggu ke 10, ya semhas.
+•	Mahasiswa: Sidang itu setelah UAS, ya?
+•	Dosen: Iya, setelah UAS. Bisa aja sebelum UAS kalau Bu Meme sama Pak Yogi mau nilai gitu. Biasanya sih bisa gitu, tapi biasanya kalau digituin, didesain sama yang deadline. Kalau yang normal, nunggu UAS aja lah, sekalian gitu, intinya minggu UAS kan sudah dientri semua sama dosen. Jadi kamu UAS sudah sidang, udah merdeka. Pas Desember to?
+18:01 - 21:05
+•	Dosen: Desember kamu sudah merdeka. Karek ngurus yudisium selesai. Semhas itu kan apa yang kamu kerjain. Kalau sudah sidang tertutup, itu tinggal teori-teori aja sih. Apa itu SI apa itu database, PML apa, RPL rekayasa perangkat lunak apa. Konsep, itu. Cepat, ya, enggak sampai 1 jam dah selesai. Nek kaya kamu enggak ada masalah karna kan SI murni nggak ada metodenya, jadi lebih gampang. Semhas-mu yang lama soalnya emang murni kan ya, fitur-fitur kan banyak. Ya, tinggal stock opname. Minggu depan sama nyicil bab 4 itu lho, tinggal screenshot-kan. Lha David iku sudah jauh di atas teman-temannya. Biar enggak mendekat, lho ngono lho, mangkane yang gini-gini nek e David gak maju wis bahaya, nanti dibandingin, lho dia dibandingin lho David aja enggak mari, ngono lho. Lha yo kasihan sing lemah.
+
+
+nah terkait fdari gemini begini tekrati rangkumannay dari audio dan transkirp itu
+
+Mengejar target Semhas di bulan Desember setelah UAS sekaligus menuntaskan beban mata kuliah Technopreneurship dan PPSI menuntut eksekusi revisi sistem yang presisi. Berdasarkan rekaman bimbingan, dosen memberikan instruksi teknis yang berfokus pada ketahanan sistem terhadap skenario terburuk di lapangan, operasional gudang, dan strategi presentasi.
+
+**Penyempurnaan Logika Sistem & Transaksi**
+
+* **Timer Kedaluwarsa Keranjang Independen:** Jangan bergantung sepenuhnya pada API Midtrans yang rentan mengalami kendala akibat pergantian token. Buat *timer* durasi keranjang (*cart*) secara mandiri di dalam sistem yang akan otomatis mengosongkan pesanan dan mengembalikan stok jika waktu bayar habis.
+
+
+* **Cetak Label Pengiriman E-Commerce Mandiri:** Mengingat jasa ekspedisi sering menutup akses API mereka, sistem Anda harus mampu men-*generate* dan mencetak *barcode* label pengiriman sendiri beserta *invoice* kertasnya tanpa bergantung pada pihak ketiga.
+
+
+
+**Prioritas Modul Gudang & Logistik**
+
+* **Modul Stok Opname Terpusat:** Ini adalah fitur terberat yang harus segera diselesaikan. Alurnya wajib berurutan: Superadmin mengunci/mematikan semua transaksi, Admin mengentri jumlah fisik barang di lapangan, sistem menampilkan selisih, dan diakhiri dengan eksekusi tombol mutasi otomatis untuk barang rusak atau kedaluwarsa.
+
+
+* **Dashboard Peringatan Anomali FIFO:** Laporan pengambilan barang yang menyalahi aturan *batch* tidak boleh hanya tampil di kertas laporan. Peringatan ini harus muncul langsung di *dashboard* Kasir dan Admin secara *real-time* untuk menegur kasir yang salah ambil barang di rak.
+
+
+* **Pemantauan Status Retur:** Tambahkan indikator status di *dashboard* Admin untuk membedakan secara tegas mana faktur penerimaan yang sudah selesai 100% dan mana yang status penggantian barang returnya masih menggantung.
+
+
+
+**Strategi Presentasi Semhas & Bab 4**
+
+* **Siapkan Properti Demo Fisik:** Saat mendemonstrasikan cetak *batch* penerimaan, siapkan stiker fisik yang sudah dipotong (*karek kelentek*) untuk langsung dipraktikkan menempel ke kardus obat.
+
+
+* **Argumen Validasi API BPOM:** Jika penguji bertanya, tegaskan bahwa fitur API BPOM bukan sekadar untuk kemudahan mengetik otomatis, melainkan berfungsi sebagai alat verifikasi silang untuk mencegah kesalahan *input* data obat.
+
+
+* **Argumen Pemisahan Varian Obat:** Kuasai argumen mengapa obat dengan jenis yang sama tetapi beda dosis (misal Amoksisilin 500mg dan 250mg) harus dipisah menjadi *item* (SKU) yang berbeda di *database*.
+
+
+* **Akselerasi Tangkapan Layar (Screenshot):** Progres pengerjaan rekan Anda (David) sudah sangat jauh. Selesaikan fitur-fitur di atas secepatnya minggu ini agar Anda bisa langsung mengambil tangkapan layar untuk Bab 4 dan mengamankan jadwal Semhas.
+
+coba nad baca pahami, liaht sistme saat ini, badnignkan lihat dan mengerti dan pahami, teriat bimbigna terbaru ini ada liaht dan paham iecara rinci dna detail 
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-27T13:37:19+07:00.
+
+The user's current state is as follows:
+Active Document: c:\xampp\htdocs\inventory_zencare\admin\master_produk.php (LANGUAGE_PHP)
+Cursor is on line: 1
+Other open documents:
+- c:\xampp\htdocs\inventory_zencare\scratch\audit_all_buttons.php (LANGUAGE_PHP)
+- c:\xampp\htdocs\inventory_zencare\laporan\penerimaan_barang.php (LANGUAGE_PHP)
+- c:\xampp\htdocs\inventory_zencare\scratch\generate_complete_sql.php (LANGUAGE_PHP)
+- c:\xampp\htdocs\inventory_zencare\laporan\anomali_fefo.php (LANGUAGE_PHP)
+- c:\xampp\htdocs\inventory_zencare\inventori\cetak_stiker.php (LANGUAGE_PHP)
+</ADDITIONAL_METADATA>

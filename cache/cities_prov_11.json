@@ -1,0 +1,41 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 142,
+            "name": "KOTA TANGERANG"
+        },
+        {
+            "id": 143,
+            "name": "KOTA TANGERANG SELATAN"
+        },
+        {
+            "id": 144,
+            "name": "KOTA SERANG"
+        },
+        {
+            "id": 145,
+            "name": "KOTA CILEGON"
+        },
+        {
+            "id": 146,
+            "name": "KABUPATEN TANGERANG"
+        },
+        {
+            "id": 147,
+            "name": "KABUPATEN SERANG"
+        },
+        {
+            "id": 148,
+            "name": "KABUPATEN PANDEGLANG"
+        },
+        {
+            "id": 149,
+            "name": "KABUPATEN LEBAK"
+        }
+    ]
+}

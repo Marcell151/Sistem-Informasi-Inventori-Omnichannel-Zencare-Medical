@@ -92,7 +92,7 @@ require_once __DIR__ . '/header.php';
                 <div class="mt-5 pt-4 border-t border-slate-100 space-y-2 text-[11px] text-slate-500">
                     <div class="flex items-center gap-2">
                         <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        <span>Stok resmi farmasi terlindungi real-time</span>
+                        <span>Stok resmi toko obat & alkes terlindungi real-time</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>

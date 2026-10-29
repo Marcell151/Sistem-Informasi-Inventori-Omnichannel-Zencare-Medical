@@ -374,13 +374,8 @@ if (!empty($orderIds)) {
                         <?php if ($status === 'Menunggu Pembayaran'): 
                             $payMethod = strtolower($ord['payment_method_ecommerce'] ?? '');
                             $isQris = in_array($payMethod, ['qris', 'gopay', 'shopeepay']);
-                            if ($isQris) {
-                                $cooldownMenit = defined('MIDTRANS_EXPIRY_ECOMMERCE_QRIS_MENIT') ? MIDTRANS_EXPIRY_ECOMMERCE_QRIS_MENIT : 15;
-                                $cooldownLabel = '15 Menit (QRIS / E-Wallet)';
-                            } else {
-                                $cooldownMenit = defined('MIDTRANS_EXPIRY_ECOMMERCE_VA_MENIT') ? MIDTRANS_EXPIRY_ECOMMERCE_VA_MENIT : 120;
-                                $cooldownLabel = '2 Jam (Transfer Bank / Virtual Account)';
-                            }
+                            $cooldownMenit = defined('MIDTRANS_EXPIRY_ECOMMERCE_MENIT') ? MIDTRANS_EXPIRY_ECOMMERCE_MENIT : 120;
+                            $cooldownLabel = $isQris ? '2 Jam (QRIS / E-Wallet)' : '2 Jam (Transfer Bank / Virtual Account)';
                             $cooldownDetik = $cooldownMenit * 60;
                             $expireTime = strtotime($ord['created_at']) + $cooldownDetik;
                             $sisaDetik = max(0, $expireTime - time());

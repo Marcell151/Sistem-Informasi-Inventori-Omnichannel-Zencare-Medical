@@ -1,0 +1,65 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 327,
+            "name": "KOTA PALANGKA RAYA"
+        },
+        {
+            "id": 328,
+            "name": "KABUPATEN KOTAWARINGIN BARAT"
+        },
+        {
+            "id": 329,
+            "name": "KABUPATEN KOTAWARINGIN TIMUR"
+        },
+        {
+            "id": 330,
+            "name": "KABUPATEN KAPUAS"
+        },
+        {
+            "id": 331,
+            "name": "KABUPATEN BARITO SELATAN"
+        },
+        {
+            "id": 332,
+            "name": "KABUPATEN BARITO UTARA"
+        },
+        {
+            "id": 333,
+            "name": "KABUPATEN KATINGAN"
+        },
+        {
+            "id": 334,
+            "name": "KABUPATEN SERUYAN"
+        },
+        {
+            "id": 335,
+            "name": "KABUPATEN SUKAMARA"
+        },
+        {
+            "id": 336,
+            "name": "KABUPATEN LAMANDAU"
+        },
+        {
+            "id": 337,
+            "name": "KABUPATEN GUNUNG MAS"
+        },
+        {
+            "id": 338,
+            "name": "KABUPATEN PULANG PISAU"
+        },
+        {
+            "id": 339,
+            "name": "KABUPATEN MURUNG RAYA"
+        },
+        {
+            "id": 340,
+            "name": "KABUPATEN BARITO TIMUR"
+        }
+    ]
+}

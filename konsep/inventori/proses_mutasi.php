@@ -84,7 +84,7 @@ $mutasiLog = $pdo->query("
 layoutHead('Mutasi Stok Cabang');
 layoutBodyOpen();
 layoutSidebar('mutasi');
-layoutHeader('Mutasi Stok Antar Cabang', 'Transfer stok barang dari cabang asal ke cabang tujuan dengan atomik & audit trail');
+layoutHeader('Mutasi Stok Antar Cabang', 'Transfer stok barang dari cabang asal ke cabang tujuan dengan atomik & riwayat mutasi');
 ?>
 
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">

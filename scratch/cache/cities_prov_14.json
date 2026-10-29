@@ -1,0 +1,37 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 442,
+            "name": "KOTA JAYAPURA"
+        },
+        {
+            "id": 443,
+            "name": "KABUPATEN JAYAPURA"
+        },
+        {
+            "id": 444,
+            "name": "KABUPATEN BIAK NUMFOR"
+        },
+        {
+            "id": 445,
+            "name": "KABUPATEN KEEROM"
+        },
+        {
+            "id": 446,
+            "name": "KABUPATEN MERAUKE"
+        },
+        {
+            "id": 447,
+            "name": "KABUPATEN MIMIKA"
+        },
+        {
+            "id": 448,
+            "name": "KABUPATEN NABIRE"
+        }
+    ]
+}

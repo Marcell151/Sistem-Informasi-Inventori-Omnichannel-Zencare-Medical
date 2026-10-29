@@ -1,1 +1,49 @@
-{"meta":{"message":"Success Get City By Province ID","code":200,"status":"success"},"data":[{"id":1,"name":"MATARAM"},{"id":2,"name":"BIMA"},{"id":3,"name":"DOMPU"},{"id":4,"name":"LOMBOK TENGAH"},{"id":5,"name":"LOMBOK TIMUR"},{"id":7,"name":"SUMBAWA"},{"id":8,"name":"LOMBOK BARAT"},{"id":9,"name":"LOMBOK UTARA"},{"id":10,"name":"SUMBAWA BARAT"}]}
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 304,
+            "name": "KOTA MATARAM"
+        },
+        {
+            "id": 305,
+            "name": "KOTA BIMA"
+        },
+        {
+            "id": 306,
+            "name": "KABUPATEN LOMBOK BARAT"
+        },
+        {
+            "id": 307,
+            "name": "KABUPATEN LOMBOK TENGAH"
+        },
+        {
+            "id": 308,
+            "name": "KABUPATEN LOMBOK TIMUR"
+        },
+        {
+            "id": 309,
+            "name": "KABUPATEN LOMBOK UTARA"
+        },
+        {
+            "id": 310,
+            "name": "KABUPATEN SUMBAWA"
+        },
+        {
+            "id": 311,
+            "name": "KABUPATEN SUMBAWA BARAT"
+        },
+        {
+            "id": 312,
+            "name": "KABUPATEN DOMPU"
+        },
+        {
+            "id": 313,
+            "name": "KABUPATEN BIMA"
+        }
+    ]
+}

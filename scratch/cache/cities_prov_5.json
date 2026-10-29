@@ -1,0 +1,117 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 115,
+            "name": "KOTA BANDUNG"
+        },
+        {
+            "id": 116,
+            "name": "KOTA BEKASI"
+        },
+        {
+            "id": 117,
+            "name": "KOTA BOGOR"
+        },
+        {
+            "id": 118,
+            "name": "KOTA CIMAHI"
+        },
+        {
+            "id": 119,
+            "name": "KOTA CIREBON"
+        },
+        {
+            "id": 120,
+            "name": "KOTA DEPOK"
+        },
+        {
+            "id": 121,
+            "name": "KOTA SUKABUMI"
+        },
+        {
+            "id": 122,
+            "name": "KOTA TASIKMALAYA"
+        },
+        {
+            "id": 123,
+            "name": "KOTA BANJAR"
+        },
+        {
+            "id": 124,
+            "name": "KABUPATEN BANDUNG"
+        },
+        {
+            "id": 125,
+            "name": "KABUPATEN BANDUNG BARAT"
+        },
+        {
+            "id": 126,
+            "name": "KABUPATEN BEKASI"
+        },
+        {
+            "id": 127,
+            "name": "KABUPATEN BOGOR"
+        },
+        {
+            "id": 128,
+            "name": "KABUPATEN CIAMIS"
+        },
+        {
+            "id": 129,
+            "name": "KABUPATEN CIANJUR"
+        },
+        {
+            "id": 130,
+            "name": "KABUPATEN CIREBON"
+        },
+        {
+            "id": 131,
+            "name": "KABUPATEN GARUT"
+        },
+        {
+            "id": 132,
+            "name": "KABUPATEN INDRAMAYU"
+        },
+        {
+            "id": 133,
+            "name": "KABUPATEN KARAWANG"
+        },
+        {
+            "id": 134,
+            "name": "KABUPATEN KUNINGAN"
+        },
+        {
+            "id": 135,
+            "name": "KABUPATEN MAJALENGKA"
+        },
+        {
+            "id": 136,
+            "name": "KABUPATEN PANGANDARAN"
+        },
+        {
+            "id": 137,
+            "name": "KABUPATEN PURWAKARTA"
+        },
+        {
+            "id": 138,
+            "name": "KABUPATEN SUBANG"
+        },
+        {
+            "id": 139,
+            "name": "KABUPATEN SUKABUMI"
+        },
+        {
+            "id": 140,
+            "name": "KABUPATEN SUMEDANG"
+        },
+        {
+            "id": 141,
+            "name": "KABUPATEN TASIKMALAYA"
+        }
+    ]
+}

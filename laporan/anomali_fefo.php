@@ -1,6 +1,6 @@
 <?php
 // File: laporan/anomali_fefo.php
-// Laporan Audit Anomali FEFO & Deviasi Pengeluaran Batch Obat
+// Laporan Anomali FEFO & Deviasi Pengeluaran Batch Obat
 // Superadmin Only — ZenCare Medical Omnichannel
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -29,12 +29,12 @@ if ($countExisting == 0) {
         $uId = $sampleP['id_user'] ?: 1;
         
         $v1 = $sampleVar[0]['id'];
-        $pdo->prepare("INSERT INTO log_anomali_fefo (id_penjualan, id_user, id_variasi, batch_diambil, batch_seharusnya, qty, created_at) VALUES (?, ?, ?, 'SNM-2026-A', 'SNM-EXP-22', 2, DATE_SUB(NOW(), INTERVAL 2 DAY))")
+        $pdo->prepare("INSERT INTO log_anomali_fefo (id_penjualan, id_user, id_variasi, batch_diambil, batch_seharusnya, qty, satuan_tipe, status, created_at) VALUES (?, ?, ?, 'SNM-2026-A', 'SNM-EXP-22', 2, 'kecil', 'disesuaikan', DATE_SUB(NOW(), INTERVAL 2 DAY))")
             ->execute([$pId, $uId, $v1]);
             
         if (isset($sampleVar[1])) {
             $v2 = $sampleVar[1]['id'];
-            $pdo->prepare("INSERT INTO log_anomali_fefo (id_penjualan, id_user, id_variasi, batch_diambil, batch_seharusnya, qty, created_at) VALUES (?, ?, ?, 'BDR-2028', 'BDR-EXP-23', 1, DATE_SUB(NOW(), INTERVAL 1 DAY))")
+            $pdo->prepare("INSERT INTO log_anomali_fefo (id_penjualan, id_user, id_variasi, batch_diambil, batch_seharusnya, qty, satuan_tipe, status, created_at) VALUES (?, ?, ?, 'BDR-2028', 'BDR-EXP-23', 1, 'kecil', 'disesuaikan', DATE_SUB(NOW(), INTERVAL 1 DAY))")
                 ->execute([$pId, $uId, $v2]);
         }
     }
@@ -76,17 +76,20 @@ $sql = "
         laf.*,
         COALESCE(u.nama_lengkap, 'Kasir / Petugas') AS nama_petugas,
         p.no_invoice,
+        p_res.no_invoice AS no_invoice_resolved,
         COALESCE(p.tipe_transaksi, 'pos') AS kanal_transaksi,
         pi.nama_produk,
         pv.nama_variasi,
         pv.sku_variasi,
         pv.satuan_kecil,
+        pv.satuan_besar,
         sb1.tgl_exp AS exp_diambil,
         sb2.tgl_exp AS exp_seharusnya,
         DATEDIFF(sb1.tgl_exp, sb2.tgl_exp) AS selisih_hari
     FROM log_anomali_fefo laf
     LEFT JOIN users u ON u.id = laf.id_user
     LEFT JOIN penjualan p ON p.id = laf.id_penjualan
+    LEFT JOIN penjualan p_res ON p_res.id = laf.resolved_in_penjualan
     JOIN produk_variasi pv ON pv.id = laf.id_variasi
     JOIN produk_induk pi ON pi.id = pv.id_produk_induk
     LEFT JOIN stok_batch sb1 ON (sb1.id_variasi = laf.id_variasi AND sb1.no_batch = laf.batch_diambil COLLATE utf8mb4_general_ci)
@@ -100,10 +103,12 @@ $stmt->execute($params);
 $anomaliList = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Kalkulasi Ringkasan KPI
-$totalKejadian = count($anomaliList);
-$totalQtyFisik = array_sum(array_column($anomaliList, 'qty'));
-$totalPos      = count(array_filter($anomaliList, fn($r) => strtolower($r['kanal_transaksi']) === 'pos'));
-$totalOnline   = count(array_filter($anomaliList, fn($r) => strtolower($r['kanal_transaksi']) === 'ecommerce'));
+$totalKejadian    = count($anomaliList);
+$totalQtyFisik    = array_sum(array_column($anomaliList, 'qty'));
+$totalPos         = count(array_filter($anomaliList, fn($r) => strtolower($r['kanal_transaksi']) === 'pos'));
+$totalOnline      = count(array_filter($anomaliList, fn($r) => strtolower($r['kanal_transaksi']) === 'ecommerce'));
+$totalDisesuaikan = count(array_filter($anomaliList, fn($r) => ($r['status'] ?? '') === 'disesuaikan'));
+$totalPending     = count(array_filter($anomaliList, fn($r) => ($r['status'] ?? '') === 'terlewat'));
 
 $prodFreq = [];
 foreach ($anomaliList as $r) {
@@ -113,10 +118,10 @@ foreach ($anomaliList as $r) {
 arsort($prodFreq);
 $topProdName = !empty($prodFreq) ? array_key_first($prodFreq) : '-';
 
-layoutHead('Laporan Audit Anomali FEFO');
+layoutHead('Laporan Anomali FEFO');
 layoutBodyOpen();
 layoutSidebar('laporan_anomali_fefo');
-layoutHeader('Laporan Audit Anomali FEFO', 'Pencatatan deviasi batch fisik obat yang dikeluarkan kasir vs rekomendasi FEFO sistem.');
+layoutHeader('Laporan Anomali FEFO', 'Pencatatan deviasi batch fisik obat yang dikeluarkan kasir vs rekomendasi FEFO sistem.');
 ?>
 
 <style>
@@ -155,11 +160,11 @@ layoutHeader('Laporan Audit Anomali FEFO', 'Pencatatan deviasi batch fisik obat 
 }
 </style>
 
-<!-- Informasi Batasan Modul Audit (Screen Only) -->
+<!-- Informasi Batasan Modul Monitoring (Screen Only) -->
 <div class="print:hidden mb-5 p-4 rounded-xl border bg-amber-50 border-amber-200 text-amber-900 text-xs flex gap-3 items-start">
     <svg class="w-5 h-5 shrink-0 mt-0.5 text-amber-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
     <div>
-        <strong>Audit Trail Kepatuhan Standar FEFO (First Expired, First Out)</strong>: Laporan ini merekam seluruh insiden ketika kasir POS atau tim gudang memilih untuk mengeluarkan batch fisik obat yang <strong>berbeda dari rekomendasi kedaluwarsa terdekat</strong> yang disarankan sistem.
+        <strong>Rekam Jejak Kepatuhan Standar FEFO (First Expired, First Out)</strong>: Laporan ini merekam seluruh insiden ketika kasir POS atau tim gudang memilih untuk mengeluarkan batch fisik obat yang <strong>berbeda dari rekomendasi kedaluwarsa terdekat</strong> yang disarankan sistem.
     </div>
 </div>
 
@@ -213,30 +218,35 @@ layoutHeader('Laporan Audit Anomali FEFO', 'Pencatatan deviasi batch fisik obat 
 </form>
 
 <!-- Summary Stats Cards (Screen Only) -->
-<div class="print:hidden grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-    <div class="bg-white rounded-2xl border border-zcBrd p-5 shadow-sm">
-        <div class="text-xs font-bold text-zcMut mb-1">Total Insiden Anomali</div>
-        <div class="text-2xl font-extrabold text-amber-600"><?= number_format($totalKejadian) ?></div>
+<div class="print:hidden grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
+    <div class="bg-white rounded-2xl border border-zcBrd p-4 shadow-sm">
+        <div class="text-[11px] font-bold text-zcMut mb-1">Total Insiden</div>
+        <div class="text-2xl font-extrabold text-slate-800"><?= number_format($totalKejadian) ?></div>
         <span class="text-[10px] text-zcMut">Frekuensi Deviasi</span>
     </div>
-    <div class="bg-white rounded-2xl border border-zcBrd p-5 shadow-sm">
-        <div class="text-xs font-bold text-zcMut mb-1">Total Fisik Terkena</div>
+    <div class="bg-white rounded-2xl border border-zcBrd p-4 shadow-sm">
+        <div class="text-[11px] font-bold text-zcMut mb-1">Sudah Disesuaikan</div>
+        <div class="text-2xl font-extrabold text-emerald-600"><?= number_format($totalDisesuaikan) ?></div>
+        <span class="text-[10px] text-emerald-600 font-semibold">Tuntas di POS ✓</span>
+    </div>
+    <div class="bg-white rounded-2xl border border-zcBrd p-4 shadow-sm">
+        <div class="text-[11px] font-bold text-zcMut mb-1">Menunggu Dikeluarkan</div>
+        <div class="text-2xl font-extrabold text-amber-600"><?= number_format($totalPending) ?></div>
+        <span class="text-[10px] text-amber-600 font-semibold">Prioritas Kasir</span>
+    </div>
+    <div class="bg-white rounded-2xl border border-zcBrd p-4 shadow-sm">
+        <div class="text-[11px] font-bold text-zcMut mb-1">Total Fisik Terkena</div>
         <div class="text-2xl font-extrabold text-rose-600"><?= number_format($totalQtyFisik) ?></div>
         <span class="text-[10px] text-zcMut">Unit Obat Terdampak</span>
     </div>
-    <div class="bg-white rounded-2xl border border-zcBrd p-5 shadow-sm">
-        <div class="text-xs font-bold text-zcMut mb-1">Transaksi POS</div>
-        <div class="text-2xl font-extrabold text-blue-600"><?= number_format($totalPos) ?></div>
-        <span class="text-[10px] text-zcMut">Layanan Kasir Fisik</span>
+    <div class="bg-white rounded-2xl border border-zcBrd p-4 shadow-sm">
+        <div class="text-[11px] font-bold text-zcMut mb-1">Kanal Transaksi</div>
+        <div class="text-lg font-extrabold text-slate-700"><?= $totalPos ?> <span class="text-xs font-semibold text-blue-600">POS</span> / <?= $totalOnline ?> <span class="text-xs font-semibold text-purple-600">Web</span></div>
+        <span class="text-[10px] text-zcMut">Distribusi Transaksi</span>
     </div>
-    <div class="bg-white rounded-2xl border border-zcBrd p-5 shadow-sm">
-        <div class="text-xs font-bold text-zcMut mb-1">Transaksi E-Commerce</div>
-        <div class="text-2xl font-extrabold text-purple-600"><?= number_format($totalOnline) ?></div>
-        <span class="text-[10px] text-zcMut">Fulfillment Online</span>
-    </div>
-    <div class="col-span-2 md:col-span-1 bg-white rounded-2xl border border-zcBrd p-5 shadow-sm">
-        <div class="text-xs font-bold text-zcMut mb-1">Produk Sering Deviasi</div>
-        <div class="text-sm font-bold text-zcTxt truncate" title="<?= htmlspecialchars($topProdName) ?>"><?= htmlspecialchars($topProdName) ?></div>
+    <div class="col-span-2 md:col-span-1 bg-white rounded-2xl border border-zcBrd p-4 shadow-sm">
+        <div class="text-[11px] font-bold text-zcMut mb-1">Sering Deviasi</div>
+        <div class="text-xs font-bold text-zcTxt truncate" title="<?= htmlspecialchars($topProdName) ?>"><?= htmlspecialchars($topProdName) ?></div>
         <span class="text-[10px] text-rose-600 font-semibold">Tingkat Evaluasi Tinggi</span>
     </div>
 </div>
@@ -248,19 +258,20 @@ layoutHeader('Laporan Audit Anomali FEFO', 'Pencatatan deviasi batch fisik obat 
             <thead>
                 <tr class="bg-slate-50 border-b border-zcBrd text-slate-700 font-bold uppercase text-[11px] tracking-wider">
                     <th class="py-3 px-4 w-12 text-center">No</th>
-                    <th class="py-3 px-4">Waktu & Transaksi</th>
+                    <th class="py-3 px-4">Waktu &amp; Transaksi</th>
                     <th class="py-3 px-4">Petugas / Kasir</th>
                     <th class="py-3 px-4">Produk Obat</th>
                     <th class="py-3 px-4">Batch FEFO (Seharusnya)</th>
                     <th class="py-3 px-4">Batch Fisik (Diambil)</th>
                     <th class="py-3 px-4 text-center">Selisih Exp</th>
-                    <th class="py-3 px-4 text-right">Kuantitas</th>
+                    <th class="py-3 px-4 text-right">Kuantitas &amp; Satuan</th>
+                    <th class="py-3 px-4 text-center">Status Tindak Lanjut</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
                 <?php if (empty($anomaliList)): ?>
                     <tr>
-                        <td colspan="8" class="py-12 text-center text-zcMut">
+                        <td colspan="9" class="py-12 text-center text-zcMut">
                             Tidak ditemukan insiden deviasi batch FEFO pada kriteria filter yang dipilih.
                         </td>
                     </tr>
@@ -268,6 +279,9 @@ layoutHeader('Laporan Audit Anomali FEFO', 'Pencatatan deviasi batch fisik obat 
                     <?php foreach ($anomaliList as $idx => $r): 
                         $isPos = strtolower($r['kanal_transaksi']) === 'pos';
                         $selisih = $r['selisih_hari'];
+                        $isBesar = (($r['satuan_tipe'] ?? 'kecil') === 'besar');
+                        $satLabel = $isBesar ? ($r['satuan_besar'] ?: 'Box') : ($r['satuan_kecil'] ?: 'Pcs');
+                        $badgeSat = $isBesar ? 'Satuan Besar (Grosir)' : 'Satuan Kecil (Eceran)';
                     ?>
                         <tr class="hover:bg-slate-50/70 transition">
                             <td class="py-3 px-4 text-center font-mono text-zcMut"><?= $idx + 1 ?></td>
@@ -315,8 +329,33 @@ layoutHeader('Laporan Audit Anomali FEFO', 'Pencatatan deviasi batch fisik obat 
                                     <span class="text-zcMut text-[10px]">-</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="py-3 px-4 text-right font-mono font-bold text-sm text-rose-600">
-                                <?= number_format($r['qty']) ?> <span class="text-[10px] text-zcMut font-normal"><?= htmlspecialchars($r['satuan_kecil'] ?: 'Pcs') ?></span>
+                            <td class="py-3 px-4 text-right">
+                                <div class="font-mono font-bold text-sm text-slate-800">
+                                    <?= number_format($r['qty']) ?> <span class="text-xs text-slate-600 font-semibold"><?= htmlspecialchars($satLabel) ?></span>
+                                </div>
+                                <div class="mt-0.5">
+                                    <span class="inline-block px-1.5 py-0.2 rounded text-[9px] font-semibold <?= $isBesar ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-600 border border-slate-200' ?>">
+                                        <?= $badgeSat ?>
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4 text-center">
+                                <?php if (($r['status'] ?? '') === 'disesuaikan'): ?>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        ✓ Sudah Disesuaikan
+                                    </span>
+                                    <div class="text-[9px] text-slate-500 font-mono mt-0.5">
+                                        di <?= htmlspecialchars($r['no_invoice_resolved'] ?: 'Invoice Berikutnya') ?>
+                                    </div>
+                                    <?php if ($r['resolved_at']): ?>
+                                        <div class="text-[9px] text-slate-400 font-mono"><?= date('d/m/Y H:i', strtotime($r['resolved_at'])) ?></div>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                        ⏳ Menunggu Dikeluarkan
+                                    </span>
+                                    <div class="text-[9px] text-amber-600 mt-0.5">Prioritaskan penjualan berikutnya</div>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -325,7 +364,7 @@ layoutHeader('Laporan Audit Anomali FEFO', 'Pencatatan deviasi batch fisik obat 
             <?php if (!empty($anomaliList)): ?>
                 <tfoot class="bg-slate-50 border-t border-zcBrd font-bold text-slate-700 text-xs">
                     <tr>
-                        <td colspan="7" class="py-3 px-4 text-right uppercase tracking-wider text-[11px]">Total Fisik Terdampak Deviasi:</td>
+                        <td colspan="8" class="py-3 px-4 text-right uppercase tracking-wider text-[11px]">Total Fisik Terdampak Deviasi:</td>
                         <td class="py-3 px-4 text-right font-mono text-rose-600 text-sm font-extrabold"><?= number_format($totalQtyFisik) ?> Unit</td>
                     </tr>
                 </tfoot>
@@ -355,12 +394,14 @@ layoutHeader('Laporan Audit Anomali FEFO', 'Pencatatan deviasi batch fisik obat 
     <!-- Judul & Metadata Laporan -->
     <div style="text-align: center; margin-bottom: 12px;">
         <h2 style="font-size: 12pt; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
-            LAPORAN AUDIT ANOMALI FEFO &amp; DEVIASI PENGELUARAN BATCH OBAT
+            LAPORAN ANOMALI FEFO &amp; DEVIASI PENGELUARAN BATCH OBAT
         </h2>
         <div style="font-size: 8.5pt; color: #334155; margin-top: 4px;">
             Periode: <strong><?= date('d/m/Y', strtotime($dari)) ?></strong> s/d <strong><?= date('d/m/Y', strtotime($sampai)) ?></strong> 
             &nbsp;|&nbsp; Kanal: <strong><?= $kanal === 'semua' ? 'Semua Kanal (Omnichannel)' : ($kanal === 'pos' ? 'POS Kasir Luring' : 'E-Commerce Online') ?></strong>
             &nbsp;|&nbsp; Total Insiden: <strong><?= number_format($totalKejadian) ?> Kali</strong>
+            &nbsp;|&nbsp; Sudah Disesuaikan: <strong style="color: #047857;"><?= number_format($totalDisesuaikan) ?></strong>
+            &nbsp;|&nbsp; Menunggu Dikeluarkan: <strong style="color: #b45309;"><?= number_format($totalPending) ?></strong>
             &nbsp;|&nbsp; Total Fisik Terdampak: <strong><?= number_format($totalQtyFisik) ?> Unit</strong>
         </div>
     </div>
@@ -368,21 +409,25 @@ layoutHeader('Laporan Audit Anomali FEFO', 'Pencatatan deviasi batch fisik obat 
     <!-- Ringkasan Statistik Cetak -->
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 8pt;">
         <tr>
-            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 25%;">
+            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 20%;">
                 <span style="color: #64748b; font-size: 7.5pt; display: block;">Total Insiden Deviasi:</span>
-                <strong style="font-size: 9.5pt; color: #b45309;"><?= number_format($totalKejadian) ?> insiden</strong>
+                <strong style="font-size: 9.5pt; color: #0f172a;"><?= number_format($totalKejadian) ?> insiden</strong>
             </td>
-            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 25%;">
+            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 20%;">
+                <span style="color: #64748b; font-size: 7.5pt; display: block;">Sudah Disesuaikan:</span>
+                <strong style="font-size: 9.5pt; color: #047857;"><?= number_format($totalDisesuaikan) ?> insiden ✓</strong>
+            </td>
+            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 20%;">
+                <span style="color: #64748b; font-size: 7.5pt; display: block;">Menunggu Dikeluarkan:</span>
+                <strong style="font-size: 9.5pt; color: #b45309;"><?= number_format($totalPending) ?> pending ⏳</strong>
+            </td>
+            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 20%;">
                 <span style="color: #64748b; font-size: 7.5pt; display: block;">Total Fisik Terkena:</span>
                 <strong style="font-size: 9.5pt; color: #e11d48;"><?= number_format($totalQtyFisik) ?> unit obat</strong>
             </td>
-            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 25%;">
-                <span style="color: #64748b; font-size: 7.5pt; display: block;">Transaksi Kasir POS:</span>
-                <strong style="font-size: 9.5pt; color: #1d4ed8;"><?= number_format($totalPos) ?> transaksi</strong>
-            </td>
-            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 25%;">
-                <span style="color: #64748b; font-size: 7.5pt; display: block;">Transaksi E-Commerce:</span>
-                <strong style="font-size: 9.5pt; color: #7e22ce;"><?= number_format($totalOnline) ?> transaksi</strong>
+            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 20%;">
+                <span style="color: #64748b; font-size: 7.5pt; display: block;">Distribusi Kanal:</span>
+                <strong style="font-size: 9pt; color: #1e293b;"><?= number_format($totalPos) ?> POS / <?= number_format($totalOnline) ?> Web</strong>
             </td>
         </tr>
     </table>
@@ -395,14 +440,19 @@ layoutHeader('Laporan Audit Anomali FEFO', 'Pencatatan deviasi batch fisik obat 
                 <th style="border: 1px solid #94a3b8; padding: 4px; text-align: left; width: 85px;">Waktu / Kanal</th>
                 <th style="border: 1px solid #94a3b8; padding: 4px; text-align: left; width: 95px;">Petugas Kasir</th>
                 <th style="border: 1px solid #94a3b8; padding: 4px; text-align: left;">Nama Produk &amp; Variasi</th>
-                <th style="border: 1px solid #94a3b8; padding: 4px; text-align: left; width: 95px;">Batch Seharusnya</th>
-                <th style="border: 1px solid #94a3b8; padding: 4px; text-align: left; width: 95px;">Batch Diambil</th>
-                <th style="border: 1px solid #94a3b8; padding: 4px; text-align: center; width: 75px;">Selisih Exp</th>
-                <th style="border: 1px solid #94a3b8; padding: 4px; text-align: right; width: 55px;">Qty</th>
+                <th style="border: 1px solid #94a3b8; padding: 4px; text-align: left; width: 90px;">Batch Seharusnya</th>
+                <th style="border: 1px solid #94a3b8; padding: 4px; text-align: left; width: 90px;">Batch Diambil</th>
+                <th style="border: 1px solid #94a3b8; padding: 4px; text-align: center; width: 70px;">Selisih Exp</th>
+                <th style="border: 1px solid #94a3b8; padding: 4px; text-align: right; width: 75px;">Kuantitas &amp; Satuan</th>
+                <th style="border: 1px solid #94a3b8; padding: 4px; text-align: center; width: 95px;">Status Tindak Lanjut</th>
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($anomaliList as $idx => $r): ?>
+            <?php foreach ($anomaliList as $idx => $r): 
+                $isBesar = (($r['satuan_tipe'] ?? 'kecil') === 'besar');
+                $satLabel = $isBesar ? ($r['satuan_besar'] ?: 'Box') : ($r['satuan_kecil'] ?: 'Pcs');
+                $badgeSat = $isBesar ? 'Satuan Besar (Grosir)' : 'Satuan Kecil (Eceran)';
+            ?>
                 <tr>
                     <td style="border: 1px solid #94a3b8; padding: 4px; text-align: center;"><?= $idx + 1 ?></td>
                     <td style="border: 1px solid #94a3b8; padding: 4px;">
@@ -425,8 +475,18 @@ layoutHeader('Laporan Audit Anomali FEFO', 'Pencatatan deviasi batch fisik obat 
                     <td style="border: 1px solid #94a3b8; padding: 4px; text-align: center;">
                         <?= $r['selisih_hari'] !== null ? ($r['selisih_hari'] > 0 ? "+{$r['selisih_hari']} Hari" : "{$r['selisih_hari']} Hari") : '-' ?>
                     </td>
-                    <td style="border: 1px solid #94a3b8; padding: 4px; text-align: right; font-family: monospace; font-weight: bold; color: #e11d48;">
-                        <?= number_format($r['qty']) ?>
+                    <td style="border: 1px solid #94a3b8; padding: 4px; text-align: right;">
+                        <strong style="color: #0f172a; font-family: monospace;"><?= number_format($r['qty']) ?> <?= htmlspecialchars($satLabel) ?></strong><br>
+                        <span style="font-size: 6.5pt; color: #475569; font-weight: 600;">(<?= $badgeSat ?>)</span>
+                    </td>
+                    <td style="border: 1px solid #94a3b8; padding: 4px; text-align: center;">
+                        <?php if (($r['status'] ?? '') === 'disesuaikan'): ?>
+                            <strong style="color: #047857;">✓ Sudah Disesuaikan</strong><br>
+                            <span style="font-size: 6.5pt; color: #475569;">di <?= htmlspecialchars($r['no_invoice_resolved'] ?: '-') ?></span>
+                        <?php else: ?>
+                            <strong style="color: #b45309;">⏳ Menunggu Dikeluarkan</strong><br>
+                            <span style="font-size: 6.5pt; color: #b45309;">(Prioritas transaksi)</span>
+                        <?php endif; ?>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -434,10 +494,11 @@ layoutHeader('Laporan Audit Anomali FEFO', 'Pencatatan deviasi batch fisik obat 
         <tfoot>
             <tr style="background-color: #f1f5f9; font-weight: bold; color: #000000; -webkit-print-color-adjust: exact;">
                 <td colspan="7" style="border: 1px solid #94a3b8; text-align: right; padding: 5px 6px; font-size: 8pt;">TOTAL FISIK TERDAMPAK:</td>
-                <td style="border: 1px solid #94a3b8; text-align: right; padding: 5px 6px; font-family: monospace; font-size: 8.5pt; color: #e11d48;"><?= number_format($totalQtyFisik) ?></td>
+                <td colspan="2" style="border: 1px solid #94a3b8; text-align: right; padding: 5px 6px; font-family: monospace; font-size: 8.5pt; color: #e11d48;"><?= number_format($totalQtyFisik) ?> Unit</td>
             </tr>
         </tfoot>
     </table>
+</div>
 </div>
 
 <?php layoutFooter(); ?>

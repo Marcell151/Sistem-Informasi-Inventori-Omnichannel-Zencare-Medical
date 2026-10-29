@@ -140,7 +140,7 @@ uasort($groupedBatchList, function ($a, $b) {
 // 1. Terjual dengan Garansi Aktif paling mendekati mau habis (sisa hari paling sedikit: 0, 1, 2, ... 30)
 // 2. Unit Retur/Rusak (Karantina)
 // 3. Terjual dengan Garansi Habis (sisa hari <= 0)
-// 4. Produk Tersedia / Belum Terjual (FIFO: barang terdaftar paling lama ke paling baru)
+// 4. Produk Tersedia / Belum Terjual (Urutan barang terdaftar paling lama ke paling baru)
 if (!function_exists('getSNUnitScore')) {
     function getSNUnitScore($s) {
         $status = $s['status'];
@@ -516,7 +516,7 @@ layoutHeader('Laporan Logistik Medis', 'Batch Obat Aktif & Jejak Serial Number A
                                 <td class="px-4 py-3 text-center">
                                     <div class="flex items-center justify-center gap-1.5">
                                         <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded-lg border border-slate-200">
-                                            <span>Jml:</span>
+                                            <span>Jumlah:</span>
                                             <input type="number" min="1" max="100" value="1" class="batch-item-qty w-10 text-center text-xs font-bold border border-slate-300 rounded bg-white py-0.5 focus:outline-none focus:border-zc" onchange="updateBatchQty(this, <?= $b['id'] ?>)">
                                         </div>
                                         <button type="button" onclick="printSingleBatch(this, <?= $b['id'] ?>)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-lg text-[10px] font-bold transition flex items-center gap-1 shadow-2xs" title="Cetak batch ini langsung">
@@ -590,7 +590,7 @@ layoutHeader('Laporan Logistik Medis', 'Batch Obat Aktif & Jejak Serial Number A
             LAPORAN LOGISTIK MEDIS: REKAPITULASI BATCH OBAT AKTIF &amp; KEDALUWARSA
         </h2>
         <div style="font-size: 8.5pt; color: #334155; margin-top: 4px;">
-            Kategori: <strong>Farmasi (Obat-obatan)</strong>
+            Kategori: <strong>Obat-obatan</strong>
             &nbsp;|&nbsp; Total Produk: <strong><?= number_format($totalGroupsBatch) ?> Produk</strong>
             &nbsp;|&nbsp; Total Batch Aktif: <strong><?= number_format($totalBatch) ?> Batch</strong>
             &nbsp;|&nbsp; Kritis / Peringatan Exp: <strong><?= number_format($batchKritis) ?> Batch</strong>
@@ -834,7 +834,7 @@ layoutHeader('Laporan Logistik Medis', 'Batch Obat Aktif & Jejak Serial Number A
                                 <th class="text-left px-4 py-2.5 font-bold">Serial Number (SN)</th>
                                 <th class="text-center px-4 py-2.5 font-bold">Status Unit</th>
                                 <th class="text-left px-4 py-2.5 font-bold">Status Transaksi & Garansi Toko</th>
-                                <th class="text-left px-4 py-2.5 font-bold">Terdaftar (FIFO)</th>
+                                <th class="text-left px-4 py-2.5 font-bold">Waktu Masuk / Registrasi</th>
                                 <th class="text-center px-4 py-2.5 font-bold">Aksi Operasional</th>
                             </tr>
                         </thead>
@@ -966,7 +966,7 @@ layoutHeader('Laporan Logistik Medis', 'Batch Obat Aktif & Jejak Serial Number A
     <!-- Judul & Metadata Laporan -->
     <div style="text-align: center; margin-bottom: 12px;">
         <h2 style="font-size: 12pt; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
-            LAPORAN LOGISTIK MEDIS: AUDIT JEJAK SERIAL NUMBER (SN) ALKES
+            LAPORAN LOGISTIK MEDIS: REKAM JEJAK SERIAL NUMBER (SN) ALKES
         </h2>
         <div style="font-size: 8.5pt; color: #334155; margin-top: 4px;">
             Kategori: <strong>Alat Kesehatan Bergaransi Resmi</strong>

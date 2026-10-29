@@ -1,0 +1,21 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 510,
+            "name": "KOTA TERNATE"
+        },
+        {
+            "id": 511,
+            "name": "KOTA TIDORE KEPULAUAN"
+        },
+        {
+            "id": 512,
+            "name": "KABUPATEN HALMAHERA UTARA"
+        }
+    ]
+}

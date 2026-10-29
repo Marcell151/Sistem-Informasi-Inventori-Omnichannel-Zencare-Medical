@@ -1,0 +1,89 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 172,
+            "name": "KOTA SEMARANG"
+        },
+        {
+            "id": 173,
+            "name": "KOTA SURAKARTA (SOLO)"
+        },
+        {
+            "id": 174,
+            "name": "KOTA MAGELANG"
+        },
+        {
+            "id": 175,
+            "name": "KOTA PEKALONGAN"
+        },
+        {
+            "id": 176,
+            "name": "KOTA SALATIGA"
+        },
+        {
+            "id": 177,
+            "name": "KOTA TEGAL"
+        },
+        {
+            "id": 178,
+            "name": "KABUPATEN BANYUMAS (PURWOKERTO)"
+        },
+        {
+            "id": 179,
+            "name": "KABUPATEN BATANG"
+        },
+        {
+            "id": 180,
+            "name": "KABUPATEN BLORA"
+        },
+        {
+            "id": 181,
+            "name": "KABUPATEN BOYOLALI"
+        },
+        {
+            "id": 182,
+            "name": "KABUPATEN BREBES"
+        },
+        {
+            "id": 183,
+            "name": "KABUPATEN CILACAP"
+        },
+        {
+            "id": 184,
+            "name": "KABUPATEN DEMAK"
+        },
+        {
+            "id": 185,
+            "name": "KABUPATEN JEPARA"
+        },
+        {
+            "id": 186,
+            "name": "KABUPATEN KARANGANYAR"
+        },
+        {
+            "id": 187,
+            "name": "KABUPATEN KLATEN"
+        },
+        {
+            "id": 188,
+            "name": "KABUPATEN KUDUS"
+        },
+        {
+            "id": 189,
+            "name": "KABUPATEN PATI"
+        },
+        {
+            "id": 190,
+            "name": "KABUPATEN SUKOHARJO"
+        },
+        {
+            "id": 191,
+            "name": "KABUPATEN WONOGIRI"
+        }
+    ]
+}

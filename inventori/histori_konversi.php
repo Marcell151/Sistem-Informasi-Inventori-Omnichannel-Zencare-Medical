@@ -85,7 +85,7 @@ $totalKecilMasuk = array_sum(array_column($histori, 'qty_pcs_hasil'));
 layoutHead('Histori Konversi Satuan');
 layoutBodyOpen();
 layoutSidebar('histori_konversi');
-layoutHeader('Histori Konversi Satuan', 'Laporan jejak audit (Audit Trail) pemecahan/konversi kemasan Satuan Besar menjadi Satuan Kecil.');
+layoutHeader('Histori Konversi Satuan', 'Laporan rekam jejak histori log pemecahan/konversi kemasan Satuan Besar menjadi Satuan Kecil.');
 ?>
 
 <!-- Metric Summary Cards -->

@@ -113,10 +113,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $snKet      = ($kategori === 'Alat Kesehatan' && $snPengganti) ? " [SN Baru: $snPengganti]" : "";
             $ketKartu   = "Penerimaan Barang Pengganti Retur ($qtyGanti {$det['satuan_besar']})$batchKet$snKet — Mengacu ke PO Awal: $noRef";
 
+            $idBatchGanti = null;
+            if ($noBatch) {
+                $qBg = $pdo->prepare("SELECT id FROM stok_batch WHERE id_variasi = ? AND no_batch = ?");
+                $qBg->execute([$det['id_variasi'], $noBatch]);
+                $idBatchGanti = $qBg->fetchColumn() ?: null;
+            }
+
             $pdo->prepare("
-                INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh)
-                VALUES (?, ?, 'Masuk', 'Penerimaan', 'Penerimaan Barang Pengganti Retur', ?, ?, ?, ?, ?)
-            ")->execute([$det['id_variasi'], $satuanTipe, $noRef, $qtyKartu, $sisaStok, $ketKartu, $userId]);
+                INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh)
+                VALUES (?, ?, ?, 'Masuk', 'Penerimaan', 'Penerimaan Barang Pengganti Retur', ?, ?, ?, ?, ?)
+            ")->execute([$det['id_variasi'], $idBatchGanti, $satuanTipe, $noRef, $qtyKartu, $sisaStok, $ketKartu, $userId]);
 
             $pdo->commit();
             $msg = "Barang pengganti retur untuk $namaLengkap ($qtyGanti {$det['satuan_besar']}) berhasil diterima dan masuk ke stok aktif di bawah PO $noRef. Total tagihan/utang toko ke supplier tetap seimbang dan tidak bertambah.";
@@ -229,7 +236,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmtStok   = $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi = ? AND 1=1");
                 $stmtBatch  = $pdo->prepare("INSERT INTO stok_batch (id_variasi, no_batch, tgl_exp, stok_sisa) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE stok_sisa = stok_sisa + ?");
                 $stmtSN     = $pdo->prepare("INSERT INTO unit_serial (id_variasi, serial_number) VALUES (?, ?)");
-                $stmtKartu  = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'Masuk', 'Penerimaan', 'Penerimaan Barang', ?, ?, ?, ?, ?)");
+                $stmtKartu  = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, ?, 'Masuk', 'Penerimaan', 'Penerimaan Barang', ?, ?, ?, ?, ?)");
 
             $createdBatches = [];
             $createdSns = [];
@@ -319,8 +326,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $satuanTipe = ($kategori === 'Alat Kesehatan') ? 'kecil' : 'besar';
                     $qtyKartu   = ($kategori === 'Alat Kesehatan') ? $qtyPcsTerima : $qtyTerima;
                     
+                    $idBatchTerima = null;
+                    if ($batch) {
+                        $qBt = $pdo->prepare("SELECT id FROM stok_batch WHERE id_variasi = ? AND no_batch = ?");
+                        $qBt->execute([$idV, $batch]);
+                        $idBatchTerima = $qBt->fetchColumn() ?: null;
+                    }
+
                     if ($qtyKartu > 0) {
-                        $stmtKartu->execute([$idV, $satuanTipe, $noReferensi, $qtyKartu, $sisaStok, $deskripsi, $userId]);
+                        $stmtKartu->execute([$idV, $idBatchTerima, $satuanTipe, $noReferensi, $qtyKartu, $sisaStok, $deskripsi, $userId]);
                     }
                 }
             }
@@ -814,7 +828,7 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
                             'no_referensi' => $p['no_referensi'],
                             'sumber' => $p['sumber'],
                             'tanggal_terima' => date('d F Y', strtotime($p['tanggal_terima'])),
-                            'supplier' => $p['nama_supplier'] ?? 'Umum / PBF Mitra',
+                            'supplier' => $p['nama_supplier'] ?? 'Umum / Distributor Resmi',
                             'pembuat' => $p['pembuat'] ?? 'Petugas Gudang',
                             'catatan' => $p['catatan'] ?? '-',
                             'items' => array_map(function($it) {
@@ -1209,7 +1223,7 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
                     <div>
                         <h2 class="text-base font-black tracking-tight text-[#0f2d5a] leading-tight">ZENCARE MEDICAL</h2>
                         <p class="text-xs text-slate-600 font-semibold">Distributor Alat Kesehatan dan Obat Omnichannel</p>
-                        <p class="text-[10px] text-slate-500">Izin Apotek: 445/SIA/2026 • SIPA: 19890425/SIPA/2026/01 • Jl. Veteran No. 12, Kota Malang</p>
+                        <p class="text-[10px] text-slate-500">Izin Toko Alat Kesehatan dan Obat: 445/ITKO/2026 • Jl. Veteran No. 12, Kota Malang</p>
                     </div>
                 </div>
                 <div class="text-right text-[11px] text-slate-600">
@@ -2216,7 +2230,7 @@ async function autoRegisterCustomProduct(query) {
                 barcode: barcodeVal,
                 dosage_form: 'Box / Pcs',
                 category: 'Obat',
-                company: 'PBF Mitra'
+                company: 'Distributor Resmi'
             })
         });
         const data = await res.json();
@@ -2298,7 +2312,7 @@ function openNotaReturModal(doc) {
     if (document.getElementById('nota_tgl_kop')) document.getElementById('nota_tgl_kop').innerText = 'Tgl: ' + (doc.tanggal_terima || '-');
     if (document.getElementById('nota_tgl')) document.getElementById('nota_tgl').innerText = doc.tanggal_terima || '-';
     if (document.getElementById('nota_sumber')) document.getElementById('nota_sumber').innerText = doc.sumber || 'PO';
-    if (document.getElementById('nota_supplier')) document.getElementById('nota_supplier').innerText = doc.supplier || 'Umum / PBF Mitra';
+    if (document.getElementById('nota_supplier')) document.getElementById('nota_supplier').innerText = doc.supplier || 'Umum / Distributor Resmi';
     if (document.getElementById('nota_petugas')) document.getElementById('nota_petugas').innerText = doc.pembuat || 'Petugas Gudang';
     if (document.getElementById('nota_catatan')) document.getElementById('nota_catatan').innerText = doc.catatan || 'Barang telah diperiksa fisik dan diterima sesuai surat jalan.';
 

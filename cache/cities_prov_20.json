@@ -1,0 +1,33 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 455,
+            "name": "KOTA KENDARI"
+        },
+        {
+            "id": 456,
+            "name": "KOTA BAUBAU"
+        },
+        {
+            "id": 457,
+            "name": "KABUPATEN KOLAKA"
+        },
+        {
+            "id": 458,
+            "name": "KABUPATEN KONAWE"
+        },
+        {
+            "id": 459,
+            "name": "KABUPATEN MUNA"
+        },
+        {
+            "id": 460,
+            "name": "KABUPATEN WAKATOBI"
+        }
+    ]
+}

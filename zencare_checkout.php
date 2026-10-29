@@ -207,7 +207,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                             <svg class="w-5 h-5 text-slate-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
                             <div class="text-xs text-slate-600 leading-relaxed">
                                 <strong class="text-slate-800 block mb-0.5">Area Luar Kota Terdeteksi</strong> 
-                                Pengiriman dialihkan menggunakan Ekspedisi Nasional (JNE / POS Indonesia). Peta akan bergeser ke lokasi tujuan.
+                                Pengiriman dialihkan menggunakan Ekspedisi Nasional (JNE / POS Indonesia / J&T Express). Peta akan bergeser ke lokasi tujuan.
                             </div>
                         </div>
 
@@ -290,44 +290,35 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                         </div>
                     </div>
 
-                    <!-- Pilihan Kategori Pembayaran Midtrans (QRIS 15 Menit vs Virtual Account 2 Jam) -->
+                    <!-- Metode Pembayaran Otomatis Midtrans (Pilihan Lengkap Langsung di Popup Midtrans) -->
                     <div class="mt-4 pt-4 border-t border-zcBrd">
                         <label class="block text-xs font-bold text-zcTxt mb-2 flex items-center justify-between">
-                            <span>Kategori Pembayaran Midtrans:</span>
-                            <span class="text-[10px] text-zc font-semibold">Batas Waktu Sinkron</span>
+                            <span>Metode Pembayaran Online:</span>
+                            <span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                Batas Waktu: 2 Jam
+                            </span>
                         </label>
-                        <div class="grid grid-cols-2 gap-2" id="group_metode_bayar">
-                            <div class="cursor-pointer border-2 border-zc rounded-xl p-2.5 flex flex-col gap-1 transition bg-blue-50/50 shadow-xs" id="card_pay_qris" onclick="selectPayCategory('qris')">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold text-zcTxt flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5 text-zc" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                                        QRIS / E-Wallet
-                                    </span>
-                                </div>
-                                <span class="text-[10px] text-zcMut">GoPay, ShopeePay, QRIS</span>
-                                <div class="mt-1 flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100/90 px-1.5 py-0.5 rounded self-start">
-                                    <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                    <span>Batas: 15 Menit</span>
-                                </div>
+                        <div class="border-2 border-zc rounded-xl p-3 bg-gradient-to-r from-blue-50/70 to-indigo-50/30 shadow-xs">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-xs font-black text-zcTxt flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-zc" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                                    Pembayaran
+                                </span>
+                                <span class="text-[10px] font-bold text-zc bg-white border border-zc/30 px-2 py-0.5 rounded shadow-2xs">Pilihan Lengkap</span>
                             </div>
-
-                            <div class="cursor-pointer border-2 border-slate-200 rounded-xl p-2.5 flex flex-col gap-1 transition hover:border-slate-300" id="card_pay_va" onclick="selectPayCategory('va')">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold text-zcTxt flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                                        Transfer Virtual Account
-                                    </span>
-                                </div>
-                                <span class="text-[10px] text-zcMut">BCA, BNI, BRI, Mandiri</span>
-                                <div class="mt-1 flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-100/90 px-1.5 py-0.5 rounded self-start">
-                                    <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                    <span>Batas: 2 Jam</span>
-                                </div>
+                            <p class="text-[11px] text-slate-600 leading-relaxed mb-2">
+                                Pilih kanal pembayaran langsung di jendela saat tombol Bayar Sekarang ditekan:
+                            </p>
+                            <div class="flex flex-wrap gap-1.5 text-[10px] font-semibold text-slate-600">
+                                <span class="px-2 py-0.5 bg-white border border-slate-200 rounded text-slate-700 shadow-2xs">QRIS (GoPay/ShopeePay)</span>
+                                <span class="px-2 py-0.5 bg-white border border-slate-200 rounded text-slate-700 shadow-2xs">BCA Virtual Account</span>
+                                <span class="px-2 py-0.5 bg-white border border-slate-200 rounded text-slate-700 shadow-2xs">Mandiri Bill</span>
+                                <span class="px-2 py-0.5 bg-white border border-slate-200 rounded text-slate-700 shadow-2xs">BNI &amp; BRI VA</span>
+                                <span class="px-2 py-0.5 bg-white border border-slate-200 rounded text-slate-700 shadow-2xs">Transfer Bank Lain</span>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="mt-5 space-y-2">
+                    </div><div class="mt-5 space-y-2">
                         <!-- Opsi "Bayar Nanti" disembunyikan (Feature Toggle) untuk mencegah Dead Stock / Penimbunan Stok Fiktif -->
                         <button onclick="prosesCheckout(false)" id="btn_checkout_nanti" style="display: none;" class="w-full bg-white hover:bg-slate-50 text-zcTxt border border-zcBrd font-semibold text-xs py-3.5 px-2 rounded-xl transition shadow-sm">
                             Buat Pesanan (Bayar Nanti)
@@ -485,6 +476,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
 
         function loadCitiesAPI() {
             let provId = document.getElementById('provinsi_select').value || '18';
+            let isJatim = (provId == '18');
             let citySelect = document.getElementById('kota_select');
             citySelect.disabled = true;
             if (window.jQuery && $.fn.select2) {
@@ -497,13 +489,25 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 .then(data => {
                     let list = data.data || data.results || [];
                     if (Array.isArray(list) && list.length > 0) {
-                        let html = '<option value="">-- Pilih Kota / Kabupaten --</option>';
-                        list.forEach(c => {
+                        let html = '';
+                        list.forEach((c, idx) => {
                             let id = c.city_id || c.id;
                             let name = (c.type ? c.type + ' ' : '') + (c.city_name || c.name);
-                            let isSelected = (SAVED_KOTA_ID && SAVED_KOTA_ID == id) || (!SAVED_KOTA_ID && (name.toLowerCase().includes('malang') || id == 391 || id == 256));
+                            let isSelected = false;
+                            if (SAVED_KOTA_ID && SAVED_KOTA_ID == id) {
+                                isSelected = true;
+                            } else if (!SAVED_KOTA_ID && isJatim && (name.toLowerCase().includes('malang') || id == 391 || id == 256)) {
+                                isSelected = true;
+                            } else if (!SAVED_KOTA_ID && !isJatim && idx === 0) {
+                                // Default ke kota pertama pada provinsi terpilih (misal: Pekanbaru di Riau)
+                                isSelected = true;
+                            }
                             html += `<option value="${id}" ${isSelected ? 'selected' : ''}>${name}</option>`;
                         });
+                        
+                        if (window.jQuery && $.fn.select2 && $('#kota_select').hasClass('select2-hidden-accessible')) {
+                            $('#kota_select').select2('destroy');
+                        }
                         citySelect.innerHTML = html;
                         citySelect.disabled = false;
                         initSelect2Kota();
@@ -511,15 +515,9 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                     } else { throw new Error("No cities"); }
                 })
                 .catch(() => {
-                    citySelect.innerHTML = `
-                        <option value="391" selected>MALANG</option>
-                        <option value="577">SURABAYA</option>
-                        <option value="583">SIDOARJO</option>
-                        <option value="393">BATU</option>
-                    `;
+                    citySelect.innerHTML = '<option value="">Gagal memuat kota. Silakan coba lagi</option>';
                     citySelect.disabled = false;
                     initSelect2Kota();
-                    onCityChange();
                 });
         }
 
@@ -568,6 +566,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 courierSelect.innerHTML = `
                     <option value="jne">Ekspedisi JNE Express</option>
                     <option value="pos">Ekspedisi POS Indonesia</option>
+                    <option value="jnt">Ekspedisi J&T Express</option>
                     <option value="pickup">Ambil Sendiri di Toko (Gratis)</option>
                 `;
                 courierSelect.value = 'jne';
@@ -619,9 +618,13 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             let serviceSelect = document.getElementById('service_select');
             serviceSelect.innerHTML = '<option value="">Kalkulasi Ongkir API RajaOngkir...</option>';
 
+            let citySelectElem = document.getElementById('kota_select');
+            let cityNameVal = citySelectElem.options[citySelectElem.selectedIndex]?.text || '';
+
             let formData = new FormData();
             formData.append('origin', ORIGIN_KOTA_ID);
             formData.append('destination', destCityId);
+            formData.append('city_name', cityNameVal);
             formData.append('weight', totalWeight);
             formData.append('courier', courier);
 
@@ -645,14 +648,38 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 if (costs.length > 0) {
                     availableCosts = costs;
                     let html = '';
+                    let isHeavyWeight = (totalWeight >= 10000);
+                    let recommendedIdx = -1;
+
                     costs.forEach((c, idx) => {
                         let costVal = (typeof c.cost === 'number') ? c.cost : (c.cost && c.cost[0] ? (c.cost[0].value || 0) : 0);
                         let etdStr = c.etd ? ` (Estimasi: ${c.etd})` : (c.cost && c.cost[0] && c.cost[0].etd ? ` (Estimasi: ${c.cost[0].etd} Hari)` : '');
                         let svcName = c.service || c.name || 'Layanan Paket';
                         let descStr = (c.description && c.description !== c.service) ? ` [${c.description}]` : '';
-                        html += `<option value="${idx}">${svcName}${descStr} - Rp ${costVal.toLocaleString('id-ID')}${etdStr}</option>`;
+
+                        let isCargo = /jtr|cargo|kargo|trucking/i.test(svcName + ' ' + (c.description || ''));
+                        let isExpress = /yes|super|nextday|ons|express/i.test(svcName + ' ' + (c.description || ''));
+                        let isReg = /reg|ez|standar|reguler/i.test(svcName + ' ' + (c.description || ''));
+
+                        let badge = '';
+                        if (isHeavyWeight) {
+                            if (isCargo) {
+                                badge = ' [Rekomendasi Hemat Kargo]';
+                                if (recommendedIdx === -1) recommendedIdx = idx;
+                            }
+                        } else {
+                            if (isReg && !isCargo && !isExpress) {
+                                badge = ' [Rekomendasi Standar]';
+                                if (recommendedIdx === -1) recommendedIdx = idx;
+                            }
+                        }
+
+                        html += `<option value="${idx}">${svcName}${descStr} - Rp ${costVal.toLocaleString('id-ID')}${etdStr}${badge}</option>`;
                     });
                     serviceSelect.innerHTML = html;
+                    if (recommendedIdx !== -1) {
+                        serviceSelect.selectedIndex = recommendedIdx;
+                    }
                     onServiceChange();
                 } else { throw new Error("No costs returned"); }
             })
@@ -660,16 +687,23 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 let weightKg = Math.max(1, Math.ceil(totalWeight / 1000));
                 let regPrice = 15000 * weightKg;
                 let yesPrice = 24000 * weightKg;
+                let extraKg = Math.max(0, weightKg - 10);
+                let truckPrice = 45000 + (extraKg * 3000);
+
+                let isHeavy = (totalWeight >= 10000);
 
                 availableCosts = [
                     { service: 'REG (Reguler ' + weightKg + 'kg)', cost: regPrice, etd: '2-3 Hari' },
-                    { service: 'YES (Yakin Esok Sampai ' + weightKg + 'kg)', cost: yesPrice, etd: '1 Hari' }
+                    { service: 'YES (Yakin Esok Sampai ' + weightKg + 'kg)', cost: yesPrice, etd: '1 Hari' },
+                    { service: 'JTR / KARGO (Trucking Logistik)', cost: truckPrice, etd: '4-7 Hari' }
                 ];
                 let html = `
-                    <option value="0">REG (Reguler ${weightKg}kg) - Rp ${regPrice.toLocaleString('id-ID')} (2-3 Hari)</option>
+                    <option value="0"${!isHeavy ? ' selected' : ''}>REG (Reguler ${weightKg}kg) - Rp ${regPrice.toLocaleString('id-ID')} (2-3 Hari)${!isHeavy ? ' [Rekomendasi Standar]' : ''}</option>
                     <option value="1">YES (Yakin Esok Sampai ${weightKg}kg) - Rp ${yesPrice.toLocaleString('id-ID')} (1 Hari)</option>
+                    <option value="2"${isHeavy ? ' selected' : ''}>JTR / KARGO (Trucking Logistik) - Rp ${truckPrice.toLocaleString('id-ID')} (4-7 Hari)${isHeavy ? ' [Rekomendasi Hemat Kargo]' : ''}</option>
                 `;
                 serviceSelect.innerHTML = html;
+                serviceSelect.selectedIndex = isHeavy ? 2 : 0;
                 onServiceChange();
             });
         }
@@ -696,7 +730,15 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             let totalWeight = cart.reduce((sum, i) => sum + ((parseInt(i.berat) || 100) * (parseInt(i.qty) || 1)), 0);
             let grandTotal = subtotal + currentOngkir;
 
-            document.getElementById('disp_total_weight').innerText = totalWeight + ' Gram';
+            let weightKg = (totalWeight / 1000).toFixed(1);
+            let weightBadge = '';
+            if (totalWeight >= 10000) {
+                weightBadge = `<span class="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full ml-1.5 border border-amber-300">📦 Muatan Berat (Rekomendasi Kargo)</span>`;
+            } else if (totalWeight > 0) {
+                weightBadge = `<span class="inline-flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded-full ml-1.5 border border-blue-200">Paket Reguler</span>`;
+            }
+
+            document.getElementById('disp_total_weight').innerHTML = `${totalWeight.toLocaleString('id-ID')} Gram (${weightKg} Kg) ${weightBadge}`;
             document.getElementById('disp_subtotal').innerText = 'Rp ' + subtotal.toLocaleString('id-ID');
             document.getElementById('disp_ongkir').innerText = 'Rp ' + currentOngkir.toLocaleString('id-ID');
             document.getElementById('disp_grand_total').innerText = 'Rp ' + grandTotal.toLocaleString('id-ID');
@@ -806,7 +848,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             }
         }
 
-        let selectedPayCategory = 'qris';
+        let selectedPayCategory = 'midtrans';
         function selectPayCategory(cat) {
             selectedPayCategory = cat;
             let cardQris = document.getElementById('card_pay_qris');

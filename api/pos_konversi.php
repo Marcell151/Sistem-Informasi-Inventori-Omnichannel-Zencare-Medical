@@ -42,6 +42,19 @@ try {
     if ($batchAsal["tgl_exp"] < date('Y-m-d')) {
         throw new Exception("Batch asal sudah kadaluarsa ({$batchAsal['tgl_exp']}). Tidak dapat dikonversi ke eceran.");
     }
+
+    // Proteksi server: Cek apakah batch ini sedang dikunci (Reserved) oleh pesanan aktif
+    $qRes = $pdo->prepare("
+        SELECT COALESCE(SUM(pba.qty_satuan_kecil), 0) 
+        FROM pesanan_batch_alokasi pba 
+        JOIN penjualan p ON pba.id_penjualan = p.id 
+        WHERE pba.id_batch = ? AND p.status_pesanan IN ('Menunggu Pembayaran', 'Diproses', 'Siap Diambil')
+    ");
+    $qRes->execute([$batchAsal['id']]);
+    $reservedQty = intval($qRes->fetchColumn());
+    if (($batchAsal['stok_sisa'] - $reservedQty) < $qtyPcs) {
+        throw new Exception("Batch {$batchAsal['no_batch']} tidak dapat dibongkar! Sebanyak $reservedQty unit sedang dikunci (Reserved) oleh pesanan aktif yang menunggu pembayaran / pengiriman.");
+    }
     
     // Kurangi batch asal
     $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$qtyPcs, $batchAsal["id"]]);
@@ -68,6 +81,11 @@ try {
     $stmtNew = $pdo->prepare("INSERT INTO stok_batch (id_variasi, no_batch, tgl_exp, stok_sisa) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE stok_sisa = stok_sisa + ?");
     $stmtNew->execute([$idVariasi, $newBatchName, $batchAsal["tgl_exp"], $qtyPcs, $qtyPcs]);
     
+    // Ambil ID sub-batch baru
+    $stmtGetNew = $pdo->prepare("SELECT id FROM stok_batch WHERE id_variasi = ? AND no_batch = ?");
+    $stmtGetNew->execute([$idVariasi, $newBatchName]);
+    $newBatchId = $stmtGetNew->fetchColumn();
+
     // Catat di kartu stok secara terpisah (Keluar Dus, Masuk Pcs)
     // Sisa Dus Utuh di Gudang setelah pembongkaran
     $qDusSisa = $pdo->prepare("SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = ? AND no_batch NOT LIKE '%.%'");
@@ -79,15 +97,15 @@ try {
     $qEceranSisa->execute([$idVariasi]);
     $sisaStokEceran = intval($qEceranSisa->fetchColumn());
     
-    // 1. Kartu Stok DUS (Keluar)
+    // 1. Kartu Stok DUS (Keluar) - tercatat per batch asal
     $catatanKeluar = "Bongkar 1 " . $var["satuan_besar"] . " (Rp0 - Konversi POS) [Batch: $noBatchAsal]";
-    $stmtKartu1 = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'besar', 'Keluar', 'Manual', 'Bongkar Dus', 1, ?, ?, ?)");
-    $stmtKartu1->execute([$idVariasi, $sisaStokDus, $catatanKeluar, $userId]);
+    $stmtKartu1 = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'besar', 'Keluar', 'Manual', 'Bongkar Dus', 1, ?, ?, ?)");
+    $stmtKartu1->execute([$idVariasi, $batchAsal['id'], $sisaStokDus, $catatanKeluar, $userId]);
     
-    // 2. Kartu Stok ECERAN (Masuk)
+    // 2. Kartu Stok ECERAN (Masuk) - tercatat per sub-batch baru
     $catatanMasuk = "Lahir Sub-Batch $newBatchName (Masuk $qtyPcs " . $var["satuan_kecil"] . ")";
-    $stmtKartu2 = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'kecil', 'Masuk', 'Manual', 'Hasil Bongkar', ?, ?, ?, ?)");
-    $stmtKartu2->execute([$idVariasi, $qtyPcs, $sisaStokEceran, $catatanMasuk, $userId]);
+    $stmtKartu2 = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'kecil', 'Masuk', 'Manual', 'Hasil Bongkar', ?, ?, ?, ?)");
+    $stmtKartu2->execute([$idVariasi, $newBatchId, $qtyPcs, $sisaStokEceran, $catatanMasuk, $userId]);
     
     // 3. Histori Konversi
     $stmtHist = $pdo->prepare("INSERT INTO histori_konversi (id_variasi, batch_asal, batch_hasil, qty_box_buka, qty_pcs_hasil, sisa_dus_akhir, dibuat_oleh) VALUES (?, ?, ?, 1, ?, ?, ?)");

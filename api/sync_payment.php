@@ -5,6 +5,7 @@
 
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/order_helper.php';
 
 $orderId = $_GET['order_id'] ?? '';
 if (empty($orderId)) {
@@ -60,7 +61,7 @@ try {
     // 2. Update Database (Logika sama dengan webhook)
     $pdo->beginTransaction();
 
-    $stmtSelect = $pdo->prepare("SELECT status_pesanan, metode_pengambilan FROM penjualan WHERE no_invoice = ? FOR UPDATE");
+    $stmtSelect = $pdo->prepare("SELECT id, status_pesanan, metode_pengambilan FROM penjualan WHERE no_invoice = ? FOR UPDATE");
     $stmtSelect->execute([$orderId]);
     $order = $stmtSelect->fetch(PDO::FETCH_ASSOC);
 
@@ -82,33 +83,34 @@ try {
         exit;
     }
 
-    $stmtUpdate = $pdo->prepare("
-        UPDATE penjualan 
-        SET status_pesanan = ?,
-            payment_method_ecommerce = COALESCE(NULLIF(?, ''), payment_method_ecommerce),
-            paid_at = CASE WHEN ? IN ('Diproses', 'Selesai') THEN COALESCE(paid_at, NOW()) ELSE paid_at END
-        WHERE no_invoice = ?
-    ");
-    $stmtUpdate->execute([$newStatus, $paymentType, $newStatus, $orderId]);
+    if ($oldStatus === 'Dibatalkan') {
+        // Pesanan sudah dibatalkan lokal karena melewati batas waktu.
+        // Jika pembayaran lunas masuk terlambat, JANGAN ubah status ke Diproses dan JANGAN potong stok.
+        // Catat waktu bayar agar admin dapat melakukan proses pengembalian dana (refund) manual.
+        $pdo->prepare("UPDATE penjualan SET payment_method_ecommerce = COALESCE(payment_method_ecommerce, ?), paid_at = COALESCE(paid_at, NOW()) WHERE no_invoice = ?")
+            ->execute([$paymentType, $orderId]);
+        $pdo->commit();
+        echo json_encode([
+            'status' => 'warning',
+            'message' => 'Pesanan ini sudah kedaluwarsa/dibatalkan sebelum pembayaran diterima. Silakan hubungi admin toko untuk pengembalian dana.'
+        ]);
+        exit;
+    }
 
-    // Ambil detail item
-    $stmtItems = $pdo->prepare("SELECT d.id_variasi, d.qty, v.rasio_konversi, v.satuan_besar FROM detail_penjualan d JOIN produk_variasi v ON d.id_variasi = v.id WHERE d.id_penjualan = (SELECT id FROM penjualan WHERE no_invoice = ?)");
-    $stmtItems->execute([$orderId]);
-    $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
-
-    // Pengembalian Stok (Jika dibatalkan)
-    if ($oldStatus !== 'Dibatalkan' && $newStatus === 'Dibatalkan') {
-        foreach ($items as $item) {
-            $idVar = $item['id_variasi'];
-            $qtyBox = intval($item['qty']);
-            $rasio = intval($item['rasio_konversi']) ?: 1;
-            $qtyPotong = $qtyBox * $rasio;
-            $satBesar = $item['satuan_besar'];
-
-            $stmtStok = $pdo->prepare("UPDATE stok_toko SET stok = stok + ? WHERE id_variasi = ?");
-            $stmtStok->execute([$qtyPotong, $idVar]);
-
+    if ($newStatus === 'Dibatalkan') {
+        batalkanSatuPesananInternal($pdo, $order['id']);
+        if (!empty($paymentType)) {
+            $pdo->prepare("UPDATE penjualan SET payment_method_ecommerce = ? WHERE id = ?")->execute([$paymentType, $order['id']]);
         }
+    } else {
+        $stmtUpdate = $pdo->prepare("
+            UPDATE penjualan 
+            SET status_pesanan = ?,
+                payment_method_ecommerce = COALESCE(NULLIF(?, ''), payment_method_ecommerce),
+                paid_at = CASE WHEN ? IN ('Diproses', 'Selesai') THEN COALESCE(paid_at, NOW()) ELSE paid_at END
+            WHERE no_invoice = ?
+        ");
+        $stmtUpdate->execute([$newStatus, $paymentType, $newStatus, $orderId]);
     }
 
     $pdo->commit();

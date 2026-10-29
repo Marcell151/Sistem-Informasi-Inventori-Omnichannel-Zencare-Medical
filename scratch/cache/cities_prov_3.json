@@ -1,0 +1,61 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 314,
+            "name": "KOTA BANJARMASIN"
+        },
+        {
+            "id": 315,
+            "name": "KOTA BANJARBARU"
+        },
+        {
+            "id": 316,
+            "name": "KABUPATEN BANJAR"
+        },
+        {
+            "id": 317,
+            "name": "KABUPATEN BARITO KUALA"
+        },
+        {
+            "id": 318,
+            "name": "KABUPATEN TAPIN"
+        },
+        {
+            "id": 319,
+            "name": "KABUPATEN HULU SUNGAI SELATAN"
+        },
+        {
+            "id": 320,
+            "name": "KABUPATEN HULU SUNGAI TENGAH"
+        },
+        {
+            "id": 321,
+            "name": "KABUPATEN HULU SUNGAI UTARA"
+        },
+        {
+            "id": 322,
+            "name": "KABUPATEN TABALONG"
+        },
+        {
+            "id": 323,
+            "name": "KABUPATEN TANAH LAUT"
+        },
+        {
+            "id": 324,
+            "name": "KABUPATEN TANAH BUMBU"
+        },
+        {
+            "id": 325,
+            "name": "KABUPATEN KOTABARU"
+        },
+        {
+            "id": 326,
+            "name": "KABUPATEN BALANGAN"
+        }
+    ]
+}

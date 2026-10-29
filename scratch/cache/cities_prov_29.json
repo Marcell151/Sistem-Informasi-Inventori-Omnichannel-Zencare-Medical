@@ -1,0 +1,25 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 497,
+            "name": "KOTA SORONG"
+        },
+        {
+            "id": 498,
+            "name": "KABUPATEN MANOKWARI"
+        },
+        {
+            "id": 499,
+            "name": "KABUPATEN FAKFAK"
+        },
+        {
+            "id": 500,
+            "name": "KABUPATEN RAJA AMPAT"
+        }
+    ]
+}

@@ -83,7 +83,7 @@ try {
         $skuInduk = $prefixInduk . date('y') . '-' . $randSeq;
 
         $desc = "Obat resmi terdaftar BPOM RI.";
-        if ($company) $desc .= " Pabrik/PBF: $company.";
+        if ($company) $desc .= " Produsen/Distributor: $company.";
         if ($dosageForm) $desc .= " Sediaan: $dosageForm.";
 
         $stmtInsertInduk = $pdo->prepare("
@@ -161,7 +161,7 @@ try {
         'satuan_kecil'   => $satuanKecil,
         'rasio_konversi' => $rasio,
         'harga_jual_besar' => 0,
-        'message'        => 'Obat berhasil didaftarkan ke Master Produk Apotek & siap masuk ke baris penerimaan.'
+        'message'        => 'Obat berhasil didaftarkan ke Master Produk Toko & siap masuk ke baris penerimaan.'
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {

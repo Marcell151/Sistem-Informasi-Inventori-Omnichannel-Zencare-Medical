@@ -376,7 +376,7 @@ $related = $stmtRelated->fetchAll();
                     </div>
                     <?php if ($hargaEceran > 0): ?>
                     <div class="sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200">
-                        <span class="text-[10px] text-slate-400 block font-medium">Referensi Eceran Apotek/POS:</span>
+                        <span class="text-[10px] text-slate-400 block font-medium">Referensi Eceran Toko Offline/POS:</span>
                         <span class="text-xs font-bold text-slate-600">
                             ~Rp <?= number_format($hargaEceran, 0, ',', '.') ?> <span class="font-normal text-slate-400">/ <?= htmlspecialchars($satKecil) ?></span>
                         </span>

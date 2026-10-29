@@ -1,0 +1,49 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 341,
+            "name": "KOTA SAMARINDA"
+        },
+        {
+            "id": 342,
+            "name": "KOTA BALIKPAPAN"
+        },
+        {
+            "id": 343,
+            "name": "KOTA BONTANG"
+        },
+        {
+            "id": 344,
+            "name": "KABUPATEN BERAU"
+        },
+        {
+            "id": 345,
+            "name": "KABUPATEN KUTAI BARAT"
+        },
+        {
+            "id": 346,
+            "name": "KABUPATEN KUTAI KARTANEGARA"
+        },
+        {
+            "id": 347,
+            "name": "KABUPATEN KUTAI TIMUR"
+        },
+        {
+            "id": 348,
+            "name": "KABUPATEN MAHAKAM ULU"
+        },
+        {
+            "id": 349,
+            "name": "KABUPATEN PASER"
+        },
+        {
+            "id": 350,
+            "name": "KABUPATEN PENAJAM PASER UTARA"
+        }
+    ]
+}

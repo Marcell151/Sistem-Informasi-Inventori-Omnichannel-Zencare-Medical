@@ -1,6 +1,8 @@
 <?php
 // File: index.php - Dashboard Operasional ZenCare Medical (v3.0 - Minimalist)
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/koneksi.php';
 require_once __DIR__ . '/config/auth.php';
@@ -33,6 +35,52 @@ $expWarningCount  = (int)$pdo->query("
 ")->fetchColumn();
 $pesananMenunggu  = (int)$pdo->query("SELECT COUNT(*) FROM penjualan WHERE status_pesanan IN ('Menunggu Pembayaran','Diproses')")->fetchColumn();
 $transaksiHariIni = (int)$pdo->query("SELECT COUNT(*) FROM penjualan WHERE DATE(created_at)=CURDATE() AND status_pesanan NOT IN ('Dibatalkan')")->fetchColumn();
+
+// ─── ANOMALI FEFO & MONITORING RETUR (Bimbingan Dosen Poin 2) ─────────────
+$anomaliPendingCount = (int)$pdo->query("SELECT COUNT(*) FROM log_anomali_fefo WHERE status = 'terlewat'")->fetchColumn();
+$anomaliSelesaiCount = (int)$pdo->query("SELECT COUNT(*) FROM log_anomali_fefo WHERE status = 'disesuaikan'")->fetchColumn();
+$anomaliHariIniCount = (int)$pdo->query("SELECT COUNT(*) FROM log_anomali_fefo WHERE (DATE(created_at) = CURDATE() OR status = 'terlewat')")->fetchColumn();
+$listAnomaliHariIni = $pdo->query("
+    SELECT a.id, a.id_penjualan, a.batch_diambil, a.batch_seharusnya, a.qty, a.satuan_tipe, a.status, a.created_at, a.resolved_at,
+           COALESCE(p.no_invoice, CONCAT('TRX-', a.id_penjualan)) AS no_invoice,
+           p_res.no_invoice AS no_invoice_resolved,
+           COALESCE(p.tipe_transaksi, 'pos') AS tipe_transaksi,
+           CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama_produk,
+           pv.satuan_kecil, pv.satuan_besar,
+           COALESCE(u.nama_lengkap, 'Kasir') AS operator
+    FROM log_anomali_fefo a
+    LEFT JOIN penjualan p ON a.id_penjualan = p.id
+    LEFT JOIN penjualan p_res ON a.resolved_in_penjualan = p_res.id
+    LEFT JOIN produk_variasi pv ON a.id_variasi = pv.id
+    LEFT JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+    LEFT JOIN users u ON a.id_user = u.id
+    ORDER BY (a.status = 'terlewat') DESC,
+             CASE WHEN a.status = 'terlewat' THEN a.created_at END DESC,
+             COALESCE(a.resolved_at, a.created_at) DESC,
+             a.id DESC
+    LIMIT 50
+")->fetchAll(PDO::FETCH_ASSOC);
+
+$returMenungguCount = (int)$pdo->query("SELECT COUNT(*) FROM penerimaan_detail WHERE status_retur = 'menunggu_pengganti'")->fetchColumn();
+$returSelesaiCount  = (int)$pdo->query("SELECT COUNT(*) FROM penerimaan_detail WHERE status_retur = 'selesai_tukar_barang'")->fetchColumn();
+$listReturMonitoring = $pdo->query("
+    SELECT pd.id, pd.status_retur, pd.qty_rusak, pd.qty_pengganti_diterima, pd.no_batch, pd.no_batch_pengganti, pd.tgl_selesai_retur, pd.catatan_retur,
+           ps.no_referensi, ps.tanggal_terima,
+           COALESCE(s.nama, 'Supplier') AS nama_supplier,
+           CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama_produk,
+           pv.satuan_besar, pv.satuan_kecil
+    FROM penerimaan_detail pd
+    JOIN penerimaan_stok ps ON pd.id_penerimaan = ps.id
+    LEFT JOIN supplier s ON ps.id_supplier = s.id
+    JOIN produk_variasi pv ON pd.id_variasi = pv.id
+    JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+    WHERE pd.status_retur IN ('menunggu_pengganti', 'selesai_tukar_barang')
+    ORDER BY (pd.status_retur = 'menunggu_pengganti') DESC,
+             CASE WHEN pd.status_retur = 'menunggu_pengganti' THEN ps.tanggal_terima END DESC,
+             pd.tgl_selesai_retur DESC,
+             pd.id DESC
+    LIMIT 50
+")->fetchAll(PDO::FETCH_ASSOC);
 
 // ─── DATA SUPERADMIN (Semua berbasis Kuantitas/Unit — tanpa Rupiah) ────────
 if ($isSuperadmin) {
@@ -105,7 +153,7 @@ if ($isSuperadmin) {
         ORDER BY ks.id DESC LIMIT 100
     ")->fetchAll();
 
-    // Riwayat Pengadaan & Harga Beli
+    // Riwayat Pengadaan & Beli
     $riwayatPengadaan = $pdo->query("
         SELECT ps.tanggal_terima, ps.no_referensi, ps.sumber, u.nama_lengkap AS penerima,
                CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama_produk,
@@ -274,8 +322,8 @@ layoutHeader(
 <!-- SUPERADMIN DASHBOARD — Berbasis Kuantitas Fisik, tanpa Rupiah -->
 <!-- ============================================================ -->
 
-<!-- ROW 1: Widgets Inventori Utama (4 kotak) -->
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;">
+<!-- ROW 1: Widgets Inventori Utama (6 kotak Responsif) -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:14px;margin-bottom:18px;">
 
     <!-- Total Stok Fisik -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;">
@@ -307,16 +355,67 @@ layoutHeader(
         <div style="font-size:30px;font-weight:900;color:<?= $pesananMenunggu>0?'#2563eb':'#1e293b' ?>;line-height:1;"><?= number_format($pesananMenunggu) ?></div>
         <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Status: Menunggu</div>
     </a>
+
+    <!-- Widget Anomali FEFO (Superadmin - Desain Seragam dengan Retur) -->
+    <div onclick="openAnomaliModal()" style="cursor:pointer;background:#fff;border:1px solid <?= $anomaliPendingCount > 0 ? '#fed7aa' : '#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">ANOMALI FEFO</div>
+        <div style="font-size:30px;font-weight:900;color:<?= $anomaliPendingCount > 0 ? '#d97706' : '#1e293b' ?>;line-height:1;"><?= number_format($anomaliPendingCount) ?> <span style="font-size:13px;font-weight:600;color:#94a3b8;">/ <?= number_format($anomaliSelesaiCount) ?> disesuaikan</span></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $anomaliPendingCount > 0 ? 'Menunggu dikeluarkan kasir' : 'Semua deviasi disesuaikan ✓' ?></div>
+    </div>
+
+    <!-- Widget Monitoring Retur Barang (Superadmin - Desain Seragam) -->
+    <div onclick="openReturModal()" style="cursor:pointer;background:#fff;border:1px solid <?= $returMenungguCount > 0 ? '#fed7aa' : '#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STATUS RETUR SUPPLIER</div>
+        <div style="font-size:30px;font-weight:900;color:<?= $returMenungguCount > 0 ? '#d97706' : '#1e293b' ?>;line-height:1;"><?= number_format($returMenungguCount) ?> <span style="font-size:13px;font-weight:600;color:#94a3b8;">/ <?= number_format($returSelesaiCount) ?> selesai</span></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $returMenungguCount > 0 ? 'Menunggu ganti barang PO' : 'Semua retur terselesaikan ✓' ?></div>
+    </div>
 </div>
 
-<!-- ROW 2: Grafik Penjualan & Volume Hari Ini -->
+<!-- ROW 2: Rekap Kuantitas Penjualan (Non-Grafik) & Volume Hari Ini -->
 <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:18px;">
 
-    <!-- Grafik Kuantitas Penjualan -->
+    <!-- Tabel Rekap Faktual Kuantitas Penjualan 7 Hari Terakhir (Pengganti Grafik) -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;">
-        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:12px;">Kuantitas Penjualan (Luring vs Daring) — 7 Hari Terakhir</div>
-        <div style="position:relative;height:240px;width:100%;">
-            <canvas id="salesChart"></canvas>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:12px;font-weight:700;color:#1e293b;">Rekap Kuantitas Penjualan (Luring vs Daring) — 7 Hari Terakhir</div>
+            <span style="font-size:10px;color:#94a3b8;font-weight:600;">Satuan: Unit Terjual</span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                <thead>
+                    <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#64748b;">
+                        <th style="padding:7px 10px;text-align:left;font-weight:600;">TANGGAL</th>
+                        <th style="padding:7px 10px;text-align:right;font-weight:600;">POS (LURING)</th>
+                        <th style="padding:7px 10px;text-align:right;font-weight:600;">E-COMMERCE (DARING)</th>
+                        <th style="padding:7px 10px;text-align:right;font-weight:700;">TOTAL HARIAN</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php 
+                    $sumPos = 0; $sumOnline = 0;
+                    for ($i = 0; $i < count($chartLabels); $i++): 
+                        $pVal = $chartDataPos[$i] ?? 0;
+                        $oVal = $chartDataOnline[$i] ?? 0;
+                        $totRow = $pVal + $oVal;
+                        $sumPos += $pVal; $sumOnline += $oVal;
+                    ?>
+                    <tr style="border-bottom:1px solid #f8fafc;">
+                        <td style="padding:6px 10px;font-weight:600;color:#334155;"><?= htmlspecialchars($chartLabels[$i]) ?></td>
+                        <td style="padding:6px 10px;text-align:right;color:#1a75d2;font-weight:600;"><?= number_format($pVal) ?></td>
+                        <td style="padding:6px 10px;text-align:right;color:#d97706;font-weight:600;"><?= number_format($oVal) ?></td>
+                        <td style="padding:6px 10px;text-align:right;font-weight:700;color:#1e293b;"><?= number_format($totRow) ?></td>
+                    </tr>
+                    <?php endfor; ?>
+                </tbody>
+                <tfoot>
+                    <tr style="background:#f8fafc;border-top:2px solid #e2e8f0;font-weight:700;">
+                        <td style="padding:7px 10px;color:#1e293b;">TOTAL 7 HARI</td>
+                        <td style="padding:7px 10px;text-align:right;color:#1a75d2;"><?= number_format($sumPos) ?></td>
+                        <td style="padding:7px 10px;text-align:right;color:#d97706;"><?= number_format($sumOnline) ?></td>
+                        <td style="padding:7px 10px;text-align:right;color:#1e293b;"><?= number_format($sumPos + $sumOnline) ?> Unit</td>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
     </div>
 
@@ -357,7 +456,7 @@ layoutHeader(
     <a href="ecommerce/index.php" target="_blank" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Buka Store</a>
 </div>
 
-<!-- ROW 3: Stok Menipis + Log Audit Kartu Stok -->
+<!-- ROW 3: Stok Menipis + Log Kartu Stok -->
 <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;margin-bottom:14px;">
 
     <!-- Panel: Stok Menipis -->
@@ -502,14 +601,22 @@ layoutHeader(
             </div>
         </div>
         <?php endforeach; ?>
+        <!-- Paginator UI Kartu Stok Admin -->
+        <div style="padding:8px 16px; display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border-top:1px solid #e4e9f0;">
+            <div style="font-size:9px; color:#64748b;"><span id="ks-ad-range">0-0</span> dari <span id="ks-ad-total"><?= count($kartuTerbaru) ?></span></div>
+            <div style="display:flex; gap:3px;">
+                <button type="button" onclick="prevKsAD()" style="padding:2px 8px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:10px; cursor:pointer; color:#334155;">&lt;</button>
+                <button type="button" onclick="nextKsAD()" style="padding:2px 8px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:10px; cursor:pointer; color:#334155;">&gt;</button>
+            </div>
+        </div>
         <?php endif; ?>
     </div>
 </div>
 
-<!-- ROW 4: Ringkasan Pergerakan Inventaris + Log Audit Mutasi -->
+<!-- ROW 4: Ringkasan Pergerakan Inventaris + Log Mutasi -->
 <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px;">
 
-    <!-- Log Audit Mutasi & Kartu Stok Terbaru -->
+    <!-- Log Mutasi & Kartu Stok Terbaru -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
         <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
             <div style="font-size:12px;font-weight:700;color:#1e293b;">Riwayat Kartu Stok Terakhir</div>
@@ -529,10 +636,10 @@ layoutHeader(
                 </tr>
             </thead>
             <tbody>
-            <?php foreach ($auditMutasi as $a): 
+            <?php foreach ($auditMutasi as $i => $a): 
                 $satuanLabel = $a['satuan_tipe'] === 'besar' ? $a['satuan_besar'] : $a['satuan_kecil'];
             ?>
-            <tr style="border-top:1px solid #f1f5f9;hover:background:#f8fafc;">
+            <tr class="ks-superadmin-item" style="border-top:1px solid #f1f5f9;display:none;">
                 <td style="padding:8px 16px;">
                     <div style="font-size:12px;color:#334155;font-weight:600;"><?= htmlspecialchars($a['nama_produk']) ?></div>
                     <div style="font-size:10px;color:#64748b;margin-top:2px;"><?= htmlspecialchars($a['alasan_mutasi']) ?> <?= $a['keterangan'] ? '&mdash; '.htmlspecialchars($a['keterangan']) : '' ?></div>
@@ -550,6 +657,14 @@ layoutHeader(
             <?php endforeach; ?>
             </tbody>
         </table>
+        <!-- Paginator UI Kartu Stok Superadmin -->
+        <div style="padding:8px 16px; display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border-top:1px solid #e4e9f0;">
+            <div style="font-size:9px; color:#64748b;"><span id="ks-sa-range">0-0</span> dari <span id="ks-sa-total"><?= count($auditMutasi) ?></span></div>
+            <div style="display:flex; gap:3px;">
+                <button type="button" onclick="prevKsSA()" style="padding:2px 8px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:10px; cursor:pointer; color:#334155;">&lt;</button>
+                <button type="button" onclick="nextKsSA()" style="padding:2px 8px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:10px; cursor:pointer; color:#334155;">&gt;</button>
+            </div>
+        </div>
         <?php endif; ?>
     </div>
 
@@ -581,10 +696,10 @@ layoutHeader(
     </div>
 </div>
 
-<!-- ROW 5: Riwayat Pengadaan & Harga Beli -->
+<!-- ROW 5: Riwayat Pengadaan & Beli -->
 <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;margin-bottom:20px;">
     <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
-        <div style="font-size:12px;font-weight:700;color:#1e293b;">Riwayat Pengadaan & Harga Beli</div>
+        <div style="font-size:12px;font-weight:700;color:#1e293b;">Riwayat Pengadaan & Beli</div>
     </div>
     <?php if (empty($riwayatPengadaan)): ?>
     <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Belum ada aktivitas pengadaan barang.</div>
@@ -602,8 +717,8 @@ layoutHeader(
                 </tr>
             </thead>
             <tbody>
-            <?php foreach ($riwayatPengadaan as $rp): ?>
-            <tr style="border-top:1px solid #f1f5f9;hover:background:#f8fafc;">
+            <?php foreach ($riwayatPengadaan as $i => $rp): ?>
+            <tr class="po-superadmin-item" style="border-top:1px solid #f1f5f9;display:none;">
                 <td style="padding:8px 16px;color:#64748b;font-size:11px;">
                     <?= date('d/m/Y H:i', strtotime($rp['tanggal_terima'])) ?><br>
                     <span style="font-size:9px;color:#94a3b8;">Oleh: <?= htmlspecialchars($rp['penerima'] ?? 'Sistem') ?></span>
@@ -639,93 +754,36 @@ layoutHeader(
             </tbody>
         </table>
     </div>
+    <!-- Paginator UI Riwayat Pengadaan Superadmin -->
+    <div style="padding:8px 16px; display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border-top:1px solid #e4e9f0;">
+        <div style="font-size:9px; color:#64748b;"><span id="po-sa-range">0-0</span> dari <span id="po-sa-total"><?= count($riwayatPengadaan) ?></span></div>
+        <div style="display:flex; gap:3px;">
+            <button type="button" onclick="prevPoSA()" style="padding:2px 8px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:10px; cursor:pointer; color:#334155;">&lt;</button>
+            <button type="button" onclick="nextPoSA()" style="padding:2px 8px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:10px; cursor:pointer; color:#334155;">&gt;</button>
+        </div>
+    </div>
     <?php endif; ?>
 </div>
 
-
-<!-- Script untuk Chart.js (Hanya Superadmin) -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const ctx = document.getElementById('salesChart');
-    if (ctx) {
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: <?= json_encode($chartLabels) ?>,
-                datasets: [
-                    {
-                        label: 'Luring (POS)',
-                        data: <?= json_encode($chartDataPos) ?>,
-                        backgroundColor: '#1a75d2',
-                        borderRadius: 4,
-                        barPercentage: 0.6,
-                        categoryPercentage: 0.8
-                    },
-                    {
-                        label: 'Daring (E-Commerce)',
-                        data: <?= json_encode($chartDataOnline) ?>,
-                        backgroundColor: '#f59e0b',
-                        borderRadius: 4,
-                        barPercentage: 0.6,
-                        categoryPercentage: 0.8
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: { boxWidth: 12, usePointStyle: true, font: { size: 11, family: "'Inter', sans-serif" } }
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ' + context.parsed.y + ' Unit';
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1, font: { size: 10, family: "'Inter', sans-serif" } },
-                        grid: { color: '#f1f5f9' },
-                        title: { display: true, text: 'Kuantitas (Unit)', font: { size: 10, family: "'Inter', sans-serif" } }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { size: 10, family: "'Inter', sans-serif" } }
-                    }
-                }
-            }
-        });
-    }
-});
-</script>
 
 <?php else: ?>
 <!-- ============================================================ -->
 <!-- ADMIN DASHBOARD                                               -->
 <!-- ============================================================ -->
 
-<!-- Row 1: Metrics Admin -->
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+<!-- Row 1: Metrics Admin (6 Kotak Responsif) -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:14px;margin-bottom:20px;">
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">TOTAL STOK FISIK</div>
         <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokFisik) ?></div>
         <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Unit tersedia</div>
     </div>
-    <a href="#" onclick="Swal.fire({title:'Informasi', text:'Silakan scroll ke bawah untuk melihat detail pada tabel Peringatan Stok Menipis. Akses laporan penuh hanya untuk Superadmin.', icon:'info'}); return false;" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $stokKritisCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
+    <a href="#" onclick="Swal.fire({title:'Informasi', text:'Silakan scroll ke bawah untuk melihat detail pada tabel Peringatan Stok Menipis.', icon:'info'}); return false;" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $stokKritisCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STOK MENIPIS (ROP)</div>
         <div style="font-size:30px;font-weight:900;color:<?= $stokKritisCount>0?'#dc2626':'#1e293b' ?>;line-height:1;"><?= number_format($stokKritisCount) ?></div>
         <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $stokKritisCount==0?'Semua stok aman ✓':'SKU mencapai ROP' ?></div>
     </a>
-    <a href="#" onclick="Swal.fire({title:'Informasi', text:'Silakan scroll ke bawah untuk melihat detail pada tabel Peringatan Kedaluwarsa. Akses laporan penuh hanya untuk Superadmin.', icon:'info'}); return false;" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $expWarningCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
+    <a href="#" onclick="Swal.fire({title:'Informasi', text:'Silakan scroll ke bawah untuk melihat detail pada tabel Peringatan Kedaluwarsa.', icon:'info'}); return false;" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $expWarningCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">PERINGATAN EXP.</div>
         <div style="font-size:30px;font-weight:900;color:<?= $expWarningCount>0?'#dc2626':'#1e293b' ?>;line-height:1;"><?= number_format($expWarningCount) ?></div>
         <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Masuk batas peringatan</div>
@@ -735,6 +793,20 @@ document.addEventListener("DOMContentLoaded", function() {
         <div style="font-size:30px;font-weight:900;color:<?= $pesananMenunggu>0?'#2563eb':'#1e293b' ?>;line-height:1;"><?= number_format($pesananMenunggu) ?></div>
         <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Status: Menunggu</div>
     </a>
+
+    <!-- Widget Anomali FEFO (Admin - Desain Seragam dengan Retur) -->
+    <div onclick="openAnomaliModal()" style="cursor:pointer;background:#fff;border:1px solid <?= $anomaliPendingCount > 0 ? '#fed7aa' : '#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">ANOMALI FEFO</div>
+        <div style="font-size:30px;font-weight:900;color:<?= $anomaliPendingCount > 0 ? '#d97706' : '#1e293b' ?>;line-height:1;"><?= number_format($anomaliPendingCount) ?> <span style="font-size:13px;font-weight:600;color:#94a3b8;">/ <?= number_format($anomaliSelesaiCount) ?> disesuaikan</span></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $anomaliPendingCount > 0 ? 'Menunggu dikeluarkan kasir' : 'Semua deviasi disesuaikan ✓' ?></div>
+    </div>
+
+    <!-- Widget Monitoring Retur Barang (Admin - Desain Seragam) -->
+    <div onclick="openReturModal()" style="cursor:pointer;background:#fff;border:1px solid <?= $returMenungguCount > 0 ? '#fed7aa' : '#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STATUS RETUR SUPPLIER</div>
+        <div style="font-size:30px;font-weight:900;color:<?= $returMenungguCount > 0 ? '#d97706' : '#1e293b' ?>;line-height:1;"><?= number_format($returMenungguCount) ?> <span style="font-size:13px;font-weight:600;color:#94a3b8;">/ <?= number_format($returSelesaiCount) ?> selesai</span></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $returMenungguCount > 0 ? 'Menunggu ganti barang PO' : 'Semua retur terselesaikan ✓' ?></div>
+    </div>
 </div>
 
 <!-- Quick Actions Admin -->
@@ -744,7 +816,7 @@ document.addEventListener("DOMContentLoaded", function() {
     <a href="ecommerce/index.php" target="_blank" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Buka Store</a>
 </div>
 
-<!-- Row 2: Stok Menipis + Obat Kedaluwarsa + Audit Kartu Stok -->
+<!-- Row 2: Stok Menipis + Obat Kedaluwarsa + Log Kartu Stok -->
 <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;">
     <!-- Stok Menipis (Admin) -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
@@ -878,7 +950,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <?php endif; ?>
     </div>
 
-    <!-- Audit Kartu Stok -->
+    <!-- Log Kartu Stok -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
         <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
             <div style="font-size:12px;font-weight:700;color:#1e293b;">Riwayat Mutasi Terbaru</div>
@@ -887,10 +959,10 @@ document.addEventListener("DOMContentLoaded", function() {
         <?php if (empty($kartuTerbaru)): ?>
         <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Belum ada aktivitas stok.</div>
         <?php else: ?>
-        <?php foreach ($kartuTerbaru as $k): 
+        <?php foreach ($kartuTerbaru as $i => $k): 
             $satuanLabel = $k['satuan_tipe'] === 'besar' ? $k['satuan_besar'] : $k['satuan_kecil'];
         ?>
-        <div style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
+        <div class="ks-admin-item" style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:none;justify-content:space-between;align-items:center;">
             <div style="flex:1;min-width:0;">
                 <div style="font-size:12px;color:#334155;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?= htmlspecialchars($k['nama_produk']) ?></div>
                 <div style="font-size:10px;color:#64748b;margin-top:2px;"><?= htmlspecialchars($k['alasan_mutasi']) ?> <?= $k['keterangan'] ? '&mdash; '.htmlspecialchars($k['keterangan']) : '' ?></div>
@@ -901,6 +973,14 @@ document.addEventListener("DOMContentLoaded", function() {
             </span>
         </div>
         <?php endforeach; ?>
+        <!-- Paginator UI Kartu Stok Admin -->
+        <div style="padding:8px 16px; display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border-top:1px solid #e4e9f0;">
+            <div style="font-size:9px; color:#64748b;"><span id="ks-ad-range">0-0</span> dari <span id="ks-ad-total"><?= count($kartuTerbaru) ?></span></div>
+            <div style="display:flex; gap:3px;">
+                <button type="button" onclick="prevKsAD()" style="padding:2px 8px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:10px; cursor:pointer; color:#334155;">&lt;</button>
+                <button type="button" onclick="nextKsAD()" style="padding:2px 8px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; font-size:10px; cursor:pointer; color:#334155;">&gt;</button>
+            </div>
+        </div>
         <?php endif; ?>
     </div>
 </div>
@@ -909,6 +989,82 @@ document.addEventListener("DOMContentLoaded", function() {
 
 <script>
 // Paginator for SuperAdmin ROP
+
+// Paginator for SuperAdmin Kartu Stok
+let ksSaPage = 1;
+const ksSaLimit = 5;
+const ksSaItems = document.querySelectorAll(".ks-superadmin-item");
+if(ksSaItems.length > 0) renderSaKs();
+
+function renderSaKs() {
+    let start = (ksSaPage - 1) * ksSaLimit;
+    let end = start + ksSaLimit;
+    ksSaItems.forEach((el, i) => {
+        if(i >= start && i < end) el.style.display = "table-row";
+        else el.style.display = "none";
+    });
+    let endDisplay = end > ksSaItems.length ? ksSaItems.length : end;
+    let startDisplay = ksSaItems.length === 0 ? 0 : start + 1;
+    let rangeEl = document.getElementById("ks-sa-range");
+    if(rangeEl) rangeEl.innerText = startDisplay + "-" + endDisplay;
+}
+function nextKsSA() {
+    if((ksSaPage * ksSaLimit) < ksSaItems.length) { ksSaPage++; renderSaKs(); }
+}
+function prevKsSA() {
+    if(ksSaPage > 1) { ksSaPage--; renderSaKs(); }
+}
+
+// Paginator for SuperAdmin Riwayat Pengadaan
+let poSaPage = 1;
+const poSaLimit = 5;
+const poSaItems = document.querySelectorAll(".po-superadmin-item");
+if(poSaItems.length > 0) renderSaPo();
+
+function renderSaPo() {
+    let start = (poSaPage - 1) * poSaLimit;
+    let end = start + poSaLimit;
+    poSaItems.forEach((el, i) => {
+        if(i >= start && i < end) el.style.display = "table-row";
+        else el.style.display = "none";
+    });
+    let endDisplay = end > poSaItems.length ? poSaItems.length : end;
+    let startDisplay = poSaItems.length === 0 ? 0 : start + 1;
+    let rangeEl = document.getElementById("po-sa-range");
+    if(rangeEl) rangeEl.innerText = startDisplay + "-" + endDisplay;
+}
+function nextPoSA() {
+    if((poSaPage * poSaLimit) < poSaItems.length) { poSaPage++; renderSaPo(); }
+}
+function prevPoSA() {
+    if(poSaPage > 1) { poSaPage--; renderSaPo(); }
+}
+
+// Paginator for Admin Kartu Stok
+let ksAdPage = 1;
+const ksAdLimit = 5;
+const ksAdItems = document.querySelectorAll(".ks-admin-item");
+if(ksAdItems.length > 0) renderAdKs();
+
+function renderAdKs() {
+    let start = (ksAdPage - 1) * ksAdLimit;
+    let end = start + ksAdLimit;
+    ksAdItems.forEach((el, i) => {
+        if(i >= start && i < end) el.style.display = "flex";
+        else el.style.display = "none";
+    });
+    let endDisplay = end > ksAdItems.length ? ksAdItems.length : end;
+    let startDisplay = ksAdItems.length === 0 ? 0 : start + 1;
+    let rangeEl = document.getElementById("ks-ad-range");
+    if(rangeEl) rangeEl.innerText = startDisplay + "-" + endDisplay;
+}
+function nextKsAD() {
+    if((ksAdPage * ksAdLimit) < ksAdItems.length) { ksAdPage++; renderAdKs(); }
+}
+function prevKsAD() {
+    if(ksAdPage > 1) { ksAdPage--; renderAdKs(); }
+}
+
 let ropSaPage = 1;
 const ropSaLimit = 5;
 const saItems = document.querySelectorAll('.rop-superadmin-item');
@@ -1041,6 +1197,248 @@ function prevExpAD() {
     }
 }
 
+</script>
+
+<!-- Modal Dialog Functions for Dashboard Widgets with Interactive Pagination -->
+<script>
+const dataAnomaliMaster = <?= json_encode($listAnomaliHariIni) ?> || [];
+let anomaliModalPage = 1;
+const anomaliModalPageSize = 5;
+
+function renderAnomaliModalPage(page) {
+    anomaliModalPage = page;
+    const total = dataAnomaliMaster.length;
+    const totalPages = Math.ceil(total / anomaliModalPageSize) || 1;
+    if (anomaliModalPage < 1) anomaliModalPage = 1;
+    if (anomaliModalPage > totalPages) anomaliModalPage = totalPages;
+
+    const start = (anomaliModalPage - 1) * anomaliModalPageSize;
+    const pageItems = dataAnomaliMaster.slice(start, start + anomaliModalPageSize);
+
+    let rowsHtml = '';
+    pageItems.forEach(an => {
+        const isBesar = (an.satuan_tipe === 'besar');
+        const satLabel = isBesar ? (an.satuan_besar || 'Box') : (an.satuan_kecil || 'Pcs');
+        const satBadge = isBesar
+            ? '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:#eef2ff;color:#4338ca;font-weight:600;display:inline-block;margin-top:2px;">Satuan Besar (Grosir)</span>'
+            : '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:#f1f5f9;color:#475569;font-weight:600;display:inline-block;margin-top:2px;">Satuan Kecil (Eceran)</span>';
+        
+        let statusBadge = '';
+        if (an.status === 'disesuaikan') {
+            statusBadge = `<span style="background:#dcfce7;color:#166534;border:1px solid #bbf7d0;padding:2px 8px;border-radius:12px;font-weight:700;font-size:10px;white-space:nowrap;">✓ Sudah Disesuaikan</span><div style="font-size:9px;color:#64748b;font-family:monospace;margin-top:2px;">di ${an.no_invoice_resolved || '-'}</div>`;
+        } else {
+            statusBadge = `<span style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:2px 8px;border-radius:12px;font-weight:700;font-size:10px;white-space:nowrap;">⏳ Menunggu Dikeluarkan</span><div style="font-size:9px;color:#b45309;margin-top:2px;">Prioritaskan berikutnya</div>`;
+        }
+
+        rowsHtml += `
+            <tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:8px;font-family:monospace;font-weight:700;color:#1e293b;">
+                    ${an.no_invoice}
+                    <div style="font-size:10px;color:#94a3b8;font-weight:normal;">${an.created_at.substring(5, 16)}</div>
+                </td>
+                <td style="padding:8px;text-align:left;color:#334155;font-weight:600;">
+                    ${an.nama_produk}
+                    <div>${satBadge}</div>
+                </td>
+                <td style="padding:8px;color:#1e40af;font-family:monospace;font-weight:700;background:#eff6ff;">${an.batch_seharusnya}</td>
+                <td style="padding:8px;color:#991b1b;font-family:monospace;font-weight:700;background:#fef2f2;">${an.batch_diambil}</td>
+                <td style="padding:8px;text-align:right;font-weight:700;color:#dc2626;">${Number(an.qty).toLocaleString('id-ID')} <span style="font-size:10px;color:#64748b;font-weight:normal;">${satLabel}</span></td>
+                <td style="padding:8px;text-align:center;">${statusBadge}</td>
+                <td style="padding:8px;color:#64748b;font-size:10px;">${an.operator}</td>
+            </tr>
+        `;
+    });
+
+    const tbody = document.getElementById('anomali_modal_tbody');
+    if (tbody) tbody.innerHTML = rowsHtml;
+
+    const pageInfo = document.getElementById('anomali_page_info');
+    if (pageInfo) pageInfo.innerText = `Halaman ${anomaliModalPage} dari ${totalPages} (Total ${total} insiden)`;
+
+    const btnPrev = document.getElementById('anomali_btn_prev');
+    const btnNext = document.getElementById('anomali_btn_next');
+    if (btnPrev) {
+        btnPrev.disabled = (anomaliModalPage <= 1);
+        btnPrev.style.opacity = (anomaliModalPage <= 1) ? '0.4' : '1';
+        btnPrev.style.cursor = (anomaliModalPage <= 1) ? 'not-allowed' : 'pointer';
+    }
+    if (btnNext) {
+        btnNext.disabled = (anomaliModalPage >= totalPages);
+        btnNext.style.opacity = (anomaliModalPage >= totalPages) ? '0.4' : '1';
+        btnNext.style.cursor = (anomaliModalPage >= totalPages) ? 'not-allowed' : 'pointer';
+    }
+}
+
+window.navigateAnomaliModal = function(delta) {
+    renderAnomaliModalPage(anomaliModalPage + delta);
+};
+
+function openAnomaliModal() {
+    if (!dataAnomaliMaster || dataAnomaliMaster.length === 0) {
+        Swal.fire({
+            title: 'Kepatuhan FEFO Tertib ✓',
+            html: '<div class="text-sm text-slate-600 mt-2">Tidak ada anomali atau penukaran batch fisik yang terjadi.<br><br><span class="text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 font-bold inline-block">Seluruh transaksi tertib mengikuti urutan First-Expired, First-Out (FEFO)</span></div>',
+            icon: 'success',
+            confirmButtonColor: '#1a75d2'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Rekap Pemantauan Anomali FEFO',
+        html: `
+            <div style="text-align:left;font-size:12px;margin-bottom:10px;color:#475569;">
+                Daftar transaksi kasir di mana terjadi deviasi batch fisik vs rekomendasi FEFO sistem (Menampilkan yang belum selesai terlebih dahulu):
+            </div>
+            <div style="min-height:200px;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+                <table style="width:100%;border-collapse:collapse;font-size:11px;text-align:center;">
+                    <thead style="background:#f8fafc;border-bottom:1px solid #cbd5e1;">
+                        <tr>
+                            <th style="padding:7px;">Invoice / Waktu</th>
+                            <th style="padding:7px;text-align:left;">Produk &amp; Satuan</th>
+                            <th style="padding:7px;">Batch FEFO</th>
+                            <th style="padding:7px;">Batch Diambil</th>
+                            <th style="padding:7px;text-align:right;">Qty</th>
+                            <th style="padding:7px;text-align:center;">Status Tindak Lanjut</th>
+                            <th style="padding:7px;">Kasir</th>
+                        </tr>
+                    </thead>
+                    <tbody id="anomali_modal_tbody"></tbody>
+                </table>
+            </div>
+
+            <!-- Navigasi Pagination Modal Anomali -->
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;background:#f8fafc;padding:6px 12px;border-radius:8px;border:1px solid #e2e8f0;font-size:11px;color:#64748b;">
+                <span id="anomali_page_info" style="font-weight:600;">Memuat...</span>
+                <div style="display:flex;gap:6px;">
+                    <button id="anomali_btn_prev" type="button" onclick="navigateAnomaliModal(-1)" style="padding:4px 10px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;font-weight:600;font-size:11px;color:#334155;">&larr; Sebelumnya</button>
+                    <button id="anomali_btn_next" type="button" onclick="navigateAnomaliModal(1)" style="padding:4px 10px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;font-weight:600;font-size:11px;color:#334155;">Selanjutnya &rarr;</button>
+                </div>
+            </div>
+
+            <div style="font-size:11px;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;padding:8px 12px;border-radius:8px;margin-top:12px;text-align:left;">
+                <strong>Alur Rekonsiliasi FEFO:</strong> Deviasi yang terjadi berstatus <em>Menunggu Dikeluarkan</em> sampai batch yang terlewat tersebut berhasil dijual pada transaksi berikutnya, di mana sistem otomatis mengubah statusnya menjadi <em>✓ Sudah Disesuaikan</em>.
+            </div>
+        `,
+        width: '850px',
+        confirmButtonText: 'Tutup',
+        confirmButtonColor: '#1a75d2',
+        didOpen: () => {
+            renderAnomaliModalPage(1);
+        }
+    });
+}
+
+const listReturMaster = <?= json_encode($listReturMonitoring) ?> || [];
+let returModalPage = 1;
+const returModalPageSize = 5;
+
+function renderReturModalPage(page) {
+    returModalPage = page;
+    const total = listReturMaster.length;
+    const totalPages = Math.ceil(total / returModalPageSize) || 1;
+    if (returModalPage < 1) returModalPage = 1;
+    if (returModalPage > totalPages) returModalPage = totalPages;
+
+    const start = (returModalPage - 1) * returModalPageSize;
+    const pageItems = listReturMaster.slice(start, start + returModalPageSize);
+
+    let rowsHtml = '';
+    pageItems.forEach(r => {
+        const isWaiting = (r.status_retur === 'menunggu_pengganti');
+        const badge = isWaiting 
+            ? '<span style="padding:2px 8px;border-radius:4px;background:#fef3c7;color:#92400e;font-weight:700;font-size:10px;">⏳ Menunggu Penggantian</span>'
+            : `<span style="padding:2px 8px;border-radius:4px;background:#dcfce7;color:#166534;font-weight:700;font-size:10px;">✓ Selesai Diganti (Batch: ${r.no_batch_pengganti || '-'})</span>`;
+        rowsHtml += `
+            <tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:8px;font-family:monospace;font-weight:700;">${r.no_referensi}</td>
+                <td style="padding:8px;text-align:left;">${r.nama_supplier}</td>
+                <td style="padding:8px;text-align:left;font-weight:600;">${r.nama_produk}</td>
+                <td style="padding:8px;text-align:right;font-weight:700;color:#dc2626;">${r.qty_rusak}</td>
+                <td style="padding:8px;">${badge}</td>
+            </tr>
+        `;
+    });
+
+    const tbody = document.getElementById('retur_modal_tbody');
+    if (tbody) tbody.innerHTML = rowsHtml;
+
+    const pageInfo = document.getElementById('retur_page_info');
+    if (pageInfo) pageInfo.innerText = `Halaman ${returModalPage} dari ${totalPages} (Total ${total} data retur)`;
+
+    const btnPrev = document.getElementById('retur_btn_prev');
+    const btnNext = document.getElementById('retur_btn_next');
+    if (btnPrev) {
+        btnPrev.disabled = (returModalPage <= 1);
+        btnPrev.style.opacity = (returModalPage <= 1) ? '0.4' : '1';
+        btnPrev.style.cursor = (returModalPage <= 1) ? 'not-allowed' : 'pointer';
+    }
+    if (btnNext) {
+        btnNext.disabled = (returModalPage >= totalPages);
+        btnNext.style.opacity = (returModalPage >= totalPages) ? '0.4' : '1';
+        btnNext.style.cursor = (returModalPage >= totalPages) ? 'not-allowed' : 'pointer';
+    }
+}
+
+window.navigateReturModal = function(delta) {
+    renderReturModalPage(returModalPage + delta);
+};
+
+function openReturModal() {
+    if (!listReturMaster || listReturMaster.length === 0) {
+        Swal.fire({
+            title: 'Monitoring Retur Bersih ✓',
+            text: 'Tidak ada barang rusak penerimaan PO yang sedang menunggu penggantian.',
+            icon: 'info',
+            confirmButtonColor: '#1a75d2'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Monitoring Retur Barang (Penerimaan PO)',
+        html: `
+            <div style="text-align:left;font-size:12px;margin-bottom:10px;color:#475569;">
+                Status tindak lanjut barang rusak/cacat yang dikembalikan ke supplier (Menampilkan yang menunggu penggantian terlebih dahulu):
+            </div>
+            <div style="min-height:180px;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+                <table style="width:100%;border-collapse:collapse;font-size:11px;text-align:center;">
+                    <thead style="background:#f8fafc;border-bottom:1px solid #cbd5e1;">
+                        <tr>
+                            <th style="padding:7px;">Ref. PO</th>
+                            <th style="padding:7px;text-align:left;">Supplier</th>
+                            <th style="padding:7px;text-align:left;">Produk</th>
+                            <th style="padding:7px;text-align:right;">Qty Rusak</th>
+                            <th style="padding:7px;">Status Penggantian</th>
+                        </tr>
+                    </thead>
+                    <tbody id="retur_modal_tbody"></tbody>
+                </table>
+            </div>
+
+            <!-- Navigasi Pagination Modal Retur -->
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;background:#f8fafc;padding:6px 12px;border-radius:8px;border:1px solid #e2e8f0;font-size:11px;color:#64748b;">
+                <span id="retur_page_info" style="font-weight:600;">Memuat...</span>
+                <div style="display:flex;gap:6px;">
+                    <button id="retur_btn_prev" type="button" onclick="navigateReturModal(-1)" style="padding:4px 10px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;font-weight:600;font-size:11px;color:#334155;">&larr; Sebelumnya</button>
+                    <button id="retur_btn_next" type="button" onclick="navigateReturModal(1)" style="padding:4px 10px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;font-weight:600;font-size:11px;color:#334155;">Selanjutnya &rarr;</button>
+                </div>
+            </div>
+        `,
+        width: '780px',
+        showCancelButton: true,
+        cancelButtonText: 'Tutup',
+        confirmButtonText: 'Buka Halaman Penerimaan & Retur',
+        confirmButtonColor: '#1a75d2',
+        didOpen: () => {
+            renderReturModalPage(1);
+        }
+    }).then(res => {
+        if (res.isConfirmed) {
+            window.location.href = 'inventori/tambah_stok.php';
+        }
+    });
+}
 </script>
 
 <?php layoutFooter(); ?>

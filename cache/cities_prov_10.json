@@ -1,0 +1,33 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 151,
+            "name": "KOTA JAKARTA BARAT"
+        },
+        {
+            "id": 152,
+            "name": "KOTA JAKARTA PUSAT"
+        },
+        {
+            "id": 153,
+            "name": "KOTA JAKARTA SELATAN"
+        },
+        {
+            "id": 154,
+            "name": "KOTA JAKARTA TIMUR"
+        },
+        {
+            "id": 155,
+            "name": "KOTA JAKARTA UTARA"
+        },
+        {
+            "id": 156,
+            "name": "KABUPATEN KEPULAUAN SERIBU"
+        }
+    ]
+}

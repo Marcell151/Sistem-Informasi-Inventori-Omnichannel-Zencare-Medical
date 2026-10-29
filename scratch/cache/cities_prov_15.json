@@ -1,0 +1,45 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 114,
+            "name": "KOTA DENPASAR"
+        },
+        {
+            "id": 115,
+            "name": "KABUPATEN BADUNG"
+        },
+        {
+            "id": 116,
+            "name": "KABUPATEN BANGLI"
+        },
+        {
+            "id": 117,
+            "name": "KABUPATEN BULELENG (SINGARAJA)"
+        },
+        {
+            "id": 118,
+            "name": "KABUPATEN GIANYAR"
+        },
+        {
+            "id": 119,
+            "name": "KABUPATEN JEMBRANA (NEGARA)"
+        },
+        {
+            "id": 120,
+            "name": "KABUPATEN KARANGASEM"
+        },
+        {
+            "id": 121,
+            "name": "KABUPATEN KLUNGKUNG"
+        },
+        {
+            "id": 122,
+            "name": "KABUPATEN TABANAN"
+        }
+    ]
+}

@@ -1,0 +1,37 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 428,
+            "name": "KOTA PANGKAL PINANG"
+        },
+        {
+            "id": 429,
+            "name": "KABUPATEN BANGKA"
+        },
+        {
+            "id": 430,
+            "name": "KABUPATEN BANGKA BARAT"
+        },
+        {
+            "id": 431,
+            "name": "KABUPATEN BANGKA TENGAH"
+        },
+        {
+            "id": 432,
+            "name": "KABUPATEN BANGKA SELATAN"
+        },
+        {
+            "id": 596,
+            "name": "KABUPATEN BELITUNG"
+        },
+        {
+            "id": 597,
+            "name": "KABUPATEN BELITUNG TIMUR"
+        }
+    ]
+}

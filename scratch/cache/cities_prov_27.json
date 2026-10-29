@@ -1,0 +1,29 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 487,
+            "name": "KOTA PALU"
+        },
+        {
+            "id": 488,
+            "name": "KABUPATEN BANGGAI"
+        },
+        {
+            "id": 489,
+            "name": "KABUPATEN DONGGALA"
+        },
+        {
+            "id": 490,
+            "name": "KABUPATEN MOROWALI"
+        },
+        {
+            "id": 491,
+            "name": "KABUPATEN POSO"
+        }
+    ]
+}

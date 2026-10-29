@@ -1,1 +1,61 @@
-{"meta":{"message":"Success Get City By Province ID","code":200,"status":"success"},"data":[{"id":29,"name":"BANJARMASIN"},{"id":30,"name":"HULU SUNGAI TENGAH"},{"id":32,"name":"HULU SUNGAI SELATAN"},{"id":34,"name":"KOTABARU"},{"id":35,"name":"TABALONG"},{"id":36,"name":"BANJARBARU"},{"id":38,"name":"HULU SUNGAI UTARA"},{"id":39,"name":"BARITO KUALA"},{"id":40,"name":"BANJAR"},{"id":42,"name":"TANAH LAUT"},{"id":44,"name":"TAPIN"},{"id":53,"name":"BALANGAN"},{"id":54,"name":"TANAH BUMBU"}]}
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 314,
+            "name": "KOTA BANJARMASIN"
+        },
+        {
+            "id": 315,
+            "name": "KOTA BANJARBARU"
+        },
+        {
+            "id": 316,
+            "name": "KABUPATEN BANJAR"
+        },
+        {
+            "id": 317,
+            "name": "KABUPATEN BARITO KUALA"
+        },
+        {
+            "id": 318,
+            "name": "KABUPATEN TAPIN"
+        },
+        {
+            "id": 319,
+            "name": "KABUPATEN HULU SUNGAI SELATAN"
+        },
+        {
+            "id": 320,
+            "name": "KABUPATEN HULU SUNGAI TENGAH"
+        },
+        {
+            "id": 321,
+            "name": "KABUPATEN HULU SUNGAI UTARA"
+        },
+        {
+            "id": 322,
+            "name": "KABUPATEN TABALONG"
+        },
+        {
+            "id": 323,
+            "name": "KABUPATEN TANAH LAUT"
+        },
+        {
+            "id": 324,
+            "name": "KABUPATEN TANAH BUMBU"
+        },
+        {
+            "id": 325,
+            "name": "KABUPATEN KOTABARU"
+        },
+        {
+            "id": 326,
+            "name": "KABUPATEN BALANGAN"
+        }
+    ]
+}

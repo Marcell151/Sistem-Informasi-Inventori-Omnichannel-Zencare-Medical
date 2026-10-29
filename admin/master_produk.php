@@ -621,7 +621,7 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
 
             <!-- Helpful Hint -->
             <div class="mb-3 px-3 py-2 bg-blue-50/70 border border-blue-200/80 rounded-xl text-[11px] text-blue-800 flex items-center justify-between">
-                <span>💡 Atur <strong>Jml</strong> untuk mencetak beberapa stiker batch yang sama.</span>
+                <span>Atur <strong>Jumlah</strong> untuk mencetak beberapa stiker batch yang sama.</span>
                 <a href="../inventori/logistik_medis.php?tab=batch" target="_blank" class="font-bold underline text-blue-700 hover:text-blue-900 shrink-0">Cetak Lintas Produk &rarr;</a>
             </div>
             
@@ -636,7 +636,7 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
         <div class="px-6 py-3.5 border-t border-zcBrd flex items-center justify-between bg-slate-50">
             <button type="button" onclick="submitBatchPrint()" class="px-4 py-2 text-xs font-bold bg-zc hover:bg-zcHv text-white rounded-xl transition shadow-sm flex items-center gap-1.5">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                <span>🖨️ Cetak Massal (A4 Grid)</span>
+                <span>Cetak Massal (A4 Grid)</span>
             </button>
             <button type="button" onclick="document.getElementById('modal_cetak_barcode').classList.add('hidden')" class="px-4 py-2 text-xs font-semibold bg-white border border-zcBrd hover:bg-slate-100 text-slate-700 rounded-xl transition shadow-sm">Tutup</button>
         </div>
@@ -1189,7 +1189,7 @@ async function openCetakModal(id, nama) {
                     </div>
                     <div class="flex items-center gap-2">
                         <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200">
-                            <span>Jml:</span>
+                            <span>Jumlah:</span>
                             <input type="number" min="1" max="100" value="1" class="barcode-item-qty w-12 text-center text-xs font-bold border border-slate-300 rounded bg-white py-0.5 focus:outline-none focus:border-zc">
                         </div>
                         <button type="button" onclick="printSingleBarcodeRow(this, 'batch', '${b.id}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs" title="Cetak label batch ini saja">

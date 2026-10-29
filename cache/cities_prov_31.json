@@ -1,0 +1,25 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 506,
+            "name": "KOTA TARAKAN"
+        },
+        {
+            "id": 507,
+            "name": "KABUPATEN BULUNGAN"
+        },
+        {
+            "id": 508,
+            "name": "KABUPATEN MALINAU"
+        },
+        {
+            "id": 509,
+            "name": "KABUPATEN NUNUKAN"
+        }
+    ]
+}

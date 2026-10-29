@@ -1,0 +1,53 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 422,
+            "name": "KOTA BANDA ACEH"
+        },
+        {
+            "id": 423,
+            "name": "KOTA LANGSA"
+        },
+        {
+            "id": 424,
+            "name": "KOTA LHOKSEUMAWE"
+        },
+        {
+            "id": 425,
+            "name": "KOTA SABANG"
+        },
+        {
+            "id": 426,
+            "name": "KOTA SUBULUSSALAM"
+        },
+        {
+            "id": 427,
+            "name": "KABUPATEN ACEH BARAT"
+        },
+        {
+            "id": 428,
+            "name": "KABUPATEN ACEH BESAR"
+        },
+        {
+            "id": 429,
+            "name": "KABUPATEN ACEH SELATAN"
+        },
+        {
+            "id": 430,
+            "name": "KABUPATEN ACEH UTARA"
+        },
+        {
+            "id": 431,
+            "name": "KABUPATEN BIREUEN"
+        },
+        {
+            "id": 432,
+            "name": "KABUPATEN PIDIE"
+        }
+    ]
+}

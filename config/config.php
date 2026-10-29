@@ -8,14 +8,13 @@ loadEnv(__DIR__ . '/../.env');
 // Timezone Configuration (WIB / GMT+7)
 date_default_timezone_set('Asia/Jakarta');
 
-// Durasi Kedaluwarsa Transaksi Midtrans & Cooldown Reservasi Stok Dinamis:
-// 1. POS Kasir Apotek Fisik: Pelanggan walk-in di counter meja kasir (5 Menit / 300 Detik)
+// Durasi Kedaluwarsa Transaksi Midtrans & Cooldown Reservasi Stok:
+// 1. POS Kasir Toko Fisik: Pelanggan walk-in di counter meja kasir (5 Menit / 300 Detik)
 define('MIDTRANS_EXPIRY_POS_QRIS_MENIT', 5);
 
-// 2. E-Commerce Online QRIS / E-Wallet (GoPay, ShopeePay, QRIS): Standar instan online (15 Menit)
-define('MIDTRANS_EXPIRY_ECOMMERCE_QRIS_MENIT', 15);
-
-// 3. E-Commerce Online Virtual Account / Bank Transfer (BCA, BNI, BRI, Mandiri, Permata): (120 Menit / 2 Jam)
+// 2. E-Commerce Online (Semua Metode Pembayaran): Batas waktu tunggal 120 Menit (2 Jam)
+define('MIDTRANS_EXPIRY_ECOMMERCE_MENIT', 120);
+define('MIDTRANS_EXPIRY_ECOMMERCE_QRIS_MENIT', 120);
 define('MIDTRANS_EXPIRY_ECOMMERCE_VA_MENIT', 120);
 
 // Default fallback untuk kompatibilitas fungsi lama

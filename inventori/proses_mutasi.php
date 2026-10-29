@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $kategori = $pdo->query("SELECT pi.kategori FROM produk_variasi pv JOIN produk_induk pi ON pv.id_produk_induk = pi.id WHERE pv.id = $idVariasi")->fetchColumn();
             
             $detailLog = "";
+            $idBatchMutasi = null;
 
             if ($kategori === 'Obat') {
                 $noBatch = trim($_POST['no_batch'] ?? '');
@@ -36,15 +37,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if ($jenisMutasi === 'Pengurangan') {
                     // Cek ketersediaan batch
-                    $cekBatch = $pdo->prepare("SELECT stok_sisa FROM stok_batch WHERE id_variasi = ? AND no_batch = ? FOR UPDATE");
+                    $cekBatch = $pdo->prepare("SELECT id, stok_sisa FROM stok_batch WHERE id_variasi = ? AND no_batch = ? FOR UPDATE");
                     $cekBatch->execute([$idVariasi, $noBatch]);
-                    $stokBatch = $cekBatch->fetchColumn();
+                    $batchRow = $cekBatch->fetch();
+                    $stokBatch = $batchRow ? $batchRow['stok_sisa'] : false;
+                    $idBatchMutasi = $batchRow ? $batchRow['id'] : null;
                     
                     if ($stokBatch === false || $stokBatch < $qty) {
                         throw new Exception("Sisa stok Batch $noBatch tidak mencukupi (Sisa: " . intval($stokBatch) . ").");
                     }
                     
-                    $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id_variasi = ? AND no_batch = ?")->execute([$qty, $idVariasi, $noBatch]);
+                    $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$qty, $idBatchMutasi]);
                 } else {
                     // Penambahan Batch
                     $tglExp = $_POST['tgl_exp'] ?? '';
@@ -57,6 +60,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     
                     $pdo->prepare("INSERT INTO stok_batch (id_variasi, no_batch, tgl_exp, stok_sisa) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE stok_sisa = stok_sisa + ?")->execute([$idVariasi, $noBatch, $tglExp, $qty, $qty]);
+                    
+                    $qBatchId = $pdo->prepare("SELECT id FROM stok_batch WHERE id_variasi = ? AND no_batch = ?");
+                    $qBatchId->execute([$idVariasi, $noBatch]);
+                    $idBatchMutasi = $qBatchId->fetchColumn() ?: null;
                 }
                 $detailLog = " [Batch: $noBatch]";
                 
@@ -105,8 +112,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $jMutasi = $jenisMutasi === 'Penambahan' ? 'Masuk' : 'Keluar';
             $fullCatatan = $catatan . $detailLog;
             
-            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, 'kecil', ?, 'Manual', ?, ?, ?, ?, ?)");
-            $stmtKartu->execute([$idVariasi, $jMutasi, $alasan, $qty, $sisaStok, $fullCatatan, $userId]);
+            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'kecil', ?, 'Manual', ?, ?, ?, ?, ?)");
+            $stmtKartu->execute([$idVariasi, $idBatchMutasi, $jMutasi, $alasan, $qty, $sisaStok, $fullCatatan, $userId]);
 
             $pdo->commit();
             $msg = "Berhasil memproses $jenisMutasi sebanyak $qty unit$detailLog.";

@@ -3,6 +3,7 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../config/order_helper.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['status' => 'error', 'message' => 'POST method required']);
@@ -35,6 +36,10 @@ if (empty($namaPembeli) || empty($phone) || empty($alamatLengkap) || empty($cart
 
 try {
     $pdo = DB::connect();
+    
+    // Pemicu timer mandiri: batalkan pesanan kedaluwarsa sebelum menghitung stok checkout baru
+    batalkanPesananKadaluarsa($pdo);
+
     $pdo->beginTransaction();
 
     $itemDetails = [];
@@ -110,16 +115,19 @@ try {
     $metodePengambilan = ($kurir === 'pickup') ? 'Pick-up' : 'Kurir';
     $statusPesanan = 'Menunggu Pembayaran';
     
-    // Tentukan durasi & kanal pembayaran dinamis sesuai kategori yang dipilih pembeli di checkout
-    $kategoriPembayaran = strtolower(trim($input['kategori_pembayaran'] ?? 'qris'));
+    // Tentukan durasi tunggal 120 menit (2 Jam) & kanal pembayaran dinamis
+    $cooldownMenit = defined('MIDTRANS_EXPIRY_ECOMMERCE_MENIT') ? MIDTRANS_EXPIRY_ECOMMERCE_MENIT : 120;
+    $kategoriPembayaran = strtolower(trim($input['kategori_pembayaran'] ?? 'midtrans'));
     if ($kategoriPembayaran === 'va') {
-        $cooldownMenit = defined('MIDTRANS_EXPIRY_ECOMMERCE_VA_MENIT') ? MIDTRANS_EXPIRY_ECOMMERCE_VA_MENIT : 120;
         $enabledPayments = ['bank_transfer', 'bca_va', 'bni_va', 'bri_va', 'echannel', 'permata_va'];
         $paymentMethodDb = 'bank_transfer';
-    } else {
-        $cooldownMenit = defined('MIDTRANS_EXPIRY_ECOMMERCE_QRIS_MENIT') ? MIDTRANS_EXPIRY_ECOMMERCE_QRIS_MENIT : 15;
+    } else if ($kategoriPembayaran === 'qris') {
         $enabledPayments = ['qris', 'gopay', 'shopeepay'];
         $paymentMethodDb = 'qris';
+    } else {
+        // Mode Midtrans Lengkap: Biarkan pembeli memilih langsung di UI Midtrans (QRIS, Semua Bank VA, E-Wallet)
+        $enabledPayments = ['qris', 'gopay', 'shopeepay', 'bank_transfer', 'bca_va', 'bni_va', 'bri_va', 'echannel', 'permata_va', 'other_va'];
+        $paymentMethodDb = 'midtrans';
     }
 
     $stmtOrder = $pdo->prepare("INSERT INTO penjualan 
@@ -152,10 +160,23 @@ try {
         // Potong stok fisik cabang (satuan kecil = qty Box * rasio)
         $qtyPotong = $qty * $rasio;
         $catatanLogistik = [];
+        $allocatedBatchesThisItem = [];
         
-        // FEFO Logic untuk Obat (E-Commerce khusus Grosir/Box, jadi wajib Batch Induk, abaikan Sub-Batch eceran)
-        if ($kategori === 'Obat') {
-            $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 AND no_batch NOT LIKE '%.%' AND tgl_exp >= CURDATE() ORDER BY tgl_exp ASC FOR UPDATE");
+        // Cek tracking stok: Batch (Obat / BMHP) atau Serial Number (Alkes ber-SN)
+        $chkBatch = $pdo->prepare("SELECT COUNT(*) FROM stok_batch WHERE id_variasi = ?");
+        $chkBatch->execute([$idVariasi]);
+        $hasBatch = ($chkBatch->fetchColumn() > 0);
+
+        $chkSn = $pdo->prepare("SELECT COUNT(*) FROM unit_serial WHERE id_variasi = ?");
+        $chkSn->execute([$idVariasi]);
+        $hasSn = ($chkSn->fetchColumn() > 0);
+
+        // FEFO Logic untuk barang ber-batch (E-Commerce khusus Grosir/Box jika rasio > 1, abaikan Sub-Batch eceran)
+        if ($hasBatch) {
+            $batchSql = ($rasio > 1) 
+                ? "SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 AND no_batch NOT LIKE '%.%' AND tgl_exp >= CURDATE() ORDER BY tgl_exp ASC FOR UPDATE"
+                : "SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 AND tgl_exp >= CURDATE() ORDER BY tgl_exp ASC FOR UPDATE";
+            $stmtBatch = $pdo->prepare($batchSql);
             $stmtBatch->execute([$idVariasi]);
             $batches = $stmtBatch->fetchAll();
             
@@ -166,21 +187,24 @@ try {
                 $potongBatch = min($b['stok_sisa'], $sisaPotong);
                 $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$potongBatch, $b['id']]);
                 
+                $allocatedBatchesThisItem[] = [
+                    'id_batch' => $b['id'],
+                    'qty_satuan_kecil' => $potongBatch
+                ];
+
                 if ($rasio > 1 && $potongBatch >= $rasio) {
                     $dusCount = floor($potongBatch / $rasio);
                     $catatanLogistik[] = $b['no_batch'] . " ({$dusCount} {$satBesar} = {$potongBatch} {$satKecil})";
                 } else {
-                    $catatanLogistik[] = $b['no_batch'] . " ({$potongBatch}x)";
+                    $catatanLogistik[] = $b['no_batch'] . " ({$potongBatch} {$satKecil})";
                 }
                 $sisaPotong -= $potongBatch;
             }
             if ($sisaPotong > 0) {
-                throw new Exception("Stok batch obat yang masih aktif / belum kadaluarsa tidak mencukupi untuk dipotong FEFO.");
+                throw new Exception("Stok batch yang masih aktif / belum kadaluarsa tidak mencukupi untuk dipotong FEFO.");
             }
-        }
-
-        // SN Auto-Pick untuk Alkes
-        if ($kategori === 'Alat Kesehatan') {
+        } elseif ($hasSn) {
+            // SN Auto-Pick untuk Alkes ber-SN
             $stmtSn = $pdo->prepare("SELECT serial_number FROM unit_serial WHERE id_variasi = ? AND status = 'Tersedia' LIMIT ? FOR UPDATE");
             $stmtSn->bindValue(1, $idVariasi, PDO::PARAM_INT);
             $stmtSn->bindValue(2, $qtyPotong, PDO::PARAM_INT);
@@ -203,6 +227,15 @@ try {
 
         $catatanStr = !empty($catatanLogistik) ? implode(', ', $catatanLogistik) : null;
         $stmtDetail->execute([$idPenjualan, $idVariasi, $qty, $harga, $catatanStr]);
+        $idDetailPenjualan = $pdo->lastInsertId();
+
+        // Rekam alokasi batch terstruktur untuk pesanan ini
+        if (!empty($allocatedBatchesThisItem)) {
+            $stmtInsAlloc = $pdo->prepare("INSERT INTO pesanan_batch_alokasi (id_penjualan, id_detail_penjualan, id_batch, qty_satuan_kecil) VALUES (?, ?, ?, ?)");
+            foreach ($allocatedBatchesThisItem as $ab) {
+                $stmtInsAlloc->execute([$idPenjualan, $idDetailPenjualan, $ab['id_batch'], $ab['qty_satuan_kecil']]);
+            }
+        }
 
         // Saldo akhir fisik
         $sisaQ = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ?");
@@ -243,6 +276,8 @@ try {
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($midtransPayload));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 5); // Timeout 5 detik agar antrean DB tidak tertahan jika jaringan lambat
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: application/json',
         'Accept: application/json',

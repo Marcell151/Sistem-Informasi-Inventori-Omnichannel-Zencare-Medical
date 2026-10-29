@@ -1,0 +1,29 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 468,
+            "name": "KOTA MANADO"
+        },
+        {
+            "id": 469,
+            "name": "KOTA BITUNG"
+        },
+        {
+            "id": 470,
+            "name": "KOTA TOMOHON"
+        },
+        {
+            "id": 471,
+            "name": "KOTA KOTAMOBAGU"
+        },
+        {
+            "id": 472,
+            "name": "KABUPATEN MINAHASA"
+        }
+    ]
+}

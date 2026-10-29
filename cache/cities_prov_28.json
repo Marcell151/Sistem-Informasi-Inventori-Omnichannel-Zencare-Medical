@@ -1,0 +1,29 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 492,
+            "name": "KOTA PONTIANAK"
+        },
+        {
+            "id": 493,
+            "name": "KOTA SINGKAWANG"
+        },
+        {
+            "id": 494,
+            "name": "KABUPATEN KUBU RAYA"
+        },
+        {
+            "id": 495,
+            "name": "KABUPATEN SAMBAS"
+        },
+        {
+            "id": 496,
+            "name": "KABUPATEN SINTANG"
+        }
+    ]
+}

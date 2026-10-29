@@ -1,0 +1,49 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 412,
+            "name": "KOTA BENGKULU"
+        },
+        {
+            "id": 413,
+            "name": "KABUPATEN BENGKULU SELATAN"
+        },
+        {
+            "id": 414,
+            "name": "KABUPATEN BENGKULU TENGAH"
+        },
+        {
+            "id": 415,
+            "name": "KABUPATEN BENGKULU UTARA"
+        },
+        {
+            "id": 416,
+            "name": "KABUPATEN KAUR"
+        },
+        {
+            "id": 417,
+            "name": "KABUPATEN KEPAHIANG"
+        },
+        {
+            "id": 418,
+            "name": "KABUPATEN LEBONG"
+        },
+        {
+            "id": 419,
+            "name": "KABUPATEN MUKOMUKO"
+        },
+        {
+            "id": 420,
+            "name": "KABUPATEN REJANG LEBONG"
+        },
+        {
+            "id": 421,
+            "name": "KABUPATEN SELUMA"
+        }
+    ]
+}

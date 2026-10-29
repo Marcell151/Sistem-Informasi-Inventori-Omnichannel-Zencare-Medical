@@ -153,7 +153,7 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
 </div>
 
 <!-- ============================================================ -->
-<!-- 2-COLUMN WIDGETS: LOW STOCK + AUDIT FEED                     -->
+<!-- 2-COLUMN WIDGETS: LOW STOCK + LOG FEED                     -->
 <!-- ============================================================ -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
 
@@ -177,10 +177,10 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
         </div>
     </div>
 
-    <!-- Audit Log Feed -->
+    <!-- Log Feed -->
     <div class="bg-white border border-zcBorder rounded-2xl shadow-sm overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-zcBorder">
-            <h3 class="text-sm font-bold text-zcText flex items-center gap-2"><?= icon('kartu_stok', 'w-4 h-4 text-amber-500') ?> Audit Kartu Stok Terbaru</h3>
+            <h3 class="text-sm font-bold text-zcText flex items-center gap-2"><?= icon('kartu_stok', 'w-4 h-4 text-amber-500') ?> Log Kartu Stok Terbaru</h3>
             <a href="inventori/proses_mutasi.php" class="text-[11px] font-medium text-gray-800 hover:underline">Lihat Semua →</a>
         </div>
         <div class="p-4 space-y-2.5">

@@ -1,0 +1,37 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 165,
+            "name": "KOTA BATAM"
+        },
+        {
+            "id": 166,
+            "name": "KOTA TANJUNG PINANG"
+        },
+        {
+            "id": 167,
+            "name": "KABUPATEN BINTAN"
+        },
+        {
+            "id": 168,
+            "name": "KABUPATEN KARIMUN"
+        },
+        {
+            "id": 169,
+            "name": "KABUPATEN KEPULAUAN ANAMBAS"
+        },
+        {
+            "id": 170,
+            "name": "KABUPATEN LINGGA"
+        },
+        {
+            "id": 171,
+            "name": "KABUPATEN NATUNA"
+        }
+    ]
+}

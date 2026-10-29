@@ -1,0 +1,21 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 519,
+            "name": "KABUPATEN MAMUJU"
+        },
+        {
+            "id": 520,
+            "name": "KABUPATEN MAJENE"
+        },
+        {
+            "id": 521,
+            "name": "KABUPATEN POLEWALI MANDAR"
+        }
+    ]
+}

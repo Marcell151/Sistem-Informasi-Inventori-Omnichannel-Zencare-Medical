@@ -1,0 +1,29 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 501,
+            "name": "KOTA BANDAR LAMPUNG"
+        },
+        {
+            "id": 502,
+            "name": "KOTA METRO"
+        },
+        {
+            "id": 503,
+            "name": "KABUPATEN LAMPUNG SELATAN"
+        },
+        {
+            "id": 504,
+            "name": "KABUPATEN LAMPUNG TENGAH"
+        },
+        {
+            "id": 505,
+            "name": "KABUPATEN LAMPUNG UTARA"
+        }
+    ]
+}

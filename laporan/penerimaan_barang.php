@@ -191,7 +191,7 @@ foreach ($rawHeaders as $h) {
 layoutHead('Laporan Penerimaan Barang');
 layoutBodyOpen();
 layoutSidebar('laporan_penerimaan');
-layoutHeader('Laporan Penerimaan Barang & Retur Parsial', 'Audit dokumen inbound barang masuk (PO Distributor Resmi & Kulakan) serta verifikasi retur rusak.');
+layoutHeader('Laporan Penerimaan Barang & Retur Parsial', 'Rekam dokumen inbound barang masuk (PO Distributor Resmi & Kulakan) serta verifikasi retur rusak.');
 ?>
 
 <style>
@@ -234,7 +234,7 @@ layoutHeader('Laporan Penerimaan Barang & Retur Parsial', 'Audit dokumen inbound
 <div class="print:hidden mb-5 p-4 rounded-xl border bg-blue-50 border-blue-200 text-blue-800 text-xs flex gap-3 items-start">
     <svg class="w-5 h-5 shrink-0 mt-0.5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
     <div>
-        <strong>Audit Trail Inbound Logistik & Retur Parsial</strong>: Laporan ini menyajikan pencatatan resmi seluruh faktur penerimaan barang dari <strong>PO Distributor Resmi</strong> maupun <strong>Pembelian Langsung (Kulakan Apotek Lain)</strong> secara permanen, mencakup selisih kuantitas rusak (*retur parsial*) dan nilai pembelian riil.
+        <strong>Riwayat Logistik Inbound & Retur Parsial</strong>: Laporan ini menyajikan pencatatan resmi seluruh faktur penerimaan barang dari <strong>PO Distributor Resmi</strong> maupun <strong>Pembelian Langsung (Kulakan Toko Lain)</strong> secara permanen, mencakup selisih kuantitas rusak (*retur parsial*) dan nilai pembelian riil.
     </div>
 </div>
 
@@ -253,7 +253,7 @@ layoutHeader('Laporan Penerimaan Barang & Retur Parsial', 'Audit dokumen inbound
         <select name="sumber" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc min-w-[150px]">
             <option value="semua" <?= $sumber === 'semua' ? 'selected' : '' ?>>Semua Sumber</option>
             <option value="PO" <?= $sumber === 'PO' ? 'selected' : '' ?>>PO (Distributor Resmi)</option>
-            <option value="Pembelian Langsung" <?= $sumber === 'Pembelian Langsung' ? 'selected' : '' ?>>Kulakan (Apotek Lain)</option>
+            <option value="Pembelian Langsung" <?= $sumber === 'Pembelian Langsung' ? 'selected' : '' ?>>Kulakan (Toko Lain)</option>
         </select>
     </div>
     <div>
@@ -543,10 +543,10 @@ layoutHeader('Laporan Penerimaan Barang & Retur Parsial', 'Audit dokumen inbound
     <!-- Judul & Metadata Laporan -->
     <div style="text-align: center; margin-bottom: 12px;">
         <h2 style="font-size: 12pt; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
-            LAPORAN PENERIMAAN BARANG &amp; AUDIT RETUR PARSIAL
+            LAPORAN PENERIMAAN BARANG &amp; MONITORING RETUR PARSIAL
         </h2>
         <div style="font-size: 8.5pt; color: #334155; margin-top: 4px;">
-            Periode Audit: <strong><?= date('d/m/Y', strtotime($dari)) ?></strong> s/d <strong><?= date('d/m/Y', strtotime($sampai)) ?></strong> 
+            Periode Laporan: <strong><?= date('d/m/Y', strtotime($dari)) ?></strong> s/d <strong><?= date('d/m/Y', strtotime($sampai)) ?></strong> 
             &nbsp;|&nbsp; Sumber: <strong><?= $sumber === 'semua' ? 'Semua Sumber' : htmlspecialchars($sumber) ?></strong>
             &nbsp;|&nbsp; Total Faktur: <strong><?= number_format($totalDokumen) ?> Dokumen</strong>
             &nbsp;|&nbsp; Total Fisik Diterima: <strong><?= number_format($totalQtyTerima) ?> Unit</strong>

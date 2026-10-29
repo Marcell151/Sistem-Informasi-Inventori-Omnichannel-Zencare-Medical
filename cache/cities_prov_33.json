@@ -1,0 +1,33 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 513,
+            "name": "KOTA MAKASSAR"
+        },
+        {
+            "id": 514,
+            "name": "KOTA PALOPO"
+        },
+        {
+            "id": 515,
+            "name": "KOTA PAREPARE"
+        },
+        {
+            "id": 516,
+            "name": "KABUPATEN GOWA"
+        },
+        {
+            "id": 517,
+            "name": "KABUPATEN MAROS"
+        },
+        {
+            "id": 518,
+            "name": "KABUPATEN BONE"
+        }
+    ]
+}

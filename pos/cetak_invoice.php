@@ -95,8 +95,8 @@ $items = $stmtDetail->fetchAll();
         <tr>
             <td style="width: 60%;">
                 <div class="title">ZenCare Medical</div>
-                <div class="subtitle"><?= htmlspecialchars($trx['nama_cabang']) ?></div>
-                <div class="subtitle"><?= htmlspecialchars($trx['alamat_cabang']) ?></div>
+                <div class="subtitle" style="font-weight: bold; color: #1e293b;">Toko Alat Kesehatan dan Obat</div>
+                <div class="subtitle"><?= htmlspecialchars($trx['nama_cabang']) ?> - <?= htmlspecialchars($trx['alamat_cabang']) ?></div>
             </td>
             <td style="width: 40%;" class="text-right">
                 <h2 style="margin: 0; font-size: 16px;">INVOICE</h2>

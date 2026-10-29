@@ -133,7 +133,7 @@ uasort($groupedBatchList, function ($a, $b) {
 // 1. Terjual dengan Garansi Aktif paling mendekati mau habis (sisa hari paling sedikit: 0, 1, 2, ... 30)
 // 2. Unit Retur/Rusak (Karantina)
 // 3. Terjual dengan Garansi Habis (sisa hari <= 0)
-// 4. Produk Tersedia / Belum Terjual (FIFO: barang terdaftar paling lama ke paling baru)
+// 4. Produk Tersedia / Belum Terjual (Urutan barang terdaftar paling lama ke paling baru)
 if (!function_exists('getSNUnitScore')) {
     function getSNUnitScore($s) {
         $status = $s['status'];
@@ -151,7 +151,7 @@ if (!function_exists('getSNUnitScore')) {
             // Tier 2: Retur / Rusak
             return [2, 0, $s['id']];
         } else {
-            // Tier 4: Tersedia (belum terjual) diurutkan FIFO: terdaftar paling lama ke paling baru (created_at ASC)
+            // Tier 4: Tersedia (belum terjual) diurutkan urutan masuk: terdaftar paling lama ke paling baru (created_at ASC)
             $createdTs = !empty($s['created_at']) ? strtotime($s['created_at']) : 0;
             return [4, $createdTs, $s['id']];
         }
@@ -477,7 +477,7 @@ layoutHeader('Logistik Medis', 'Pemantauan status kedaluwarsa obat & pelacakan n
                                 <td class="px-4 py-3 text-center">
                                     <div class="flex items-center justify-center gap-1.5">
                                         <div class="flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded-lg border border-slate-200">
-                                            <span>Jml:</span>
+                                            <span>Jumlah:</span>
                                             <input type="number" min="1" max="100" value="1" class="batch-item-qty w-10 text-center text-xs font-bold border border-slate-300 rounded bg-white py-0.5 focus:outline-none focus:border-zc" onchange="updateBatchQty(this, <?= $b['id'] ?>)">
                                         </div>
                                         <button type="button" onclick="printSingleBatch(this, <?= $b['id'] ?>)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-lg text-[10px] font-bold transition flex items-center gap-1 shadow-2xs" title="Cetak batch ini langsung">
@@ -647,7 +647,7 @@ layoutHeader('Logistik Medis', 'Pemantauan status kedaluwarsa obat & pelacakan n
                                 <th class="text-left px-4 py-2.5 font-bold">Serial Number (SN)</th>
                                 <th class="text-center px-4 py-2.5 font-bold">Status Unit</th>
                                 <th class="text-left px-4 py-2.5 font-bold">Status Transaksi & Garansi Toko</th>
-                                <th class="text-left px-4 py-2.5 font-bold">Terdaftar (FIFO)</th>
+                                <th class="text-left px-4 py-2.5 font-bold">Waktu Masuk / Registrasi</th>
                                 <th class="text-center px-4 py-2.5 font-bold">Aksi Operasional</th>
                             </tr>
                         </thead>

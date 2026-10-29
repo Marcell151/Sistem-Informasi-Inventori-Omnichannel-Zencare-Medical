@@ -372,7 +372,7 @@ $totalNilaiFisikAkhir = $totalNilaiTerimaAwal + $totalNilaiPengganti;
             <div>
                 <h1 class="header-kop-title">ZENCARE MEDICAL</h1>
                 <p class="header-kop-sub">Distributor Alat Kesehatan dan Obat Omnichannel</p>
-                <p class="header-kop-legal">Izin Apotek: 445/SIA/2026 • SIPA: 19890425/SIPA/2026/01 • Jl. Veteran No. 12, Kota Malang</p>
+                <p class="header-kop-legal">Izin Toko Alat Kesehatan dan Obat: 445/ITKO/2026 • Jl. Veteran No. 12, Kota Malang</p>
             </div>
         </div>
         <div class="header-kop-meta">

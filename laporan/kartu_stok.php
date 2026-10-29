@@ -63,8 +63,9 @@ if ($id_variasi > 0) {
     // Ambil SEMUA data mutasi untuk hitung running balance
     $stmtLog = $pdo->prepare("
         SELECT ks.id, ks.tanggal, ks.keterangan as deskripsi, ks.jenis_mutasi, ks.qty, ks.no_ref_dokumen, ks.kanal, ks.alasan_mutasi,
-               COALESCE(u.nama_lengkap, up.nama_lengkap, 'Sistem') AS nama_lengkap, ks.satuan_tipe
+               COALESCE(u.nama_lengkap, up.nama_lengkap, 'Sistem') AS nama_lengkap, ks.satuan_tipe, ks.id_batch, sb.no_batch AS direct_batch_no
         FROM kartu_stok ks
+        LEFT JOIN stok_batch sb ON ks.id_batch = sb.id
         LEFT JOIN users u ON ks.dibuat_oleh = u.id
         LEFT JOIN penjualan p ON (p.no_invoice = ks.no_ref_dokumen OR (ks.keterangan LIKE '%Penjualan Luring%' AND ks.keterangan LIKE CONCAT('%', p.no_invoice, '%')))
         LEFT JOIN users up ON p.id_user = up.id
@@ -124,11 +125,18 @@ if ($id_variasi > 0) {
         $desc = $log['deskripsi'] ?? '';
         $batchDetail = '';
         
+        // 0. Prioritaskan nomor batch langsung dari kolom id_batch jika tersedia
+        if (!empty($log['direct_batch_no'])) {
+            $batchDetail = trim($log['direct_batch_no']);
+        }
+        
         // 1. Ekstrak dari teks deskripsi [Batch: ...] atau [SN: ...] atau Sub-Batch ...
-        if (preg_match('/\[(?:Batch|SN)[:\s]+(.*?)\]/i', $desc, $m)) {
-            $batchDetail = trim($m[1]);
-        } elseif (preg_match('/(?:Lahir Sub-Batch|Sub-Batch|Bongkar Dus|Batch|SN)[:\s]+([A-Za-z0-9\-\.]+)/i', $desc, $m)) {
-            $batchDetail = trim($m[1]);
+        if (empty($batchDetail)) {
+            if (preg_match('/\[(?:Batch|SN)[:\s]+(.*?)\]/i', $desc, $m)) {
+                $batchDetail = trim($m[1]);
+            } elseif (preg_match('/(?:Lahir Sub-Batch|Sub-Batch|Bongkar Dus|Batch|SN)[:\s]+([A-Za-z0-9\-\.]+)/i', $desc, $m)) {
+                $batchDetail = trim($m[1]);
+            }
         }
         
         // 2. Fallback: Cari dari detail_penjualan (POS / E-Commerce) jika kosong
@@ -290,7 +298,7 @@ if ($id_variasi > 0) {
 layoutHead('Kartu Stok');
 layoutBodyOpen();
 layoutSidebar('laporan_kartu_stok');
-layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto)');
+layoutHeader('Kartu Stok Barang', 'Log mutasi fisik keluar/masuk (Pusat - Muharto)');
 ?>
 
 <div class="bg-white border border-zcBrd rounded-2xl p-6 shadow-sm mb-6">
@@ -354,7 +362,7 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
         </div>
         <div>
             <h4 class="text-sm font-black uppercase tracking-wide">Filter Kanal Aktif: <?= $filterKanal === 'POS' ? 'Kasir Offline (POS)' : 'Penjualan Daring (E-Commerce)' ?></h4>
-            <p class="text-xs text-blue-800 mt-0.5">Menampilkan pergerakan audit stok khusus yang keluar melalui kanal <strong><?= htmlspecialchars($filterKanal) ?></strong>.</p>
+            <p class="text-xs text-blue-800 mt-0.5">Menampilkan pergerakan log stok khusus yang keluar melalui kanal <strong><?= htmlspecialchars($filterKanal) ?></strong>.</p>
         </div>
     </div>
     <div class="flex items-center gap-2 self-stretch sm:self-auto">
@@ -366,7 +374,7 @@ layoutHeader('Kartu Stok Barang', 'Audit log fisik keluar/masuk (Pusat - Muharto
 <?php endif; ?>
 
 <?php if ($id_variasi > 0 && $produkData && $filterKonversi): ?>
-<!-- BANNER AUDIT KHUSUS PEMBONGKARAN SATUAN BESAR -->
+<!-- BANNER LOG KHUSUS PEMBONGKARAN SATUAN BESAR -->
 <div class="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm print:hidden">
     <div class="flex items-center gap-3">
         <div>

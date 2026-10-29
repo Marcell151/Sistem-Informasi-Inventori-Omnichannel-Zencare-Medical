@@ -1,0 +1,77 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 361,
+            "name": "KOTA MEDAN"
+        },
+        {
+            "id": 366,
+            "name": "KOTA BINJAI"
+        },
+        {
+            "id": 377,
+            "name": "KOTA TEBING TINGGI"
+        },
+        {
+            "id": 381,
+            "name": "KOTA TANJUNG BALAI"
+        },
+        {
+            "id": 382,
+            "name": "KOTA PEMATANG SIANTAR"
+        },
+        {
+            "id": 219,
+            "name": "KOTA GUNUNGSITOLI"
+        },
+        {
+            "id": 225,
+            "name": "KOTA SIBOLGA"
+        },
+        {
+            "id": 227,
+            "name": "KOTA PADANG SIDEMPUAN"
+        },
+        {
+            "id": 363,
+            "name": "KABUPATEN ASAHAN"
+        },
+        {
+            "id": 365,
+            "name": "KABUPATEN DELI SERDANG"
+        },
+        {
+            "id": 374,
+            "name": "KABUPATEN KARO"
+        },
+        {
+            "id": 375,
+            "name": "KABUPATEN LANGKAT"
+        },
+        {
+            "id": 368,
+            "name": "KABUPATEN SIMALUNGUN"
+        },
+        {
+            "id": 220,
+            "name": "KABUPATEN NIAS"
+        },
+        {
+            "id": 221,
+            "name": "KABUPATEN NIAS BARAT"
+        },
+        {
+            "id": 222,
+            "name": "KABUPATEN NIAS SELATAN"
+        },
+        {
+            "id": 223,
+            "name": "KABUPATEN NIAS UTARA"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 192,
+            "name": "KOTA YOGYAKARTA"
+        },
+        {
+            "id": 193,
+            "name": "KABUPATEN SLEMAN"
+        },
+        {
+            "id": 194,
+            "name": "KABUPATEN BANTUL"
+        },
+        {
+            "id": 195,
+            "name": "KABUPATEN GUNUNGKIDUL"
+        },
+        {
+            "id": 196,
+            "name": "KABUPATEN KULON PROGO"
+        }
+    ]
+}

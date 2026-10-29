@@ -1,0 +1,45 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 433,
+            "name": "KOTA JAMBI"
+        },
+        {
+            "id": 434,
+            "name": "KOTA SUNGAI PENUH"
+        },
+        {
+            "id": 435,
+            "name": "KABUPATEN BATANGHARI"
+        },
+        {
+            "id": 436,
+            "name": "KABUPATEN BUNGO"
+        },
+        {
+            "id": 437,
+            "name": "KABUPATEN KERINCI"
+        },
+        {
+            "id": 438,
+            "name": "KABUPATEN MERANGIN"
+        },
+        {
+            "id": 439,
+            "name": "KABUPATEN MUARO JAMBI"
+        },
+        {
+            "id": 440,
+            "name": "KABUPATEN SAROLANGUN"
+        },
+        {
+            "id": 441,
+            "name": "KABUPATEN TEBO"
+        }
+    ]
+}

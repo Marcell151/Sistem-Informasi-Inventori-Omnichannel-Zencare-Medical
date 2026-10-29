@@ -211,7 +211,7 @@ $initCategory = $_GET['kategori'] ?? 'all';
             <div class="flex-1 text-white z-10 max-w-xl mb-4 md:mb-0">
                 <div class="flex items-center gap-2 mb-3 flex-wrap">
                     <span class="inline-flex items-center px-3 py-1 rounded-full border border-blue-300/30 bg-blue-950/40 text-xs font-bold uppercase tracking-wider text-blue-200 backdrop-blur-md">
-                        Farmasi &bull; Obat Bebas &amp; Terbatas
+                        Obat &bull; Obat Bebas &amp; Terbatas
                     </span>
                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-900/50 border border-blue-400/30 text-[11px] font-semibold text-blue-200">
                         Kedaluwarsa Aman Terjaga

@@ -1,0 +1,57 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 201,
+            "name": "KOTA PEKANBARU"
+        },
+        {
+            "id": 202,
+            "name": "KOTA DUMAI"
+        },
+        {
+            "id": 203,
+            "name": "KABUPATEN KAMPAR"
+        },
+        {
+            "id": 204,
+            "name": "KABUPATEN SIAK"
+        },
+        {
+            "id": 205,
+            "name": "KABUPATEN PELALAWAN"
+        },
+        {
+            "id": 206,
+            "name": "KABUPATEN BENGKALIS"
+        },
+        {
+            "id": 207,
+            "name": "KABUPATEN ROKAN HULU"
+        },
+        {
+            "id": 208,
+            "name": "KABUPATEN ROKAN HILIR"
+        },
+        {
+            "id": 209,
+            "name": "KABUPATEN INDRAGIRI HILIR"
+        },
+        {
+            "id": 210,
+            "name": "KABUPATEN INDRAGIRI HULU"
+        },
+        {
+            "id": 211,
+            "name": "KABUPATEN KUANTAN SINGINGI"
+        },
+        {
+            "id": 212,
+            "name": "KABUPATEN KEPULAUAN MERANTI"
+        }
+    ]
+}

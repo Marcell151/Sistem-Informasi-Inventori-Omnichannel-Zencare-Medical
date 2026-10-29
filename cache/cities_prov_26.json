@@ -1,0 +1,33 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 481,
+            "name": "KOTA PALEMBANG"
+        },
+        {
+            "id": 482,
+            "name": "KOTA LUBUKLINGGAU"
+        },
+        {
+            "id": 483,
+            "name": "KOTA PRABUMULIH"
+        },
+        {
+            "id": 484,
+            "name": "KABUPATEN BANYUASIN"
+        },
+        {
+            "id": 485,
+            "name": "KABUPATEN OGAN ILIR"
+        },
+        {
+            "id": 486,
+            "name": "KABUPATEN OGAN KOMERING ILIR"
+        }
+    ]
+}

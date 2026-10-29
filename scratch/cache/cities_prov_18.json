@@ -1,0 +1,81 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 391,
+            "name": "KOTA MALANG"
+        },
+        {
+            "id": 577,
+            "name": "KOTA SURABAYA"
+        },
+        {
+            "id": 393,
+            "name": "KOTA BATU"
+        },
+        {
+            "id": 392,
+            "name": "KOTA BLITAR"
+        },
+        {
+            "id": 289,
+            "name": "KOTA KEDIRI"
+        },
+        {
+            "id": 353,
+            "name": "KOTA MADIUN"
+        },
+        {
+            "id": 388,
+            "name": "KOTA MOJOKERTO"
+        },
+        {
+            "id": 531,
+            "name": "KOTA PASURUAN"
+        },
+        {
+            "id": 394,
+            "name": "KOTA PROBOLINGGO"
+        },
+        {
+            "id": 583,
+            "name": "KABUPATEN SIDOARJO"
+        },
+        {
+            "id": 578,
+            "name": "KABUPATEN GRESIK"
+        },
+        {
+            "id": 256,
+            "name": "KABUPATEN JEMBER"
+        },
+        {
+            "id": 257,
+            "name": "KABUPATEN BANYUWANGI"
+        },
+        {
+            "id": 395,
+            "name": "KABUPATEN LUMAJANG"
+        },
+        {
+            "id": 389,
+            "name": "KABUPATEN JOMBANG"
+        },
+        {
+            "id": 390,
+            "name": "KABUPATEN NGANJUK"
+        },
+        {
+            "id": 585,
+            "name": "KABUPATEN TUBAN"
+        },
+        {
+            "id": 579,
+            "name": "KABUPATEN LAMONGAN"
+        }
+    ]
+}

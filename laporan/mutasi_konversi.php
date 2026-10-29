@@ -55,7 +55,7 @@ if ($tab === 'konversi') {
     $sqlKonversi = "
         SELECT 
             hk.*,
-            COALESCE(u.nama_lengkap, 'Petugas Farmasi') AS nama_petugas,
+            COALESCE(u.nama_lengkap, 'Petugas Toko') AS nama_petugas,
             pi.nama_produk,
             pi.kategori,
             pv.nama_variasi,
@@ -149,7 +149,7 @@ if ($tab === 'mutasi') {
 layoutHead('Laporan Mutasi & Konversi Stok');
 layoutBodyOpen();
 layoutSidebar('laporan_mutasi_konversi');
-layoutHeader('Laporan Mutasi & Konversi Stok', 'Audit dekomposisi kemasan dus (Konversi UOM) dan riwayat penyesuaian stok fisik (Opname & Pemusnahan).');
+layoutHeader('Laporan Mutasi & Konversi Stok', 'Rekam jejak dekomposisi kemasan dus (Konversi UOM) dan riwayat penyesuaian stok fisik (Opname & Pemusnahan).');
 ?>
 
 <style>
@@ -192,7 +192,7 @@ layoutHeader('Laporan Mutasi & Konversi Stok', 'Audit dekomposisi kemasan dus (K
 <div class="print:hidden mb-5 p-4 rounded-xl border bg-indigo-50 border-indigo-200 text-indigo-900 text-xs flex gap-3 items-start">
     <svg class="w-5 h-5 shrink-0 mt-0.5 text-indigo-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4"/></svg>
     <div>
-        <strong>Pemisahan Audit Mutasi vs Konversi</strong>:
+        <strong>Pemisahan Mutasi vs Konversi</strong>:
         <ul class="list-disc pl-4 mt-1 space-y-0.5">
             <li><strong>Tab 1 (Konversi Satuan UOM)</strong>: Khusus mencatat riwayat pemecahan dus/box besar menjadi sub-batch eceran siap jual.</li>
             <li><strong>Tab 2 (Mutasi Manual &amp; Stok Opname)</strong>: Khusus mencatat penyesuaian fisik internal (Hasil Stok Opname, Pemusnahan Obat Rusak/Expired, Koreksi Selisih Fisik). Transaksi turunan konversi UOM otomatis dipisahkan agar data mutasi murni dan tidak tumpang tindih.</li>

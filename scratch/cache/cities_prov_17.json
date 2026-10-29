@@ -1,0 +1,33 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 449,
+            "name": "KOTA GORONTALO"
+        },
+        {
+            "id": 450,
+            "name": "KABUPATEN BOALEMO"
+        },
+        {
+            "id": 451,
+            "name": "KABUPATEN BONE BOLANGO"
+        },
+        {
+            "id": 452,
+            "name": "KABUPATEN GORONTALO"
+        },
+        {
+            "id": 453,
+            "name": "KABUPATEN GORONTALO UTARA"
+        },
+        {
+            "id": 454,
+            "name": "KABUPATEN POHUWATO"
+        }
+    ]
+}

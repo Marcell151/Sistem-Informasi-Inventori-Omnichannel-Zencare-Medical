@@ -1,0 +1,37 @@
+{
+    "meta": {
+        "message": "Success Get City By Province ID",
+        "code": 200,
+        "status": "success"
+    },
+    "data": [
+        {
+            "id": 461,
+            "name": "KOTA KUPANG"
+        },
+        {
+            "id": 462,
+            "name": "KABUPATEN ALOR"
+        },
+        {
+            "id": 463,
+            "name": "KABUPATEN BELU"
+        },
+        {
+            "id": 464,
+            "name": "KABUPATEN ENDE"
+        },
+        {
+            "id": 465,
+            "name": "KABUPATEN FLORES TIMUR"
+        },
+        {
+            "id": 466,
+            "name": "KABUPATEN MANGGARAI"
+        },
+        {
+            "id": 467,
+            "name": "KABUPATEN SIKKA (MAUMERE)"
+        }
+    ]
+}
