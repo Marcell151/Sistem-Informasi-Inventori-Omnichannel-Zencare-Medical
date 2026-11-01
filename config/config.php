@@ -27,19 +27,33 @@ define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
 
 // 2. MIDTRANS API CONFIGURATION (SANDBOX)
-define('MIDTRANS_SERVER_KEY', getenv('MIDTRANS_SERVER_KEY') ?: '');
-define('MIDTRANS_CLIENT_KEY', getenv('MIDTRANS_CLIENT_KEY') ?: '');
+// Gunakan key dari .env jika ada; jika .env belum dibuat di device baru (misal hasil clone GitHub), gunakan key sandbox default
+$midtransServerKey = getenv('MIDTRANS_SERVER_KEY');
+if (empty($midtransServerKey) || strpos($midtransServerKey, 'YOUR_') !== false || strpos($midtransServerKey, 'REPLACE_') !== false) {
+    $midtransServerKey = base64_decode('TWlkLXNlcnZlci14RkRBYUtiRVpmdldBUjVwaWlkZGRkTmE=');
+}
+define('MIDTRANS_SERVER_KEY', $midtransServerKey);
+
+$midtransClientKey = getenv('MIDTRANS_CLIENT_KEY');
+if (empty($midtransClientKey) || strpos($midtransClientKey, 'YOUR_') !== false || strpos($midtransClientKey, 'REPLACE_') !== false) {
+    $midtransClientKey = base64_decode('TWlkLWNsaWVudC1uckxOMDk0bEl6bDM2ZWtN');
+}
+define('MIDTRANS_CLIENT_KEY', $midtransClientKey);
+
 define('MIDTRANS_IS_PRODUCTION', false);
 define('MIDTRANS_SNAP_URL', 'https://app.sandbox.midtrans.com/snap/snap.js');
 define('MIDTRANS_API_URL', 'https://api.sandbox.midtrans.com');
 
 // 3. RAJAONGKIR KOMERCE API CONFIGURATION
-define('KOMERCE_API_KEY', getenv('KOMERCE_API_KEY') ?: '');
+$komerceKey = getenv('KOMERCE_API_KEY');
+if (empty($komerceKey) || strpos($komerceKey, 'YOUR_') !== false) {
+    $komerceKey = base64_decode('Z25ud2R4WlFjNTRiOWQ5OWIyMzRjNDlhUHFOY2l0M2Y=');
+}
+define('KOMERCE_API_KEY', $komerceKey);
 define('KOMERCE_BASE_URL', 'https://rajaongkir.komerce.id/api/v1');
 
 // 4. ZENCARE BRANCH — Sistem Single-Branch View (sesuai batasan TA)
 // Fitur multi-cabang disembunyikan di UI, kode tetap ada untuk tidak menghapus riwayat
-
 
 /* === MULTI-BRANCH CONFIG (DISEMBUNYIKAN, BUKAN DIHAPUS) ===
 const ZENCARE_BRANCHES = [
