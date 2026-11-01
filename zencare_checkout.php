@@ -4,6 +4,9 @@
 session_start();
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/koneksi.php';
+require_once __DIR__ . '/config/opname_helper.php';
+
+$sesiOpnameAktif = cekSesiOpnameAktif($pdo);
 
 $activeCabangId = 1;
 $originKotaId = 256; // Malang
@@ -263,7 +266,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                     <!-- Interactive Editable Cart Summary List -->
                     <div id="stock_sync_alert" class="hidden mb-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs">
                         <div class="flex items-start gap-2">
-                            <span class="text-base leading-none">⚠️</span>
+                            <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                             <div id="stock_sync_text" class="flex-1 font-medium leading-relaxed"></div>
                         </div>
                     </div>
@@ -319,18 +322,36 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                             </div>
                         </div>
                     </div><div class="mt-5 space-y-2">
-                        <!-- Opsi "Bayar Nanti" disembunyikan (Feature Toggle) untuk mencegah Dead Stock / Penimbunan Stok Fiktif -->
-                        <button onclick="prosesCheckout(false)" id="btn_checkout_nanti" style="display: none;" class="w-full bg-white hover:bg-slate-50 text-zcTxt border border-zcBrd font-semibold text-xs py-3.5 px-2 rounded-xl transition shadow-sm">
-                            Buat Pesanan (Bayar Nanti)
-                        </button>
-                        <button onclick="prosesCheckout(true)" id="btn_checkout_sekarang" class="w-full bg-zc hover:bg-zcHv text-white font-bold text-sm py-4 px-4 rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[.99]">
-                            <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                            <span>Bayar Sekarang</span>
-                        </button>
-                        <div class="flex items-center justify-center gap-1.5 text-[11px] text-zcMut pt-1">
-                            <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                            <span>Transaksi tertutup: Pembayaran instan mengamankan stok Anda seketika.</span>
-                        </div>
+                        <?php if ($sesiOpnameAktif): ?>
+                            <div class="p-3.5 rounded-xl bg-rose-50 border-2 border-rose-300 text-rose-800 text-xs shadow-xs">
+                                <div class="flex items-start gap-2">
+                                    <span class="text-lg leading-none">🔒</span>
+                                    <div>
+                                        <strong class="block font-bold text-rose-900">Checkout Ditutup Sementara</strong>
+                                        <p class="text-[11px] text-rose-700 mt-0.5 leading-relaxed">
+                                            Toko sedang melakukan pemeriksaan fisik stok berkala (Sesi Opname: <strong><?= htmlspecialchars($sesiOpnameAktif['kode_sesi']) ?></strong>). Seluruh transaksi online ditahan sementara demi akurasi inventori.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button disabled id="btn_checkout_sekarang" class="w-full bg-slate-200 text-slate-400 font-bold text-sm py-4 px-4 rounded-xl cursor-not-allowed flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                <span>Checkout Terkunci (Stok Opname Aktif)</span>
+                            </button>
+                        <?php else: ?>
+                            <!-- Opsi "Bayar Nanti" disembunyikan (Feature Toggle) untuk mencegah Dead Stock / Penimbunan Stok Fiktif -->
+                            <button onclick="prosesCheckout(false)" id="btn_checkout_nanti" style="display: none;" class="w-full bg-white hover:bg-slate-50 text-zcTxt border border-zcBrd font-semibold text-xs py-3.5 px-2 rounded-xl transition shadow-sm">
+                                Buat Pesanan (Bayar Nanti)
+                            </button>
+                            <button onclick="prosesCheckout(true)" id="btn_checkout_sekarang" class="w-full bg-zc hover:bg-zcHv text-white font-bold text-sm py-4 px-4 rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[.99]">
+                                <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                                <span>Bayar Sekarang</span>
+                            </button>
+                            <div class="flex items-center justify-center gap-1.5 text-[11px] text-zcMut pt-1">
+                                <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                <span>Transaksi tertutup: Pembayaran instan mengamankan stok Anda seketika.</span>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

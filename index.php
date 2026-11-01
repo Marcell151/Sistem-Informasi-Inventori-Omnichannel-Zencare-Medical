@@ -288,7 +288,7 @@ layoutHeader(
             <a href="admin/pesanan.php" style="font-size:11px;color:#1a75d2;text-decoration:none;font-weight:600;">Kelola Semua →</a>
         </div>
         <?php if (empty($pesananPickup)): ?>
-        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Tidak ada pesanan Pick-up yang menunggu diambil ✓</div>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Tidak ada pesanan Pick-up yang menunggu diambil</div>
         <?php else: ?>
         <table style="width:100%;border-collapse:collapse;font-size:12px;">
             <thead>
@@ -337,7 +337,7 @@ layoutHeader(
 
     <!-- Stok Menipis -->
     <a href="laporan/ketersediaan_stok.php" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $stokKritisCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
-        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STOK MENIPIS (ROP)</div>
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STOK MENIPIS</div>
         <div style="font-size:30px;font-weight:900;color:<?= $stokKritisCount>0?'#dc2626':'#1e293b' ?>;line-height:1;"><?= number_format($stokKritisCount) ?></div>
         <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $stokKritisCount==0 ? 'Semua stok aman ✓' : 'SKU mencapai ROP' ?></div>
     </a>
@@ -360,14 +360,14 @@ layoutHeader(
     <div onclick="openAnomaliModal()" style="cursor:pointer;background:#fff;border:1px solid <?= $anomaliPendingCount > 0 ? '#fed7aa' : '#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">ANOMALI FEFO</div>
         <div style="font-size:30px;font-weight:900;color:<?= $anomaliPendingCount > 0 ? '#d97706' : '#1e293b' ?>;line-height:1;"><?= number_format($anomaliPendingCount) ?> <span style="font-size:13px;font-weight:600;color:#94a3b8;">/ <?= number_format($anomaliSelesaiCount) ?> disesuaikan</span></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $anomaliPendingCount > 0 ? 'Menunggu dikeluarkan kasir' : 'Semua deviasi disesuaikan ✓' ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $anomaliPendingCount > 0 ? 'Menunggu dikeluarkan kasir' : 'Semua deviasi disesuaikan' ?></div>
     </div>
 
     <!-- Widget Monitoring Retur Barang (Superadmin - Desain Seragam) -->
     <div onclick="openReturModal()" style="cursor:pointer;background:#fff;border:1px solid <?= $returMenungguCount > 0 ? '#fed7aa' : '#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STATUS RETUR SUPPLIER</div>
         <div style="font-size:30px;font-weight:900;color:<?= $returMenungguCount > 0 ? '#d97706' : '#1e293b' ?>;line-height:1;"><?= number_format($returMenungguCount) ?> <span style="font-size:13px;font-weight:600;color:#94a3b8;">/ <?= number_format($returSelesaiCount) ?> selesai</span></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $returMenungguCount > 0 ? 'Menunggu ganti barang PO' : 'Semua retur terselesaikan ✓' ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $returMenungguCount > 0 ? 'Menunggu ganti barang PO' : 'Semua retur terselesaikan' ?></div>
     </div>
 </div>
 
@@ -464,7 +464,7 @@ layoutHeader(
         <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
             <div style="font-size:12px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:6px;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="<?= $stokKritisCount>0?'#dc2626':'#64748b' ?>" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                Peringatan Stok Menipis (ROP)
+                Peringatan Stok Menipis
             </div>
             <span style="font-size:10px;color:#94a3b8;">Pusat (Muharto)</span>
         </div>
@@ -490,17 +490,20 @@ layoutHeader(
                 
                 <?php if($isEceranMenipis): ?>
                     <?php if($stokDusFisik > 0 && $s['kategori'] !== 'Alat Kesehatan'): ?>
-                        <div style="margin-top:4px;font-size:10px;color:#ea580c;background:#fff7ed;border:1px solid #fed7aa;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
-                            ⚠ Stok Eceran Menipis - Lakukan Konversi (Buka Satuan Besar).
+                        <div style="margin-top:4px;font-size:10px;color:#ea580c;background:#fff7ed;border:1px solid #fed7aa;padding:3px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:4px;font-weight:600;">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>Stok Eceran Menipis - Lakukan Konversi (Buka Satuan Besar).</span>
                         </div>
                     <?php else: ?>
-                        <div style="margin-top:4px;font-size:10px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
-                            🚨 <?= $s['kategori'] === 'Alat Kesehatan' ? 'Stok Habis!' : 'Eceran & Grosir Habis!' ?> Segera Lakukan Penerimaan Barang.
+                        <div style="margin-top:4px;font-size:10px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:3px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:4px;font-weight:600;">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span><?= $s['kategori'] === 'Alat Kesehatan' ? 'Stok Habis!' : 'Eceran & Grosir Habis!' ?> Segera Lakukan Penerimaan Barang.</span>
                         </div>
                     <?php endif; ?>
                 <?php elseif($isDusMenipis): ?>
-                    <div style="margin-top:4px;font-size:10px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
-                        🚨 Stok Grosir Menipis - Lakukan Penerimaan Barang.
+                    <div style="margin-top:4px;font-size:10px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:3px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:4px;font-weight:600;">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span>Stok Grosir Menipis - Lakukan Penerimaan Barang.</span>
                     </div>
                 <?php endif; ?>
             </div>
@@ -779,7 +782,7 @@ layoutHeader(
         <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Unit tersedia</div>
     </div>
     <a href="#" onclick="Swal.fire({title:'Informasi', text:'Silakan scroll ke bawah untuk melihat detail pada tabel Peringatan Stok Menipis.', icon:'info'}); return false;" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $stokKritisCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
-        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STOK MENIPIS (ROP)</div>
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STOK MENIPIS</div>
         <div style="font-size:30px;font-weight:900;color:<?= $stokKritisCount>0?'#dc2626':'#1e293b' ?>;line-height:1;"><?= number_format($stokKritisCount) ?></div>
         <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $stokKritisCount==0?'Semua stok aman ✓':'SKU mencapai ROP' ?></div>
     </a>
@@ -821,7 +824,7 @@ layoutHeader(
     <!-- Stok Menipis (Admin) -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
         <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
-            <div style="font-size:12px;font-weight:700;color:#1e293b;">Peringatan Stok Menipis (ROP)</div>
+            <div style="font-size:12px;font-weight:700;color:#1e293b;">Peringatan Stok Menipis</div>
             <span style="font-size:10px;color:#94a3b8;">Pusat (Muharto)</span>
         </div>
         <?php
@@ -864,17 +867,20 @@ layoutHeader(
                 
                 <?php if($isEceranMenipis): ?>
                     <?php if($stokDusFisik > 0 && $s['kategori'] !== 'Alat Kesehatan'): ?>
-                        <div style="margin-top:4px;font-size:10px;color:#ea580c;background:#fff7ed;border:1px solid #fed7aa;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
-                            ⚠ Stok Eceran Menipis - Lakukan Konversi (Buka Satuan Besar).
+                        <div style="margin-top:4px;font-size:10px;color:#ea580c;background:#fff7ed;border:1px solid #fed7aa;padding:3px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:4px;font-weight:600;">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>Stok Eceran Menipis - Lakukan Konversi (Buka Satuan Besar).</span>
                         </div>
                     <?php else: ?>
-                        <div style="margin-top:4px;font-size:10px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
-                            🚨 <?= $s['kategori'] === 'Alat Kesehatan' ? 'Stok Habis / Menipis!' : 'Eceran & Grosir Habis!' ?> Segera Lakukan Penerimaan Barang.
+                        <div style="margin-top:4px;font-size:10px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:3px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:4px;font-weight:600;">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span><?= $s['kategori'] === 'Alat Kesehatan' ? 'Stok Habis / Menipis!' : 'Eceran & Grosir Habis!' ?> Segera Lakukan Penerimaan Barang.</span>
                         </div>
                     <?php endif; ?>
                 <?php elseif($isDusMenipis): ?>
-                    <div style="margin-top:4px;font-size:10px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:3px 6px;border-radius:4px;display:inline-block;font-weight:600;">
-                        🚨 Stok Grosir Menipis - Lakukan Penerimaan Barang.
+                    <div style="margin-top:4px;font-size:10px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:3px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:4px;font-weight:600;">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span>Stok Grosir Menipis - Lakukan Penerimaan Barang.</span>
                     </div>
                 <?php endif; ?>
             </div>
@@ -1225,9 +1231,9 @@ function renderAnomaliModalPage(page) {
         
         let statusBadge = '';
         if (an.status === 'disesuaikan') {
-            statusBadge = `<span style="background:#dcfce7;color:#166534;border:1px solid #bbf7d0;padding:2px 8px;border-radius:12px;font-weight:700;font-size:10px;white-space:nowrap;">✓ Sudah Disesuaikan</span><div style="font-size:9px;color:#64748b;font-family:monospace;margin-top:2px;">di ${an.no_invoice_resolved || '-'}</div>`;
+            statusBadge = `<span style="background:#dcfce7;color:#166534;border:1px solid #bbf7d0;padding:2px 8px;border-radius:12px;font-weight:700;font-size:10px;white-space:nowrap;">Sudah Disesuaikan</span><div style="font-size:9px;color:#64748b;font-family:monospace;margin-top:2px;">di ${an.no_invoice_resolved || '-'}</div>`;
         } else {
-            statusBadge = `<span style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:2px 8px;border-radius:12px;font-weight:700;font-size:10px;white-space:nowrap;">⏳ Menunggu Dikeluarkan</span><div style="font-size:9px;color:#b45309;margin-top:2px;">Prioritaskan berikutnya</div>`;
+            statusBadge = `<span style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:2px 8px;border-radius:12px;font-weight:700;font-size:10px;white-space:nowrap;">Menunggu Dikeluarkan</span><div style="font-size:9px;color:#b45309;margin-top:2px;">Prioritaskan berikutnya</div>`;
         }
 
         rowsHtml += `
@@ -1317,7 +1323,7 @@ function openAnomaliModal() {
             </div>
 
             <div style="font-size:11px;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;padding:8px 12px;border-radius:8px;margin-top:12px;text-align:left;">
-                <strong>Alur Rekonsiliasi FEFO:</strong> Deviasi yang terjadi berstatus <em>Menunggu Dikeluarkan</em> sampai batch yang terlewat tersebut berhasil dijual pada transaksi berikutnya, di mana sistem otomatis mengubah statusnya menjadi <em>✓ Sudah Disesuaikan</em>.
+                <strong>Alur Rekonsiliasi FEFO:</strong> Deviasi yang terjadi berstatus <em>Menunggu Dikeluarkan</em> sampai batch yang terlewat tersebut berhasil dijual pada transaksi berikutnya, di mana sistem otomatis mengubah statusnya menjadi <em>Sudah Disesuaikan</em>.
             </div>
         `,
         width: '850px',
@@ -1347,8 +1353,8 @@ function renderReturModalPage(page) {
     pageItems.forEach(r => {
         const isWaiting = (r.status_retur === 'menunggu_pengganti');
         const badge = isWaiting 
-            ? '<span style="padding:2px 8px;border-radius:4px;background:#fef3c7;color:#92400e;font-weight:700;font-size:10px;">⏳ Menunggu Penggantian</span>'
-            : `<span style="padding:2px 8px;border-radius:4px;background:#dcfce7;color:#166534;font-weight:700;font-size:10px;">✓ Selesai Diganti (Batch: ${r.no_batch_pengganti || '-'})</span>`;
+            ? '<span style="padding:2px 8px;border-radius:4px;background:#fef3c7;color:#92400e;font-weight:700;font-size:10px;">Menunggu Penggantian</span>'
+            : `<span style="padding:2px 8px;border-radius:4px;background:#dcfce7;color:#166534;font-weight:700;font-size:10px;">Selesai Diganti (Batch: ${r.no_batch_pengganti || '-'})</span>`;
         rowsHtml += `
             <tr style="border-bottom:1px solid #e2e8f0;">
                 <td style="padding:8px;font-family:monospace;font-weight:700;">${r.no_referensi}</td>

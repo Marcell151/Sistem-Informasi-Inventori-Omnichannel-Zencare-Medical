@@ -6,8 +6,11 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
+require_once __DIR__ . '/../config/opname_helper.php';
 
 requireRole(['superadmin', 'admin']);
+
+$sesiOpnameAktif = cekSesiOpnameAktif($pdo);
 
 $activeCabang = $_SESSION['id_cabang'] ?? 1;
 if (isset($_GET['cabang'])) $_SESSION['id_cabang'] = $activeCabang = intval($_GET['cabang']);
@@ -27,6 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
     $newStatus  = $_POST['status_pesanan'] ?? '';
     
     if ($idPesanan && in_array($newStatus, ['Menunggu Pembayaran', 'Diproses', 'Dikirim', 'Siap Diambil', 'Selesai', 'Dibatalkan'])) {
+        if (in_array($newStatus, ['Dikirim', 'Selesai'])) {
+            assertTidakSedangOpname($pdo, 'pengiriman / penyelesaian pesanan');
+        }
         $pdo->beginTransaction();
         try {
             // Ambil status lama dan invoice
@@ -804,6 +810,14 @@ let pendingItems = [];
 function handleStatusChange(selectEl, orderId) {
     var newStatus = selectEl.value;
     var origStatus = selectEl.getAttribute('data-original');
+    
+    if (newStatus === 'Dikirim' || newStatus === 'Siap Diambil' || newStatus === 'Selesai') {
+        if (<?= $sesiOpnameAktif ? 'true' : 'false' ?>) {
+            alert('Aksi pengiriman/penyelesaian dibekukan sementara karena Sesi Stok Opname (<?= htmlspecialchars($sesiOpnameAktif['kode_sesi'] ?? '') ?>) sedang aktif.');
+            selectEl.value = origStatus;
+            return;
+        }
+    }
     
     if (newStatus === 'Dikirim' || newStatus === 'Siap Diambil') {
         activeOrderId = orderId;

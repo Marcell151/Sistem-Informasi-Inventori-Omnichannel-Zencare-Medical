@@ -24,10 +24,12 @@ try {
         $stmt->execute([$idVariasi]);
         $response['items'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } else if ($kategori === 'Alat Kesehatan') {
-        // Ambil SN aktif
-        $stmt = $pdo->prepare("SELECT serial_number FROM unit_serial WHERE id_variasi = ? AND status = 'Tersedia'");
+        // Ambil SN aktif (id, serial_number, status)
+        $stmt = $pdo->prepare("SELECT id, serial_number, status FROM unit_serial WHERE id_variasi = ? AND status = 'Tersedia' ORDER BY id ASC");
         $stmt->execute([$idVariasi]);
-        $response['items'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $snRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $response['items'] = $snRows;
+        $response['sns'] = $snRows;
     }
 
     echo json_encode($response);

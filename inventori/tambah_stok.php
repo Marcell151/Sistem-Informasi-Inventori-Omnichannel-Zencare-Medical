@@ -7,9 +7,11 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
+require_once __DIR__ . '/../config/opname_helper.php';
 
 requireRole(['superadmin', 'admin']);
 
+$sesiOpnameAktif = cekSesiOpnameAktif($pdo);
 $msg = ''; $msgType = '';
 $userId = $_SESSION['user_id'];
 $idCabang = 1;
@@ -18,8 +20,12 @@ $idCabang = 1;
 $minTglTerima = date('Y-m-d', strtotime('-30 days'));
 $maxTglTerima = date('Y-m-d', strtotime('+30 days'));
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $aksi = $_POST['aksi'] ?? '';
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    if ($sesiOpnameAktif) {
+        $msg = "Aksi ditolak! Sesi Stok Opname [{$sesiOpnameAktif['kode_sesi']}] sedang aktif. Penerimaan barang dan tukar guling retur dibekukan sementara.";
+        $msgType = 'error';
+    } else {
+        $aksi = $_POST['aksi'] ?? '';
 
     // --- AKSI 1: TERIMA BARANG PENGGANTI RETUR (Tukar Guling Supplier) ---
     if ($aksi === 'terima_barang_pengganti') {
@@ -351,6 +357,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 }
+}
 
 // Data Produk untuk Form
 $supplierList = $pdo->query("SELECT id, nama FROM supplier WHERE is_active = 1 ORDER BY nama")->fetchAll();
@@ -671,10 +678,17 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
         </div>
 
         <div class="flex justify-end pt-4">
-            <button type="submit" class="px-8 py-3 bg-zc hover:bg-zcHv text-white font-bold rounded-xl shadow-md shadow-blue-500/20 active:scale-95 transition flex items-center gap-2">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                Simpan &amp; Update Stok
-            </button>
+            <?php if ($sesiOpnameAktif): ?>
+                <button type="button" disabled class="px-8 py-3 bg-slate-100 border border-slate-300 text-slate-400 font-bold rounded-xl cursor-not-allowed flex items-center gap-2 shadow-2xs">
+                    <svg class="w-5 h-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Penerimaan Dibekukan (Stok Opname Aktif)
+                </button>
+            <?php else: ?>
+                <button type="submit" class="px-8 py-3 bg-zc hover:bg-zcHv text-white font-bold rounded-xl shadow-md shadow-blue-500/20 active:scale-95 transition flex items-center gap-2">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Simpan &amp; Update Stok
+                </button>
+            <?php endif; ?>
         </div>
     </form>
 </div>
@@ -988,30 +1002,41 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
                                     <?php if ($itQrusak > 0 && $stRetur === 'menunggu_pengganti'): ?>
                                         <div class="mb-2 p-1.5 bg-slate-50 border border-slate-200 rounded-lg flex flex-col gap-1 w-full max-w-[210px] mx-auto text-left shadow-2xs">
                                             <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider px-0.5">Tindakan Klaim Retur:</div>
-                                            <button type="button" onclick="openTerimaPenggantiModal(<?= htmlspecialchars(json_encode([
-                                                'id_detail' => $it['id'],
-                                                'no_referensi' => $p['no_referensi'],
-                                                'nama_produk' => $it['nama_produk'] . ' — ' . $it['nama_variasi'],
-                                                'kategori' => $it['kategori'],
-                                                'satuan' => $it['satuan_besar'] ?? 'Dus',
-                                                'qty_rusak' => $qtyRusak,
-                                                'harga_beli' => $hargaBeli
-                                            ]), ENT_QUOTES, 'UTF-8') ?>)" class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold transition shadow-2xs">
-                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                                                <span>Terima Unit Pengganti</span>
-                                            </button>
-                                            <button type="button" onclick="openPotongFakturModal(<?= htmlspecialchars(json_encode([
-                                                'id_detail' => $it['id'],
-                                                'no_referensi' => $p['no_referensi'],
-                                                'nama_produk' => $it['nama_produk'] . ' — ' . $it['nama_variasi'],
-                                                'satuan' => $it['satuan_besar'] ?? 'Dus',
-                                                'qty_rusak' => $qtyRusak,
-                                                'harga_beli' => $hargaBeli,
-                                                'nilai_klaim' => $qtyRusak * $hargaBeli
-                                            ]), ENT_QUOTES, 'UTF-8') ?>)" class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded text-[11px] font-semibold transition">
-                                                <svg class="w-3.5 h-3.5 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
-                                                <span>Potong Tagihan Faktur</span>
-                                            </button>
+                                            <?php if ($sesiOpnameAktif): ?>
+                                                <button type="button" disabled class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-slate-100 border border-slate-300 text-slate-400 rounded text-[11px] font-semibold cursor-not-allowed shadow-2xs" title="Tindakan terima pengganti dibekukan karena Sesi Stok Opname sedang aktif">
+                                                    <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                                    <span>Terima Pengganti (Dibekukan)</span>
+                                                </button>
+                                                <button type="button" disabled class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-slate-100 border border-slate-300 text-slate-400 rounded text-[11px] font-semibold cursor-not-allowed shadow-2xs" title="Tindakan potong faktur dibekukan karena Sesi Stok Opname sedang aktif">
+                                                    <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                                    <span>Potong Tagihan (Dibekukan)</span>
+                                                </button>
+                                            <?php else: ?>
+                                                <button type="button" onclick="openTerimaPenggantiModal(<?= htmlspecialchars(json_encode([
+                                                    'id_detail' => $it['id'],
+                                                    'no_referensi' => $p['no_referensi'],
+                                                    'nama_produk' => $it['nama_produk'] . ' — ' . $it['nama_variasi'],
+                                                    'kategori' => $it['kategori'],
+                                                    'satuan' => $it['satuan_besar'] ?? 'Dus',
+                                                    'qty_rusak' => $qtyRusak,
+                                                    'harga_beli' => $hargaBeli
+                                                ]), ENT_QUOTES, 'UTF-8') ?>)" class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold transition shadow-2xs">
+                                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                                                    <span>Terima Unit Pengganti</span>
+                                                </button>
+                                                <button type="button" onclick="openPotongFakturModal(<?= htmlspecialchars(json_encode([
+                                                    'id_detail' => $it['id'],
+                                                    'no_referensi' => $p['no_referensi'],
+                                                    'nama_produk' => $it['nama_produk'] . ' — ' . $it['nama_variasi'],
+                                                    'satuan' => $it['satuan_besar'] ?? 'Dus',
+                                                    'qty_rusak' => $qtyRusak,
+                                                    'harga_beli' => $hargaBeli,
+                                                    'nilai_klaim' => $qtyRusak * $hargaBeli
+                                                ]), ENT_QUOTES, 'UTF-8') ?>)" class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded text-[11px] font-semibold transition">
+                                                    <svg class="w-3.5 h-3.5 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                                                    <span>Potong Tagihan Faktur</span>
+                                                </button>
+                                            <?php endif; ?>
                                         </div>
                                     <?php endif; ?>
 
@@ -1446,10 +1471,17 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
                 <button type="button" onclick="closeTerimaPenggantiModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition">
                     Batal
                 </button>
-                <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-1.5">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span>Konfirmasi Terima Pengganti</span>
-                </button>
+                <?php if ($sesiOpnameAktif): ?>
+                    <button type="button" disabled class="px-5 py-2 bg-slate-200 border border-slate-300 text-slate-400 text-xs font-bold rounded-xl cursor-not-allowed flex items-center gap-1.5 shadow-2xs">
+                        <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span>Dibekukan (Opname Aktif)</span>
+                    </button>
+                <?php else: ?>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span>Konfirmasi Terima Pengganti</span>
+                    </button>
+                <?php endif; ?>
             </div>
         </form>
     </div>
@@ -1513,10 +1545,17 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
                 <button type="button" onclick="closePotongFakturModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition">
                     Batal
                 </button>
-                <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-1.5">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
-                    <span>Konfirmasi Potong Tagihan</span>
-                </button>
+                <?php if ($sesiOpnameAktif): ?>
+                    <button type="button" disabled class="px-5 py-2 bg-slate-200 border border-slate-300 text-slate-400 text-xs font-bold rounded-xl cursor-not-allowed flex items-center gap-1.5 shadow-2xs">
+                        <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span>Dibekukan (Opname Aktif)</span>
+                    </button>
+                <?php else: ?>
+                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                        <span>Konfirmasi Potong Tagihan</span>
+                    </button>
+                <?php endif; ?>
             </div>
         </form>
     </div>
@@ -2523,6 +2562,10 @@ function printNotaReturModal() {
 
 // Helper Modal Terima Barang Pengganti Retur
 function openTerimaPenggantiModal(data) {
+    if (<?= $sesiOpnameAktif ? 'true' : 'false' ?>) {
+        alert('Aksi dibekukan! Sesi Stok Opname sedang aktif. Penerimaan barang dan tukar guling retur tidak dapat diproses.');
+        return;
+    }
     if (!data) return;
     const modal = document.getElementById('modal_terima_pengganti');
     if (!modal) return;
@@ -2643,6 +2686,10 @@ function closeTerimaPenggantiModal() {
 
 // Helper Modal Selesaikan via Potong Faktur / Credit Note
 function openPotongFakturModal(data) {
+    if (<?= $sesiOpnameAktif ? 'true' : 'false' ?>) {
+        alert('Aksi dibekukan! Sesi Stok Opname sedang aktif. Penyelesaian faktur retur tidak dapat diproses.');
+        return;
+    }
     if (!data) return;
     const modal = document.getElementById('modal_potong_faktur');
     if (!modal) return;

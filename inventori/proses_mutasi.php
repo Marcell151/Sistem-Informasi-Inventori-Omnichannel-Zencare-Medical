@@ -6,6 +6,9 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
+require_once __DIR__ . '/../config/opname_helper.php';
+
+$sesiOpnameAktif = cekSesiOpnameAktif($pdo);
 
 requireRole(['superadmin', 'admin']);
 
@@ -13,6 +16,10 @@ $msg = ''; $msgType = '';
 $userId = $_SESSION['user_id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($sesiOpnameAktif) {
+        $msg = "Aksi mutasi ditolak! Sesi Stok Opname [{$sesiOpnameAktif['kode_sesi']}] sedang aktif. Mutasi manual di luar modul opname dibekukan sementara.";
+        $msgType = 'error';
+    } else {
     $idVariasi   = intval($_POST['id_variasi'] ?? 0);
     $jenisMutasi = $_POST['jenis_mutasi'] ?? '';
     $qty         = intval($_POST['qty'] ?? 0);
@@ -125,6 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+}
 
 // Fetch produk untuk dropdown
 $produkList = $pdo->query("
@@ -222,10 +230,17 @@ layoutHeader('Mutasi Stok Manual', 'Penyesuaian stok gudang karena selisih, retu
                     <textarea name="catatan" rows="2" placeholder="Detail tambahan..." class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50"></textarea>
                 </div>
 
-                <button type="submit" class="w-full bg-zc hover:bg-zcHv text-white font-bold text-sm py-3 px-4 rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-[.98]">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
-                    <span>Simpan Penyesuaian Stok</span>
-                </button>
+                <?php if ($sesiOpnameAktif): ?>
+                    <button type="button" disabled class="w-full bg-slate-100 border border-slate-300 text-slate-400 font-bold text-sm py-3 px-4 rounded-xl cursor-not-allowed flex items-center justify-center gap-2 shadow-2xs">
+                        <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span>Mutasi Stok Dibekukan Sementara (Stok Opname Aktif)</span>
+                    </button>
+                <?php else: ?>
+                    <button type="submit" class="w-full bg-zc hover:bg-zcHv text-white font-bold text-sm py-3 px-4 rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-[.98]">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+                        <span>Simpan Penyesuaian Stok</span>
+                    </button>
+                <?php endif; ?>
             </form>
         </div>
     </div>

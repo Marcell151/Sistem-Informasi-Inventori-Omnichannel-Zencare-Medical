@@ -6,6 +6,9 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/layout.php';
+require_once __DIR__ . '/../config/opname_helper.php';
+
+$sesiOpnameAktif = cekSesiOpnameAktif($pdo);
 
 requireRole(['superadmin', 'admin']);
 
@@ -13,6 +16,10 @@ $msg = ''; $msgType = ''; $newBatchId = null;
 $userId = $_SESSION['user_id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($sesiOpnameAktif) {
+        $msg = "Aksi konversi ditolak! Sesi Stok Opname [{$sesiOpnameAktif['kode_sesi']}] sedang aktif. Konversi UOM dibekukan sementara.";
+        $msgType = 'error';
+    } else {
     $idVariasi = intval($_POST['id_variasi'] ?? 0);
     $noBatchAsal = trim($_POST['no_batch_asal'] ?? '');
     $qtyBox = intval($_POST['qty_box'] ?? 0);
@@ -131,6 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+}
 
 // Fetch Obat dengan rasio > 1
 $produkList = $pdo->query("
@@ -204,10 +212,17 @@ layoutHeader('Konversi Satuan (UOM)', 'Pemecahan kemasan Satuan Besar (Gudang/Gr
             </div>
 
             <div class="pt-2">
-                <button type="submit" class="w-full bg-zc hover:bg-zcHv text-white font-bold text-sm py-3 px-4 rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-[.98]">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                    <span>Proses Konversi (Mutasi Satuan)</span>
-                </button>
+                <?php if ($sesiOpnameAktif): ?>
+                    <button type="button" disabled class="w-full bg-slate-100 border border-slate-300 text-slate-400 font-bold text-sm py-3 px-4 rounded-xl cursor-not-allowed flex items-center justify-center gap-2 shadow-2xs">
+                        <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span>Konversi Dibekukan Sementara (Stok Opname Aktif)</span>
+                    </button>
+                <?php else: ?>
+                    <button type="submit" class="w-full bg-zc hover:bg-zcHv text-white font-bold text-sm py-3 px-4 rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-[.98]">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        <span>Proses Konversi (Mutasi Satuan)</span>
+                    </button>
+                <?php endif; ?>
             </div>
         </form>
     </div>

@@ -210,6 +210,7 @@ function icon(string $name, string $cls = 'w-4 h-4'): string {
         'settings'     => '<path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/>',
         'logout'       => '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>',
         'truck'        => '<path d="M14 18V6a2 2 0 00-2-2H4a2 2 0 00-2 2v11a1 1 0 001 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 001-1v-3.65a1 1 0 00-.22-.624l-3.48-4.35A1 1 0 0017.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+        'opname'       => '<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/><path d="M9 10h6"/>',
     ];
     $path = $icons[$name] ?? $icons['settings'];
     return '<svg class="' . $cls . ' shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' . $path . '</svg>';
@@ -277,6 +278,7 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
             $link('/inventory_zencare/inventori/proses_mutasi.php', 'swap', 'Mutasi Stok Manual', 'mutasi');
             $link('/inventory_zencare/inventori/konversi_uom.php', 'uom', 'Konversi (UOM)', 'konversi_uom');
             $link('/inventory_zencare/inventori/histori_konversi.php', 'report_sale', 'Histori Konversi', 'histori_konversi');
+            $link('/inventory_zencare/inventori/stok_opname.php', 'opname', 'Stok Opname', 'stok_opname');
             $link('/inventory_zencare/laporan/kartu_stok.php', 'kartu', 'Kartu Stok', 'laporan_kartu_stok');
             if ($role === 'admin') {
                 $link('/inventory_zencare/inventori/logistik_medis.php', 'report_med', 'Logistik Medis', 'logistik_medis_admin');
@@ -365,8 +367,28 @@ function layoutHeader(string $title, string $subtitle = '', bool $showBranchSele
           </div>
         </div>
       </div>
-    </header>
-    <main class="p-6 flex-1 overflow-x-hidden">';
+    </header>';
+
+    require_once __DIR__ . '/opname_helper.php';
+    $sesiOpnameGlobal = (isset($pdo) && function_exists('cekSesiOpnameAktif')) ? cekSesiOpnameAktif($pdo) : null;
+    $currentPage = basename($_SERVER['PHP_SELF'] ?? '');
+
+    if ($sesiOpnameGlobal && $currentPage !== 'stok_opname.php') {
+        echo '<div class="bg-amber-500 text-white px-5 py-2.5 text-xs font-semibold flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs sticky top-14 z-20 shrink-0">
+            <div class="flex items-center gap-2.5">
+                <div class="w-6 h-6 rounded-md bg-amber-600/60 flex items-center justify-center shrink-0">
+                    <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+                <span><strong>SESI STOK OPNAME AKTIF (' . htmlspecialchars($sesiOpnameGlobal['kode_sesi']) . '):</strong> Transaksi kasir POS, checkout e-commerce, penerimaan logistik, dan mutasi inventori sedang dibekukan sementara.</span>
+            </div>
+            <a href="/inventory_zencare/inventori/stok_opname.php" class="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1 self-start sm:self-auto shrink-0">
+                <span>Buka Stok Opname</span>
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
+        </div>';
+    }
+
+    echo '<main class="p-6 flex-1 overflow-x-hidden">';
 }
 
 function layoutEnd() {

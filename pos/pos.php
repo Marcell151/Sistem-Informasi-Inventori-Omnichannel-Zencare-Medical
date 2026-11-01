@@ -6,15 +6,21 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/opname_helper.php';
 
 requireRole(['superadmin', 'kasir']);
 
+$sesiOpnameAktif = cekSesiOpnameAktif($pdo);
 $idCabangKaryawan = $_SESSION['id_cabang'] ?? 1;
 
 $msg = ''; $msgType = '';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_pos') {
-    $cartItems = json_decode($_POST['cart_data'] ?? '[]', true);
+    if ($sesiOpnameAktif) {
+        $msg = "Transaksi ditolak! Sesi Stok Opname [{$sesiOpnameAktif['kode_sesi']}] sedang aktif. Transaksi kasir dibekukan sementara.";
+        $msgType = 'error';
+    } else {
+        $cartItems = json_decode($_POST['cart_data'] ?? '[]', true);
     if (empty($cartItems)) {
         $msg = "Keranjang kasir kosong!"; $msgType = 'error';
     } else {
@@ -283,6 +289,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['aksi'] ?? '') === 
         }
     }
 }
+}
 
 $katalog = $pdo->prepare("
     SELECT v.id, v.sku_variasi, CONCAT(i.nama_produk,' - ',v.nama_variasi) AS nama,
@@ -439,6 +446,19 @@ if ($userRole === "superadmin") {
             <a href="../logout.php" class="text-sm font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 border border-rose-200 px-4 py-2.5 rounded-xl transition">Keluar</a>
         </div>
     </header>
+
+    <?php if ($sesiOpnameAktif): ?>
+        <div class="bg-rose-600 text-white px-6 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-md">
+            <div class="flex items-center gap-3">
+                <span class="text-xl">🔒</span>
+                <div>
+                    <strong class="text-sm font-bold block">SESI STOK OPNAME SEDANG BERLANGSUNG (Kode Sesi: <?= htmlspecialchars($sesiOpnameAktif['kode_sesi']) ?>)</strong>
+                    <span class="text-xs text-rose-100">Seluruh transaksi penjualan kasir offline dinonaktifkan sementara demi integritas perhitungan fisik gudang &amp; etalase.</span>
+                </div>
+            </div>
+            <span class="bg-rose-800/80 border border-rose-400 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider self-start sm:self-auto">Freeze Mode Aktif</span>
+        </div>
+    <?php endif; ?>
 
     <div class="max-w-7xl mx-auto px-4 py-5">
 
@@ -742,7 +762,7 @@ if ($userRole === "superadmin") {
                         <input type="hidden" name="custom_invoice" id="form_custom_invoice" value="">
                         <button type="button" id="btn_pay" disabled onclick="openPaymentModal()"
                             class="w-full py-3.5 rounded-xl text-xs font-bold transition shadow-sm bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed">
-                            Proses Pembayaran
+                            <?= $sesiOpnameAktif ? 'Kasir Dibekukan (Stok Opname Aktif)' : 'Proses Pembayaran' ?>
                         </button>
                     </form>
                     <button onclick="clearCart()" class="w-full py-2 rounded-xl text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition flex items-center justify-center gap-2">
@@ -1738,8 +1758,15 @@ if ($userRole === "superadmin") {
 
         tbody.innerHTML = html;
         totalEl.innerText = 'Rp ' + total.toLocaleString('id-ID');
-        btn.disabled = false;
-        btn.className = 'w-full py-3.5 rounded-xl text-xs font-bold bg-zc hover:bg-zcHv text-white transition shadow-sm cursor-pointer';
+        if (<?= $sesiOpnameAktif ? 'true' : 'false' ?>) {
+            btn.disabled = true;
+            btn.innerText = 'Kasir Dibekukan (Stok Opname Aktif)';
+            btn.className = 'w-full py-3.5 rounded-xl text-xs font-bold bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed';
+        } else {
+            btn.disabled = false;
+            btn.innerText = 'Proses Pembayaran';
+            btn.className = 'w-full py-3.5 rounded-xl text-xs font-bold bg-zc hover:bg-zcHv text-white transition shadow-sm cursor-pointer';
+        }
         inp.value = JSON.stringify(cart);
         try {
             sessionStorage.setItem('zencare_pos_cart', JSON.stringify(cart));
@@ -1756,6 +1783,15 @@ if ($userRole === "superadmin") {
     }
 
     function openPaymentModal() {
+        if (<?= $sesiOpnameAktif ? 'true' : 'false' ?>) {
+            Swal.fire({
+                title: 'Transaksi Kasir Terkunci!',
+                text: 'Sesi Stok Opname (<?= htmlspecialchars($sesiOpnameAktif['kode_sesi'] ?? '') ?>) sedang berlangsung. Transaksi kasir offline dinonaktifkan sementara demi integritas perhitungan fisik.',
+                icon: 'error',
+                confirmButtonColor: '#e11d48'
+            });
+            return;
+        }
         if (!cart.length) return;
         
         // Blokir jika ada item yang belum divalidasi fisik (di-scan)

@@ -4,6 +4,7 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../config/order_helper.php';
+require_once __DIR__ . '/../config/opname_helper.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['status' => 'error', 'message' => 'POST method required']);
@@ -39,6 +40,9 @@ try {
     
     // Pemicu timer mandiri: batalkan pesanan kedaluwarsa sebelum menghitung stok checkout baru
     batalkanPesananKadaluarsa($pdo);
+
+    // Proteksi Server Central Freeze: Blokir checkout jika Sesi Stok Opname sedang aktif
+    assertTidakSedangOpname($pdo, 'checkout pesanan e-commerce');
 
     $pdo->beginTransaction();
 
