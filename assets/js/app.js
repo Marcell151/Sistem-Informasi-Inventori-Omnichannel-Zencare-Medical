@@ -546,8 +546,8 @@ function calculateInternalDistance() {
     const minDistance = Math.min(distMuharto, distBorobudur);
     const originBranch = distMuharto < distBorobudur ? CABANG_MUHARTO.nama : CABANG_BOROBUDUR.nama;
 
-    // Calculate cost based on rate
-    let cost = Math.round(minDistance * TARIF_PER_KM);
+    // Calculate cost based on rate & pembulatan ke kelipatan Rp 1.000 ke atas
+    let cost = Math.ceil((minDistance * TARIF_PER_KM) / 1000) * 1000;
     if (cost < TARIF_MINIMAL) {
         cost = TARIF_MINIMAL;
     }

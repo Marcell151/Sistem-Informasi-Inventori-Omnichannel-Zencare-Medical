@@ -431,11 +431,14 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 let totalWeight = cart.reduce((sum, item) => sum + ((parseInt(item.berat) || 100) * (parseInt(item.qty) || 1)), 0);
 
                 let baseFare = 10000;
-                let distFare = dist > 2 ? Math.round((dist - 2) * 3000) : 0;
+                let distFare = dist > 2 ? ((dist - 2) * 3000) : 0;
                 let weightKg = Math.ceil(totalWeight / 1000);
                 let weightFare = weightKg > 1 ? (weightKg - 1) * 2000 : 0;
 
-                currentOngkir = baseFare + distFare + weightFare;
+                let rawOngkir = baseFare + distFare + weightFare;
+                // Pembulatan ke kelipatan Rp 1.000 ke atas (standar tarif kurir logistik tanpa uang receh)
+                currentOngkir = Math.ceil(rawOngkir / 1000) * 1000;
+
                 let weightLabel = totalWeight >= 1000 ? (totalWeight/1000).toFixed(1) + 'kg' : totalWeight + 'g';
                 selectedServiceLabel = 'ZenCare Direct Delivery (' + dist.toFixed(1) + ' km, ' + weightLabel + ')';
                 updateTotalsDisplay();

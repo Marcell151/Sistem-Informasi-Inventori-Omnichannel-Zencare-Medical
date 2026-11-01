@@ -92,8 +92,11 @@ try {
         throw new Exception("Keranjang belanja kosong!");
     }
 
-    // 2. Ongkir (Terima dari frontend, divalidasi minimalnya)
+    // 2. Ongkir (Terima dari frontend, divalidasi minimalnya dan dibulatkan ke kelipatan Rp 1.000)
     $ongkir = intval($input['ongkir'] ?? 0);
+    if ($kurir === 'internal' && $ongkir > 0) {
+        $ongkir = (int)(ceil($ongkir / 1000) * 1000);
+    }
     $grandTotal = $totalHargaBarang + $ongkir;
 
     if ($ongkir > 0) {
