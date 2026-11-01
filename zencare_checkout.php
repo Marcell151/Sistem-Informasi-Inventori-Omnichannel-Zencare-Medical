@@ -324,8 +324,8 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                     </div><div class="mt-5 space-y-2">
                         <?php if ($sesiOpnameAktif): ?>
                             <div class="p-3.5 rounded-xl bg-rose-50 border-2 border-rose-300 text-rose-800 text-xs shadow-xs">
-                                <div class="flex items-start gap-2">
-                                    <span class="text-lg leading-none">🔒</span>
+                                <div class="flex items-start gap-2.5">
+                                    <svg class="w-5 h-5 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                     <div>
                                         <strong class="block font-bold text-rose-900">Checkout Ditutup Sementara</strong>
                                         <p class="text-[11px] text-rose-700 mt-0.5 leading-relaxed">
@@ -754,7 +754,7 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             let weightKg = (totalWeight / 1000).toFixed(1);
             let weightBadge = '';
             if (totalWeight >= 10000) {
-                weightBadge = `<span class="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full ml-1.5 border border-amber-300">📦 Muatan Berat (Rekomendasi Kargo)</span>`;
+                weightBadge = `<span class="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full ml-1.5 border border-amber-300"><svg class="w-3 h-3 text-amber-700 shrink-0 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Muatan Berat (Rekomendasi Kargo)</span>`;
             } else if (totalWeight > 0) {
                 weightBadge = `<span class="inline-flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded-full ml-1.5 border border-blue-200">Paket Reguler</span>`;
             }
@@ -800,6 +800,16 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
             calculateShippingCost();
         }
 
+        function resolveProductImg(gbr) {
+            if (!gbr) return 'assets/img/no-image.png';
+            if (typeof gbr === 'string' && gbr.includes(',')) {
+                gbr = gbr.split(',')[0].trim();
+            }
+            if (gbr.startsWith('http')) return gbr;
+            let clean = gbr.replace(/^\.\.\//, '');
+            return clean || 'assets/img/no-image.png';
+        }
+
         function renderCartItems() {
             let cart = getCheckoutCart();
             let container = document.getElementById('cart_summary_list');
@@ -827,13 +837,12 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 let itemName = item.nama || item.name || 'Produk';
                 let maxStok = parseInt(item.max) || 0;
 
-                let rawImg = item.gambar || item.image || '';
-                let itemImg = rawImg.startsWith('http') ? rawImg : (rawImg.replace(/^\.\.\//, '') || 'assets/img/no-image.png');
+                let itemImg = resolveProductImg(item.gambar || item.image || '');
 
                 html += `
                     <div class="flex items-center justify-between text-xs border-b border-zcBrd/60 pb-2.5 gap-2.5">
-                        <div class="w-11 h-11 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shrink-0 overflow-hidden">
-                            <img src="${itemImg}" class="w-full h-full object-contain mix-blend-multiply" alt="${itemName}" onerror="this.src='assets/img/no-image.png'">
+                        <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
+                            <img src="${itemImg}" class="w-full h-full object-contain mix-blend-multiply" alt="${itemName}" onerror="this.onerror=null; this.src='assets/img/no-image.png';">
                         </div>
                         <div class="pr-2 min-w-0 flex-1">
                             <span class="font-bold text-zcTxt block truncate leading-snug">${itemName}</span>
@@ -1022,13 +1031,24 @@ $namaToko = $webCfg['nama_toko'] ?? 'ZenCare Medical Store';
                 });
                 let data = await res.json();
                 if (data.status === 'success') {
+                    let cartNeedsSave = false;
                     if (data.stock_map) {
                         cart.forEach(item => {
                             let itemKey = item.cartId || item.id;
-                            if (data.stock_map[itemKey]) {
-                                item.max = data.stock_map[itemKey].max_dus;
+                            let stockInfo = data.stock_map[itemKey] || data.stock_map[item.id];
+                            if (stockInfo) {
+                                item.max = stockInfo.max_dus;
+                                if ((!item.gambar || item.gambar === 'assets/img/no-image.png') && stockInfo.gambar) {
+                                    item.gambar = stockInfo.gambar;
+                                    item.image = stockInfo.gambar;
+                                    cartNeedsSave = true;
+                                }
                             }
                         });
+                        if (cartNeedsSave) {
+                            localStorage.setItem('zc_cart', JSON.stringify(cart));
+                            renderCartItems();
+                        }
                     }
                     if (data.has_adjustments && data.adjusted_items.length > 0) {
                         let msgList = [];

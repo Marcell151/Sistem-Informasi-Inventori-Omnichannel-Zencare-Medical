@@ -450,7 +450,7 @@ if ($userRole === "superadmin") {
     <?php if ($sesiOpnameAktif): ?>
         <div class="bg-rose-600 text-white px-6 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-md">
             <div class="flex items-center gap-3">
-                <span class="text-xl">🔒</span>
+                <svg class="w-6 h-6 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 <div>
                     <strong class="text-sm font-bold block">SESI STOK OPNAME SEDANG BERLANGSUNG (Kode Sesi: <?= htmlspecialchars($sesiOpnameAktif['kode_sesi']) ?>)</strong>
                     <span class="text-xs text-rose-100">Seluruh transaksi penjualan kasir offline dinonaktifkan sementara demi integritas perhitungan fisik gudang &amp; etalase.</span>
@@ -711,8 +711,9 @@ if ($userRole === "superadmin") {
                                 <?php if ($item['kategori'] === 'Obat' && (isset($item['stok_dus']) && $item['stok_dus'] > 0)): ?>
                                     <button type="button" 
                                         onclick="triggerManualBongkar(<?= intval($item['id']) ?>, '<?= htmlspecialchars($item['nama'], ENT_QUOTES, 'UTF-8') ?>', '<?= htmlspecialchars($item['batch_list'] ?? '') ?>', <?= floatval($item['harga_jual_kecil']) ?>, <?= floatval($item['harga_jual_besar']) ?>, <?= intval($item['stok']) ?>, <?= intval($item['rasio_konversi']) ?: 1 ?>)" 
-                                        class="w-full text-[9px] font-bold px-2 py-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 transition shadow-xs">
-                                        📦 Bongkar Box (Tersisa: <?= isset($item['stok_eceran']) ? $item['stok_eceran'] : 0 ?> <?= htmlspecialchars($item['satuan_kecil']) ?>)
+                                        class="w-full text-[9px] font-bold px-2 py-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 transition shadow-xs flex items-center justify-center gap-1">
+                                        <svg class="w-3 h-3 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                        <span>Bongkar Box (Tersisa: <?= isset($item['stok_eceran']) ? $item['stok_eceran'] : 0 ?> <?= htmlspecialchars($item['satuan_kecil']) ?>)</span>
                                     </button>
                                 <?php endif; ?>
                             </div>
@@ -897,8 +898,9 @@ if ($userRole === "superadmin") {
                         </select>
                     </div>
                     <div class="text-right">
-                        <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800" id="scan_status_badge">
-                            🟢 Scanner Aktif
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800" id="scan_status_badge">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>Scanner Aktif</span>
                         </span>
                     </div>
                 </div>
@@ -1033,14 +1035,25 @@ if ($userRole === "superadmin") {
                     var avail = b.stockUom - used;
                     if (avail > 0) {
                         var take = Math.min(avail, remainingNeeded);
-                        newAllocations.push({
-                            batch: b.code,
-                            qty: take,
-                            verified: false,
-                            scanned_batch: null,
-                            is_anomaly: false,
-                            batch_seharusnya: null
+
+                        // Cek apakah batch ini sudah ada di alokasi dan sudah diverifikasi sebelumnya
+                        var existingAlloc = newAllocations.find(function(al) {
+                            return (al.scanned_batch || al.batch).toLowerCase() === b.code.toLowerCase();
                         });
+
+                        if (existingAlloc && existingAlloc.verified) {
+                            // Jika batch yang sama sudah diverifikasi kasir, penambahan kuantitas otomatis ikut terverifikasi
+                            existingAlloc.qty += take;
+                        } else {
+                            newAllocations.push({
+                                batch: b.code,
+                                qty: take,
+                                verified: false,
+                                scanned_batch: null,
+                                is_anomaly: false,
+                                batch_seharusnya: null
+                            });
+                        }
                         remainingNeeded -= take;
                         batchUsedMap[b.code.toLowerCase()] = used + take;
                     }
@@ -1094,36 +1107,48 @@ if ($userRole === "superadmin") {
                 } else {
                     // Produk Multi-UOM (rasio > 1, e.g. Obat Dus & Eceran)
                     var isScannedSubBatch = scannedCode.includes('.');
-                    var existingInCart = cart.find(ci => parseInt(ci.id) === id);
+                    var scannedUom = isScannedSubBatch ? 'kecil' : 'besar';
 
-                    if (existingInCart) {
-                        var cartUom = existingInCart.satuan_tipe;
-                        if (cartUom === 'kecil' && !isScannedSubBatch) {
-                            var allBatchesRaw = rawBatch ? rawBatch.split(',').map(b => b.split('|')[0].trim().toLowerCase()) : [];
-                            if (allBatchesRaw.includes(scannedCode.toLowerCase())) {
+                    // Cek apakah di keranjang SUDAH ADA item dengan satuan yang sesuai dengan fisik yang discan
+                    var matchingCartItem = cart.find(ci => parseInt(ci.id) === id && ci.satuan_tipe === scannedUom);
+
+                    if (matchingCartItem) {
+                        // Keranjang memiliki item yang cocok dengan UOM yang discan (misal kardus untuk kardus, eceran untuk eceran)
+                        uomType = scannedUom;
+                    } else {
+                        // Keranjang TIDAK memiliki item dengan UOM yang discan
+                        // Cek apakah ada item dengan UOM kebalikannya yang masih BELUM diverifikasi
+                        var oppositeUom = (scannedUom === 'besar') ? 'kecil' : 'besar';
+                        var oppositeCartItem = cart.find(ci => parseInt(ci.id) === id && ci.satuan_tipe === oppositeUom);
+
+                        var hasUnverifiedOpposite = oppositeCartItem && (oppositeCartItem.allocations || []).some(al => !al.verified);
+
+                        if (hasUnverifiedOpposite) {
+                            // Benar-benar salah ambil kemasan fisik karena di keranjang pesanan hanya ada satuan lain yang belum terverifikasi
+                            if (oppositeUom === 'kecil' && scannedUom === 'besar') {
+                                var allBatchesRaw = rawBatch ? rawBatch.split(',').map(b => b.split('|')[0].trim().toLowerCase()) : [];
+                                if (allBatchesRaw.includes(scannedCode.toLowerCase())) {
+                                    Swal.fire({
+                                        title: '❌ Salah Ambil Fisik!', 
+                                        html: 'Di keranjang pesanan adalah <b>ECERAN (Kecil)</b>, tetapi fisik yang Anda scan adalah <b>GROSIR / DUS (Besar)</b>.<br><br><span class="text-xs text-slate-500">Silakan ambil kemasan eceran (sub-batch bertitik) atau tambahkan kardus ke keranjang terlebih dahulu.</span>', 
+                                        icon: 'error'
+                                    });
+                                    return;
+                                }
+                            } else if (oppositeUom === 'besar' && scannedUom === 'kecil') {
                                 Swal.fire({
                                     title: '❌ Salah Ambil Fisik!', 
-                                    html: 'Di keranjang pesanan adalah <b>ECERAN (Kecil)</b>, tetapi fisik yang Anda scan adalah <b>GROSIR / DUS (Besar)</b>.<br><br><span class="text-xs text-slate-500">Silakan ambil kemasan eceran (sub-batch bertitik) atau tambahkan kardus ke keranjang terlebih dahulu.</span>', 
+                                    html: 'Di keranjang pesanan adalah <b>GROSIR / DUS (Besar)</b>, tetapi fisik yang Anda scan adalah <b>ECERAN (Kecil)</b>.<br><br><span class="text-xs text-slate-500">Silakan ambil kemasan kardus utuh atau tambahkan eceran ke keranjang terlebih dahulu.</span>', 
                                     icon: 'error'
                                 });
                                 return;
                             }
-                        } else if (cartUom === 'besar' && isScannedSubBatch) {
-                            Swal.fire({
-                                title: '❌ Salah Ambil Fisik!', 
-                                html: 'Di keranjang pesanan adalah <b>GROSIR / DUS (Besar)</b>, tetapi fisik yang Anda scan adalah <b>ECERAN (Kecil)</b>.<br><br><span class="text-xs text-slate-500">Silakan ambil kemasan kardus utuh atau tambahkan eceran ke keranjang terlebih dahulu.</span>', 
-                                icon: 'error'
-                            });
-                            return;
                         }
-                        uomType = cartUom;
-                    } else {
-                        // Belum ada di keranjang (Direct scan dari rak)
-                        if (isScannedSubBatch) {
-                            uomType = 'kecil';
-                            if (sel && sel.value !== 'kecil') sel.value = 'kecil';
-                        } else {
-                            uomType = (sel && sel.value === 'besar') ? 'besar' : 'kecil';
+
+                        // Jika tidak ada konflik (belum ada di keranjang, atau item satuan sebelumnya sudah 100% diverifikasi)
+                        uomType = scannedUom;
+                        if (sel) {
+                            sel.value = scannedUom;
                         }
                     }
                 }
@@ -1585,7 +1610,7 @@ if ($userRole === "superadmin") {
                         if (updatedDus <= 0) {
                             bongkarBtn.style.display = 'none';
                         } else {
-                            bongkarBtn.innerHTML = '📦 Bongkar Box (Tersisa: ' + updatedEceran + ' ' + (data.satuan_kecil || 'Box') + ')';
+                            bongkarBtn.innerHTML = '<svg class="w-3 h-3 text-rose-500 shrink-0 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Bongkar Box (Tersisa: ' + updatedEceran + ' ' + (data.satuan_kecil || 'Box') + ')';
                         }
                     }
                 }
@@ -1736,7 +1761,7 @@ if ($userRole === "superadmin") {
             }
 
             var maxAllowed = Math.floor(i.maxPcs / i.rasio);
-            var stokInfo = '<span class="block text-[9px] text-slate-500 font-medium mt-1">📦 Total Tersedia: ' + maxAllowed + ' ' + i.satuan_label + '</span>';
+            var stokInfo = '<span class="flex items-center gap-1 text-[9px] text-slate-500 font-medium mt-1"><svg class="w-3 h-3 text-slate-400 shrink-0 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Total Tersedia: ' + maxAllowed + ' ' + i.satuan_label + '</span>';
 
             html += '<tr class="hover:bg-slate-50/60 transition-colors">' +
                 '<td class="px-4 py-3 font-semibold text-zcTxt text-xs align-top">' +
@@ -1950,12 +1975,12 @@ if ($userRole === "superadmin") {
                 stopPosQrisTimer();
                 if (timerDisplay) timerDisplay.innerText = '00:00';
                 if (badge) {
-                    badge.innerText = '⚠️ Kadaluarsa (5 Menit)';
+                    badge.innerHTML = '<span class="inline-flex items-center gap-1"><svg class="w-3 h-3 text-rose-600 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Kadaluarsa (5 Menit)</span>';
                     badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800';
                 }
                 if (btn) {
                     btn.disabled = false;
-                    btn.innerHTML = '🔄 Buat Ulang QRIS Kasir (Waktu Habis)';
+                    btn.innerHTML = '<svg class="w-3.5 h-3.5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Buat Ulang QRIS Kasir (Waktu Habis)';
                 }
                 Swal.fire({
                     title: 'Batas Waktu QRIS Habis',
@@ -2202,14 +2227,14 @@ if ($userRole === "superadmin") {
             isCameraScannerRunning = true;
             if (loading) loading.classList.add('hidden');
             if (badge) {
-                badge.innerText = '🟢 Kamera Aktif';
+                badge.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>Kamera Aktif</span>';
                 badge.className = 'inline-block px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800';
             }
 
         } catch (err) {
             if (loading) loading.classList.add('hidden');
             if (badge) {
-                badge.innerText = '🔴 Gagal Akses Kamera';
+                badge.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span>Gagal Akses Kamera</span>';
                 badge.className = 'inline-block px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800';
             }
             Swal.fire({
@@ -2612,7 +2637,7 @@ if ($userRole === "superadmin") {
                     if (bongkarBtn) {
                         if (item.kategori === 'Obat' && newStokDus > 0) {
                             bongkarBtn.style.display = 'block';
-                            bongkarBtn.innerHTML = '📦 Bongkar Box (Tersisa: ' + newStokEceran + ' ' + (item.satuan_kecil || 'Box') + ')';
+                            bongkarBtn.innerHTML = '<svg class="w-3 h-3 text-rose-500 shrink-0 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Bongkar Box (Tersisa: ' + newStokEceran + ' ' + (item.satuan_kecil || 'Box') + ')';
                         } else {
                             bongkarBtn.style.display = 'none';
                         }
@@ -2747,7 +2772,7 @@ function openKasirAnomaliModal() {
     <?php
     $rowsHtml = "";
     if (empty($listAnomaliKasir)) {
-        $rowsHtml = "<tr><td colspan='7' class='px-4 py-8 text-center text-slate-400 font-semibold'>Belum ada catatan anomali FEFO hari ini. Layanan kasir mematuhi urutan FEFO secara sempurna! 👍</td></tr>";
+        $rowsHtml = "<tr><td colspan='7' class='px-4 py-8 text-center text-slate-400 font-semibold'>Belum ada catatan anomali FEFO hari ini. Layanan kasir mematuhi urutan FEFO secara sempurna.</td></tr>";
     } else {
         foreach ($listAnomaliKasir as $i => $row) {
             $num = $i + 1;
@@ -2810,7 +2835,7 @@ function openKasirAnomaliModal() {
     </div>`;
 
     Swal.fire({
-        title: '<span style="font-size:18px; font-weight:800; color:#1e293b;">📋 Log Pengawasan Anomali FEFO Hari Ini</span>',
+        title: '<span style="font-size:16px; font-weight:800; color:#1e293b;">Log Pengawasan Anomali FEFO Hari Ini</span>',
         html: modalHtml,
         width: 800,
         showCloseButton: true,

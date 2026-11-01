@@ -44,7 +44,7 @@ $saNewCards = '    <!-- Widget Anomali FEFO Hari Ini (Superadmin - Desain Seraga
     <div onclick="openReturModal()" style="cursor:pointer;background:#fff;border:1px solid <?= $returMenungguCount > 0 ? \'#fed7aa\' : \'#e4e9f0\' ?>;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STATUS RETUR SUPPLIER</div>
         <div style="font-size:30px;font-weight:900;color:<?= $returMenungguCount > 0 ? \'#d97706\' : \'#1e293b\' ?>;line-height:1;"><?= number_format($returMenungguCount) ?> <span style="font-size:13px;font-weight:600;color:#94a3b8;">/ <?= number_format($returSelesaiCount) ?> selesai</span></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $returMenungguCount > 0 ? \'Menunggu ganti barang PO\' : \'Semua retur terselesaikan ✓\' ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $returMenungguCount > 0 ? \'Menunggu ganti barang PO\' : \'Semua retur terselesaikan\' ?></div>
     </div>';
 
 // -------------------------------------------------------------
@@ -89,7 +89,7 @@ $adNewCards = '    <!-- Widget Anomali FEFO Hari Ini (Admin - Desain Seragam) --
     <div onclick="openReturModal()" style="cursor:pointer;background:#fff;border:1px solid <?= $returMenungguCount > 0 ? \'#fed7aa\' : \'#e4e9f0\' ?>;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STATUS RETUR SUPPLIER</div>
         <div style="font-size:30px;font-weight:900;color:<?= $returMenungguCount > 0 ? \'#d97706\' : \'#1e293b\' ?>;line-height:1;"><?= number_format($returMenungguCount) ?> <span style="font-size:13px;font-weight:600;color:#94a3b8;">/ <?= number_format($returSelesaiCount) ?> selesai</span></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $returMenungguCount > 0 ? \'Menunggu ganti barang PO\' : \'Semua retur terselesaikan ✓\' ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $returMenungguCount > 0 ? \'Menunggu ganti barang PO\' : \'Semua retur terselesaikan\' ?></div>
     </div>';
 
 // -------------------------------------------------------------

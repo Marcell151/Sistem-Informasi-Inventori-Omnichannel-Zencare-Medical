@@ -35,7 +35,7 @@ try {
         if ($idVariasi <= 0) continue;
 
         $stmt = $pdo->prepare("
-            SELECT pv.id, pv.nama_variasi, pv.satuan_besar, pv.satuan_kecil, pv.rasio_konversi,
+            SELECT pv.id, pv.nama_variasi, pv.gambar, pv.satuan_besar, pv.satuan_kecil, pv.rasio_konversi,
                    pv.harga_jual_besar, pv.harga_jual_kecil, pi.nama_produk, pi.kategori,
                    COALESCE(st.stok, 0) AS stok_eceran,
                    (SELECT COALESCE(SUM(sb.stok_sisa), 0) 
@@ -79,6 +79,7 @@ try {
         $liveStockList[$idVariasi] = [
             'id' => $idVariasi,
             'nama' => $namaLengkap,
+            'gambar' => $prod['gambar'] ?? '',
             'max_dus' => $maxDus,
             'stok_eceran' => $stokEceran,
             'rasio' => $rasio,

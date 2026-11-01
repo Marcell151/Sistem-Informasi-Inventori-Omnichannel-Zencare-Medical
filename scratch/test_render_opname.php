@@ -10,7 +10,7 @@ include __DIR__ . '/../inventori/stok_opname.php';
 $html = ob_get_clean();
 
 echo "Length of rendered HTML: " . strlen($html) . " bytes\n";
-if (strpos($html, 'Track SN (1:1)') !== false) {
+if (strpos($html, 'Track SN') !== false) {
     echo "[PASS] Inline Track SN found in output.\n";
 }
 if (strpos($html, 'OMR-TENS-02') !== false) {

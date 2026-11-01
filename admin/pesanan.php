@@ -732,8 +732,9 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                     </select>
                 </div>
                 <div class="text-right">
-                    <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800" id="pack_scan_status_badge">
-                        🟢 Scanner Aktif
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800" id="pack_scan_status_badge">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>Scanner Aktif</span>
                     </span>
                 </div>
             </div>
@@ -940,11 +941,11 @@ function showPackingModal(targetStatus) {
         let expBadge = "";
         if (it.expInfo) {
             let expParts = it.expInfo.split('|');
-            expBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">⏳ Exp: ${expParts[0]} (${expParts[1]} Hari)</span>
+            expBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">Exp: ${expParts[0]} (${expParts[1]} Hari)</span>
                         <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black bg-blue-50 text-blue-700 border border-blue-200 uppercase">Rekomendasi FEFO</span>`;
         }
             
-        let rec = cleanInstruksi ? `<div class="flex items-center gap-1.5 flex-wrap"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-900 border border-blue-200 tracking-wide font-mono">📦 ${cleanInstruksi}</span> ${qtyText} ${expBadge}</div>` : "<span class=\"text-slate-400 text-xs italic\">Non-Batch</span>";
+        let rec = cleanInstruksi ? `<div class="flex items-center gap-1.5 flex-wrap"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-900 border border-blue-200 tracking-wide font-mono">${cleanInstruksi}</span> ${qtyText} ${expBadge}</div>` : "<span class=\"text-slate-400 text-xs italic\">Non-Batch</span>";
 
         let scannedDisplay = "";
         if (isVerified && it.scannedBatch) {
@@ -1148,13 +1149,13 @@ async function startPackCamera(cameraId = null) {
         isPackCameraRunning = true;
         if (loading) loading.classList.add('hidden');
         if (badge) {
-            badge.innerText = '🟢 Kamera Aktif';
+            badge.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>Kamera Aktif</span>';
             badge.className = 'inline-block px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800';
         }
     } catch (err) {
         if (loading) loading.classList.add('hidden');
         if (badge) {
-            badge.innerText = '🔴 Gagal Akses Kamera';
+            badge.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span>Gagal Akses Kamera</span>';
             badge.className = 'inline-block px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800';
         }
         Swal.fire({

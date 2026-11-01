@@ -37,7 +37,29 @@ $stmtDetail = $pdo->prepare("
     WHERE d.id_penjualan = ?
 ");
 $stmtDetail->execute([$order['id']]);
-$items = $stmtDetail->fetchAll();
+$itemsRaw = $stmtDetail->fetchAll();
+
+// Agregasi kuantitas & gabung catatan batch/SN jika produk/variasi sama
+$aggregatedItems = [];
+foreach ($itemsRaw as $row) {
+    $key = $row['id_variasi'];
+    if (isset($aggregatedItems[$key])) {
+        $aggregatedItems[$key]['qty'] += (int)$row['qty'];
+        if (!empty($row['catatan_logistik'])) {
+            if (!empty($aggregatedItems[$key]['catatan_logistik'])) {
+                $parts = array_map('trim', explode(',', $aggregatedItems[$key]['catatan_logistik'] . ',' . $row['catatan_logistik']));
+                $aggregatedItems[$key]['catatan_logistik'] = implode(', ', array_unique(array_filter($parts)));
+            } else {
+                $parts = array_map('trim', explode(',', $row['catatan_logistik']));
+                $aggregatedItems[$key]['catatan_logistik'] = implode(', ', array_unique(array_filter($parts)));
+            }
+        }
+    } else {
+        $row['qty'] = (int)$row['qty'];
+        $aggregatedItems[$key] = $row;
+    }
+}
+$items = array_values($aggregatedItems);
 
 // Klasifikasi Transaksi & Pengiriman
 $isPos = ($order['tipe_transaksi'] === 'pos');
@@ -135,24 +157,32 @@ if ($isPos) {
         .brand-wrapper {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
-        .brand-logo-svg {
-            width: 30px;
-            height: 30px;
+        .brand-logo-img {
+            height: 38px;
+            width: auto;
+            object-fit: contain;
             flex-shrink: 0;
+            filter: grayscale(100%) contrast(150%);
         }
         .brand-title {
-            font-size: 15px;
+            font-size: 13.5px;
             font-weight: 900;
             letter-spacing: 0.5px;
             text-transform: uppercase;
             line-height: 1.1;
+            color: #000;
         }
         .brand-sub {
-            font-size: 8.5px;
+            font-size: 8px;
             font-weight: bold;
-            color: #333;
+            color: #222;
+            margin-top: 1px;
+        }
+        .brand-address {
+            font-size: 7px;
+            color: #444;
             margin-top: 1px;
         }
         .courier-badge {
@@ -322,22 +352,73 @@ if ($isPos) {
             color: #555;
         }
         .print-btn-bar {
-            text-align: center;
-            margin-bottom: 15px;
+            width: 100mm;
+            margin: 0 auto 16px auto;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06);
+            box-sizing: border-box;
+        }
+        .toolbar-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .toolbar-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f2d5a;
+        }
+        .toolbar-badge {
+            display: inline-block;
+            font-size: 9.5px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+        .toolbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s;
         }
         .btn-print {
             background: #1a75d2;
             color: #fff;
-            border: none;
-            padding: 8px 18px;
-            font-size: 13px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            border: 1px solid #1562b3;
         }
         .btn-print:hover {
             background: #1562b3;
+        }
+        .btn-close {
+            background: #fff;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+        .btn-close:hover {
+            background: #f8fafc;
         }
         @media print {
             body {
@@ -359,30 +440,37 @@ if ($isPos) {
 </head>
 <body>
 
+    <!-- Top Action Toolbar (Layar Saja / Tidak Dicetak) -->
     <div class="print-btn-bar">
-        <button onclick="window.print()" class="btn-print">
-            🏷️ Cetak Stiker Label Pengiriman Thermal (100x150mm / A6)
-        </button>
-        <a href="pesanan.php" style="margin-left: 10px; font-size: 12px; color: #475569; text-decoration: underline;">Kembali ke Daftar Pesanan</a>
+        <div class="toolbar-info">
+            <span class="toolbar-title">Pratinjau Label Pengiriman</span>
+            <span class="toolbar-badge">#<?= htmlspecialchars($order['no_invoice']) ?></span>
+            <span style="font-size: 10px; color: #64748b;">(100 &times; 150 mm / A6)</span>
+        </div>
+        <div class="toolbar-actions">
+            <button onclick="window.print()" class="btn-action btn-print">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                <span>Cetak Label Thermal</span>
+            </button>
+            <button onclick="window.close()" class="btn-action btn-close">
+                Tutup
+            </button>
+        </div>
     </div>
 
     <div class="label-container">
         <!-- Header dengan Logo Resmi ZenCare Medical -->
         <div class="header-section">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                 <div class="brand-wrapper">
-                    <!-- Logo Vektor Medis & Cross (Monochrome Crisp untuk Thermal Printer) -->
-                    <svg class="brand-logo-svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        <path d="M12 8v8"/>
-                        <path d="M8 12h8"/>
-                    </svg>
+                    <img src="/inventory_zencare/gambar/Logo.png" alt="Logo ZenCare" class="brand-logo-img" onerror="this.src='../gambar/Logo.png'">
                     <div>
-                        <div class="brand-title">ZenCare Medical</div>
-                        <div class="brand-sub">Toko Alat Kesehatan dan Obat Resmi</div>
+                        <div class="brand-title">ZENCARE MEDICAL</div>
+                        <div class="brand-sub">Toko Alat Kesehatan dan Obat Omnichannel</div>
+                        <div class="brand-address">Jl. Muharto No. 1, Kota Malang &bull; Telp: 0812-3456-7890</div>
                     </div>
                 </div>
-                <div style="text-align: right; white-space: nowrap;">
+                <div style="text-align: right; white-space: nowrap; flex-shrink: 0;">
                     <span class="courier-badge"><?= htmlspecialchars($kurirDisplay) ?></span>
                     <span class="service-badge"><?= htmlspecialchars($layananDisplay) ?></span>
                 </div>
@@ -418,7 +506,7 @@ if ($isPos) {
                 <div class="info-address">
                     Jl. Muharto No. 1, Kota Malang<br>
                     Jawa Timur - Indonesia 65136<br>
-                    <em>Pusat Distribusi Alkes &amp; Obat Terdaftar</em>
+                    <em>Toko Alat Kesehatan dan Obat Resmi</em>
                 </div>
                 <div style="margin-top: 6px; border: 1px solid #000; padding: 3px; border-radius: 2px; text-align: center;">
                     <span style="font-size: 7.5px; font-weight: bold; text-transform: uppercase;">Waktu Order:</span>
@@ -453,7 +541,11 @@ if ($isPos) {
                                 <?= intval($it['qty']) ?>
                             </td>
                             <td style="font-family: monospace; font-size: 7.5px;">
-                                <?= !empty($it['catatan_logistik']) ? htmlspecialchars($it['catatan_logistik']) : '-' ?>
+                                <?php if (!empty($it['catatan_logistik'])): ?>
+                                    <?= htmlspecialchars($it['catatan_logistik']) ?>
+                                <?php else: ?>
+                                    -
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -473,7 +565,7 @@ if ($isPos) {
             </div>
             <div class="footer-right">
                 <div class="system-tag">ZenCare Fulfillment System</div>
-                <div class="system-sub">Resmi • Terverifikasi FEFO • Bukti Serah Terima</div>
+                <div class="system-sub">Resmi • Bukti Serah Terima</div>
             </div>
         </div>
     </div>

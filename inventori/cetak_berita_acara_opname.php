@@ -31,7 +31,8 @@ if (!$sesi) {
 }
 
 $stmtItems = $pdo->prepare("
-    SELECT dob.*, pv.nama_variasi, pi.nama_produk, pi.kategori, sb.no_batch, sb.tgl_exp,
+    SELECT dob.*, pv.nama_variasi, pv.sku_variasi, pv.satuan_besar, pv.satuan_kecil, pv.rasio_konversi,
+           pi.nama_produk, pi.kategori, sb.no_batch, sb.tgl_exp,
            u_hit.nama_lengkap AS nama_penghitung, u_mut.nama_lengkap AS nama_pemutasi
     FROM detail_opname_batch dob
     JOIN produk_variasi pv ON dob.id_variasi = pv.id
@@ -40,7 +41,7 @@ $stmtItems = $pdo->prepare("
     LEFT JOIN users u_hit ON dob.dihitung_oleh = u_hit.id
     LEFT JOIN users u_mut ON dob.dimutasi_oleh = u_mut.id
     WHERE dob.id_sesi = ?
-    ORDER BY dob.jenis_komoditas ASC, pi.nama_produk ASC, pv.nama_variasi ASC, sb.tgl_exp ASC
+    ORDER BY dob.jenis_komoditas ASC, pi.nama_produk ASC, pv.nama_variasi ASC, (dob.satuan_tipe = 'besar') DESC, sb.tgl_exp ASC
 ");
 $stmtItems->execute([$idSesi]);
 $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
@@ -50,6 +51,7 @@ $totalSesuai = 0;
 $totalSelisih = 0;
 $totalMutasi = 0;
 
+$groupedItems = [];
 foreach ($items as $it) {
     $sel = intval($it['selisih'] ?? 0);
     if ($it['hitung_fisik'] !== null && $sel === 0) {
@@ -60,6 +62,44 @@ foreach ($items as $it) {
             $totalMutasi++;
         }
     }
+
+    $vid = $it['id_variasi'];
+    if (!isset($groupedItems[$vid])) {
+        $groupedItems[$vid] = [
+            'id_variasi'     => $vid,
+            'nama_produk'    => $it['nama_produk'],
+            'nama_variasi'   => $it['nama_variasi'],
+            'sku_variasi'    => $it['sku_variasi'] ?? '',
+            'kategori'       => $it['kategori'] ?? '',
+            'jenis_komoditas'=> $it['jenis_komoditas'],
+            'satuan_besar'   => $it['satuan_besar'] ?? '',
+            'satuan_kecil'   => $it['satuan_kecil'] ?? '',
+            'rasio_konversi' => intval($it['rasio_konversi'] ?? 1),
+            'items'          => []
+        ];
+    }
+    $groupedItems[$vid]['items'][] = $it;
+}
+
+// Ambil seluruh Serial Number aktif (Tersedia) per variasi alkes untuk dicantumkan di Berita Acara
+$alkesSnMap = [];
+$snRows = $pdo->query("SELECT id_variasi, serial_number, status FROM unit_serial WHERE status = 'Tersedia' ORDER BY serial_number ASC")->fetchAll(PDO::FETCH_ASSOC);
+foreach ($snRows as $sr) {
+    $alkesSnMap[$sr['id_variasi']][] = $sr['serial_number'];
+}
+
+// Ambil rekaman Serial Number yang disesuaikan/dimutasi pada sesi opname ini
+$mutatedSnMap = [];
+$dosRows = $pdo->prepare("
+    SELECT dos.id_detail_opname, dos.serial_number, dos.jenis_tindakan 
+    FROM detail_opname_sn dos
+    JOIN detail_opname_batch dob ON dos.id_detail_opname = dob.id
+    WHERE dob.id_sesi = ?
+    ORDER BY dos.id ASC
+");
+$dosRows->execute([$idSesi]);
+foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
+    $mutatedSnMap[$dr['id_detail_opname']][] = $dr;
 }
 ?>
 <!DOCTYPE html>
@@ -154,40 +194,45 @@ foreach ($items as $it) {
         .meta-summary-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 12px;
-            font-size: 8pt;
+            margin-bottom: 16px;
+            font-size: 8.5pt;
         }
         .meta-summary-table td {
             border: 1px solid #cbd5e1;
-            padding: 5px 8px;
+            padding: 8px 12px;
             background: #f8fafc;
         }
         .meta-summary-table .label {
             color: #64748b;
-            font-size: 7pt;
+            font-size: 7.5pt;
             display: block;
             text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 3px;
         }
         .meta-summary-table .val {
-            font-size: 9.5pt;
+            font-size: 10.5pt;
             font-weight: bold;
             color: #0f172a;
         }
         table.data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 8pt;
-            margin-bottom: 16px;
+            font-size: 8.5pt;
+            margin-bottom: 20px;
         }
         table.data-table th, table.data-table td {
-            border: 1px solid #94a3b8;
-            padding: 4px 6px;
+            border: 1px solid #cbd5e1;
+            padding: 6px 8px;
+            line-height: 1.35;
         }
         table.data-table th {
-            background-color: #f1f5f9;
-            font-weight: bold;
-            color: #0f172a;
+            background-color: #f8fafc;
+            font-weight: 700;
+            color: #1e293b;
             text-align: center;
+            font-size: 8pt;
+            letter-spacing: 0.3px;
         }
         .sign-container {
             width: 100%;
@@ -291,7 +336,7 @@ foreach ($items as $it) {
             <strong>DOKUMEN RESMI INVENTORI</strong>
             <div>No. Sesi: #<?= htmlspecialchars($sesi['kode_sesi']) ?></div>
             <div>Dicetak: <?= date('d/m/Y H:i') ?> WIB</div>
-            <div>Oleh: <?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Superadmin') ?></div>
+            <div>Oleh: <?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Pengelola Stok') ?></div>
         </div>
     </div>
 
@@ -331,64 +376,134 @@ foreach ($items as $it) {
         </tr>
     </table>
 
-    <!-- Tabel Rincian Hasil Pemeriksaan Fisik Lapangan -->
+    <!-- Tabel Rincian Hasil Pemeriksaan Fisik Lapangan (Dikelompokkan Berdasarkan Produk Induk & Variasi) -->
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 28px;">No</th>
-                <th style="width: 60px;">Jenis</th>
-                <th>Nama Produk &amp; Variasi</th>
-                <th style="width: 120px;">Batch / Identitas SN</th>
-                <th style="width: 50px;">Satuan</th>
+                <th style="width: 24px;">No</th>
+                <th style="width: 140px;">Tingkat Satuan / Komoditas</th>
+                <th>Batch / Identitas Serial Number</th>
+                <th style="width: 55px;">Satuan</th>
                 <th style="width: 55px;">Sistem</th>
                 <th style="width: 55px;">Fisik</th>
                 <th style="width: 55px;">Selisih</th>
-                <th style="width: 110px;">Tindakan &amp; Keterangan</th>
+                <th style="width: 115px;">Tindakan &amp; Keterangan</th>
             </tr>
         </thead>
         <tbody>
-            <?php 
-            $no = 1;
-            foreach ($items as $it): 
-                $sel = intval($it['selisih'] ?? 0);
-            ?>
+            <?php if (empty($groupedItems)): ?>
                 <tr>
-                    <td style="text-align: center;"><?= $no++ ?></td>
-                    <td style="text-align: center; font-weight: bold; font-size: 7.5pt; color: <?= $it['jenis_komoditas'] === 'Obat' ? '#1e40af' : '#065f46' ?>;">
-                        <?= htmlspecialchars($it['jenis_komoditas']) ?>
+                    <td colspan="8" style="text-align: center; padding: 12px; color: #64748b; font-style: italic;">
+                        Tidak ada data pemeriksaan fisik pada sesi ini.
                     </td>
-                    <td>
-                        <strong><?= htmlspecialchars($it['nama_produk']) ?></strong>
-                        <div style="font-size: 7.5pt; color: #475569;"><?= htmlspecialchars($it['nama_variasi']) ?></div>
-                    </td>
-                    <td style="font-family: monospace; font-size: 7.5pt;">
-                        <?php if ($it['jenis_komoditas'] === 'Obat'): ?>
-                            <strong><?= htmlspecialchars($it['no_batch'] ?: '-') ?></strong>
-                            <div style="font-size: 7pt; color: #64748b;">Exp: <?= $it['tgl_exp'] ? date('d/m/Y', strtotime($it['tgl_exp'])) : '-' ?></div>
-                        <?php else: ?>
-                            <span style="color: #065f46; font-weight: bold;">Serial Number (1:1)</span>
+                </tr>
+            <?php else: 
+                $pNo = 1;
+                foreach ($groupedItems as $grp): 
+            ?>
+                <!-- Header Produk Induk & Variasi (Format Bersih & Rapi) -->
+                <tr style="background-color: #f8fafc; font-weight: bold; border-top: 2px solid #64748b; border-bottom: 1px solid #cbd5e1; page-break-after: avoid;">
+                    <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; color: #334155; font-weight: bold;"><?= $pNo++ ?></td>
+                    <td colspan="3" style="border: 1px solid #cbd5e1; padding: 6px 10px;">
+                        <span style="font-size: 7.5pt; font-weight: bold; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; margin-right: 6px;">
+                            <?= $grp['jenis_komoditas'] === 'Obat' ? 'Obat' : 'Alkes' ?>
+                        </span>
+                        <strong style="font-size: 9pt; color: #0f2d5a;"><?= htmlspecialchars($grp['nama_produk']) ?></strong>
+                        <span style="font-weight: normal; color: #475569;">— <?= htmlspecialchars($grp['nama_variasi']) ?></span>
+                        <?php if (!empty($grp['sku_variasi'])): ?>
+                            <span style="font-family: monospace; font-size: 7.5pt; color: #64748b;">[<?= htmlspecialchars($grp['sku_variasi']) ?>]</span>
                         <?php endif; ?>
                     </td>
-                    <td style="text-align: center;"><?= htmlspecialchars($it['nama_satuan']) ?></td>
-                    <td style="text-align: right; font-family: monospace;"><?= number_format($it['stok_sistem_fisik']) ?></td>
-                    <td style="text-align: right; font-family: monospace; font-weight: bold; background: #fffbeb;">
-                        <?= $it['hitung_fisik'] !== null ? number_format($it['hitung_fisik']) : '-' ?>
-                    </td>
-                    <td style="text-align: right; font-family: monospace; font-weight: bold; color: <?= $sel < 0 ? '#b91c1c' : ($sel > 0 ? '#1d4ed8' : '#047857') ?>;">
-                        <?= $sel > 0 ? "+$sel" : "$sel" ?>
-                    </td>
-                    <td style="font-size: 7.5pt; text-align: center;">
-                        <?php if ($sel === 0): ?>
-                            <span style="color: #047857; font-weight: bold;">Sesuai (0)</span>
+                    <td colspan="4" style="border: 1px solid #cbd5e1; padding: 6px 10px; text-align: right; font-size: 8pt; color: #334155;">
+                        <?php if ($grp['jenis_komoditas'] === 'Obat' && $grp['rasio_konversi'] > 1): ?>
+                            <span style="font-weight: 600; color: #334155;">Konversi: 1 <?= htmlspecialchars($grp['satuan_besar']) ?> = <?= $grp['rasio_konversi'] ?> <?= htmlspecialchars($grp['satuan_kecil']) ?></span>
+                            <span style="color: #64748b; font-size: 7.5pt;">(Konversi Satuan Besar &amp; Satuan Kecil)</span>
+                        <?php elseif ($grp['jenis_komoditas'] === 'Alat Kesehatan'): ?>
+                            <span style="font-weight: 600; color: #0f2d5a;">Pelacakan Serial Number</span>
                         <?php else: ?>
-                            <div style="font-weight: bold; color: <?= $it['status_mutasi'] === 'Sudah Dimutasi' ? '#047857' : '#b91c1c' ?>;">
-                                <?= $it['status_mutasi'] === 'Sudah Dimutasi' ? 'Telah Dimutasi' : 'Belum Dimutasi' ?>
-                            </div>
-                            <div style="font-size: 7pt; color: #475569;"><?= htmlspecialchars($it['alasan_mutasi'] ?: '-') ?></div>
+                            <span style="color: #64748b;">Satuan Tunggal (<?= htmlspecialchars($grp['satuan_kecil']) ?>)</span>
                         <?php endif; ?>
                     </td>
                 </tr>
+
+                <!-- Baris Sub-Item / Batch / SN di Bawah Produk Tersebut -->
+                <?php foreach ($grp['items'] as $it): 
+                    $sel = intval($it['selisih'] ?? 0);
+                ?>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="text-align: center; color: #94a3b8; font-size: 8pt; border: 1px solid #cbd5e1;">▷</td>
+                        <td style="border: 1px solid #cbd5e1; font-size: 8pt; padding: 6px 8px;">
+                            <?php if ($it['jenis_komoditas'] === 'Obat'): ?>
+                                <?php if ($it['satuan_tipe'] === 'besar'): ?>
+                                    <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; font-size: 7.5pt;">Satuan Besar</span>
+                                <?php else: ?>
+                                    <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; font-size: 7.5pt;">Satuan Kecil</span>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; background: #f1f5f9; color: #0f2d5a; border: 1px solid #cbd5e1; font-size: 7.5pt;">Unit Fisik (SN)</span>
+                            <?php endif; ?>
+                        </td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px 8px;">
+                            <?php if ($it['jenis_komoditas'] === 'Obat'): ?>
+                                <strong style="font-family: monospace; font-size: 8pt;"><?= htmlspecialchars($it['no_batch'] ?: '-') ?></strong>
+                                <span style="font-size: 7.5pt; color: #64748b; font-family: sans-serif; margin-left: 4px;">(Exp: <?= $it['tgl_exp'] ? date('d/m/Y', strtotime($it['tgl_exp'])) : '-' ?>)</span>
+                            <?php else: 
+                                $snList = $alkesSnMap[$it['id_variasi']] ?? [];
+                                $mutSnList = $mutatedSnMap[$it['id']] ?? [];
+                            ?>
+                                <div style="font-size: 7.5pt; line-height: 1.35;">
+                                    <?php if (!empty($snList)): ?>
+                                        <div style="color: #334155; margin-bottom: 2px;">
+                                            <strong style="color: #0f2d5a;">SN Fisik Terverifikasi (<?= count($snList) ?> Unit):</strong>
+                                        </div>
+                                        <div style="font-family: monospace; font-size: 7pt; color: #1e293b; background: #f8fafc; padding: 3px 6px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                                            <?= implode(', ', array_map('htmlspecialchars', $snList)) ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span style="color: #64748b; font-style: italic;">Tidak ada unit serial aktif</span>
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($mutSnList)): ?>
+                                        <div style="margin-top: 3px; padding-top: 2px; border-top: 1px dashed #cbd5e1; font-size: 7pt; color: #b91c1c;">
+                                            <strong>SN Disesuaikan:</strong>
+                                            <?php 
+                                            $snMutTxt = [];
+                                            foreach ($mutSnList as $msn) {
+                                                $snMutTxt[] = htmlspecialchars($msn['serial_number']) . ' (' . str_replace('_', ' ', $msn['jenis_tindakan']) . ')';
+                                            }
+                                            echo implode(', ', $snMutTxt);
+                                            ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </td>
+                        <td style="text-align: center; border: 1px solid #cbd5e1; font-weight: 600; font-size: 8pt; color: #334155;">
+                            <?= htmlspecialchars($it['nama_satuan']) ?>
+                        </td>
+                        <td style="text-align: right; border: 1px solid #cbd5e1; font-family: monospace; font-size: 8.5pt; padding: 6px 8px;">
+                            <?= number_format($it['stok_sistem_fisik']) ?>
+                        </td>
+                        <td style="text-align: right; border: 1px solid #cbd5e1; font-family: monospace; font-size: 8.5pt; font-weight: bold; background: #fafafa; padding: 6px 8px;">
+                            <?= $it['hitung_fisik'] !== null ? number_format($it['hitung_fisik']) : '-' ?>
+                        </td>
+                        <td style="text-align: right; border: 1px solid #cbd5e1; font-family: monospace; font-size: 8.5pt; font-weight: bold; color: <?= $sel < 0 ? '#b91c1c' : ($sel > 0 ? '#1d4ed8' : '#047857') ?>; padding: 6px 8px;">
+                            <?= $sel > 0 ? "+$sel" : "$sel" ?>
+                        </td>
+                        <td style="font-size: 8pt; text-align: center; border: 1px solid #cbd5e1; padding: 6px 8px;">
+                            <?php if ($sel === 0): ?>
+                                <span style="color: #047857; font-weight: bold;">Sesuai (0)</span>
+                            <?php else: ?>
+                                <div style="font-weight: bold; color: <?= $it['status_mutasi'] === 'Sudah Dimutasi' ? '#047857' : '#b91c1c' ?>;">
+                                    <?= $it['status_mutasi'] === 'Sudah Dimutasi' ? 'Telah Dimutasi' : 'Belum Dimutasi' ?>
+                                </div>
+                                <div style="font-size: 7.5pt; color: #475569;"><?= htmlspecialchars($it['alasan_mutasi'] ?: '-') ?></div>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
             <?php endforeach; ?>
+            <?php endif; ?>
         </tbody>
     </table>
 
@@ -398,21 +513,17 @@ foreach ($items as $it) {
             <tr>
                 <td>
                     Kota Malang, <?= date('d F Y', strtotime($sesi['dibuka_pada'] ?: $sesi['dibekukan_pada'])) ?><br>
-                    <strong>Petugas Pemeriksa Lapangan (Admin / Gudang)</strong>
+                    <strong>Pengelola Stok Gudang</strong>
                     <div class="sign-space"></div>
-                    <div class="sign-name">
-                        <?= htmlspecialchars($sesi['nama_pembuka'] ?? 'Petugas Logistik Medis') ?>
-                    </div>
-                    <div class="sign-role">Admin Pengelola Stok &amp; Logistik</div>
+                    <div class="sign-name">( ............................................................ )</div>
+                    <div class="sign-role">Petugas Pengelola Stok &amp; Logistik</div>
                 </td>
                 <td>
                     Mengetahui &amp; Menyetujui,<br>
-                    <strong>Penanggung Jawab Toko (Superadmin / Pemilik)</strong>
+                    <strong>Pemilik Toko</strong>
                     <div class="sign-space"></div>
-                    <div class="sign-name">
-                        <?= htmlspecialchars($sesi['nama_penutup'] ?: $sesi['nama_pembuka'] ?: 'Superadmin') ?>
-                    </div>
-                    <div class="sign-role">Superadmin / Pemilik Toko ZenCare Medical</div>
+                    <div class="sign-name">( ............................................................ )</div>
+                    <div class="sign-role">Pemilik Toko ZenCare Medical</div>
                 </td>
             </tr>
         </table>

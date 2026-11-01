@@ -14,6 +14,41 @@ $isSuperadmin = ($_SESSION['role'] === 'superadmin');
 $namaUser     = $_SESSION['nama_lengkap'] ?? 'Pengguna';
 
 // ─── WIDGET DATA BERSAMA (Admin & Superadmin) ─────────────────────────────
+$totalProdukInduk   = (int)$pdo->query("SELECT COUNT(*) FROM produk_induk WHERE is_active=1")->fetchColumn();
+$totalProdukVariasi = (int)$pdo->query("
+    SELECT COUNT(*) 
+    FROM produk_variasi pv 
+    JOIN produk_induk pi ON pv.id_produk_induk = pi.id 
+    WHERE pv.is_active=1 AND pi.is_active=1
+")->fetchColumn();
+
+// Stok Satuan Besar: Kemasan dus/box utuh (khusus Obat)
+$totalStokBesar = (int)$pdo->query("
+    SELECT COALESCE(SUM(FLOOR(sb.stok_sisa / pv.rasio_konversi)), 0)
+    FROM stok_batch sb
+    JOIN produk_variasi pv ON sb.id_variasi = pv.id
+    JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+    WHERE pi.kategori != 'Alat Kesehatan' AND sb.no_batch NOT LIKE '%.%' AND sb.stok_sisa > 0
+")->fetchColumn();
+
+// Stok Satuan Kecil: Eceran terbuka (Obat sub-batch) + Alkes (Unit fisik SN)
+$stokEceranObat = (int)$pdo->query("
+    SELECT COALESCE(SUM(sb.stok_sisa), 0)
+    FROM stok_batch sb
+    JOIN produk_variasi pv ON sb.id_variasi = pv.id
+    JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+    WHERE pi.kategori != 'Alat Kesehatan' AND sb.no_batch LIKE '%.%' AND sb.stok_sisa > 0
+")->fetchColumn();
+
+$stokAlkesUnit = (int)$pdo->query("
+    SELECT COALESCE(SUM(st.stok), 0)
+    FROM stok_toko st
+    JOIN produk_variasi pv ON st.id_variasi = pv.id
+    JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+    WHERE pi.kategori = 'Alat Kesehatan' AND st.stok > 0
+")->fetchColumn();
+
+$totalStokKecil   = $stokEceranObat + $stokAlkesUnit;
 $totalStokFisik   = (int)$pdo->query("SELECT COALESCE(SUM(stok),0) FROM stok_toko")->fetchColumn();
 $stokKritisCount  = (int)$pdo->query("
     SELECT COUNT(*) FROM (
@@ -322,24 +357,41 @@ layoutHeader(
 <!-- SUPERADMIN DASHBOARD — Berbasis Kuantitas Fisik, tanpa Rupiah -->
 <!-- ============================================================ -->
 
-<!-- ROW 1: Widgets Inventori Utama (6 kotak Responsif) -->
+<!-- ROW 1: Widgets Inventori Utama (8 Kotak Responsif) -->
 <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:14px;margin-bottom:18px;">
 
-    <!-- Total Stok Fisik -->
-    <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;">
+    <!-- Total Master Produk (Hierarki Induk & Variasi) -->
+    <a href="admin/master_produk.php" style="text-decoration:none;display:block;background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;transition:box-shadow .15s ease;" onmouseover="this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:5px;letter-spacing:.04em;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-            TOTAL STOK FISIK
+            KATALOG PRODUK
         </div>
-        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokFisik) ?></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Unit tersedia di gudang</div>
-    </div>
+        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalProdukInduk) ?> <span style="font-size:13px;font-weight:600;color:#64748b;">Produk</span></div>
+        <div style="font-size:11px;color:#0f2d5a;margin-top:5px;font-weight:600;"><?= number_format($totalProdukVariasi) ?> Variasi SKU Aktif</div>
+    </a>
+
+    <!-- Stok Satuan Besar (Dus / Kemasan Pabrik Utuh) -->
+    <a href="laporan/ketersediaan_stok.php" style="text-decoration:none;display:block;background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;transition:box-shadow .15s ease;" onmouseover="this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:5px;letter-spacing:.04em;">
+            STOK SATUAN BESAR
+        </div>
+        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokBesar) ?> <span style="font-size:13px;font-weight:600;color:#64748b;">Dus/Box</span></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Kemasan Besar</div>
+    </a>
+
+    <!-- Stok Satuan Kecil (Eceran Obat & Unit Alkes SN) -->
+    <a href="laporan/ketersediaan_stok.php" style="text-decoration:none;display:block;background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;transition:box-shadow .15s ease;" onmouseover="this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:5px;letter-spacing:.04em;">
+            STOK SATUAN KECIL
+        </div>
+        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokKecil) ?> <span style="font-size:13px;font-weight:600;color:#64748b;">Unit/Pcs</span></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= number_format($stokEceranObat) ?> Eceran • <?= number_format($stokAlkesUnit) ?> Alkes</div>
+    </a>
 
     <!-- Stok Menipis -->
     <a href="laporan/ketersediaan_stok.php" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $stokKritisCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STOK MENIPIS</div>
         <div style="font-size:30px;font-weight:900;color:<?= $stokKritisCount>0?'#dc2626':'#1e293b' ?>;line-height:1;"><?= number_format($stokKritisCount) ?></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $stokKritisCount==0 ? 'Semua stok aman ✓' : 'SKU mencapai ROP' ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $stokKritisCount==0 ? 'Semua stok aman' : 'SKU mencapai ROP' ?></div>
     </a>
 
     <!-- Hampir Kedaluwarsa -->
@@ -774,17 +826,39 @@ layoutHeader(
 <!-- ADMIN DASHBOARD                                               -->
 <!-- ============================================================ -->
 
-<!-- Row 1: Metrics Admin (6 Kotak Responsif) -->
+<!-- Row 1: Metrics Admin (8 Kotak Responsif) -->
 <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:14px;margin-bottom:20px;">
-    <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;">
-        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">TOTAL STOK FISIK</div>
-        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokFisik) ?></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Unit tersedia</div>
-    </div>
+
+    <!-- Total Master Produk (Hierarki Induk & Variasi) -->
+    <a href="admin/master_produk.php" style="text-decoration:none;display:block;background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;transition:box-shadow .15s ease;" onmouseover="this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:5px;letter-spacing:.04em;">
+            KATALOG PRODUK
+        </div>
+        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalProdukInduk) ?> <span style="font-size:13px;font-weight:600;color:#64748b;">Produk</span></div>
+        <div style="font-size:11px;color:#0f2d5a;margin-top:5px;font-weight:600;"><?= number_format($totalProdukVariasi) ?> Variasi SKU Aktif</div>
+    </a>
+
+    <!-- Stok Satuan Besar (Dus / Kemasan Pabrik Utuh) -->
+    <a href="inventori/logistik_medis.php" style="text-decoration:none;display:block;background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;transition:box-shadow .15s ease;" onmouseover="this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:5px;letter-spacing:.04em;">
+            STOK SATUAN BESAR
+        </div>
+        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokBesar) ?> <span style="font-size:13px;font-weight:600;color:#64748b;">Dus/Box</span></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Kemasan Besar</div>
+    </a>
+
+    <!-- Stok Satuan Kecil (Eceran Obat & Unit Alkes SN) -->
+    <a href="inventori/logistik_medis.php" style="text-decoration:none;display:block;background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;transition:box-shadow .15s ease;" onmouseover="this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'">
+        <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:5px;letter-spacing:.04em;">
+            STOK SATUAN KECIL
+        </div>
+        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokKecil) ?> <span style="font-size:13px;font-weight:600;color:#64748b;">Unit/Pcs</span></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= number_format($stokEceranObat) ?> Eceran • <?= number_format($stokAlkesUnit) ?> Alkes</div>
+    </a>
     <a href="#" onclick="Swal.fire({title:'Informasi', text:'Silakan scroll ke bawah untuk melihat detail pada tabel Peringatan Stok Menipis.', icon:'info'}); return false;" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $stokKritisCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STOK MENIPIS</div>
         <div style="font-size:30px;font-weight:900;color:<?= $stokKritisCount>0?'#dc2626':'#1e293b' ?>;line-height:1;"><?= number_format($stokKritisCount) ?></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $stokKritisCount==0?'Semua stok aman ✓':'SKU mencapai ROP' ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $stokKritisCount==0?'Semua stok aman':'SKU mencapai ROP' ?></div>
     </a>
     <a href="#" onclick="Swal.fire({title:'Informasi', text:'Silakan scroll ke bawah untuk melihat detail pada tabel Peringatan Kedaluwarsa.', icon:'info'}); return false;" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $expWarningCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">PERINGATAN EXP.</div>
@@ -801,14 +875,14 @@ layoutHeader(
     <div onclick="openAnomaliModal()" style="cursor:pointer;background:#fff;border:1px solid <?= $anomaliPendingCount > 0 ? '#fed7aa' : '#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">ANOMALI FEFO</div>
         <div style="font-size:30px;font-weight:900;color:<?= $anomaliPendingCount > 0 ? '#d97706' : '#1e293b' ?>;line-height:1;"><?= number_format($anomaliPendingCount) ?> <span style="font-size:13px;font-weight:600;color:#94a3b8;">/ <?= number_format($anomaliSelesaiCount) ?> disesuaikan</span></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $anomaliPendingCount > 0 ? 'Menunggu dikeluarkan kasir' : 'Semua deviasi disesuaikan ✓' ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $anomaliPendingCount > 0 ? 'Menunggu dikeluarkan kasir' : 'Semua deviasi disesuaikan' ?></div>
     </div>
 
     <!-- Widget Monitoring Retur Barang (Admin - Desain Seragam) -->
     <div onclick="openReturModal()" style="cursor:pointer;background:#fff;border:1px solid <?= $returMenungguCount > 0 ? '#fed7aa' : '#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STATUS RETUR SUPPLIER</div>
         <div style="font-size:30px;font-weight:900;color:<?= $returMenungguCount > 0 ? '#d97706' : '#1e293b' ?>;line-height:1;"><?= number_format($returMenungguCount) ?> <span style="font-size:13px;font-weight:600;color:#94a3b8;">/ <?= number_format($returSelesaiCount) ?> selesai</span></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $returMenungguCount > 0 ? 'Menunggu ganti barang PO' : 'Semua retur terselesaikan ✓' ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $returMenungguCount > 0 ? 'Menunggu ganti barang PO' : 'Semua retur terselesaikan' ?></div>
     </div>
 </div>
 
@@ -846,7 +920,7 @@ layoutHeader(
         ")->fetchAll();
         ?>
         <?php if (empty($stokMenipis2)): ?>
-        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Semua item stok aman ✓</div>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Semua item stok aman</div>
         <?php else: ?>
         <div id="rop-admin-list">
         <?php foreach ($stokMenipis2 as $index => $s): 

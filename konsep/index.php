@@ -106,7 +106,7 @@ layoutHeader('Dashboard Inventaris & Omnichannel', 'Cabang: ' . ($cabangInfo['na
             <?php if ($stokTipis > 0): ?>
                 <span class="inline-block px-2 py-0.5 bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-bold rounded-full"><?= $stokTipis ?> item kritis</span>
             <?php else: ?>
-                <span class="text-[10px] text-emerald-600 font-semibold">Semua stok aman ✓</span>
+                <span class="text-[10px] text-emerald-600 font-semibold">Semua stok aman</span>
             <?php endif; ?>
         </div>
     </div>
