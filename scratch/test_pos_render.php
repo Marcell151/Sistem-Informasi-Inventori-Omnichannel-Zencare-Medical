@@ -1,18 +1,13 @@
 <?php
-session_start();
-$_SESSION['user_id'] = 1;
-$_SESSION['role'] = 'superadmin';
-$_SESSION['nama_lengkap'] = 'Kasir Test';
-$_SESSION['id_cabang'] = 1;
-ob_start();
-try {
-    include 'pos/pos.php';
-    $out = ob_get_clean();
-    echo "SUCCESS: pos.php rendered " . strlen($out) . " bytes\n";
-    if (strpos($out, 'Shift FEFO:') !== false) echo "MATCH: Shift FEFO pill found\n";
-    if (strpos($out, 'openKasirAnomaliModal') !== false) echo "MATCH: openKasirAnomaliModal found\n";
-} catch (Throwable $e) {
-    ob_end_clean();
-    echo "ERROR: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n";
-}
+require_once __DIR__ . '/../config/koneksi.php';
+$q = $pdo->query("SELECT pv.*, pi.nama_produk, pi.kategori 
+                  FROM produk_variasi pv 
+                  JOIN produk_induk pi ON pv.id_produk_induk = pi.id 
+                  WHERE pv.id = 51")->fetch(PDO::FETCH_ASSOC);
 
+echo "Rasio: " . $q['rasio_konversi'] . "\n";
+if ($q['rasio_konversi'] > 1) {
+    echo "Renders: DUAL (Eceran & Grosir)\n";
+} else {
+    echo "Renders: SINGLE (Harga Satuan)\n";
+}
