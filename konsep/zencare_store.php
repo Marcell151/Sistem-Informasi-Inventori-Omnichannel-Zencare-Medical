@@ -151,6 +151,7 @@ if (!$settings) {
                     <?php endif; ?>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
 
         <h2 class="text-lg font-bold border-b-2 border-sky-500 pb-2 mb-6 text-slate-900">Katalog Produk Alat Kesehatan (Grosir E-Commerce)</h2>

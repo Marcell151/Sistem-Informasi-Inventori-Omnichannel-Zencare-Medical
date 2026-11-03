@@ -50,14 +50,28 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 $stmtSesi->execute([$kodeSesi, $userId, $catatan]);
                 $idSesi = $pdo->lastInsertId();
 
-                // Snapshot 1: Seluruh Batch Obat & BMHP
+                // Snapshot 1: Seluruh Batch Obat & BMHP yang memiliki stok fisik di toko (stok_sisa + reserved > 0)
                 $stmtObat = $pdo->query("
                     SELECT sb.id AS id_batch, sb.id_variasi, sb.no_batch, sb.stok_sisa,
+                           COALESCE((
+                               SELECT SUM(pba.qty_satuan_kecil) 
+                               FROM pesanan_batch_alokasi pba 
+                               JOIN penjualan p ON pba.id_penjualan = p.id 
+                               WHERE pba.id_batch = sb.id 
+                                 AND p.status_pesanan IN ('Menunggu Pembayaran', 'Diproses', 'Siap Diambil')
+                           ), 0) AS stok_reserved_kecil,
                            pv.satuan_kecil, pv.satuan_besar, pv.rasio_konversi, pi.nama_produk, pv.nama_variasi
                     FROM stok_batch sb
                     JOIN produk_variasi pv ON sb.id_variasi = pv.id
                     JOIN produk_induk pi ON pv.id_produk_induk = pi.id
-                    WHERE pv.is_active = 1
+                    WHERE pv.is_active = 1 
+                      AND (sb.stok_sisa + COALESCE((
+                               SELECT SUM(pba.qty_satuan_kecil) 
+                               FROM pesanan_batch_alokasi pba 
+                               JOIN penjualan p ON pba.id_penjualan = p.id 
+                               WHERE pba.id_batch = sb.id 
+                                 AND p.status_pesanan IN ('Menunggu Pembayaran', 'Diproses', 'Siap Diambil')
+                           ), 0)) > 0
                     ORDER BY pi.nama_produk ASC, pv.nama_variasi ASC, sb.tgl_exp ASC
                 ");
                 $obatBatches = $stmtObat->fetchAll();
@@ -71,17 +85,22 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 foreach ($obatBatches as $ob) {
                     $rasio = max(1, intval($ob['rasio_konversi']));
                     $isSubBatch = (strpos($ob['no_batch'], '.') !== false);
+                    $stokFisikKecil = intval($ob['stok_sisa']) + intval($ob['stok_reserved_kecil']);
 
                     if ($rasio > 1 && !$isSubBatch) {
                         // BATCH INDUK (Kardus / Box / Dus Utuh di Gudang) -> Dihitung dalam Satuan Besar
                         $satuanTipe = 'besar';
                         $namaSatuan = $ob['satuan_besar'] ?: 'Dus';
-                        $stokFisik = max(0, intval(floor($ob['stok_sisa'] / $rasio)));
+                        $stokFisik = max(0, intval(floor($stokFisikKecil / $rasio)));
+                        $stokTersedia = max(0, intval(floor(intval($ob['stok_sisa']) / $rasio)));
+                        $stokReserved = max(0, intval(floor(intval($ob['stok_reserved_kecil']) / $rasio)));
                     } else {
                         // SUB-BATCH / ECERAN DI ETALASE / PRODUK SINGLE UOM -> Dihitung dalam Satuan Kecil
                         $satuanTipe = 'kecil';
                         $namaSatuan = $ob['satuan_kecil'] ?: 'Pcs';
-                        $stokFisik = max(0, intval($ob['stok_sisa']));
+                        $stokFisik = $stokFisikKecil;
+                        $stokTersedia = intval($ob['stok_sisa']);
+                        $stokReserved = intval($ob['stok_reserved_kecil']);
                     }
 
                     $insDetail->execute([
@@ -91,20 +110,22 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         'Obat',
                         $satuanTipe,
                         $namaSatuan,
-                        $stokFisik, // nilai awal snapshot fisik
-                        0,          // dihitung dinamis saat reveal
+                        $stokTersedia,
+                        $stokReserved,
                         $stokFisik
                     ]);
                 }
 
-                // Snapshot 2: Seluruh Variasi Alat Kesehatan ber-Serial Number
+                // Snapshot 2: Seluruh Variasi Alat Kesehatan ber-Serial Number yang memiliki unit fisik di toko
                 $stmtAlkes = $pdo->query("
-                    SELECT pv.id AS id_variasi, pv.nama_variasi, pi.nama_produk, pv.satuan_kecil,
+                    SELECT pv.id AS id_variasi, pv.nama_variasi, pi.nama_produk, pv.satuan_besar, pv.satuan_kecil,
                            (SELECT COUNT(*) FROM unit_serial us WHERE us.id_variasi = pv.id AND us.status = 'Tersedia') as sn_tersedia,
                            (SELECT COUNT(*) FROM unit_serial us JOIN penjualan p ON us.id_penjualan = p.id WHERE us.id_variasi = pv.id AND p.status_pesanan IN ('Menunggu Pembayaran', 'Diproses', 'Siap Diambil')) as sn_reserved
                     FROM produk_variasi pv
                     JOIN produk_induk pi ON pv.id_produk_induk = pi.id
-                    WHERE pv.is_active = 1 AND EXISTS (SELECT 1 FROM unit_serial us WHERE us.id_variasi = pv.id)
+                    WHERE pv.is_active = 1 
+                      AND ((SELECT COUNT(*) FROM unit_serial us WHERE us.id_variasi = pv.id AND us.status = 'Tersedia') + 
+                           (SELECT COUNT(*) FROM unit_serial us JOIN penjualan p ON us.id_penjualan = p.id WHERE us.id_variasi = pv.id AND p.status_pesanan IN ('Menunggu Pembayaran', 'Diproses', 'Siap Diambil'))) > 0
                     ORDER BY pi.nama_produk ASC, pv.nama_variasi ASC
                 ");
                 $alkesVars = $stmtAlkes->fetchAll();
@@ -113,14 +134,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     $snTersedia = intval($ak['sn_tersedia']);
                     $snReserved = intval($ak['sn_reserved']);
                     $stokFisikAlkes = $snTersedia + $snReserved;
+                    $namaSatuan = $ak['satuan_besar'] ?: ($ak['satuan_kecil'] ?: 'Unit');
 
                     $insDetail->execute([
                         $idSesi,
                         null, // Alkes tidak memiliki id_batch
                         $ak['id_variasi'],
                         'Alkes',
-                        'kecil',
-                        $ak['satuan_kecil'] ?: 'Unit',
+                        'besar', // Alkes seragam sebagai Satuan Besar (Kemasan Utuh)
+                        $namaSatuan,
                         $snTersedia,
                         $snReserved,
                         $stokFisikAlkes
@@ -483,14 +505,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     // --- 3. EKSEKUSI MUTASI SELISIH BARIS (Admin & Superadmin) ---
     elseif ($aksi === 'eksekusi_mutasi_baris') {
         $idDetail = intval($_POST['id_detail'] ?? 0);
-        $alasanMutasi = trim($_POST['alasan_mutasi'] ?? '');
         $keterangan = trim($_POST['keterangan_mutasi'] ?? '');
 
         if (!$activeSession) {
             $msg = "Tidak ada sesi opname yang sedang aktif.";
             $msgType = 'error';
-        } elseif (!$idDetail || empty($alasanMutasi)) {
-            $msg = "Harap tentukan alasan mutasi untuk baris berselisih!";
+        } elseif (!$idDetail) {
+            $msg = "Data baris opname tidak valid!";
             $msgType = 'error';
         } else {
             try {
@@ -519,45 +540,101 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 $isMinus = ($selisih < 0);
                 $kodeSesi = $activeSession['kode_sesi'];
 
-                // ── A. MUTASI OBAT (Quantity-Based) ──────────────────────────
+                // Evaluasi Distribusi / Alokasi Alasan Selisih
+                $breakdown = [];
+                if ($isMinus) {
+                    $qtyRusak = max(0, intval($_POST['alokasi_rusak'] ?? 0));
+                    $qtyHilang = max(0, intval($_POST['alokasi_hilang'] ?? 0));
+                    $qtyExpired = max(0, intval($_POST['alokasi_expired'] ?? 0));
+                    $qtySalahCatat = max(0, intval($_POST['alokasi_salah_catat'] ?? 0));
+                    $qtyLainnya = max(0, intval($_POST['alokasi_lainnya'] ?? 0));
+                    $teksLainnya = trim($_POST['teks_alasan_lainnya'] ?? '');
+                    if ($qtyLainnya > 0 && empty($teksLainnya)) {
+                        $teksLainnya = 'Alasan Lainnya (Kustom)';
+                    }
+                    $totalAlokasi = $qtyRusak + $qtyHilang + $qtyExpired + $qtySalahCatat + $qtyLainnya;
+
+                    if ($totalAlokasi > 0) {
+                        if ($totalAlokasi !== $absSelisih) {
+                            throw new Exception("Total alokasi alasan ($totalAlokasi {$item['nama_satuan']}) tidak sesuai dengan selisih defisit ($absSelisih {$item['nama_satuan']})!");
+                        }
+                        if ($qtyRusak > 0) $breakdown['Barang Rusak'] = $qtyRusak;
+                        if ($qtyHilang > 0) $breakdown['Barang Hilang'] = $qtyHilang;
+                        if ($qtyExpired > 0) $breakdown['Barang Kedaluwarsa'] = $qtyExpired;
+                        if ($qtySalahCatat > 0) $breakdown['Koreksi Salah Catat / Ditemukan'] = $qtySalahCatat;
+                        if ($qtyLainnya > 0) $breakdown[$teksLainnya] = $qtyLainnya;
+                    } else {
+                        // Fallback single reason
+                        $alasanSingle = trim($_POST['alasan_mutasi'] ?? 'Barang Rusak');
+                        if (empty($alasanSingle)) $alasanSingle = 'Barang Rusak';
+                        $breakdown[$alasanSingle] = $absSelisih;
+                    }
+                } else {
+                    // Surplus (+): Selisih positif dialokasikan sesuai pilihan alasan kelebihan stok
+                    $surplusReason = trim($_POST['alasan_mutasi_surplus'] ?? 'Koreksi Salah Catat / Ditemukan');
+                    if ($surplusReason === 'Lainnya') {
+                        $surplusCustom = trim($_POST['teks_surplus_lainnya'] ?? '');
+                        $surplusReason = !empty($surplusCustom) ? $surplusCustom : 'Koreksi Fisik Lebih (Lainnya)';
+                    }
+                    $breakdown[$surplusReason] = $absSelisih;
+                }
+
+                // ── A. MUTASI OBAT (Quantity-Based & Terikat Langsung ke Batch Baris Ini) ─────────────
                 if ($item['jenis_komoditas'] === 'Obat') {
+                    // Batch selalu terkunci pada batch baris opname ini
                     $idBatch = $item['id_batch'];
+                    $noBatchTerdampak = $item['no_batch'] ?? '-';
+
                     $idVariasi = $item['id_variasi'];
                     $rasio = max(1, intval($item['rasio_konversi'] ?? 1));
                     $isBesar = ($item['satuan_tipe'] === 'besar');
                     $qtyPcs = $isBesar ? ($absSelisih * $rasio) : $absSelisih;
 
-                    // Update stok_batch (Signed INT aman jika negatif)
+                    // Update stok_batch & stok_toko
                     $operator = $isMinus ? '-' : '+';
                     $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa $operator ? WHERE id = ?")
                         ->execute([$qtyPcs, $idBatch]);
-
-                    // Update stok_toko
                     $pdo->prepare("UPDATE stok_toko SET stok = stok $operator ? WHERE id_variasi = ?")
                         ->execute([$qtyPcs, $idVariasi]);
 
                     // Hitung saldo akhir untuk kartu stok
                     $sisaStokToko = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVariasi")->fetchColumn();
-
                     $jMutasi = $isMinus ? 'Keluar' : 'Masuk';
-                    $ketTambahan = $isBesar ? " ($absSelisih {$item['nama_satuan']} = $qtyPcs pcs)" : "";
-                    $ketKartu = "[Stok Opname: $kodeSesi] Batch: {$item['no_batch']} | $alasanMutasi$ketTambahan" . ($keterangan ? " - $keterangan" : "");
 
+                    // Rekam Kartu Stok untuk setiap alasan yang memiliki kuantitas
                     $stmtKartu = $pdo->prepare("
                         INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh)
-                        VALUES (?, ?, ?, ?, 'Manual', 'Selisih Stok Opname', ?, ?, ?, ?, ?)
+                        VALUES (?, ?, ?, ?, 'Manual', ?, ?, ?, ?, ?, ?)
                     ");
-                    $stmtKartu->execute([
-                        $idVariasi,
-                        $idBatch,
-                        $item['satuan_tipe'],
-                        $jMutasi,
-                        $kodeSesi,
-                        $absSelisih,
-                        $sisaStokToko,
-                        $ketKartu,
-                        $userId
-                    ]);
+
+                    $allowedAlasanKartu = [
+                        'Penerimaan Barang', 'Penjualan POS', 'Penjualan E-Commerce', 'Retur Barang Rusak',
+                        'Klaim Garansi SN', 'Selisih Stok Opname', 'Barang Rusak', 'Barang Kedaluwarsa',
+                        'Barang Hilang', 'Koreksi Salah Catat / Ditemukan', 'Koreksi Manual'
+                    ];
+
+                    $summaryAlasanArr = [];
+                    foreach ($breakdown as $reasonName => $rQty) {
+                        $rQtyPcs = $isBesar ? ($rQty * $rasio) : $rQty;
+                        $ketPcs = $isBesar ? " ($rQty {$item['nama_satuan']} = $rQtyPcs pcs)" : "";
+                        $ketKartu = "[Stok Opname: $kodeSesi] Batch: $noBatchTerdampak | $reasonName$ketPcs" . ($keterangan ? " - $keterangan" : "");
+                        $kartuEnum = in_array($reasonName, $allowedAlasanKartu) ? $reasonName : 'Koreksi Manual';
+
+                        $stmtKartu->execute([
+                            $idVariasi,
+                            $idBatch,
+                            $item['satuan_tipe'],
+                            $jMutasi,
+                            $kartuEnum,
+                            $kodeSesi,
+                            $rQty,
+                            $sisaStokToko,
+                            $ketKartu,
+                            $userId
+                        ]);
+                        $summaryAlasanArr[] = "$reasonName ($rQty {$item['nama_satuan']})";
+                    }
+                    $finalAlasanMutasi = implode(', ', $summaryAlasanArr);
                 }
                 // ── B. MUTASI ALKES (Item-Based / Serial Number 1:1) ─────────
                 else {
@@ -571,7 +648,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         }
 
                         $mutatedSnList = [];
-                        $newSnStatus = ($alasanMutasi === 'Barang Rusak') ? 'Retur/Rusak' : 'Hilang';
+                        $alkesBreakdown = [];
+                        $snReasonInputs = $_POST['sn_reason'] ?? [];
+                        $snCustomInputs = $_POST['sn_custom_reason'] ?? [];
 
                         $stmtUpSn = $pdo->prepare("UPDATE unit_serial SET status = ?, catatan = ? WHERE id = ? AND id_variasi = ?");
                         $stmtInsDos = $pdo->prepare("INSERT INTO detail_opname_sn (id_detail_opname, id_unit_serial, serial_number, jenis_tindakan) VALUES (?, ?, ?, ?)");
@@ -583,25 +662,52 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                             $snVal = $qSn->fetchColumn();
                             if (!$snVal) throw new Exception("Serial Number ID $snId tidak valid.");
 
-                            $catatanSn = "[Opname $kodeSesi] " . $alasanMutasi . ($keterangan ? ": $keterangan" : "");
-                            $stmtUpSn->execute([$newSnStatus, $catatanSn, $snId, $idVariasi]);
-                            $stmtInsDos->execute([$idDetail, $snId, $snVal, ($alasanMutasi === 'Barang Rusak' ? 'Kurang_Rusak' : 'Kurang_Hilang')]);
+                            // Setiap SN memiliki alasan tersendiri yang dipilih pengguna
+                            $thisReason = $snReasonInputs[$snId] ?? 'Barang Rusak';
+                            if ($thisReason === 'Lainnya') {
+                                $customVal = trim($snCustomInputs[$snId] ?? '');
+                                $thisReason = !empty($customVal) ? $customVal : 'Alasan Lainnya (Kustom)';
+                            } elseif (!in_array($thisReason, ['Barang Rusak', 'Barang Hilang', 'Koreksi Salah Catat / Ditemukan'])) {
+                                $thisReason = 'Barang Rusak';
+                            }
+                            $alkesBreakdown[$thisReason] = ($alkesBreakdown[$thisReason] ?? 0) + 1;
 
-                            $mutatedSnList[] = $snVal;
+                            $newSnStatus = (strpos($thisReason, 'Hilang') !== false) ? 'Hilang' : 'Retur/Rusak';
+                            $catatanSn = "[Opname $kodeSesi] " . $thisReason . ($keterangan ? ": $keterangan" : "");
+                            $stmtUpSn->execute([$newSnStatus, $catatanSn, $snId, $idVariasi]);
+                            $stmtInsDos->execute([$idDetail, $snId, $snVal, ($newSnStatus === 'Retur/Rusak' ? 'Kurang_Rusak' : 'Kurang_Hilang')]);
+
+                            $mutatedSnList[] = "$snVal ($thisReason)";
                         }
 
                         // Potong stok_toko
                         $pdo->prepare("UPDATE stok_toko SET stok = stok - ? WHERE id_variasi = ?")->execute([$absSelisih, $idVariasi]);
                         $sisaStokToko = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVariasi")->fetchColumn();
 
-                        // Catat Kartu Stok
-                        $ketKartu = "[Stok Opname: $kodeSesi] SN: " . implode(', ', $mutatedSnList) . " | $alasanMutasi" . ($keterangan ? " - $keterangan" : "");
+                        // Catat Kartu Stok untuk masing-masing alasan secara terpisah
                         $stmtKartu = $pdo->prepare("
                             INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh)
-                            VALUES (?, NULL, 'kecil', 'Keluar', 'Manual', 'Selisih Stok Opname', ?, ?, ?, ?, ?)
+                            VALUES (?, NULL, 'besar', 'Keluar', 'Manual', ?, ?, ?, ?, ?, ?)
                         ");
-                        $stmtKartu->execute([$idVariasi, $kodeSesi, $absSelisih, $sisaStokToko, $ketKartu, $userId]);
 
+                        $allowedAlasanKartu = [
+                            'Penerimaan Barang', 'Penjualan POS', 'Penjualan E-Commerce', 'Retur Barang Rusak',
+                            'Klaim Garansi SN', 'Selisih Stok Opname', 'Barang Rusak', 'Barang Kedaluwarsa',
+                            'Barang Hilang', 'Koreksi Salah Catat / Ditemukan', 'Koreksi Manual'
+                        ];
+
+                        $summaryAlasanArr = [];
+                        foreach ($alkesBreakdown as $rName => $rCount) {
+                            $snInThisReason = [];
+                            foreach ($mutatedSnList as $ms) {
+                                if (strpos($ms, $rName) !== false) $snInThisReason[] = $ms;
+                            }
+                            $ketKartu = "[Stok Opname: $kodeSesi] SN: " . implode(', ', $snInThisReason) . " | $rName" . ($keterangan ? " - $keterangan" : "");
+                            $kartuEnum = in_array($rName, $allowedAlasanKartu) ? $rName : 'Koreksi Manual';
+                            $stmtKartu->execute([$idVariasi, $kartuEnum, $kodeSesi, $rCount, $sisaStokToko, $ketKartu, $userId]);
+                            $summaryAlasanArr[] = "$rName ($rCount Unit)";
+                        }
+                        $finalAlasanMutasi = implode(', ', $summaryAlasanArr);
                     } else {
                         // Mutasi Plus Alkes: Wajib input/scan SN baru yang ditemukan
                         $rawNewSns = trim($_POST['input_new_sns'] ?? '');
@@ -612,7 +718,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
                         $stmtInsDos = $pdo->prepare("INSERT INTO detail_opname_sn (id_detail_opname, id_unit_serial, serial_number, jenis_tindakan) VALUES (?, ?, ?, 'Tambah_Ditemukan')");
                         foreach ($newSnArr as $snStr) {
-                            // Cek apakah SN sudah pernah ada (misal pernah ditandai Hilang/Rusak)
                             $chkSn = $pdo->prepare("SELECT id FROM unit_serial WHERE serial_number = ?");
                             $chkSn->execute([$snStr]);
                             $existSnId = $chkSn->fetchColumn();
@@ -634,16 +739,17 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         $sisaStokToko = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVariasi")->fetchColumn();
 
                         // Catat Kartu Stok
-                        $ketKartu = "[Stok Opname: $kodeSesi] SN Ditemukan: " . implode(', ', $newSnArr) . " | $alasanMutasi" . ($keterangan ? " - $keterangan" : "");
+                        $ketKartu = "[Stok Opname: $kodeSesi] SN Ditemukan: " . implode(', ', $newSnArr) . " | Koreksi Salah Catat / Ditemukan" . ($keterangan ? " - $keterangan" : "");
                         $stmtKartu = $pdo->prepare("
                             INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh)
-                            VALUES (?, NULL, 'kecil', 'Masuk', 'Manual', 'Selisih Stok Opname', ?, ?, ?, ?, ?)
+                            VALUES (?, NULL, 'besar', 'Masuk', 'Manual', 'Koreksi Salah Catat / Ditemukan', ?, ?, ?, ?, ?)
                         ");
                         $stmtKartu->execute([$idVariasi, $kodeSesi, $absSelisih, $sisaStokToko, $ketKartu, $userId]);
+                        $finalAlasanMutasi = 'Koreksi Salah Catat / Ditemukan';
                     }
                 }
 
-                // Tandai baris opname sebagai 'Sudah Dimutasi'
+                // Tandai baris opname sebagai 'Sudah Dimutasi' dengan ringkasan alasan yang presisi
                 $stmtUpDetail = $pdo->prepare("
                     UPDATE detail_opname_batch
                     SET status_mutasi = 'Sudah Dimutasi',
@@ -653,10 +759,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         waktu_mutasi = NOW()
                     WHERE id = ?
                 ");
-                $stmtUpDetail->execute([$alasanMutasi, $keterangan, $userId, $idDetail]);
+                $stmtUpDetail->execute([$finalAlasanMutasi, $keterangan, $userId, $idDetail]);
 
                 $pdo->commit();
-                $msg = "Mutasi selisih untuk {$item['nama_produk']} berhasil dieksekusi dan dicatat di Kartu Stok!";
+                $msg = "Mutasi selisih untuk {$item['nama_produk']} berhasil dieksekusi ($finalAlasanMutasi) dan dicatat di Kartu Stok!";
                 $msgType = 'success';
             } catch (Exception $e) {
                 if (isset($pdo)) $pdo->rollBack();
@@ -1313,6 +1419,14 @@ layoutSidebar('stok_opname');
                 </div>
             </div>
 
+            <!-- Panduan Operasional Blind Count -->
+            <div class="p-3 bg-amber-50/70 border border-amber-200 rounded-2xl flex items-start gap-3 text-xs text-amber-900">
+                <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 font-bold">ℹ</div>
+                <div class="leading-relaxed">
+                    <strong>Petunjuk Blind Count:</strong> Masukkan hanya jumlah fisik barang dalam <strong>Kondisi BAIK (Layak Jual)</strong>. Barang yang rusak, cacat kemasan, atau kedaluwarsa <u>jangan dihitung di sini</u>; selisih defisitnya akan dialokasikan alasannya (Rusak/Expired/Hilang) pada formulir penyesuaian setelah disimpan.
+                </div>
+            </div>
+
             <!-- Tabel Antarmuka Hitung Buta & Rekonsiliasi -->
             <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
@@ -1323,9 +1437,9 @@ layoutSidebar('stok_opname');
                                 <th class="py-3 px-3">Komoditas &amp; Produk</th>
                                 <th class="py-3 px-3">Batch / SN Tracker</th>
                                 <th class="py-3 px-3 text-center">Satuan</th>
-                                <th class="py-3 px-3 text-center w-36 bg-amber-50/50 border-x border-amber-200">
-                                    <div class="text-amber-900 font-bold">HITUNG FISIK</div>
-                                    <div class="text-[9px] text-amber-700 font-normal">(Blind Count Input)</div>
+                                <th class="py-3 px-3 text-center w-40 bg-amber-50/50 border-x border-amber-200">
+                                    <div class="text-amber-900 font-bold">HITUNG FISIK BAIK</div>
+                                    <div class="text-[9px] text-amber-800 font-semibold">(Kondisi Layak Jual)</div>
                                 </th>
                                 <th class="py-3 px-3 text-center">Stok Fisik Sistem</th>
                                 <th class="py-3 px-3 text-center">Reserved</th>
@@ -1609,10 +1723,10 @@ layoutSidebar('stok_opname');
                 </div>
             </div>
 
-            <!-- Modal Eksekusi Mutasi Selisih (Obat vs Alkes) -->
+            <!-- Modal Eksekusi Mutasi Selisih (Obat vs Alkes & Multi-Alasan Defisit) -->
             <div id="modal_mutasi" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-                <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl overflow-hidden border border-zcBrd">
-                    <div class="px-6 py-4 border-b border-zcBrd flex items-center justify-between bg-white">
+                <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl overflow-hidden border border-zcBrd max-h-[92vh] flex flex-col">
+                    <div class="px-6 py-4 border-b border-zcBrd flex items-center justify-between bg-white shrink-0">
                         <div class="flex items-center gap-2.5">
                             <div class="w-8 h-8 rounded-lg bg-blue-50 text-zc flex items-center justify-center shrink-0">
                                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
@@ -1622,14 +1736,16 @@ layoutSidebar('stok_opname');
                                 <p class="text-[11px] text-zcMut">Rekonsiliasi kartu stok dan penyesuaian fisik</p>
                             </div>
                         </div>
-                        <button onclick="document.getElementById('modal_mutasi').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center transition">
+                        <button type="button" onclick="document.getElementById('modal_mutasi').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center transition">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </button>
                     </div>
-                    <form method="POST" id="form_mutasi_selisih" class="p-6 space-y-4 text-xs">
+                    <form method="POST" id="form_mutasi_selisih" class="p-6 space-y-4 text-xs overflow-y-auto">
                         <input type="hidden" name="aksi" value="eksekusi_mutasi_baris">
                         <input type="hidden" name="id_detail" id="mutasi_id_detail">
+                        <input type="hidden" name="id_batch_target" id="mutasi_id_batch_target">
                         
+                        <!-- Rincian Produk & Selisih -->
                         <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
                             <div class="flex justify-between">
                                 <span class="text-zcMut">Komoditas:</span>
@@ -1645,12 +1761,138 @@ layoutSidebar('stok_opname');
                             </div>
                         </div>
 
-                        <!-- Pilihan Alasan Mutasi -->
-                        <div>
-                            <label class="block font-bold text-zcTxt mb-1">Alasan Penyesuaian / Mutasi:</label>
-                            <select name="alasan_mutasi" id="mutasi_alasan_select" required class="w-full border border-zcBrd rounded-xl p-2.5 bg-white text-xs font-semibold focus:ring-1 focus:ring-zc">
-                                <!-- Populated dynamically based on Minus vs Plus & Obat vs Alkes -->
-                            </select>
+                        <!-- Form Khusus Obat (Batch Terikat Langsung Sesuai Baris, Tanpa Dropdown) -->
+                        <div id="container_obat_batch" class="p-3.5 bg-blue-50/70 border border-blue-200 rounded-xl space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-bold text-blue-900 flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                    Nomor Batch Terikat (Otomatis Sesuai Baris)
+                                </span>
+                                <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-mono text-[10px] font-bold" id="mutasi_batch_satuan_label"></span>
+                            </div>
+                            <div class="p-2.5 bg-white border border-blue-200 rounded-lg flex items-center justify-between">
+                                <div>
+                                    <div class="text-[10px] text-slate-400 font-semibold uppercase">Nomor Batch</div>
+                                    <div class="font-mono font-bold text-blue-950 text-sm" id="mutasi_batch_display_no">-</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-[10px] text-slate-400 font-semibold uppercase">Kedaluwarsa (Exp)</div>
+                                    <div class="font-mono font-semibold text-slate-700 text-xs" id="mutasi_batch_display_exp">-</div>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-blue-800 leading-tight">
+                                Mutasi stok dialokasikan langsung ke identitas batch ini untuk akurasi kartu stok dan pelacakan FEFO.
+                            </p>
+                        </div>
+
+                        <!-- SECTION ALOKASI ALASAN DEFISIT (Minus) -->
+                        <div id="container_alokasi_defisit" class="space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="block font-bold text-zcTxt text-xs">Alokasi Alasan Selisih Defisit</label>
+                                    <p class="text-[10px] text-zcMut">Tentukan rincian penyebab barang tidak ada / rusak fisik:</p>
+                                </div>
+                                <span id="badge_alokasi_counter" class="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold"></span>
+                            </div>
+
+                            <!-- List Alasan dengan Input Kuantitas & Quick Fill -->
+                            <div class="space-y-2 bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                                <!-- 1. Barang Rusak -->
+                                <div class="flex items-center justify-between gap-2 p-2 bg-white rounded-lg border border-slate-200">
+                                    <div class="flex-1">
+                                        <div class="font-bold text-rose-700 flex items-center gap-1.5">
+                                            <span>Barang Rusak</span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400">Kemasan pecah / bocor / cacat fisik</div>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <input type="number" min="0" name="alokasi_rusak" id="alokasi_rusak" class="w-16 text-center font-mono font-bold text-xs border border-slate-300 rounded-lg p-1.5 focus:ring-1 focus:ring-zc" value="0">
+                                        <button type="button" onclick="quickFillReason('rusak')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[10px] font-bold" title="Isi semua ke Rusak">Penuh</button>
+                                    </div>
+                                </div>
+
+                                <!-- 2. Barang Hilang -->
+                                <div class="flex items-center justify-between gap-2 p-2 bg-white rounded-lg border border-slate-200">
+                                    <div class="flex-1">
+                                        <div class="font-bold text-amber-700 flex items-center gap-1.5">
+                                            <span>Barang Hilang</span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400">Tidak ditemukan di rak etalase / gudang</div>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <input type="number" min="0" name="alokasi_hilang" id="alokasi_hilang" class="w-16 text-center font-mono font-bold text-xs border border-slate-300 rounded-lg p-1.5 focus:ring-1 focus:ring-zc" value="0">
+                                        <button type="button" onclick="quickFillReason('hilang')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[10px] font-bold" title="Isi semua ke Hilang">Penuh</button>
+                                    </div>
+                                </div>
+
+                                <!-- 3. Barang Kedaluwarsa (Khusus Obat) -->
+                                <div id="row_alokasi_expired" class="flex items-center justify-between gap-2 p-2 bg-white rounded-lg border border-slate-200">
+                                    <div class="flex-1">
+                                        <div class="font-bold text-purple-700 flex items-center gap-1.5">
+                                            <span>Barang Kedaluwarsa</span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400">Pemusnahan batch yang telah lewat expired date</div>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <input type="number" min="0" name="alokasi_expired" id="alokasi_expired" class="w-16 text-center font-mono font-bold text-xs border border-slate-300 rounded-lg p-1.5 focus:ring-1 focus:ring-zc" value="0">
+                                        <button type="button" onclick="quickFillReason('expired')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[10px] font-bold" title="Isi semua ke Expired">Penuh</button>
+                                    </div>
+                                </div>
+
+                                <!-- 4. Koreksi Salah Catat -->
+                                <div class="flex items-center justify-between gap-2 p-2 bg-white rounded-lg border border-slate-200">
+                                    <div class="flex-1">
+                                        <div class="font-bold text-slate-700 flex items-center gap-1.5">
+                                            <span>Koreksi Salah Catat</span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400">Selisih administrasi / salah hitung terdahulu</div>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <input type="number" min="0" name="alokasi_salah_catat" id="alokasi_salah_catat" class="w-16 text-center font-mono font-bold text-xs border border-slate-300 rounded-lg p-1.5 focus:ring-1 focus:ring-zc" value="0">
+                                        <button type="button" onclick="quickFillReason('salah_catat')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[10px] font-bold" title="Isi semua ke Salah Catat">Penuh</button>
+                                    </div>
+                                </div>
+
+                                <!-- 5. Alasan Lainnya (Kustom Bebas) -->
+                                <div class="space-y-1.5 p-2 bg-white rounded-lg border border-slate-200">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="flex-1">
+                                            <div class="font-bold text-indigo-700 flex items-center gap-1.5">
+                                                <span>Alasan Lainnya (Kustom)</span>
+                                            </div>
+                                            <div class="text-[10px] text-slate-400">Penyebab khusus di luar opsi di atas</div>
+                                        </div>
+                                        <div class="flex items-center gap-1.5">
+                                            <input type="number" min="0" name="alokasi_lainnya" id="alokasi_lainnya" class="w-16 text-center font-mono font-bold text-xs border border-slate-300 rounded-lg p-1.5 focus:ring-1 focus:ring-zc" value="0">
+                                            <button type="button" onclick="quickFillReason('lainnya')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[10px] font-bold" title="Isi semua ke Lainnya">Penuh</button>
+                                        </div>
+                                    </div>
+                                    <div id="box_teks_alasan_lainnya" class="hidden pt-1.5 border-t border-slate-100">
+                                        <input type="text" name="teks_alasan_lainnya" id="teks_alasan_lainnya" placeholder="Tuliskan alasan khusus (misal: Rusak Terendam Air, Sampel Uji)..." class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs bg-slate-50 focus:bg-white focus:ring-1 focus:ring-zc">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION SURPLUS / KELEBIHAN FISIK (Plus) -->
+                        <div id="container_alokasi_surplus" class="hidden p-3.5 bg-blue-50 border border-blue-200 rounded-xl space-y-2">
+                            <div>
+                                <span class="font-bold text-blue-900 block">Kelebihan Fisik (Surplus Stok)</span>
+                                <p class="text-[11px] text-blue-800">
+                                    Fisik lapangan melebihi catatan sistem. Tentukan penyebab kelebihan barang:
+                                </p>
+                            </div>
+                            <div class="space-y-2">
+                                <select name="alasan_mutasi_surplus" id="alasan_mutasi_surplus" class="w-full border border-blue-300 rounded-lg p-2 text-xs font-semibold bg-white text-slate-800" onchange="toggleSurplusCustomText(this.value)">
+                                    <option value="Koreksi Salah Catat / Ditemukan">Koreksi Salah Catat / Ditemukan Kembali di Rak</option>
+                                    <option value="Kelebihan Kirim Supplier">Kelebihan Kirim dari Supplier (Belum Tercatat)</option>
+                                    <option value="Retur Pembatalan Pelanggan">Retur / Pembatalan Pelanggan Belum Terdata</option>
+                                    <option value="Lainnya">Alasan Lainnya (Tulis Manual)...</option>
+                                </select>
+                                <div id="box_surplus_teks_lainnya" class="hidden">
+                                    <input type="text" name="teks_surplus_lainnya" id="teks_surplus_lainnya" placeholder="Tuliskan penyebab kelebihan stok..." class="w-full border border-blue-300 rounded-lg p-2 text-xs bg-white">
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Form Khusus Alkes (Pemilihan SN Spesifik) -->
@@ -1658,7 +1900,7 @@ layoutSidebar('stok_opname');
                             <div id="alkes_minus_sn_box" class="space-y-2">
                                 <div class="flex items-center justify-between">
                                     <label class="block font-bold text-emerald-900 text-xs">
-                                        Pilih Serial Number yang Rusak / Hilang (<span id="count_sn_needed" class="font-black text-rose-700"></span> unit):
+                                        Pilih Serial Number Terkait (<span id="count_sn_needed" class="font-black text-rose-700"></span> unit):
                                     </label>
                                     <div id="sn_selection_status" class="text-[11px]"></div>
                                 </div>
@@ -1681,7 +1923,7 @@ layoutSidebar('stok_opname');
 
                         <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-zcBrd">
                             <button type="button" onclick="document.getElementById('modal_mutasi').classList.add('hidden')" class="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-semibold hover:bg-slate-50 transition">Batal</button>
-                            <button type="submit" class="px-5 py-2 bg-zc hover:bg-zcHv text-white font-bold rounded-xl shadow-sm transition">Simpan &amp; Eksekusi Mutasi</button>
+                            <button type="submit" id="btn_submit_mutasi" class="px-5 py-2 bg-zc hover:bg-zcHv disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-sm transition">Simpan &amp; Eksekusi Mutasi</button>
                         </div>
                     </form>
                 </div>
@@ -1839,6 +2081,50 @@ function simpanSatuBaris(idDetail) {
         if (inputEl) inputEl.focus();
         return;
     }
+
+    let valFisik = parseInt(inputEl.value, 10);
+    let valSistem = parseInt(inputEl.dataset.sistem, 10);
+
+    // Jika terdeteksi selisih fisik vs sistem, berikan konfirmasi langsung
+    if (!isNaN(valSistem) && valFisik !== valSistem) {
+        let sel = valFisik - valSistem;
+        let selText = (sel > 0 ? '+' + sel : sel);
+        let defText = (sel < 0 ? 'Defisit / Berkurang' : 'Surplus / Bertambah');
+        
+        Swal.fire({
+            title: 'Terdeteksi Selisih Fisik: ' + selText + ' Unit',
+            html: `
+                <div class="text-left text-xs text-slate-700 space-y-2">
+                    <p>Hitung Fisik: <strong class="font-mono text-sm">${valFisik}</strong> | Stok Sistem: <strong class="font-mono text-sm">${valSistem}</strong></p>
+                    <div class="p-2.5 rounded-xl ${sel < 0 ? 'bg-rose-50 border border-rose-200 text-rose-900' : 'bg-blue-50 border border-blue-200 text-blue-900'} font-bold">
+                        Status: ${defText} (${selText} unit)
+                    </div>
+                    <p class="text-[11px] text-slate-500">
+                        Hasil hitung fisik akan disimpan dan sistem akan langsung membuka formulir penyesuaian untuk memilih alasan selisih (Rusak, Hilang, Expired, atau Salah Catat) dan alokasi batch terkait.
+                    </p>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Simpan & Lanjut Penyesuaian',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#1a75d2',
+            cancelButtonColor: '#64748b',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-xl font-bold text-xs px-4 py-2',
+                cancelButton: 'rounded-xl font-bold text-xs px-4 py-2'
+            }
+        }).then((res) => {
+            if (res.isConfirmed) {
+                document.getElementById('single_save_id').value = idDetail;
+                document.getElementById('single_save_val').value = valFisik;
+                document.getElementById('form_single_save').submit();
+            }
+        });
+        return;
+    }
+
     document.getElementById('single_save_id').value = idDetail;
     document.getElementById('single_save_val').value = inputEl.value;
     document.getElementById('form_single_save').submit();
@@ -1851,15 +2137,98 @@ function openModalRecount(idDetail, hitungLama, namaProduk) {
     document.getElementById('modal_recount').classList.remove('hidden');
 }
 
+let currentOpnameItem = null;
+let currentAbsSelisih = 0;
+
+function updateAllocationStatus() {
+    let r = parseInt(document.getElementById('alokasi_rusak')?.value, 10) || 0;
+    let h = parseInt(document.getElementById('alokasi_hilang')?.value, 10) || 0;
+    let e = parseInt(document.getElementById('alokasi_expired')?.value, 10) || 0;
+    let s = parseInt(document.getElementById('alokasi_salah_catat')?.value, 10) || 0;
+    let l = parseInt(document.getElementById('alokasi_lainnya')?.value, 10) || 0;
+    let sum = r + h + e + s + l;
+    let target = currentAbsSelisih;
+    let satuan = currentOpnameItem ? (currentOpnameItem.nama_satuan || 'Unit') : 'Unit';
+
+    // Munculkan input teks alasan lainnya jika kuantitas lainnya diisi > 0
+    let boxTeksLainnya = document.getElementById('box_teks_alasan_lainnya');
+    if (boxTeksLainnya) {
+        if (l > 0) {
+            boxTeksLainnya.classList.remove('hidden');
+        } else {
+            boxTeksLainnya.classList.add('hidden');
+        }
+    }
+
+    let counterBadge = document.getElementById('badge_alokasi_counter');
+    let btnSubmit = document.getElementById('btn_submit_mutasi');
+
+    if (counterBadge) {
+        if (sum === target && target > 0) {
+            counterBadge.className = 'px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
+            counterBadge.innerText = `✓ Klop: ${sum}/${target} ${satuan}`;
+            if (btnSubmit) btnSubmit.disabled = false;
+        } else if (sum < target) {
+            let sisa = target - sum;
+            counterBadge.className = 'px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-300';
+            counterBadge.innerText = `Kurang: ${sum}/${target} (Sisa ${sisa})`;
+            if (btnSubmit) btnSubmit.disabled = true;
+        } else {
+            let lebih = sum - target;
+            counterBadge.className = 'px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-rose-100 text-rose-800 border border-rose-300';
+            counterBadge.innerText = `Lebih: ${sum}/${target} (+${lebih})`;
+            if (btnSubmit) btnSubmit.disabled = true;
+        }
+    }
+}
+
+function quickFillReason(type) {
+    let fields = ['rusak', 'hilang', 'expired', 'salah_catat', 'lainnya'];
+    fields.forEach(f => {
+        let el = document.getElementById('alokasi_' + f);
+        if (el) {
+            el.value = (f === type) ? currentAbsSelisih : 0;
+        }
+    });
+    updateAllocationStatus();
+}
+
+function toggleSurplusCustomText(val) {
+    let box = document.getElementById('box_surplus_teks_lainnya');
+    if (box) {
+        if (val === 'Lainnya') {
+            box.classList.remove('hidden');
+            document.getElementById('teks_surplus_lainnya')?.focus();
+        } else {
+            box.classList.add('hidden');
+        }
+    }
+}
+
+function toggleSnCustomInput(selectEl, snId) {
+    let customInput = document.getElementById('sn_custom_input_' + snId);
+    if (customInput) {
+        if (selectEl.value === 'Lainnya') {
+            customInput.classList.remove('hidden');
+            customInput.focus();
+        } else {
+            customInput.classList.add('hidden');
+        }
+    }
+}
+
 function openModalMutasi(item) {
-    document.getElementById('mutasi_id_detail').value = item.id;
-    document.getElementById('mutasi_nama_produk').innerText = item.nama_produk + ' — ' + item.nama_variasi;
-    
-    let isObat = (item.jenis_komoditas === 'Obat');
+    currentOpnameItem = item;
     let selisih = parseInt(item.selisih) || 0;
     let isMinus = (selisih < 0);
     let absSel = Math.abs(selisih);
+    currentAbsSelisih = absSel;
 
+    document.getElementById('mutasi_id_detail').value = item.id;
+    document.getElementById('mutasi_id_batch_target').value = item.id_batch || '';
+    document.getElementById('mutasi_nama_produk').innerText = item.nama_produk + ' — ' + item.nama_variasi;
+    
+    let isObat = (item.jenis_komoditas === 'Obat');
     document.getElementById('mutasi_komoditas_badge').innerText = isObat ? 'Obat' : 'Alat Kesehatan';
     document.getElementById('mutasi_komoditas_badge').className = isObat ? 'font-bold text-blue-700' : 'font-bold text-emerald-700';
 
@@ -1867,51 +2236,64 @@ function openModalMutasi(item) {
     selBadge.innerText = (selisih > 0 ? '+' + selisih : selisih) + ' ' + (item.nama_satuan || 'Unit');
     selBadge.className = isMinus ? 'font-extrabold text-sm text-rose-600' : 'font-extrabold text-sm text-blue-600';
 
-    let alasanSelect = document.getElementById('mutasi_alasan_select');
-    alasanSelect.innerHTML = '';
+    let containerObat = document.getElementById('container_obat_batch');
+    let containerAlkes = document.getElementById('container_alkes_sn');
+    let containerDefisit = document.getElementById('container_alokasi_defisit');
+    let containerSurplus = document.getElementById('container_alokasi_surplus');
+    let rowExpired = document.getElementById('row_alokasi_expired');
+    let btnSubmit = document.getElementById('btn_submit_mutasi');
+
+    if (isObat) {
+        containerObat.classList.remove('hidden');
+        containerAlkes.classList.add('hidden');
+        document.getElementById('mutasi_batch_display_no').innerText = item.no_batch || 'Batch Terdaftar';
+        document.getElementById('mutasi_batch_display_exp').innerText = item.tgl_exp ? item.tgl_exp : '-';
+        document.getElementById('mutasi_batch_satuan_label').innerText = item.nama_satuan || 'Satuan';
+        if (rowExpired) rowExpired.classList.remove('hidden');
+    } else {
+        containerObat.classList.add('hidden');
+        if (rowExpired) rowExpired.classList.add('hidden');
+    }
 
     if (isMinus) {
         if (isObat) {
-            alasanSelect.innerHTML = `
-                <option value="Barang Rusak">Barang Rusak</option>
-                <option value="Barang Kedaluwarsa">Barang Kedaluwarsa (Pemusnahan Batch)</option>
-                <option value="Barang Hilang">Barang Hilang</option>
-                <option value="Koreksi Salah Catat / Ditemukan">Koreksi Salah Catat</option>
-            `;
+            containerDefisit.classList.remove('hidden');
+            containerAlkes.classList.add('hidden');
+
+            // Default alokasi: seluruh selisih diset ke Barang Rusak agar user bisa langsung klik simpan
+            document.getElementById('alokasi_rusak').value = absSel;
+            document.getElementById('alokasi_hilang').value = 0;
+            document.getElementById('alokasi_expired').value = 0;
+            document.getElementById('alokasi_salah_catat').value = 0;
+            if (document.getElementById('alokasi_lainnya')) document.getElementById('alokasi_lainnya').value = 0;
+            if (document.getElementById('teks_alasan_lainnya')) document.getElementById('teks_alasan_lainnya').value = '';
+
+            ['rusak', 'hilang', 'expired', 'salah_catat', 'lainnya'].forEach(f => {
+                let el = document.getElementById('alokasi_' + f);
+                if (el) {
+                    el.max = absSel;
+                    el.oninput = updateAllocationStatus;
+                }
+            });
+
+            updateAllocationStatus();
         } else {
-            // Alkes tidak punya kedaluwarsa
-            alasanSelect.innerHTML = `
-                <option value="Barang Rusak">Barang Rusak</option>
-                <option value="Barang Hilang">Barang Hilang</option>
-                <option value="Koreksi Salah Catat / Ditemukan">Koreksi Salah Catat</option>
-            `;
-        }
-    } else {
-        alasanSelect.innerHTML = `
-            <option value="Koreksi Salah Catat / Ditemukan">Koreksi Salah Catat / Ditemukan Fisik</option>
-        `;
-    }
-
-    // Penanganan khusus Alkes
-    let containerAlkes = document.getElementById('container_alkes_sn');
-    let minusBox = document.getElementById('alkes_minus_sn_box');
-    let plusBox = document.getElementById('alkes_plus_sn_box');
-
-    if (!isObat) {
-        containerAlkes.classList.remove('hidden');
-        if (isMinus) {
+            containerDefisit.classList.add('hidden');
+            containerAlkes.classList.remove('hidden');
+            let minusBox = document.getElementById('alkes_minus_sn_box');
+            let plusBox = document.getElementById('alkes_plus_sn_box');
             minusBox.classList.remove('hidden');
             plusBox.classList.add('hidden');
             document.getElementById('count_sn_needed').innerText = absSel;
+            if (btnSubmit) btnSubmit.disabled = true;
 
-            // Fetch list SN aktif untuk variasi ini via AJAX
             let snListContainer = document.getElementById('alkes_sn_checkbox_list');
             snListContainer.innerHTML = '<div class="text-xs text-slate-400 py-2 text-center">Memuat Serial Number aktif...</div>';
 
             fetch('../api/get_batch_sn.php?action=get_available_sns&id_variasi=' + item.id_variasi)
                 .then(r => r.json())
                 .then(data => {
-                    let sns = data.sns || [];
+                    let sns = data.sns || data.items || [];
                     if (!sns.length) {
                         snListContainer.innerHTML = '<div class="text-xs text-rose-600 p-2">Tidak ada SN berstatus Tersedia di database.</div>';
                         return;
@@ -1919,11 +2301,27 @@ function openModalMutasi(item) {
                     let html = '';
                     sns.forEach(s => {
                         html += `
-                            <label class="sn-item-label flex items-center gap-2 p-1.5 hover:bg-slate-50 rounded cursor-pointer border-b border-slate-100 last:border-none transition">
-                                <input type="checkbox" name="selected_sn_ids[]" value="${s.id}" class="rounded border-slate-300 text-zc focus:ring-zc sn-checkbox cursor-pointer">
-                                <span class="font-mono text-xs font-semibold text-slate-800">${s.serial_number}</span>
-                                <span class="text-[10px] text-slate-400 ml-auto">(${s.status})</span>
-                            </label>
+                            <div class="sn-item-card p-2 border border-slate-200 rounded-lg bg-white space-y-1.5 shadow-2xs">
+                                <div class="flex items-center justify-between">
+                                    <label class="sn-item-label flex items-center gap-2 cursor-pointer select-none">
+                                        <input type="checkbox" name="selected_sn_ids[]" value="${s.id}" class="rounded border-slate-300 text-zc focus:ring-zc sn-checkbox cursor-pointer" onchange="toggleSnItemReason(this, ${s.id})">
+                                        <span class="font-mono text-xs font-bold text-slate-800">${s.serial_number}</span>
+                                    </label>
+                                    <span class="text-[10px] text-slate-400 font-medium">Status: ${s.status}</span>
+                                </div>
+                                <div id="sn_reason_box_${s.id}" class="hidden pt-1.5 border-t border-slate-100 space-y-1.5">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-[11px] text-slate-600 font-semibold">Alasan SN ini:</span>
+                                        <select name="sn_reason[${s.id}]" class="border border-slate-300 rounded px-2 py-1 text-xs font-semibold bg-white focus:ring-1 focus:ring-zc text-slate-700" onchange="toggleSnCustomInput(this, ${s.id})">
+                                            <option value="Barang Rusak">Barang Rusak (Cacat Fisik / Fungsi)</option>
+                                            <option value="Barang Hilang">Barang Hilang (Tidak Ditemukan)</option>
+                                            <option value="Koreksi Salah Catat / Ditemukan">Koreksi Salah Catat</option>
+                                            <option value="Lainnya">Alasan Lainnya (Kustom)...</option>
+                                        </select>
+                                    </div>
+                                    <input type="text" name="sn_custom_reason[${s.id}]" id="sn_custom_input_${s.id}" placeholder="Tuliskan penyebab spesifik untuk SN ini..." class="hidden w-full border border-slate-300 rounded px-2 py-1 text-xs bg-slate-50 focus:bg-white text-slate-700">
+                                </div>
+                            </div>
                         `;
                     });
                     snListContainer.innerHTML = html;
@@ -1932,16 +2330,38 @@ function openModalMutasi(item) {
                 .catch(() => {
                     snListContainer.innerHTML = '<div class="text-xs text-rose-600 p-2">Gagal memuat SN.</div>';
                 });
+        }
+    } else {
+        containerDefisit.classList.add('hidden');
+        containerSurplus.classList.remove('hidden');
+        let selSurplus = document.getElementById('alasan_mutasi_surplus');
+        if (selSurplus) selSurplus.value = 'Koreksi Salah Catat / Ditemukan';
+        toggleSurplusCustomText('Koreksi Salah Catat / Ditemukan');
+        if (btnSubmit) btnSubmit.disabled = false;
 
-        } else {
+        if (!isObat) {
+            containerAlkes.classList.remove('hidden');
+            let minusBox = document.getElementById('alkes_minus_sn_box');
+            let plusBox = document.getElementById('alkes_plus_sn_box');
             minusBox.classList.add('hidden');
             plusBox.classList.remove('hidden');
         }
-    } else {
-        containerAlkes.classList.add('hidden');
     }
 
     document.getElementById('modal_mutasi').classList.remove('hidden');
+}
+
+// Fungsi toggle dropdown alasan untuk masing-masing item Serial Number
+function toggleSnItemReason(checkbox, snId) {
+    let box = document.getElementById('sn_reason_box_' + snId);
+    if (box) {
+        if (checkbox.checked) {
+            box.classList.remove('hidden');
+        } else {
+            box.classList.add('hidden');
+        }
+    }
+    updateAlkesSnCheckboxes();
 }
 
 // Fungsi pembatasan pemilihan Serial Number agar tidak bisa memilih melebihi kuantitas selisih
@@ -1954,39 +2374,43 @@ function updateAlkesSnCheckboxes() {
     let infoStatus = document.getElementById('sn_selection_status');
     if (infoStatus) {
         if (countChecked >= needed && needed > 0) {
-            infoStatus.innerHTML = `<span class="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded text-[10px]">✓ ${countChecked}/${needed} Dipilih (Maksimal)</span>`;
+            infoStatus.innerHTML = `<span class="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded text-[10px]">✓ ${countChecked}/${needed} Dipilih (Lengkap)</span>`;
         } else {
             infoStatus.innerHTML = `<span class="inline-flex items-center gap-1 font-semibold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded text-[10px]">${countChecked}/${needed} Dipilih</span>`;
         }
     }
 
+    let btnSubmit = document.getElementById('btn_submit_mutasi');
+    if (btnSubmit && currentOpnameItem && currentOpnameItem.jenis_komoditas !== 'Obat') {
+        btnSubmit.disabled = (countChecked !== needed);
+    }
+
     allCheckboxes.forEach(cb => {
-        let label = cb.closest('.sn-item-label');
+        let card = cb.closest('.sn-item-card') || cb.closest('.sn-item-label');
         if (!cb.checked) {
             if (countChecked >= needed) {
                 cb.disabled = true;
                 cb.classList.remove('cursor-pointer');
                 cb.classList.add('cursor-not-allowed');
-                if (label) {
-                    label.classList.add('opacity-40', 'cursor-not-allowed', 'bg-slate-100');
-                    label.classList.remove('cursor-pointer', 'hover:bg-slate-50', 'bg-emerald-50/50');
+                if (card) {
+                    card.classList.add('opacity-40', 'cursor-not-allowed', 'bg-slate-100');
+                    card.classList.remove('border-emerald-300', 'bg-emerald-50/50');
                 }
             } else {
                 cb.disabled = false;
                 cb.classList.add('cursor-pointer');
                 cb.classList.remove('cursor-not-allowed');
-                if (label) {
-                    label.classList.remove('opacity-40', 'cursor-not-allowed', 'bg-slate-100', 'bg-emerald-50/50');
-                    label.classList.add('cursor-pointer', 'hover:bg-slate-50');
+                if (card) {
+                    card.classList.remove('opacity-40', 'cursor-not-allowed', 'bg-slate-100', 'bg-emerald-50/50');
                 }
             }
         } else {
             cb.disabled = false;
             cb.classList.add('cursor-pointer');
             cb.classList.remove('cursor-not-allowed');
-            if (label) {
-                label.classList.remove('opacity-40', 'cursor-not-allowed', 'bg-slate-100');
-                label.classList.add('cursor-pointer', 'bg-emerald-50/50');
+            if (card) {
+                card.classList.remove('opacity-40', 'cursor-not-allowed', 'bg-slate-100');
+                card.classList.add('bg-emerald-50/50', 'border-emerald-400');
             }
         }
     });
@@ -2012,6 +2436,7 @@ document.getElementById('form_mutasi_selisih')?.addEventListener('submit', funct
     }
 });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <?php
 layoutFooter();

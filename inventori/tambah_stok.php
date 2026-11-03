@@ -600,71 +600,92 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
                 </div>
             </div>
             
-            <div class="border border-zcBrd rounded-xl overflow-x-auto">
-                <table class="w-full text-xs min-w-[1100px]">
+            <style>
+                .table-penerimaan {
+                    width: 100%;
+                    table-layout: auto;
+                }
+                @media (max-width: 1366px) {
+                    .table-penerimaan th {
+                        font-size: 11px !important;
+                        padding-left: 3px !important;
+                        padding-right: 3px !important;
+                    }
+                    .table-penerimaan td {
+                        padding-left: 3px !important;
+                        padding-right: 3px !important;
+                    }
+                    .table-penerimaan input,
+                    .table-penerimaan select {
+                        font-size: 11px !important;
+                    }
+                }
+            </style>
+            <div class="border border-zcBrd rounded-xl overflow-x-auto shadow-xs">
+                <table class="w-full text-xs table-penerimaan min-w-[960px]">
                     <thead class="bg-slate-50 border-b border-zcBrd">
                         <tr>
-                            <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[20%]">Produk * (Ketik untuk Cari)</th>
-                            <th class="text-left px-2 py-2.5 font-bold text-zcMut w-[8%]">Pesan *</th>
-                            <th class="text-left px-2 py-2.5 font-bold text-emerald-800 w-[8%] bg-emerald-50/60">Terima Baik*</th>
-                            <th class="text-left px-2 py-2.5 font-bold text-rose-700 w-[8%] bg-rose-50/60">Rusak/Retur</th>
-                            <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[11%]">Nilai Beli Satuan *</th>
-                            <th class="text-left px-3 py-2.5 font-bold text-zcMut w-[11%]">Subtotal Diterima</th>
-                            <th class="text-left px-2 py-2.5 font-bold text-zcMut w-[10%]">No. Batch</th>
-                            <th class="text-left px-2 py-2.5 font-bold text-zcMut w-[9%]">Tgl Exp</th>
-                            <th class="text-left px-2 py-2.5 font-bold text-zcMut w-[12%]">SN (Khusus Alkes)</th>
-                            <th class="px-2 py-2.5 w-[3%]"></th>
+                            <th class="text-left px-2 py-2.5 font-bold text-zcMut w-[22%]">Produk * (Ketik untuk Cari)</th>
+                            <th class="text-center px-1 py-2.5 font-bold text-zcMut w-[7.5%]">Pesan *</th>
+                            <th class="text-center px-1 py-2.5 font-bold text-emerald-800 w-[7.5%] bg-emerald-50/60">Terima Baik *</th>
+                            <th class="text-center px-1 py-2.5 font-bold text-rose-700 w-[7.5%] bg-rose-50/60">Rusak/Retur</th>
+                            <th class="text-left px-2 py-2.5 font-bold text-zcMut w-[11%]">Nilai Beli Satuan *</th>
+                            <th class="text-left px-2 py-2.5 font-bold text-zcMut w-[9.5%]">Subtotal Diterima</th>
+                            <th class="text-left px-1.5 py-2.5 font-bold text-zcMut w-[10%]">No. Batch</th>
+                            <th class="text-left px-1.5 py-2.5 font-bold text-zcMut w-[11.5%]">Tgl Exp</th>
+                            <th class="text-left px-1.5 py-2.5 font-bold text-zcMut w-[10.5%]">SN (Khusus Alkes)</th>
+                            <th class="px-1 py-2.5 w-[3%]"></th>
                         </tr>
                     </thead>
                     <tbody id="items-body">
                         <tr id="row-0" class="border-b border-zcBrd/50">
-                            <td class="px-2 py-2 align-top">
+                            <td class="px-1.5 py-2 align-top">
                                 <select name="id_variasi[]" id="sel-0" data-row-idx="0" required onchange="checkProduk(this, 0); calcSubtotal(0);" class="select2-produk w-full border border-zcBrd rounded-lg px-2 py-1.5 text-xs">
                                     <option value="">-- Cari &amp; Pilih Produk --</option>
                                     <?php foreach ($produkList as $p): ?>
                                     <option value="<?= $p['id'] ?>" data-kat="<?= htmlspecialchars($p['kategori']) ?>" data-satbesar="<?= htmlspecialchars($p['satuan_besar'] ?? 'Dus') ?>" data-satkecil="<?= htmlspecialchars($p['satuan_kecil'] ?? 'Pcs') ?>" data-rasio="<?= $p['rasio_konversi'] ?>" data-hargajual="<?= $p['harga_jual_besar'] ?>" data-sku="<?= htmlspecialchars($p['sku_variasi'] ?? '') ?>" data-skuinduk="<?= htmlspecialchars($p['sku_induk'] ?? '') ?>" data-namaproduk="<?= htmlspecialchars($p['nama_produk'] ?? '') ?>"><?= htmlspecialchars($p['label']) ?> (<?= htmlspecialchars($p['satuan_besar'] ?? 'Dus') ?>)</option>
                                     <?php endforeach; ?>
                                 </select>
-                                
                             </td>
-                            <td class="px-2 py-2 align-top">
-                                <div class="flex items-center gap-1">
-                                    <input type="number" name="qty_pesan[]" id="qty_pesan-0" min="1" required placeholder="Pesan" oninput="syncQty(0, 'pesan')" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs font-semibold">
-                                    <span id="badge-uom-0" class="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-1 rounded whitespace-nowrap border border-slate-200">Dus</span>
+                            <td class="px-1 py-2 align-top">
+                                <input type="number" name="qty_pesan[]" id="qty_pesan-0" min="1" required placeholder="0" oninput="syncQty(0, 'pesan')" class="w-full border border-zcBrd rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-zc text-xs font-bold text-slate-800 text-center">
+                                <div class="flex items-center justify-between text-[10px] mt-1 text-slate-500 font-semibold px-0.5">
+                                    <span>Sat:</span>
+                                    <span id="badge-uom-0" class="font-bold text-slate-700 bg-slate-100 px-1 py-0.5 rounded border border-slate-200">Dus</span>
                                 </div>
                             </td>
-                            <td class="px-2 py-2 align-top bg-emerald-50/20">
-                                <input type="number" name="qty_terima[]" id="qty_terima-0" min="0" required placeholder="Baik" oninput="syncQty(0, 'terima')" class="w-full border border-emerald-300 bg-white rounded-lg px-2 py-1.5 focus:outline-none focus:border-emerald-500 text-xs font-bold text-emerald-800">
-                                <div class="text-[9px] text-emerald-600 mt-0.5">Masuk stok</div>
+                            <td class="px-1 py-2 align-top bg-emerald-50/20">
+                                <input type="number" name="qty_terima[]" id="qty_terima-0" min="0" required placeholder="0" oninput="syncQty(0, 'terima')" class="w-full border border-emerald-400 bg-white rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-emerald-600 text-xs font-bold text-emerald-800 text-center">
+                                <div class="text-[10px] text-emerald-600 font-semibold text-center mt-1 whitespace-nowrap">Masuk stok</div>
                             </td>
-                            <td class="px-2 py-2 align-top bg-rose-50/20">
-                                <input type="number" name="qty_rusak[]" id="qty_rusak-0" min="0" value="0" placeholder="0" oninput="syncQty(0, 'rusak')" class="w-full border border-rose-300 bg-white rounded-lg px-2 py-1.5 focus:outline-none focus:border-rose-500 text-xs font-bold text-rose-700">
-                                <div class="text-[9px] text-rose-600 mt-0.5">Retur supplier</div>
+                            <td class="px-1 py-2 align-top bg-rose-50/20">
+                                <input type="number" name="qty_rusak[]" id="qty_rusak-0" min="0" value="0" placeholder="0" oninput="syncQty(0, 'rusak')" class="w-full border border-rose-300 bg-white rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-rose-500 text-xs font-bold text-rose-700 text-center">
+                                <div class="text-[10px] text-rose-600 font-semibold text-center mt-1 whitespace-nowrap">Retur supplier</div>
                             </td>
-                            <td class="px-2 py-2 align-top">
+                            <td class="px-1.5 py-2 align-top">
                                 <div class="relative">
-                                    <span class="absolute left-2.5 top-1.5 text-xs font-bold text-slate-400">Rp</span>
+                                    <span class="absolute left-2 top-1.5 text-xs font-bold text-slate-400">Rp</span>
                                     <input type="text" inputmode="numeric" name="harga_beli[]" id="harga-0" placeholder="0" oninput="formatRupiahInput(this); calcSubtotal(0);" 
-                                        class="w-full pl-8 border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs font-semibold">
+                                        class="w-full pl-7 pr-1.5 border border-zcBrd rounded-lg py-1.5 focus:outline-none focus:border-zc text-xs font-semibold">
                                 </div>
-                                <div class="text-[9px] text-zcMut mt-0.5">Per 1 Satuan Besar</div>
+                                <div class="text-[9px] text-zcMut mt-0.5 whitespace-nowrap">Per 1 Sat. Besar</div>
                             </td>
-                            <td class="px-2 py-2 align-top">
+                            <td class="px-1.5 py-2 align-top">
                                 <div id="subtotal-0" class="text-xs font-bold text-slate-800 pt-1.5 whitespace-nowrap">Rp 0</div>
-                                <div class="text-[9px] text-zcMut">Subtotal Diterima</div>
+                                <div class="text-[9px] text-zcMut whitespace-nowrap">Subtotal Diterima</div>
                             </td>
-                            <td class="px-2 py-2 align-top"><input type="text" name="no_batch[]" id="b-0" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly placeholder="Wajib obat"></td>
-                            <td class="px-2 py-2 align-top"><input type="date" name="tgl_exp[]" id="e-0" min="<?= date('Y-m-d', strtotime('+1 day')) ?>" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly></td>
-                            <td class="px-2 py-2 align-top">
-                                <div id="sn-container-0" class="min-w-[130px]">
+                            <td class="px-1.5 py-2 align-top"><input type="text" name="no_batch[]" id="b-0" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly placeholder="Wajib obat"></td>
+                            <td class="px-1.5 py-2 align-top"><input type="date" name="tgl_exp[]" id="e-0" min="<?= date('Y-m-d', strtotime('+1 day')) ?>" class="w-full border border-zcBrd rounded-lg px-1 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly></td>
+                            <td class="px-1.5 py-2 align-top">
+                                <div id="sn-container-0" class="w-full">
                                     <input type="hidden" name="serial_number[]" id="s-0" value="">
-                                    <div id="sn-placeholder-0" class="text-[10px] text-slate-400 italic py-1.5 px-1 bg-slate-50 border border-dashed border-slate-200 rounded text-center">
+                                    <div id="sn-placeholder-0" class="text-[10px] text-slate-400 italic py-1.5 px-1 bg-slate-50 border border-dashed border-slate-200 rounded text-center whitespace-nowrap">
                                         — Khusus Alkes —
                                     </div>
                                     <div id="sn-list-0" class="space-y-1 hidden"></div>
                                 </div>
                             </td>
-                            <td class="px-2 py-2 align-top text-center"><button type="button" onclick="removeRow(0)" class="text-slate-300 hover:text-red-500 font-bold text-lg leading-none">&times;</button></td>
+                            <td class="px-1 py-2 align-top text-center"><button type="button" onclick="removeRow(0)" class="text-slate-300 hover:text-red-500 font-bold text-base leading-none">&times;</button></td>
                         </tr>
                     </tbody>
                 </table>
@@ -1622,28 +1643,54 @@ function syncQty(idx, source) {
     const rusakEl = document.getElementById('qty_rusak-' + idx);
     if (!pesanEl || !terimaEl || !rusakEl) return;
 
-    let pesan = parseInt(pesanEl.value, 10);
+    const rawPesan = (pesanEl.value || '').trim();
+    const rawTerima = (terimaEl.value || '').trim();
+    const rawRusak = (rusakEl.value || '').trim();
+
+    // Jika pengguna sedang menghapus untuk mengetik ulang (kosong), jangan paksa kalkulasi liar
+    if ((source === 'pesan' && rawPesan === '') ||
+        (source === 'terima' && rawTerima === '') ||
+        (source === 'rusak' && rawRusak === '')) {
+        calcSubtotal(idx);
+        return;
+    }
+
+    let pesan = parseInt(rawPesan, 10);
     if (isNaN(pesan) || pesan < 0) pesan = 0;
     
-    let terima = parseInt(terimaEl.value, 10);
+    let terima = parseInt(rawTerima, 10);
     if (isNaN(terima) || terima < 0) terima = 0;
 
-    let rusak = parseInt(rusakEl.value, 10);
+    let rusak = parseInt(rawRusak, 10);
     if (isNaN(rusak) || rusak < 0) rusak = 0;
 
     if (source === 'pesan') {
-        if (rusak === 0) {
-            terimaEl.value = pesan;
+        if (pesan >= rusak) {
+            terimaEl.value = pesan - rusak;
         } else {
-            terimaEl.value = Math.max(0, pesan - rusak);
+            terimaEl.value = pesan;
+            rusakEl.value = 0;
         }
     } else if (source === 'rusak') {
         if (pesan > 0) {
-            terimaEl.value = Math.max(0, pesan - rusak);
+            if (rusak > pesan) {
+                pesanEl.value = rusak;
+                terimaEl.value = 0;
+            } else {
+                terimaEl.value = Math.max(0, pesan - rusak);
+            }
+        } else {
+            pesanEl.value = terima + rusak;
         }
     } else if (source === 'terima') {
-        if (pesan > 0 && terima <= pesan) {
-            rusakEl.value = Math.max(0, pesan - terima);
+        if (pesan > 0) {
+            if (terima > pesan) {
+                pesanEl.value = terima + rusak;
+            } else {
+                rusakEl.value = Math.max(0, pesan - terima);
+            }
+        } else {
+            pesanEl.value = terima + rusak;
         }
     }
     calcSubtotal(idx);
@@ -1676,49 +1723,50 @@ function addRow() {
     tr.id = 'row-' + rC;
     tr.className = 'border-b border-zcBrd/50';
     tr.innerHTML = `
-        <td class="px-2 py-2 align-top">
+        <td class="px-1.5 py-2 align-top">
             <select name="id_variasi[]" id="sel-${rC}" data-row-idx="${rC}" required onchange="checkProduk(this, ${rC}); calcSubtotal(${rC});" class="select2-produk w-full border border-zcBrd rounded-lg px-2 py-1.5 text-xs">
                 ${getOptionsHtml()}
             </select>
-            
         </td>
-        <td class="px-2 py-2 align-top">
-            <div class="flex items-center gap-1">
-                <input type="number" name="qty_pesan[]" id="qty_pesan-${rC}" min="1" required placeholder="Pesan" oninput="syncQty(${rC}, 'pesan')" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs font-semibold">
-                <span id="badge-uom-${rC}" class="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-1 rounded whitespace-nowrap border border-slate-200">Dus</span>
+        <td class="px-1 py-2 align-top">
+            <input type="number" name="qty_pesan[]" id="qty_pesan-${rC}" min="1" required placeholder="0" oninput="syncQty(${rC}, 'pesan')" class="w-full border border-zcBrd rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-zc text-xs font-bold text-slate-800 text-center">
+            <div class="flex items-center justify-between text-[10px] mt-1 text-slate-500 font-semibold px-0.5">
+                <span>Sat:</span>
+                <span id="badge-uom-${rC}" class="font-bold text-slate-700 bg-slate-100 px-1 py-0.5 rounded border border-slate-200">Dus</span>
             </div>
         </td>
-        <td class="px-2 py-2 align-top bg-emerald-50/20">
-            <input type="number" name="qty_terima[]" id="qty_terima-${rC}" min="0" required placeholder="Baik" oninput="syncQty(${rC}, 'terima')" class="w-full border border-emerald-300 bg-white rounded-lg px-2 py-1.5 focus:outline-none focus:border-emerald-500 text-xs font-bold text-emerald-800">
-            <div class="text-[9px] text-emerald-600 mt-0.5">Masuk stok</div>
+        <td class="px-1 py-2 align-top bg-emerald-50/20">
+            <input type="number" name="qty_terima[]" id="qty_terima-${rC}" min="0" required placeholder="0" oninput="syncQty(${rC}, 'terima')" class="w-full border border-emerald-400 bg-white rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-emerald-600 text-xs font-bold text-emerald-800 text-center">
+            <div class="text-[10px] text-emerald-600 font-semibold text-center mt-1 whitespace-nowrap">Masuk stok</div>
         </td>
-        <td class="px-2 py-2 align-top bg-rose-50/20">
-            <input type="number" name="qty_rusak[]" id="qty_rusak-${rC}" min="0" value="0" placeholder="0" oninput="syncQty(${rC}, 'rusak')" class="w-full border border-rose-300 bg-white rounded-lg px-2 py-1.5 focus:outline-none focus:border-rose-500 text-xs font-bold text-rose-700">
-            <div class="text-[9px] text-rose-600 mt-0.5">Retur supplier</div>
+        <td class="px-1 py-2 align-top bg-rose-50/20">
+            <input type="number" name="qty_rusak[]" id="qty_rusak-${rC}" min="0" value="0" placeholder="0" oninput="syncQty(${rC}, 'rusak')" class="w-full border border-rose-300 bg-white rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-rose-500 text-xs font-bold text-rose-700 text-center">
+            <div class="text-[10px] text-rose-600 font-semibold text-center mt-1 whitespace-nowrap">Retur supplier</div>
         </td>
-        <td class="px-2 py-2 align-top">
+        <td class="px-1.5 py-2 align-top">
             <div class="relative">
-                <span class="absolute left-2.5 top-1.5 text-xs font-bold text-slate-400">Rp</span>
+                <span class="absolute left-2 top-1.5 text-xs font-bold text-slate-400">Rp</span>
                 <input type="text" inputmode="numeric" name="harga_beli[]" id="harga-${rC}" placeholder="0" oninput="formatRupiahInput(this); calcSubtotal(${rC});" 
-                    class="w-full pl-8 border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs font-semibold">
+                    class="w-full pl-7 pr-1.5 border border-zcBrd rounded-lg py-1.5 focus:outline-none focus:border-zc text-xs font-semibold">
             </div>
-            <div class="text-[9px] text-zcMut mt-0.5">Per 1 Satuan Besar</div>
+            <div class="text-[9px] text-zcMut mt-0.5 whitespace-nowrap">Per 1 Sat. Besar</div>
         </td>
-        <td class="px-2 py-2 align-top">
+        <td class="px-1.5 py-2 align-top">
             <div id="subtotal-${rC}" class="text-xs font-bold text-slate-800 pt-1.5 whitespace-nowrap">Rp 0</div>
-            <div class="text-[9px] text-zcMut">Subtotal Diterima</div>
+            <div class="text-[9px] text-zcMut whitespace-nowrap">Subtotal Diterima</div>
         </td>
-        <td class="px-2 py-2 align-top"><input type="text" name="no_batch[]" id="b-${rC}" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly placeholder="Wajib obat"></td>
-        <td class="px-2 py-2 align-top">
-            <div id="sn-container-${rC}" class="min-w-[130px]">
+        <td class="px-1.5 py-2 align-top"><input type="text" name="no_batch[]" id="b-${rC}" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly placeholder="Wajib obat"></td>
+        <td class="px-1.5 py-2 align-top"><input type="date" name="tgl_exp[]" id="e-${rC}" min="<?= date('Y-m-d', strtotime('+1 day')) ?>" class="w-full border border-zcBrd rounded-lg px-1 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly></td>
+        <td class="px-1.5 py-2 align-top">
+            <div id="sn-container-${rC}" class="w-full">
                 <input type="hidden" name="serial_number[]" id="s-${rC}" value="">
-                <div id="sn-placeholder-${rC}" class="text-[10px] text-slate-400 italic py-1.5 px-1 bg-slate-50 border border-dashed border-slate-200 rounded text-center">
+                <div id="sn-placeholder-${rC}" class="text-[10px] text-slate-400 italic py-1.5 px-1 bg-slate-50 border border-dashed border-slate-200 rounded text-center whitespace-nowrap">
                     — Khusus Alkes —
                 </div>
                 <div id="sn-list-${rC}" class="space-y-1 hidden"></div>
             </div>
         </td>
-        <td class="px-2 py-2 align-top text-center"><button type="button" onclick="removeRow(${rC})" class="text-slate-300 hover:text-red-500 font-bold text-lg leading-none">&times;</button></td>
+        <td class="px-1 py-2 align-top text-center"><button type="button" onclick="removeRow(${rC})" class="text-slate-300 hover:text-red-500 font-bold text-base leading-none">&times;</button></td>
     `;
     tbody.appendChild(tr);
     initSelect2('sel-' + rC);

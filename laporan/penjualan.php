@@ -96,18 +96,28 @@ foreach ($rawSales as $row) {
     $rasio = max(1, intval($row['rasio_konversi'] ?: 1));
     $qty = intval($row['qty']);
 
-    // Tentukan apakah transaksi menggunakan satuan besar (grosir) atau kecil (eceran)
-    $isGrosir = ($row['tipe_transaksi'] === 'ecommerce') || (floatval($row['harga_satuan']) == floatval($row['harga_jual_besar']));
+    // Tentukan klasifikasi Satuan Besar (Utuh Pabrikan) vs Satuan Kecil (Eceran Terbuka)
+    // 1. Alkes selalu merupakan Kemasan Besar (Utuh Pabrikan) karena tidak mengalami pembongkaran konversi (Rasio 1:1).
+    // 2. Obat E-Commerce selalu dalam Kemasan Besar (Box/Karton utuh pabrik).
+    // 3. Obat di POS: jika harga transaksi sama dengan harga besar maka Kemasan Besar, jika harga eceran maka Eceran Kecil.
+    $isAlkes = ($row['kategori'] === 'Alat Kesehatan');
+    $isGrosir = $isAlkes || ($row['tipe_transaksi'] === 'ecommerce') || (floatval($row['harga_satuan']) == floatval($row['harga_jual_besar']));
     
-    if ($isGrosir) {
+    if ($isAlkes) {
+        $satuanLabel = $row['satuan_besar'] ?: ($row['satuan_kecil'] ?: 'Unit');
+        $tipeSatuan = 'Satuan Besar (Alkes)';
+        $badgeSatuan = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+        $ekuivalenKecil = $qty;
+        $totalQtyGrosirBox += $qty;
+    } elseif ($isGrosir) {
         $satuanLabel = $row['satuan_besar'] ?: 'Box';
-        $tipeSatuan = 'Grosir (Besar)';
+        $tipeSatuan = 'Grosir (Kemasan Besar)';
         $badgeSatuan = 'bg-amber-50 text-amber-800 border-amber-200';
         $ekuivalenKecil = $qty * $rasio;
         $totalQtyGrosirBox += $qty;
     } else {
         $satuanLabel = $row['satuan_kecil'] ?: 'Pcs';
-        $tipeSatuan = 'Eceran (Kecil)';
+        $tipeSatuan = 'Eceran (Kemasan Kecil)';
         $badgeSatuan = 'bg-blue-50 text-blue-800 border-blue-200';
         $ekuivalenKecil = $qty;
         $totalQtyEceranPcs += $qty;
@@ -140,6 +150,12 @@ $summary = [
     'item_online' => $totalOnlineItems
 ];
 
+// Logika Visibilitas Satuan Eceran (Kemasan Kecil):
+// 1. Kategori Alat Kesehatan: Tidak memiliki pecahan eceran (selalu Satuan Besar/Utuh).
+// 2. Kanal E-Commerce: Hanya melayani pesanan Dus/Box Utuh (tidak melayani eceran terbuka).
+// 3. Eceran hanya relevan pada kategori Obat di kasir fisik POS.
+$hideEceran = ($kategori === 'Alat Kesehatan' || $kanal === 'ecommerce');
+
 // Pagination (Layar: 15 baris per halaman)
 $perPage = 15;
 $page = max(1, intval($_GET['page'] ?? 1));
@@ -148,10 +164,10 @@ $totalPages = max(1, (int)ceil($totalRecords / $perPage));
 if ($page > $totalPages) $page = $totalPages;
 $salesPageList = array_slice($salesRows, ($page - 1) * $perPage, $perPage);
 
-layoutHead('Laporan Penjualan Barang');
+layoutHead('Laporan Penjualan Barang Omnichannel');
 layoutBodyOpen();
 layoutSidebar('laporan_penjualan');
-layoutHeader('Laporan Penjualan Barang', 'Rekapitulasi kuantitas fisik barang terjual per transaksi, batch, dan satuan UOM (Omnichannel).');
+layoutHeader('Laporan Penjualan Barang Omnichannel', 'Rekapitulasi kuantitas fisik barang terjual per transaksi POS, E-Commerce, dan pelacakan batch FEFO.');
 ?>
 
 <style>
@@ -199,7 +215,13 @@ layoutHeader('Laporan Penjualan Barang', 'Rekapitulasi kuantitas fisik barang te
 <div class="print:hidden mb-5 p-4 rounded-xl border bg-blue-50 border-blue-200 text-blue-800 text-xs flex gap-3 items-start">
     <svg class="w-5 h-5 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
     <div>
-        <strong>Mode Inventori Fisik & Pelacakan Batch Aktif</strong>: Laporan ini melacak kuantitas fisik barang keluar berdasarkan <strong>Nomor Batch / Sub-Batch</strong>, jenis kemasan (<strong>Grosir vs Eceran</strong>), dan kanal penjualan (POS / E-Commerce).
+        <?php if ($kategori === 'Alat Kesehatan'): ?>
+            <strong>Mode Alat Kesehatan Aktif</strong>: Seluruh unit Alat Kesehatan dipasarkan dalam <strong>Satuan Besar (Kemasan Utuh Pabrik)</strong> ber-Serial Number tanpa pembongkaran eceran.
+        <?php elseif ($kanal === 'ecommerce'): ?>
+            <strong>Mode Kanal E-Commerce Aktif</strong>: Transaksi daring hanya melayani <strong>Kemasan Besar (Dus/Box Utuh)</strong>. Penjualan eceran terurai hanya dilayani melalui kasir luring (POS).
+        <?php else: ?>
+            <strong>Mode Inventori Fisik &amp; Pelacakan Batch Aktif</strong>: Laporan ini melacak kuantitas fisik barang keluar berdasarkan <strong>Nomor Batch / Sub-Batch / Serial Number</strong>, jenis kemasan (<strong>Kemasan Besar vs Eceran</strong>), dan kanal penjualan (POS / E-Commerce).
+        <?php endif; ?>
     </div>
 </div>
 
@@ -250,7 +272,7 @@ layoutHeader('Laporan Penjualan Barang', 'Rekapitulasi kuantitas fisik barang te
 </form>
 
 <!-- Summary Stats Cards (Screen Only) -->
-<div class="print:hidden grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+<div class="print:hidden grid grid-cols-1 sm:grid-cols-2 <?= $hideEceran ? 'md:grid-cols-3' : 'md:grid-cols-4' ?> gap-4 mb-6">
     <div class="bg-white rounded-2xl border border-zcBrd p-5 shadow-sm">
         <div class="text-xs font-bold text-zcMut mb-1">Total Transaksi Selesai</div>
         <div class="text-2xl font-extrabold text-zcTxt"><?= number_format($summary['total_transaksi']) ?></div>
@@ -259,18 +281,20 @@ layoutHeader('Laporan Penjualan Barang', 'Rekapitulasi kuantitas fisik barang te
     <div class="bg-white rounded-2xl border border-zcBrd p-5 shadow-sm">
         <div class="text-xs font-bold text-zcMut mb-1">Total Fisik Terjual</div>
         <div class="text-2xl font-extrabold text-blue-600"><?= number_format($summary['total_fisik_semua']) ?> <span class="text-xs font-medium">unit fisik</span></div>
-        <span class="text-[10px] text-zcMut">Ekuivalen Satuan Terkecil</span>
+        <span class="text-[10px] text-zcMut"><?= ($kategori === 'Alat Kesehatan') ? 'Total Kuantitas Fisik Alkes' : 'Ekuivalen Satuan Terkecil' ?></span>
     </div>
     <div class="bg-white rounded-2xl border border-zcBrd p-5 shadow-sm">
-        <div class="text-xs font-bold text-amber-700 mb-1">Terjual Grosir (Kemasan Besar)</div>
-        <div class="text-2xl font-extrabold text-amber-600"><?= number_format($summary['total_grosir_box']) ?> <span class="text-xs font-medium">Box/Karton</span></div>
-        <span class="text-[10px] text-amber-800">Kemasan Utuh Pabrik</span>
+        <div class="text-xs font-bold text-amber-700 mb-1"><?= ($kategori === 'Alat Kesehatan') ? 'Terjual Satuan Besar (Unit)' : 'Terjual Kemasan Besar (Utuh)' ?></div>
+        <div class="text-2xl font-extrabold text-amber-600"><?= number_format($summary['total_grosir_box']) ?> <span class="text-xs font-medium"><?= ($kategori === 'Alat Kesehatan') ? 'Unit' : 'Box/Unit' ?></span></div>
+        <span class="text-[10px] text-amber-800"><?= ($kategori === 'Alat Kesehatan') ? 'Unit Alkes Bersegel Pabrik (Serial Number)' : 'Dus Obat Utuh &amp; Unit Alkes' ?></span>
     </div>
+    <?php if (!$hideEceran): ?>
     <div class="bg-white rounded-2xl border border-zcBrd p-5 shadow-sm">
         <div class="text-xs font-bold text-emerald-700 mb-1">Terjual Eceran (Kemasan Kecil)</div>
-        <div class="text-2xl font-extrabold text-emerald-600"><?= number_format($summary['total_eceran_pcs']) ?> <span class="text-xs font-medium">Botol/Strip</span></div>
-        <span class="text-[10px] text-emerald-800">Hasil Konversi Kasir Luring</span>
+        <div class="text-2xl font-extrabold text-emerald-600"><?= number_format($summary['total_eceran_pcs']) ?> <span class="text-xs font-medium">Strip/Botol</span></div>
+        <span class="text-[10px] text-emerald-800">Hasil Pembongkaran Konversi Obat (Kasir POS)</span>
     </div>
+    <?php endif; ?>
 </div>
 
 <!-- Screen View: Paginated Table -->
@@ -395,7 +419,7 @@ layoutHeader('Laporan Penjualan Barang', 'Rekapitulasi kuantitas fisik barang te
             <img src="/inventory_zencare/gambar/Logo.png" alt="Logo ZenCare" style="height: 48px; width: auto; object-fit: contain;" onerror="this.src='../gambar/Logo.png'">
             <div>
                 <h1 style="font-size: 16pt; font-weight: 800; color: #0f2d5a; margin: 0; line-height: 1.1;">ZENCARE MEDICAL</h1>
-                <p style="font-size: 8.5pt; color: #475569; margin: 3px 0 0 0; font-weight: 600;">Distributor Alat Kesehatan dan Obat Omnichannel</p>
+                <p style="font-size: 8.5pt; color: #475569; margin: 3px 0 0 0; font-weight: 600;">Toko Alat Kesehatan dan Obat Omnichannel</p>
             </div>
         </div>
         <div style="text-align: right; font-size: 8pt; color: #64748b; line-height: 1.4;">
@@ -407,9 +431,12 @@ layoutHeader('Laporan Penjualan Barang', 'Rekapitulasi kuantitas fisik barang te
 
     <!-- Judul & Metadata Laporan -->
     <div style="text-align: center; margin-bottom: 12px;">
-        <h2 style="font-size: 12pt; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
-            LAPORAN REKAPITULASI PENJUALAN FISIK BARANG &amp; BATCH
+        <h2 style="font-size: 13pt; font-weight: 900; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
+            LAPORAN PENJUALAN BARANG OMNICHANNEL
         </h2>
+        <div style="font-size: 8pt; color: #475569; margin-top: 2px; font-weight: 600; text-transform: uppercase;">
+            Rekapitulasi Fisik Barang Terjual &amp; Pelacakan Batch FEFO
+        </div>
         <div style="font-size: 8.5pt; color: #334155; margin-top: 4px;">
             Periode: <strong><?= date('d/m/Y', strtotime($dari)) ?></strong> s/d <strong><?= date('d/m/Y', strtotime($sampai)) ?></strong>
             &nbsp;|&nbsp; Kategori: <strong><?= htmlspecialchars($kategori === 'semua' ? 'Semua (Obat & Alkes)' : $kategori) ?></strong>
@@ -420,22 +447,24 @@ layoutHeader('Laporan Penjualan Barang', 'Rekapitulasi kuantitas fisik barang te
     <!-- Ringkasan Statistik Cetak -->
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 8pt;">
         <tr>
-            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 25%;">
+            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: <?= $hideEceran ? '33.33%' : '25%' ?>;">
                 <span style="color: #64748b; font-size: 7.5pt; display: block;">Total Transaksi:</span>
                 <strong style="font-size: 9.5pt; color: #0f172a;"><?= number_format($summary['total_transaksi']) ?> faktur</strong>
             </td>
-            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 25%;">
+            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: <?= $hideEceran ? '33.33%' : '25%' ?>;">
                 <span style="color: #64748b; font-size: 7.5pt; display: block;">Total Fisik Terjual:</span>
                 <strong style="font-size: 9.5pt; color: #1d4ed8;"><?= number_format($summary['total_fisik_semua']) ?> unit fisik</strong>
             </td>
-            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 25%;">
-                <span style="color: #64748b; font-size: 7.5pt; display: block;">Terjual Grosir (Kemasan Besar):</span>
-                <strong style="font-size: 9.5pt; color: #b45309;"><?= number_format($summary['total_grosir_box']) ?> Box/Karton</strong>
+            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: <?= $hideEceran ? '33.33%' : '25%' ?>;">
+                <span style="color: #64748b; font-size: 7.5pt; display: block;"><?= ($kategori === 'Alat Kesehatan') ? 'Terjual Satuan Besar (Unit):' : 'Terjual Kemasan Besar (Grosir):' ?></span>
+                <strong style="font-size: 9.5pt; color: #b45309;"><?= number_format($summary['total_grosir_box']) ?> <?= ($kategori === 'Alat Kesehatan') ? 'Unit' : 'Box/Karton' ?></strong>
             </td>
+            <?php if (!$hideEceran): ?>
             <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 25%;">
                 <span style="color: #64748b; font-size: 7.5pt; display: block;">Terjual Eceran (Kemasan Kecil):</span>
                 <strong style="font-size: 9.5pt; color: #047857;"><?= number_format($summary['total_eceran_pcs']) ?> Botol/Pcs</strong>
             </td>
+            <?php endif; ?>
         </tr>
     </table>
 
@@ -480,7 +509,7 @@ layoutHeader('Laporan Penjualan Barang', 'Rekapitulasi kuantitas fisik barang te
                         <?= htmlspecialchars($s['batch_info']) ?>
                     </td>
                     <td style="border: 1px solid #94a3b8; padding: 4px; text-align: center; font-size: 7pt;">
-                        <?= $s['is_grosir'] ? 'Grosir' : 'Eceran' ?>
+                        <?= $s['kategori'] === 'Alat Kesehatan' ? 'Satuan Besar' : ($s['is_grosir'] ? 'Grosir' : 'Eceran') ?>
                     </td>
                     <td style="border: 1px solid #94a3b8; padding: 4px; text-align: right; font-weight: bold;">
                         <?= number_format($s['qty']) ?> <?= htmlspecialchars($s['satuan_label']) ?>
@@ -509,7 +538,7 @@ layoutHeader('Laporan Penjualan Barang', 'Rekapitulasi kuantitas fisik barang te
 
     <!-- Footer Dokumen Resmi Cetak -->
     <div style="margin-top: 14px; display: flex; justify-content: space-between; font-size: 7.5pt; color: #64748b; border-top: 1px solid #cbd5e1; padding-top: 4px; page-break-inside: avoid;">
-        <span>ZenCare Medical Inventory &bull; Laporan Penjualan Fisik &amp; Pelacakan Batch</span>
+        <span>ZenCare Medical Inventory &bull; Laporan Penjualan Barang Omnichannel</span>
         <span>Dokumen Resmi Sistem Inventori ZenCare Medical</span>
     </div>
 </div>

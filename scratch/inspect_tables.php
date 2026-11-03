@@ -1,9 +1,9 @@
 <?php
-require 'config/koneksi.php';
-$tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
-echo "=== LIST OF ALL TABLES ===\n";
-foreach ($tables as $t) {
-    $count = $pdo->query("SELECT COUNT(*) FROM `$t`")->fetchColumn();
-    echo "- $t ($count rows)\n";
-}
+require __DIR__ . '/../config/koneksi.php';
+
+echo "=== unit_serial ===\n";
+print_r($pdo->query("DESCRIBE unit_serial")->fetchAll(PDO::FETCH_ASSOC));
+
+
+
 

@@ -79,8 +79,14 @@ if ($id_variasi > 0) {
     $allLogsBesar = [];
     $allLogsKecil = [];
     foreach ($allLogs as $log) {
-        if ($log['satuan_tipe'] === 'besar') $allLogsBesar[] = $log;
-        else $allLogsKecil[] = $log;
+        if ($produkData['kategori'] === 'Alat Kesehatan') {
+            // Seluruh mutasi Alkes ditampilkan lengkap pada Kartu Stok Alkes (Kemasan Utuh)
+            $allLogsBesar[] = $log;
+            $allLogsKecil[] = $log;
+        } else {
+            if ($log['satuan_tipe'] === 'besar') $allLogsBesar[] = $log;
+            else $allLogsKecil[] = $log;
+        }
     }
     
     // Helper function untuk memformat tampilan batch pada tabel kartu stok (MURNI NOMOR BATCH SAJA, TANPA KURUNG / SATUAN)
@@ -398,10 +404,12 @@ layoutHeader('Kartu Stok Barang', 'Log mutasi fisik keluar/masuk (Pusat - Muhart
 <?php if ($id_variasi > 0 && $produkData): ?>
 <!-- TAB NAVIGATION -->
 <div class="flex border-b border-slate-200 mb-6 print:hidden">
-    <?php if ($produkData['kategori'] !== 'Alat Kesehatan'): ?>
+    <?php if ($produkData['kategori'] === 'Alat Kesehatan'): ?>
+    <button class="px-6 py-3 font-bold text-sm border-b-4 border-emerald-600 text-emerald-800 transition">Kartu Stok Alat Kesehatan (Kemasan Utuh Pabrik - Serial Number)</button>
+    <?php else: ?>
     <button onclick="switchTab('besar')" id="tab_btn_besar" class="px-6 py-3 font-bold text-sm border-b-4 border-amber-600 text-amber-700 transition">Kartu Stok Gudang (Satuan Besar)</button>
+    <button onclick="switchTab('kecil')" id="tab_btn_kecil" class="px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition">Kartu Stok Etalase (Satuan Kecil)</button>
     <?php endif; ?>
-    <button onclick="switchTab('kecil')" id="tab_btn_kecil" class="px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition"><?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Kartu Stok Alat Kesehatan (Unit Fisik)' : 'Kartu Stok Etalase (Satuan Kecil)' ?></button>
 </div>
 <div id="print-container" class="space-y-8 print:space-y-0 w-full">
     <?php if ($produkData['kategori'] !== 'Alat Kesehatan'): ?>

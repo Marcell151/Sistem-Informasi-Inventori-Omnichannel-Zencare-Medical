@@ -125,17 +125,12 @@ foreach ($rawRows as $r) {
             }
         } else {
             $boxUtuh = $pcs;
-            $eceranKonversi = $pcs;
+            $eceranKonversi = 0;
         }
     } else {
-        // Alat Kesehatan
-        if ($rasio > 1) {
-            $boxUtuh = (int) floor($pcs / $rasio);
-            $eceranKonversi = (int) ($pcs % $rasio);
-        } else {
-            $boxUtuh = $pcs;
-            $eceranKonversi = $pcs;
-        }
+        // Alat Kesehatan: Seluruh unit merupakan Satuan Besar (Kemasan Utuh Pabrikan / SN), tidak ada konversi eceran
+        $boxUtuh = $pcs;
+        $eceranKonversi = 0;
     }
 
     if ($pcs <= 0) {
@@ -372,14 +367,14 @@ layoutHeader('Ketersediaan Stok Fisik', 'Pemantauan persediaan berbasis Produk I
         <span class="text-[10px] text-zcMut block mt-0.5">SKU Aktif</span>
     </div>
     <div class="bg-white border border-zcBrd rounded-2xl p-4 shadow-sm">
-        <span class="text-[11px] font-semibold text-amber-700 block mb-1">Satuan Besar (Belum Konversi)</span>
+        <span class="text-[11px] font-semibold text-amber-700 block mb-1">Satuan Besar</span>
         <span class="text-xl font-bold text-amber-600"><?= number_format($totalBoxUtuhAll) ?></span>
-        <span class="text-[10px] text-amber-800 block mt-0.5">Kemasan Pabrik Utuh</span>
+        <span class="text-[10px] text-amber-800 block mt-0.5">Dus Obat Utuh &amp; Unit Alkes</span>
     </div>
     <div class="bg-white border border-zcBrd rounded-2xl p-4 shadow-sm">
-        <span class="text-[11px] font-semibold text-emerald-700 block mb-1">Satuan Kecil (Sudah Konversi)</span>
+        <span class="text-[11px] font-semibold text-emerald-700 block mb-1">Satuan Kecil (Konversi)</span>
         <span class="text-xl font-bold text-emerald-600"><?= number_format($totalEceranKonversiAll) ?></span>
-        <span class="text-[10px] text-emerald-800 block mt-0.5">Siap Jual Kasir (Eceran)</span>
+        <span class="text-[10px] text-emerald-800 block mt-0.5">Eceran Obat Siap Jual Kasir</span>
     </div>
     <div class="bg-white border border-zcBrd rounded-2xl p-4 shadow-sm col-span-2 sm:col-span-1">
         <span class="text-[11px] font-semibold text-rose-600 block mb-1">Item Kritis / Habis</span>
@@ -437,8 +432,10 @@ layoutHeader('Ketersediaan Stok Fisik', 'Pemantauan persediaan berbasis Produk I
                                 <span><?= count($pi['variasi_list']) ?> variasi SKU</span>
                                 <span>&bull;</span>
                                 <span>Satuan Besar: <strong class="text-amber-700"><?= number_format($pi['total_box_utuh']) ?> <?= htmlspecialchars($uomBesar) ?></strong></span>
+                                <?php if ($pi['kategori'] !== 'Alat Kesehatan'): ?>
                                 <span>&bull;</span>
                                 <span>Satuan Kecil: <strong class="text-emerald-700"><?= number_format($pi['total_eceran_konversi']) ?> <?= htmlspecialchars($uomKecil) ?></strong></span>
+                                <?php endif; ?>
                                 <span>&bull;</span>
                                 <span>Total Fisik: <strong class="text-blue-700"><?= number_format($pi['total_pcs']) ?> <?= htmlspecialchars($uomKecil) ?></strong></span>
                             </div>
@@ -499,8 +496,10 @@ layoutHeader('Ketersediaan Stok Fisik', 'Pemantauan persediaan berbasis Produk I
                                         <?php endif; ?>
                                     </td>
                                     <td class="py-2 px-3 text-right font-bold text-emerald-700 align-top whitespace-nowrap">
-                                        <?= number_format($v['stok_eceran_konversi']) ?> <span class="font-normal text-[10px] text-zcMut"><?= htmlspecialchars($v['satuan_kecil'] ?: 'Pcs') ?></span>
-                                        <?php if ($v['rasio_konversi'] > 1): ?>
+                                        <?php if ($v['kategori'] === 'Alat Kesehatan' || $v['rasio_konversi'] <= 1): ?>
+                                            <span class="text-slate-400 font-normal italic">-</span>
+                                        <?php else: ?>
+                                            <?= number_format($v['stok_eceran_konversi']) ?> <span class="font-normal text-[10px] text-zcMut"><?= htmlspecialchars($v['satuan_kecil'] ?: 'Pcs') ?></span>
                                             <div class="text-[10px] font-normal text-emerald-600 mt-0.5">(Eceran Siap Jual)</div>
                                         <?php endif; ?>
                                     </td>
@@ -602,12 +601,12 @@ layoutHeader('Ketersediaan Stok Fisik', 'Pemantauan persediaan berbasis Produk I
                 <strong style="font-size: 9.5pt; color: #0f172a;"><?= number_format($totalVariasiCount) ?> SKU</strong>
             </td>
             <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 20%;">
-                <span style="color: #64748b; font-size: 7pt; display: block;">Satuan Besar (Belum Konversi):</span>
-                <strong style="font-size: 9.5pt; color: #b45309;"><?= number_format($totalBoxUtuhAll) ?> Satuan Besar</strong>
+                <span style="color: #64748b; font-size: 7pt; display: block;">Satuan Besar:</span>
+                <strong style="font-size: 9.5pt; color: #b45309;"><?= number_format($totalBoxUtuhAll) ?> Dus/Unit</strong>
             </td>
             <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 20%;">
-                <span style="color: #64748b; font-size: 7pt; display: block;">Satuan Kecil (Sudah Konversi):</span>
-                <strong style="font-size: 9.5pt; color: #047857;"><?= number_format($totalEceranKonversiAll) ?> Satuan Kecil</strong>
+                <span style="color: #64748b; font-size: 7pt; display: block;">Satuan Kecil (Konversi):</span>
+                <strong style="font-size: 9.5pt; color: #047857;"><?= number_format($totalEceranKonversiAll) ?> Eceran</strong>
             </td>
             <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 20%;">
                 <span style="color: #64748b; font-size: 7pt; display: block;">Total Fisik Terkecil:</span>
@@ -688,7 +687,11 @@ layoutHeader('Ketersediaan Stok Fisik', 'Pemantauan persediaan berbasis Produk I
                             <?= number_format($v['stok_box_utuh']) ?> <span style="font-size: 6.5pt; color: #64748b;"><?= htmlspecialchars($v['satuan_besar'] ?: 'Box') ?></span>
                         </td>
                         <td style="border: 1px solid #94a3b8; padding: 3px; text-align: right;">
-                            <?= number_format($v['stok_eceran_konversi']) ?> <span style="font-size: 6.5pt; color: #64748b;"><?= htmlspecialchars($v['satuan_kecil'] ?: 'Pcs') ?></span>
+                            <?php if ($v['kategori'] === 'Alat Kesehatan' || $v['rasio_konversi'] <= 1): ?>
+                                <span style="color: #94a3b8;">-</span>
+                            <?php else: ?>
+                                <?= number_format($v['stok_eceran_konversi']) ?> <span style="font-size: 6.5pt; color: #64748b;"><?= htmlspecialchars($v['satuan_kecil'] ?: 'Pcs') ?></span>
+                            <?php endif; ?>
                         </td>
                         <td style="border: 1px solid #94a3b8; padding: 3px; text-align: right; font-weight: bold; color: #1d4ed8;">
                             <?= number_format($v['stok_pcs']) ?> <span style="font-size: 6.5pt; color: #64748b;"><?= htmlspecialchars($v['satuan_kecil'] ?: 'Pcs') ?></span>

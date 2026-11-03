@@ -56,7 +56,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'cancel_order') {
-    $cancelInvoice = $_POST['no_invoice'];
+    $cancelInvoice = $_POST['no_invoice'] ?? '';
+    $alasanKategori = trim($_POST['alasan_kategori'] ?? '');
+    $alasanDetail   = trim($_POST['alasan_detail'] ?? '');
+    
+    if ($alasanKategori === 'Lainnya') {
+        $finalReason = !empty($alasanDetail) ? 'Lainnya: ' . $alasanDetail : 'Lainnya';
+    } elseif (!empty($alasanKategori)) {
+        $finalReason = $alasanKategori . (!empty($alasanDetail) ? ' (' . $alasanDetail . ')' : '');
+    } else {
+        $finalReason = 'Dibatalkan oleh Pelanggan';
+    }
+
     try {
         $pdo->beginTransaction();
         
@@ -71,14 +82,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             throw new Exception("Hanya pesanan berstatus Menunggu Pembayaran yang dapat dibatalkan.");
         }
 
-        // Batalkan dan pulihkan seluruh stok toko, stok batch FEFO, dan unit serial
-        batalkanSatuPesananInternal($pdo, $orderToCancel['id']);
+        // Batalkan dan pulihkan seluruh stok toko, stok batch FEFO, dan unit serial beserta pencatatan alasan
+        batalkanSatuPesananInternal($pdo, $orderToCancel['id'], $finalReason, 'Pelanggan');
 
         $pdo->commit();
-        $successMsg = "Pesanan $cancelInvoice berhasil dibatalkan dan seluruh stok reserved telah dikembalikan.";
+        $successMsg = "Pesanan $cancelInvoice berhasil dibatalkan. Alasan: \"$finalReason\". Seluruh stok barang telah dikembalikan.";
     } catch (Exception $e) {
         $pdo->rollBack();
         $errorMsg = "Gagal membatalkan pesanan: " . $e->getMessage();
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'request_cancel') {
+    $reqInvoice = $_POST['no_invoice'] ?? '';
+    $alasanKategori = trim($_POST['alasan_kategori'] ?? '');
+    $alasanDetail   = trim($_POST['alasan_detail'] ?? '');
+    
+    if ($alasanKategori === 'Lainnya') {
+        $finalReason = !empty($alasanDetail) ? 'Lainnya: ' . $alasanDetail : 'Lainnya';
+    } elseif (!empty($alasanKategori)) {
+        $finalReason = $alasanKategori . (!empty($alasanDetail) ? ' (' . $alasanDetail . ')' : '');
+    } else {
+        $finalReason = 'Pengajuan pembatalan oleh Pelanggan';
+    }
+
+    try {
+        $stmtCek = $pdo->prepare("SELECT id, status_pesanan FROM penjualan WHERE no_invoice = ? AND id_user = ?");
+        $stmtCek->execute([$reqInvoice, $userId]);
+        $ord = $stmtCek->fetch();
+
+        if (!$ord) throw new Exception("Pesanan tidak ditemukan.");
+        if ($ord['status_pesanan'] !== 'Diproses') {
+            throw new Exception("Pengajuan pembatalan hanya dapat dilakukan untuk pesanan yang sedang diproses.");
+        }
+
+        $pdo->prepare("UPDATE penjualan SET request_batal = 1, request_batal_alasan = ?, request_batal_waktu = NOW() WHERE id = ?")
+            ->execute([$finalReason, $ord['id']]);
+
+        $successMsg = "Permohonan pembatalan pesanan $reqInvoice berhasil dikirim! Menunggu konfirmasi peninjauan dari Admin toko.";
+    } catch (Exception $e) {
+        $errorMsg = "Gagal mengajukan pembatalan: " . $e->getMessage();
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'batal_request_cancel') {
+    $reqInvoice = $_POST['no_invoice'] ?? '';
+    try {
+        $pdo->prepare("UPDATE penjualan SET request_batal = 0, request_batal_alasan = NULL, request_batal_waktu = NULL WHERE no_invoice = ? AND id_user = ?")
+            ->execute([$reqInvoice, $userId]);
+        $successMsg = "Permohonan pembatalan untuk pesanan $reqInvoice berhasil ditarik kembali (pesanan tetap diproses).";
+    } catch (Exception $e) {
+        $errorMsg = "Gagal membatalkan permohonan: " . $e->getMessage();
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'selesai_order') {
     $selesaiInvoice = $_POST['no_invoice'];
@@ -342,13 +392,9 @@ if (!empty($orderIds)) {
                                     <button onclick="lanjutkanPembayaran('<?= htmlspecialchars($ord['snap_token']) ?>', '<?= htmlspecialchars($ord['no_invoice']) ?>')" class="px-2 py-0.5 bg-zc border border-zc hover:bg-zcHv text-white text-[10px] font-bold rounded-md shadow-2xs transition flex items-center gap-1">
                                         Bayar
                                     </button>
-                                    <form method="POST" class="m-0 p-0" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini?');">
-                                        <input type="hidden" name="action" value="cancel_order">
-                                        <input type="hidden" name="no_invoice" value="<?= htmlspecialchars($ord['no_invoice']) ?>">
-                                        <button type="submit" class="px-2 py-0.5 bg-white border border-rose-200 hover:border-rose-500 text-rose-500 text-[10px] font-bold rounded-md shadow-2xs transition flex items-center gap-1">
-                                            Batal
-                                        </button>
-                                    </form>
+                                    <button type="button" onclick="bukaModalBatalCustomer('<?= htmlspecialchars($ord['no_invoice']) ?>')" class="px-2 py-0.5 bg-white border border-rose-200 hover:border-rose-500 text-rose-500 text-[10px] font-bold rounded-md shadow-2xs transition flex items-center gap-1">
+                                        Batal
+                                    </button>
                                 <?php elseif (in_array($status, ['Dikirim', 'Siap Diambil'])): ?>
                                     <form method="POST" class="m-0 p-0" onsubmit="return confirm('Apakah Anda yakin telah menerima pesanan ini dengan baik?');">
                                         <input type="hidden" name="action" value="selesai_order">
@@ -357,6 +403,24 @@ if (!empty($orderIds)) {
                                             Pesanan Diterima
                                         </button>
                                     </form>
+                                    <a href="../pos/cetak_invoice.php?no_invoice=<?= urlencode($ord['no_invoice']) ?>" target="_blank"
+                                       class="px-2 py-0.5 bg-white border border-slate-200 hover:border-zc text-zc text-[10px] font-bold rounded-md shadow-2xs transition flex items-center gap-1">
+                                        Struk
+                                    </a>
+                                <?php elseif ($status === 'Diproses'): ?>
+                                    <?php if (!empty($ord['request_batal'])): ?>
+                                        <form method="POST" class="m-0 p-0" onsubmit="return confirm('Tarik kembali permohonan pembatalan?');">
+                                            <input type="hidden" name="action" value="batal_request_cancel">
+                                            <input type="hidden" name="no_invoice" value="<?= htmlspecialchars($ord['no_invoice']) ?>">
+                                            <button type="submit" title="Tarik pengajuan pembatalan" class="px-2 py-0.5 bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 text-[10px] font-bold rounded-md shadow-2xs transition flex items-center gap-1">
+                                                Tarik Batal
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <button type="button" onclick="bukaModalRequestBatal('<?= htmlspecialchars($ord['no_invoice']) ?>')" class="px-2 py-0.5 bg-white border border-slate-300 hover:border-rose-400 hover:text-rose-600 text-slate-600 text-[10px] font-bold rounded-md shadow-2xs transition flex items-center gap-1">
+                                            Ajukan Batal
+                                        </button>
+                                    <?php endif; ?>
                                     <a href="../pos/cetak_invoice.php?no_invoice=<?= urlencode($ord['no_invoice']) ?>" target="_blank"
                                        class="px-2 py-0.5 bg-white border border-slate-200 hover:border-zc text-zc text-[10px] font-bold rounded-md shadow-2xs transition flex items-center gap-1">
                                         Struk
@@ -387,6 +451,33 @@ if (!empty($orderIds)) {
                             </div>
                             <div class="flex items-center gap-1 self-start sm:self-auto font-mono font-black text-xs px-2.5 py-0.5 rounded-lg bg-amber-200/70 text-amber-950 countdown-timer shrink-0" data-seconds="<?= $sisaDetik ?>">
                                 <span class="countdown-text">--:--:--</span>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if ($status === 'Diproses' && !empty($ord['request_batal'])): ?>
+                        <div class="mt-2.5 mb-1 p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-[11px] flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
+                            <div class="flex items-start gap-2">
+                                <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                <div>
+                                    <span class="font-bold">Permohonan Pembatalan Sedang Ditinjau Admin:</span> "<?= htmlspecialchars($ord['request_batal_alasan']) ?>"
+                                    <span class="text-amber-700 block text-[10px] mt-0.5">Admin toko sedang memeriksa status fisik paket Anda di meja pengemasan.</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5 self-start sm:self-auto shrink-0">
+                                <a href="https://wa.me/6281234567890?text=<?= urlencode('Halo Admin ZenCare, saya ingin konfirmasi permohonan pembatalan pesanan #' . $ord['no_invoice'] . ' karena: ' . $ord['request_batal_alasan']) ?>" target="_blank" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded shadow-2xs transition flex items-center gap-1">
+                                    WhatsApp Admin
+                                </a>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if ($status === 'Dibatalkan'): ?>
+                        <div class="mt-2.5 mb-1 p-2.5 rounded-xl bg-rose-50/90 border border-rose-200 text-rose-900 text-[11px] flex items-start gap-2 shadow-2xs">
+                            <svg class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            <div class="leading-snug">
+                                <span class="font-bold">Pesanan Dibatalkan:</span> <?= htmlspecialchars($ord['alasan_batal'] ?: 'Pesanan dibatalkan.') ?>
+                                <span class="text-rose-600 block text-[10px] mt-0.5">Dibatalkan oleh: <strong><?= htmlspecialchars($ord['dibatalkan_oleh'] ?: 'Pelanggan/Sistem') ?></strong><?= !empty($ord['waktu_batal']) ? ' pada ' . date('d/m/Y H:i', strtotime($ord['waktu_batal'])) . ' WIB' : '' ?></span>
                             </div>
                         </div>
                         <?php endif; ?>
@@ -541,6 +632,169 @@ if (!empty($orderIds)) {
         update();
     }
     document.addEventListener('DOMContentLoaded', startOrderCountdowns);
+
+    function bukaModalBatalCustomer(invoice) {
+        Swal.fire({
+            title: 'Batalkan Pesanan #' + invoice + '?',
+            html: `
+                <div class="text-left text-xs text-slate-700">
+                    <p class="mb-3 text-slate-500 font-medium">Pilih alasan mengapa Anda ingin membatalkan pesanan ini:</p>
+                    <div class="space-y-2 mb-3">
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input type="radio" name="swal_alasan" value="Ingin mengubah rincian pesanan" class="text-zc focus:ring-zc" checked onchange="toggleSwalLainnya(false)">
+                            <span class="font-medium text-slate-700">Ingin mengubah rincian pesanan (varian/jumlah/alamat)</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input type="radio" name="swal_alasan" value="Berubah pikiran / Salah pesan" class="text-zc focus:ring-zc" onchange="toggleSwalLainnya(false)">
+                            <span class="font-medium text-slate-700">Berubah pikiran / Salah pesan produk</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input type="radio" name="swal_alasan" value="Waktu pengiriman atau ongkos kirim tidak sesuai" class="text-zc focus:ring-zc" onchange="toggleSwalLainnya(false)">
+                            <span class="font-medium text-slate-700">Waktu pengiriman atau ongkos kirim tidak sesuai</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input type="radio" name="swal_alasan" value="Lainnya" class="text-zc focus:ring-zc" onchange="toggleSwalLainnya(true)">
+                            <span class="font-medium text-slate-700">Alasan lainnya...</span>
+                        </label>
+                    </div>
+                    <div id="swal_lainnya_box" class="hidden">
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1">Tuliskan alasan pembatalan: *</label>
+                        <textarea id="swal_alasan_detail" rows="2" placeholder="Tuliskan keterangan singkat..." class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:border-zc"></textarea>
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e11d48',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Batalkan Pesanan',
+            cancelButtonText: 'Kembali',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-xl font-bold text-xs px-4 py-2',
+                cancelButton: 'rounded-xl font-bold text-xs px-4 py-2'
+            },
+            preConfirm: () => {
+                const selected = document.querySelector('input[name="swal_alasan"]:checked');
+                if (!selected) {
+                    Swal.showValidationMessage('Harap pilih salah satu alasan pembatalan.');
+                    return false;
+                }
+                const kategori = selected.value;
+                const detail = (document.getElementById('swal_alasan_detail')?.value || '').trim();
+                if (kategori === 'Lainnya' && !detail) {
+                    Swal.showValidationMessage('Harap tuliskan alasan pembatalan pada kolom teks.');
+                    return false;
+                }
+                return { kategori, detail };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('cancel_invoice_inp').value = invoice;
+                document.getElementById('cancel_kategori_inp').value = result.value.kategori;
+                document.getElementById('cancel_detail_inp').value = result.value.detail;
+                document.getElementById('form-cancel-customer').submit();
+            }
+        });
+    }
+
+    function toggleSwalLainnya(show) {
+        const box = document.getElementById('swal_lainnya_box');
+        if (box) {
+            if (show) box.classList.remove('hidden');
+            else box.classList.add('hidden');
+        }
+    }
+
+    function bukaModalRequestBatal(invoice) {
+        Swal.fire({
+            title: 'Ajukan Pembatalan #' + invoice + '?',
+            html: `
+                <div class="text-left text-xs text-slate-700">
+                    <p class="mb-2 text-slate-500 font-medium">Pesanan ini sedang disiapkan oleh tim gudang. Pengajuan pembatalan memerlukan persetujuan Admin Toko:</p>
+                    <div class="space-y-2 mb-3">
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input type="radio" name="swal_req_alasan" value="Ingin mengubah rincian pesanan" class="text-zc focus:ring-zc" checked onchange="toggleSwalReqLainnya(false)">
+                            <span class="font-medium text-slate-700">Ingin mengubah pesanan (varian/jumlah/alamat kirim)</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input type="radio" name="swal_req_alasan" value="Berubah pikiran / Tidak sengaja pesan" class="text-zc focus:ring-zc" onchange="toggleSwalReqLainnya(false)">
+                            <span class="font-medium text-slate-700">Berubah pikiran / Tidak sengaja memesan</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input type="radio" name="swal_req_alasan" value="Waktu pengiriman terlalu lama" class="text-zc focus:ring-zc" onchange="toggleSwalReqLainnya(false)">
+                            <span class="font-medium text-slate-700">Waktu pengemasan atau pengiriman diperkirakan terlalu lama</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input type="radio" name="swal_req_alasan" value="Lainnya" class="text-zc focus:ring-zc" onchange="toggleSwalReqLainnya(true)">
+                            <span class="font-medium text-slate-700">Alasan lainnya...</span>
+                        </label>
+                    </div>
+                    <div id="swal_req_lainnya_box" class="hidden">
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1">Tuliskan alasan pengajuan batal: *</label>
+                        <textarea id="swal_req_alasan_detail" rows="2" placeholder="Tuliskan keterangan detail untuk admin..." class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:border-zc"></textarea>
+                    </div>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#f59e0b',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Kirim Pengajuan Batal',
+            cancelButtonText: 'Kembali',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-xl font-bold text-xs px-4 py-2',
+                cancelButton: 'rounded-xl font-bold text-xs px-4 py-2'
+            },
+            preConfirm: () => {
+                const selected = document.querySelector('input[name="swal_req_alasan"]:checked');
+                if (!selected) {
+                    Swal.showValidationMessage('Harap pilih salah satu alasan pengajuan.');
+                    return false;
+                }
+                const kategori = selected.value;
+                const detail = (document.getElementById('swal_req_alasan_detail')?.value || '').trim();
+                if (kategori === 'Lainnya' && !detail) {
+                    Swal.showValidationMessage('Harap tuliskan alasan pada kolom teks.');
+                    return false;
+                }
+                return { kategori, detail };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('req_cancel_invoice_inp').value = invoice;
+                document.getElementById('req_cancel_kategori_inp').value = result.value.kategori;
+                document.getElementById('req_cancel_detail_inp').value = result.value.detail;
+                document.getElementById('form-request-cancel-customer').submit();
+            }
+        });
+    }
+
+    function toggleSwalReqLainnya(show) {
+        const box = document.getElementById('swal_req_lainnya_box');
+        if (box) {
+            if (show) box.classList.remove('hidden');
+            else box.classList.add('hidden');
+        }
+    }
 </script>
+
+<!-- Hidden Form Pembatalan Pelanggan Langsung (Menunggu Pembayaran) -->
+<form id="form-cancel-customer" method="POST" class="hidden">
+    <input type="hidden" name="action" value="cancel_order">
+    <input type="hidden" name="no_invoice" id="cancel_invoice_inp">
+    <input type="hidden" name="alasan_kategori" id="cancel_kategori_inp">
+    <input type="hidden" name="alasan_detail" id="cancel_detail_inp">
+</form>
+
+<!-- Hidden Form Pengajuan Pembatalan Pelanggan (Diproses) -->
+<form id="form-request-cancel-customer" method="POST" class="hidden">
+    <input type="hidden" name="action" value="request_cancel">
+    <input type="hidden" name="no_invoice" id="req_cancel_invoice_inp">
+    <input type="hidden" name="alasan_kategori" id="req_cancel_kategori_inp">
+    <input type="hidden" name="alasan_detail" id="req_cancel_detail_inp">
+</form>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <?php require_once __DIR__ . '/footer.php'; ?>

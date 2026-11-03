@@ -45,9 +45,17 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['aksi'] ?? '') === 
                 $varData = $chk->fetch();
                 
                 $rasio = intval($varData['rasio_konversi']) ?: 1;
-                $effPrice = ($satuanTipe === 'besar') ? floatval($varData['harga_jual_besar']) : floatval($varData['harga_jual_kecil']);
-                $qtyPotong = ($satuanTipe === 'besar') ? ($qtyInput * $rasio) : $qtyInput;
                 $kategori = $varData['kategori'] ?? '';
+
+                if ($kategori === 'Alat Kesehatan' || $rasio <= 1) {
+                    // Alkes seragam sebagai Satuan Besar (Kemasan Utuh Pabrik) dengan rasio 1:1
+                    $satuanTipe = 'besar';
+                    $effPrice = floatval($varData['harga_jual_kecil']);
+                    $qtyPotong = $qtyInput;
+                } else {
+                    $effPrice = ($satuanTipe === 'besar') ? floatval($varData['harga_jual_besar']) : floatval($varData['harga_jual_kecil']);
+                    $qtyPotong = ($satuanTipe === 'besar') ? ($qtyInput * $rasio) : $qtyInput;
+                }
                 
                 if (!$varData || intval($varData['stok']) < $qtyPotong) {
                     throw new Exception("Stok ID $idVar tidak cukup! (Pesan: $qtyPotong, Sisa: " . ($varData['stok'] ?? 0) . ")");
@@ -645,23 +653,31 @@ if ($userRole === "superadmin") {
                             </div>
                             <div class="pt-2.5 border-t border-zcBrd flex flex-col gap-2">
                                 <!-- Pilihan Harga Seimbang & Berpembatas -->
-                                <div class="grid grid-cols-2 gap-1.5 p-1.5 bg-slate-100/70 rounded-xl border border-slate-200 text-center">
-                                    <div class="bg-white rounded-lg p-1.5 shadow-xs border border-slate-200/60">
-                                        <span class="text-[9px] font-bold text-slate-400 block uppercase tracking-wide">Eceran</span>
-                                        <span class="text-xs font-black text-slate-800 block">Rp <?= number_format($item['harga_jual_kecil'], 0, ',', '.') ?></span>
-                                        <span class="text-[9px] font-semibold text-slate-500 block">/ <?= htmlspecialchars($item['satuan_kecil']) ?></span>
-                                    </div>
-                                    <div class="bg-white rounded-lg p-1.5 shadow-xs border border-slate-200/60">
-                                        <span class="text-[9px] font-bold text-slate-400 block uppercase tracking-wide">Grosir</span>
-                                        <?php if ($item['rasio_konversi'] > 1): ?>
+                                <?php if ($item['rasio_konversi'] > 1): ?>
+                                    <div class="grid grid-cols-2 gap-1.5 p-1.5 bg-slate-100/70 rounded-xl border border-slate-200 text-center">
+                                        <div class="bg-white rounded-lg p-1.5 shadow-xs border border-slate-200/60">
+                                            <span class="text-[9px] font-bold text-slate-400 block uppercase tracking-wide">Eceran</span>
+                                            <span class="text-xs font-black text-slate-800 block">Rp <?= number_format($item['harga_jual_kecil'], 0, ',', '.') ?></span>
+                                            <span class="text-[9px] font-semibold text-slate-500 block">/ <?= htmlspecialchars($item['satuan_kecil']) ?></span>
+                                        </div>
+                                        <div class="bg-white rounded-lg p-1.5 shadow-xs border border-slate-200/60">
+                                            <span class="text-[9px] font-bold text-slate-400 block uppercase tracking-wide">Grosir</span>
                                             <span class="text-xs font-black text-slate-800 block">Rp <?= number_format($item['harga_jual_besar'], 0, ',', '.') ?></span>
                                             <span class="text-[9px] font-semibold text-slate-500 block">/ <?= htmlspecialchars($item['satuan_besar']) ?></span>
-                                        <?php else: ?>
-                                            <span class="text-xs font-black text-slate-400 block">-</span>
-                                            <span class="text-[9px] font-semibold text-slate-400 block">(1 Satuan)</span>
-                                        <?php endif; ?>
+                                        </div>
                                     </div>
-                                </div>
+                                <?php else: ?>
+                                    <!-- Produk Kemasan Utuh Tunggal (Alkes / Non-Konversi) -->
+                                    <div class="p-1 bg-slate-100/70 rounded-xl border border-slate-200 text-center">
+                                        <div class="bg-white rounded-lg py-1.5 px-3 shadow-xs border border-slate-200/60 flex items-center justify-between">
+                                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Harga Satuan</span>
+                                            <div class="text-right">
+                                                <span class="text-xs font-black text-slate-900">Rp <?= number_format($item['harga_jual_kecil'], 0, ',', '.') ?></span>
+                                                <span class="text-[9px] font-semibold text-slate-500">/ <?= htmlspecialchars($item['satuan_besar'] ?: $item['satuan_kecil']) ?></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
 
                                 <!-- Sisa Stok Terpisah (Besar vs Kecil) -->
                                 <div class="sisa-stok-container p-1.5 rounded-lg border text-[10px] <?= $stok > 0 ? 'bg-emerald-50/60 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-700' ?> flex items-center justify-between">
@@ -672,7 +688,7 @@ if ($userRole === "superadmin") {
                                             <span class="text-slate-400">•</span>
                                             <span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700"><?= $eceranSisa ?> <?= htmlspecialchars($item['satuan_kecil']) ?></span>
                                         <?php else: ?>
-                                            <span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700"><?= $stok ?> <?= htmlspecialchars($item['satuan_kecil']) ?></span>
+                                            <span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700"><?= $stok ?> <?= htmlspecialchars($item['satuan_besar'] ?: $item['satuan_kecil']) ?></span>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -687,9 +703,9 @@ if ($userRole === "superadmin") {
                                         </select>
                                     </div>
                                     <?php else: ?>
-                                    <input type="hidden" id="uom_<?= $item['id'] ?>" value="kecil" data-label="<?= htmlspecialchars($item['satuan_kecil']) ?>">
-                                    <div class="w-1/2 text-[10px] border border-zcBrd rounded-lg px-2 py-1.5 bg-slate-100 text-slate-500 text-center font-bold">
-                                        <?= htmlspecialchars($item['satuan_kecil']) ?>
+                                    <input type="hidden" id="uom_<?= $item['id'] ?>" value="besar" data-label="<?= htmlspecialchars($item['satuan_besar'] ?: $item['satuan_kecil']) ?>">
+                                    <div class="w-1/2 text-[10px] border border-zcBrd rounded-lg px-2 py-1.5 bg-slate-100 text-slate-600 text-center font-bold">
+                                        <?= htmlspecialchars($item['satuan_besar'] ?: $item['satuan_kecil']) ?>
                                     </div>
                                     <?php endif; ?>
 

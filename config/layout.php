@@ -236,7 +236,7 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
         echo '<span>' . $label . '</span></a>';
     };
 
-    echo '<aside class="w-[230px] bg-white border-r border-zcBrd flex flex-col shrink-0 min-h-screen sticky top-0 hidden md:flex">';
+    echo '<aside id="app-sidebar" class="w-[230px] bg-white border-r border-zcBrd flex flex-col shrink-0 min-h-screen sticky top-0 hidden md:flex transition-all duration-200 z-40">';
 
     // Brand logo
     echo '<div class="h-16 flex items-center px-4 border-b border-zcBrd gap-2.5">
@@ -289,7 +289,7 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
     // ── LAPORAN (KHUSUS SUPERADMIN / OWNER) ───────────────────────────
     if ($isSuperadmin) {
         echo '<p class="sidebar-section">Laporan</p>';
-        $link('/inventory_zencare/laporan/penjualan.php', 'report_sale', 'Lap. Penjualan Barang', 'laporan_penjualan');
+        $link('/inventory_zencare/laporan/penjualan.php', 'report_sale', 'Lap. Penjualan Omnichannel', 'laporan_penjualan');
         $link('/inventory_zencare/laporan/ketersediaan_stok.php', 'report_stock', 'Lap. Persediaan', 'laporan_ketersediaan');
         $link('/inventory_zencare/laporan/logistik_medis.php', 'report_med', 'Lap. Logistik Medis', 'laporan_logistik');
         $link('/inventory_zencare/laporan/penerimaan_barang.php', 'receive', 'Lap. Penerimaan Barang', 'laporan_penerimaan');
@@ -343,7 +343,7 @@ function layoutHeader(string $title, string $subtitle = '', bool $showBranchSele
         <h1 class="text-[15px] font-semibold text-zcTxt leading-tight">' . htmlspecialchars($title) . '</h1>';
     if ($subtitle) echo '<p class="text-[11px] text-zcMut mt-0.5">' . htmlspecialchars($subtitle) . '</p>';
     echo '  </div>
-      <div class="flex items-center gap-3">';
+      <div class="flex items-center gap-3 shrink-0">';
 
     /* === BRANCH SELECTOR DISEMBUNYIKAN (single-branch view per TA) ===
     // Kode ini disembunyikan, bukan dihapus, agar bisa diaktifkan kembali
@@ -388,7 +388,7 @@ function layoutHeader(string $title, string $subtitle = '', bool $showBranchSele
         </div>';
     }
 
-    echo '<main class="p-6 flex-1 overflow-x-hidden">';
+    echo '<main class="p-3 sm:p-5 lg:p-6 flex-1 min-w-0 overflow-x-hidden">';
 }
 
 function layoutEnd() {

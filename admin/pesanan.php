@@ -24,8 +24,43 @@ if ($autoCancelled > 0) {
     $msgType = 'info';
 }
 
-// Handle Status Update
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['aksi'] === 'update_status') {
+// Handle Status Update & Request Batal Pelanggan
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
+    if ($_POST['aksi'] === 'tolak_request_batal') {
+        $idPesanan = intval($_POST['id_penjualan'] ?? 0);
+        if ($idPesanan) {
+            $pdo->prepare("UPDATE penjualan SET request_batal = 0 WHERE id = ?")->execute([$idPesanan]);
+            $msg = "Permohonan pembatalan pesanan telah ditolak. Pesanan tetap berstatus Diproses dan siap dikirim.";
+            $msgType = 'info';
+        }
+    } elseif ($_POST['aksi'] === 'setujui_request_batal') {
+        $idPesanan = intval($_POST['id_penjualan'] ?? 0);
+        if ($idPesanan) {
+            $pdo->beginTransaction();
+            try {
+                $stmtCek = $pdo->prepare("SELECT no_invoice, request_batal_alasan, status_pesanan FROM penjualan WHERE id = ? FOR UPDATE");
+                $stmtCek->execute([$idPesanan]);
+                $ordData = $stmtCek->fetch();
+                if (!$ordData || $ordData['status_pesanan'] !== 'Diproses') {
+                    throw new Exception("Pesanan tidak dapat dibatalkan atau bukan berstatus Diproses.");
+                }
+                $alasan = "Permohonan Pelanggan: " . ($ordData['request_batal_alasan'] ?: 'Dibatalkan atas permintaan pembeli');
+                $adminNama = $_SESSION['nama_lengkap'] ?? 'Admin';
+                $pelaku = "Admin ($adminNama) - Persetujuan Pelanggan";
+
+                // Batalkan dan pulihkan stok menggunakan batalkanSatuPesananInternal
+                batalkanSatuPesananInternal($pdo, $idPesanan, $alasan, $pelaku);
+
+                $pdo->commit();
+                $msg = "Permohonan pembatalan pesanan #{$ordData['no_invoice']} disetujui. Pesanan resmi Dibatalkan dan seluruh stok fisik & batch FEFO telah dipulihkan.";
+                $msgType = 'success';
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                $msg = "Gagal menyetujui pembatalan: " . $e->getMessage();
+                $msgType = 'error';
+            }
+        }
+    } elseif ($_POST['aksi'] === 'update_status') {
     $idPesanan  = intval($_POST['id_penjualan'] ?? 0);
     $newStatus  = $_POST['status_pesanan'] ?? '';
     
@@ -51,7 +86,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
                 }
 
                 // Update Status
-                $pdo->prepare("UPDATE penjualan SET status_pesanan = ? WHERE id = ?")->execute([$newStatus, $idPesanan]);
+                if ($newStatus === 'Dibatalkan') {
+                    $alasanKat = trim($_POST['alasan_kategori'] ?? '');
+                    $alasanDet = trim($_POST['alasan_detail'] ?? '');
+                    if ($alasanKat === 'Lainnya') {
+                        $finalReason = !empty($alasanDet) ? 'Lainnya: ' . $alasanDet : 'Lainnya';
+                    } elseif (!empty($alasanKat)) {
+                        $finalReason = $alasanKat . (!empty($alasanDet) ? ' (' . $alasanDet . ')' : '');
+                    } else {
+                        $finalReason = 'Dibatalkan oleh Admin';
+                    }
+                    $adminNama = $_SESSION['nama_lengkap'] ?? 'Admin';
+                    $dibatalkanOleh = "Admin ($adminNama)";
+
+                    $pdo->prepare("
+                        UPDATE penjualan 
+                        SET status_pesanan = ?, 
+                            alasan_batal = ?, 
+                            dibatalkan_oleh = ?, 
+                            waktu_batal = NOW(),
+                            request_batal = 0 
+                        WHERE id = ?
+                    ")->execute([$newStatus, $finalReason, $dibatalkanOleh, $idPesanan]);
+                } else {
+                    $pdo->prepare("UPDATE penjualan SET status_pesanan = ? WHERE id = ?")->execute([$newStatus, $idPesanan]);
+                }
 
                 // Jika status diubah menjadi Selesai dan metode Pick-up, catat sebagai Keluar di Kartu Stok
                 if ($oldStatus !== 'Selesai' && $newStatus === 'Selesai' && $metodePengambilan === 'Pick-up') {
@@ -311,6 +370,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi']) && $_POST['ak
         }
     }
 }
+}
 
 // Fetch orders for active branch (or all branches for super_admin)
 $query = "
@@ -383,16 +443,16 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
 
 <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
-        <table class="w-full text-xs">
-            <thead class="bg-slate-50 border-b border-zcBrd text-zcMut font-bold uppercase tracking-wider">
+        <table class="w-full text-xs min-w-[1020px]">
+            <thead class="bg-slate-50 border-b border-zcBrd text-zcMut font-bold uppercase tracking-wider text-[11px]">
                 <tr>
-                    <th class="px-4 py-3 text-left">Invoice</th>
-                    <th class="px-4 py-3 text-left">Tipe</th>
-                    <th class="px-4 py-3 text-left">Penerima &amp; Alamat</th>
-                    <th class="px-4 py-3 text-left">Kurir</th>
-                    <th class="px-4 py-3 text-right">Total</th>
-                    <th class="px-4 py-3 text-center">Status</th>
-                    <th class="px-4 py-3 text-center">Aksi</th>
+                    <th class="px-3.5 py-3 text-left w-[16%]">Invoice</th>
+                    <th class="px-2.5 py-3 text-center w-[8%]">Tipe</th>
+                    <th class="px-3.5 py-3 text-left w-[24%]">Penerima &amp; Alamat</th>
+                    <th class="px-3 py-3 text-left w-[13%]">Kurir</th>
+                    <th class="px-3.5 py-3 text-right w-[11%]">Total</th>
+                    <th class="px-3 py-3 text-center w-[13%]">Status</th>
+                    <th class="px-3.5 py-3 text-center w-[15%]">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zcBrd/60">
@@ -414,47 +474,74 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                             'Dibatalkan'=> 'bg-rose-100 text-rose-800 border-rose-200',
                             default     => 'bg-slate-100 text-slate-700 border-slate-200'
                         };
+                        
+                        $kCode = strtolower($o['kurir'] ?? '');
+                        $kName = match($kCode) {
+                            'internal' => 'Kurir Toko',
+                            'jne'      => 'JNE Express',
+                            'pos'      => 'POS Indonesia',
+                            'sicepat'  => 'SiCepat',
+                            'tiki'     => 'TIKI',
+                            'jnt'      => 'J&T Express',
+                            default    => !empty($o['kurir']) ? htmlspecialchars($o['kurir']) : 'Direct'
+                        };
+                        $lName = htmlspecialchars($o['layanan'] ?? 'Standard');
+                        if (stripos($lName, 'ZenCare Direct') !== false) {
+                            $lName = preg_match('/\(([^)]+)\)/', $lName, $mD) ? 'Direct (' . $mD[1] . ')' : 'Direct Delivery';
+                        }
+                        
+                        $isFinalStatus = in_array($o['status_pesanan'], ['Selesai', 'Dibatalkan']);
+                        $selectCls = $isFinalStatus
+                            ? 'w-[125px] text-[11px] border border-slate-200 rounded-lg px-2 py-1 bg-slate-50 text-slate-400 font-semibold cursor-not-allowed text-center'
+                            : 'w-[125px] text-[11px] border border-zcBrd rounded-lg px-2 py-1 bg-white font-semibold text-slate-700 hover:border-zc focus:outline-none focus:ring-1 focus:ring-zc cursor-pointer transition text-center';
                         ?>
                         <tr class="order-row hover:bg-slate-50/60 transition cursor-pointer" data-tipe="<?= htmlspecialchars($o['tipe_transaksi']) ?>" onclick="toggleDetail(<?= $o['id'] ?>)">
-                            <td class="px-4 py-3.5">
+                            <td class="px-3.5 py-3.5">
                                 <div class="flex items-center gap-2">
-                                    <svg id="icon-<?= $o['id'] ?>" class="w-4 h-4 text-zcMut transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                                    <svg id="icon-<?= $o['id'] ?>" class="w-4 h-4 text-zcMut transition-transform shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
                                     <div>
-                                        <span class="font-bold text-zcTxt font-mono block"><?= htmlspecialchars($o['no_invoice']) ?></span>
-                                        <span class="text-[10px] text-zcMut"><?= date('d/m/Y H:i', strtotime($o['created_at'])) ?></span>
+                                        <span class="font-bold text-zcTxt font-mono block leading-snug"><?= htmlspecialchars($o['no_invoice']) ?></span>
+                                        <span class="text-[10px] text-zcMut block leading-none mt-0.5"><?= date('d/m/Y H:i', strtotime($o['created_at'])) ?></span>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-4 py-3.5">
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase <?= $typeCls ?>">
+                            <td class="px-2.5 py-3.5 text-center">
+                                <span class="inline-flex items-center justify-center w-[82px] py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider <?= $typeCls ?>">
                                     <?= htmlspecialchars($o['tipe_transaksi']) ?>
                                 </span>
                             </td>
-                            <td class="px-4 py-3.5">
-                                <span class="font-bold text-zcTxt block"><?= htmlspecialchars($o['nama_penerima'] ?? $o['nama_kasir'] ?? 'Pelanggan') ?></span>
-                                <span class="text-[11px] text-zcMut truncate block max-w-xs"><?= htmlspecialchars($o['alamat_lengkap'] ?? 'Di Tempat') ?></span>
+                            <td class="px-3.5 py-3.5">
+                                <span class="font-bold text-zcTxt block leading-snug"><?= htmlspecialchars($o['nama_penerima'] ?? $o['nama_kasir'] ?? 'Pelanggan') ?></span>
+                                <span class="text-[11px] text-zcMut truncate block max-w-xs mt-0.5" title="<?= htmlspecialchars($o['alamat_lengkap'] ?? 'Di Tempat') ?>"><?= htmlspecialchars($o['alamat_lengkap'] ?? 'Di Tempat') ?></span>
                             </td>
-                            <td class="px-4 py-3.5">
-                                <span class="font-semibold text-zcTxt block"><?= htmlspecialchars($o['kurir'] ?? 'Direct') ?></span>
-                                <span class="text-[10px] text-zcMut"><?= htmlspecialchars($o['layanan'] ?? 'Standard') ?></span>
+                            <td class="px-3 py-3.5">
+                                <span class="font-semibold text-zcTxt block leading-snug"><?= $kName ?></span>
+                                <span class="text-[10px] text-zcMut block leading-none mt-0.5"><?= $lName ?></span>
                             </td>
-                            <td class="px-4 py-3.5 text-right">
-                                <span class="font-bold text-zcTxt block">Rp <?= number_format($o['total_harga'], 0, ',', '.') ?></span>
+                            <td class="px-3.5 py-3.5 text-right whitespace-nowrap">
+                                <span class="font-bold text-zcTxt block leading-snug">Rp <?= number_format($o['total_harga'], 0, ',', '.') ?></span>
                                 <?php if ($o['ongkir'] > 0): ?>
-                                    <span class="text-[10px] text-zcMut">+Ongkir <?= number_format($o['ongkir'], 0, ',', '.') ?></span>
+                                    <span class="text-[10px] text-zcMut block leading-none mt-0.5">+Ongkir <?= number_format($o['ongkir'], 0, ',', '.') ?></span>
                                 <?php endif; ?>
                             </td>
-                            <td class="px-4 py-3.5 text-center">
-                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border <?= $statusCls ?>">
-                                    <?= htmlspecialchars($o['status_pesanan']) ?>
-                                </span>
+                            <td class="px-3 py-3.5 text-center">
+                                <div class="flex flex-col items-center justify-center gap-1">
+                                    <span class="inline-flex items-center justify-center w-[138px] py-1 rounded-full text-[11px] font-bold border shadow-2xs text-center <?= $statusCls ?>">
+                                        <?= htmlspecialchars($o['status_pesanan']) ?>
+                                    </span>
+                                    <?php if (!empty($o['request_batal']) && $o['status_pesanan'] === 'Diproses'): ?>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-extrabold bg-amber-500 text-white shadow-2xs animate-pulse" title="Pelanggan mengajukan pembatalan">
+                                            ⚠️ Minta Batal
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
                             </td>
-                            <td class="px-4 py-3.5 text-center">
+                            <td class="px-3.5 py-3.5 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
-                                    <form method="POST" class="inline flex items-center gap-1">
+                                    <form method="POST" class="inline m-0 shrink-0">
                                         <input type="hidden" name="aksi" value="update_status">
                                         <input type="hidden" name="id_penjualan" value="<?= $o['id'] ?>">
-                                        <select name="status_pesanan" onchange="handleStatusChange(this, <?= $o['id'] ?>)" data-original="<?= $o['status_pesanan'] ?>" class="text-[11px] border border-zcBrd rounded-lg px-2 py-1 bg-white font-medium focus:outline-none focus:border-zc">
+                                        <select name="status_pesanan" onchange="handleStatusChange(this, <?= $o['id'] ?>)" data-original="<?= $o['status_pesanan'] ?>" <?= $isFinalStatus ? 'disabled' : '' ?> class="<?= $selectCls ?>">
                                             <option value="<?= $o['status_pesanan'] ?>" selected><?= $o['status_pesanan'] ?></option>
                                             
                                             <?php if ($o['status_pesanan'] === 'Menunggu Pembayaran'): ?>
@@ -471,17 +558,17 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                             <?php endif; ?>
                                         </select>
                                     </form>
-                                    <div class="inline-flex items-center gap-1.5 mt-1 sm:mt-0" onclick="event.stopPropagation()">
+                                    <div class="inline-flex items-center gap-1 shrink-0" onclick="event.stopPropagation()">
                                         <a href="../pos/cetak_invoice.php?no_invoice=<?= $o['no_invoice'] ?>" target="_blank"
                                             title="Cetak Dokumen Invoice Kertas (A4)"
-                                            class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg shadow-2xs transition">
-                                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                            class="inline-flex items-center justify-center gap-1 w-[68px] py-1 text-[11px] font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg shadow-2xs hover:border-slate-400 transition">
+                                            <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                             <span>Invoice</span>
                                         </a>
                                         <a href="cetak_label_pengiriman.php?no_invoice=<?= $o['no_invoice'] ?>" target="_blank"
                                             title="Cetak Stiker Label Pengiriman Thermal (100x150mm / A6)"
-                                            class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg shadow-2xs transition">
-                                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                                            class="inline-flex items-center justify-center gap-1 w-[84px] py-1 text-[11px] font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg shadow-2xs hover:border-slate-400 transition">
+                                            <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
                                             <span>Label Kirim</span>
                                         </a>
                                     </div>
@@ -491,6 +578,46 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                         <tr id="detail-<?= $o['id'] ?>" class="hidden bg-slate-50/50">
                             <td colspan="7" class="px-8 py-4 border-t border-zcBrd/40 shadow-inner">
                                 <div class="text-xs">
+                                    <?php if (!empty($o['request_batal']) && $o['status_pesanan'] === 'Diproses'): ?>
+                                    <div class="mb-3.5 p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                                        <div class="flex items-start gap-2.5">
+                                            <svg class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                            <div>
+                                                <span class="font-extrabold text-amber-900 text-xs">Permohonan Pembatalan dari Pelanggan:</span>
+                                                <p class="font-semibold text-slate-800 mt-0.5 italic">"<?= htmlspecialchars($o['request_batal_alasan']) ?>"</p>
+                                                <span class="text-amber-800 text-[11px] block mt-1">Diajukan: <?= !empty($o['request_batal_waktu']) ? date('d/m/Y H:i', strtotime($o['request_batal_waktu'])) . ' WIB' : '-' ?>. Silakan periksa apakah barang sudah dikemas atau siap dikirim.</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
+                                            <form method="POST" class="inline m-0" onsubmit="return confirm('Apakah Anda yakin ingin MENYETUJUI pembatalan pesanan ini? Seluruh stok fisik dan batch FEFO akan dikembalikan otomatis.');">
+                                                <input type="hidden" name="aksi" value="setujui_request_batal">
+                                                <input type="hidden" name="id_penjualan" value="<?= $o['id'] ?>">
+                                                <button type="submit" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-lg shadow-2xs transition flex items-center gap-1.5 cursor-pointer">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                    <span>Setujui Pembatalan</span>
+                                                </button>
+                                            </form>
+                                            <form method="POST" class="inline m-0" onsubmit="return confirm('Tolak permohonan pembatalan pelanggan ini? Pesanan akan tetap diproses ke pengiriman.');">
+                                                <input type="hidden" name="aksi" value="tolak_request_batal">
+                                                <input type="hidden" name="id_penjualan" value="<?= $o['id'] ?>">
+                                                <button type="submit" class="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs rounded-lg shadow-2xs transition flex items-center gap-1.5 cursor-pointer">
+                                                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                    <span>Tolak &amp; Lanjut Proses</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <?php endif; ?>
+
+                                    <?php if ($o['status_pesanan'] === 'Dibatalkan'): ?>
+                                    <div class="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2 shadow-2xs">
+                                        <svg class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                        <div>
+                                            <span class="font-bold">Pesanan Dibatalkan:</span> <?= htmlspecialchars($o['alasan_batal'] ?: 'Pesanan dibatalkan.') ?><br>
+                                            <span class="text-rose-700 text-[11px]">Dibatalkan oleh: <strong><?= htmlspecialchars($o['dibatalkan_oleh'] ?: 'Admin/Sistem') ?></strong><?= !empty($o['waktu_batal']) ? ' pada ' . date('d/m/Y H:i', strtotime($o['waktu_batal'])) . ' WIB' : '' ?>. Seluruh alokasi stok telah dipulihkan ke stok fisik &amp; batch.</span>
+                                        </div>
+                                    </div>
+                                    <?php endif; ?>
                                     <h4 class="font-bold text-zcTxt mb-2 uppercase tracking-wide border-b border-zcBrd pb-1 inline-block">Detail Item Pesanan</h4>
                                     <ul class="space-y-2 mt-2">
                                          <?php $items = $orderDetails[$o['id']] ?? []; ?>
@@ -897,9 +1024,98 @@ function handleStatusChange(selectEl, orderId) {
         
         showPackingModal(newStatus);
         selectEl.value = origStatus; // reset sementara
+    } else if (newStatus === 'Dibatalkan') {
+        var form = selectEl.closest('form');
+        Swal.fire({
+            title: 'Batalkan Pesanan Ini?',
+            html: `
+                <div class="text-left text-xs text-slate-700">
+                    <p class="mb-3 text-slate-500 font-medium">Pilih alasan pembatalan pesanan ini oleh staf/admin:</p>
+                    <div class="space-y-2 mb-3">
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input type="radio" name="admin_alasan" value="Stok fisik rusak / cacat / tidak memenuhi standar mutu" class="text-zc focus:ring-zc" checked onchange="toggleAdminLainnya(false)">
+                            <span class="font-medium text-slate-700">Stok fisik rusak / cacat / tidak memenuhi standar mutu</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input type="radio" name="admin_alasan" value="Pelanggan meminta pembatalan langsung" class="text-zc focus:ring-zc" onchange="toggleAdminLainnya(false)">
+                            <span class="font-medium text-slate-700">Pelanggan meminta pembatalan langsung (WhatsApp/Telepon)</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input type="radio" name="admin_alasan" value="Pembeli tidak responsif / Alamat tidak valid" class="text-zc focus:ring-zc" onchange="toggleAdminLainnya(false)">
+                            <span class="font-medium text-slate-700">Pembeli tidak responsif / Alamat pengiriman tidak valid</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input type="radio" name="admin_alasan" value="Lainnya" class="text-zc focus:ring-zc" onchange="toggleAdminLainnya(true)">
+                            <span class="font-medium text-slate-700">Alasan lainnya...</span>
+                        </label>
+                    </div>
+                    <div id="admin_lainnya_box" class="hidden">
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1">Tuliskan keterangan pembatalan: *</label>
+                        <textarea id="admin_alasan_detail" rows="2" placeholder="Tuliskan alasan pembatalan..." class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:border-zc"></textarea>
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e11d48',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Batalkan Pesanan',
+            cancelButtonText: 'Kembali',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-xl font-bold text-xs px-4 py-2',
+                cancelButton: 'rounded-xl font-bold text-xs px-4 py-2'
+            },
+            preConfirm: () => {
+                const selected = document.querySelector('input[name="admin_alasan"]:checked');
+                if (!selected) {
+                    Swal.showValidationMessage('Harap pilih salah satu alasan pembatalan.');
+                    return false;
+                }
+                const kategori = selected.value;
+                const detail = (document.getElementById('admin_alasan_detail')?.value || '').trim();
+                if (kategori === 'Lainnya' && !detail) {
+                    Swal.showValidationMessage('Harap tuliskan alasan pembatalan pada kolom teks.');
+                    return false;
+                }
+                return { kategori, detail };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let inpKat = form.querySelector('input[name="alasan_kategori"]');
+                if (!inpKat) {
+                    inpKat = document.createElement('input');
+                    inpKat.type = 'hidden';
+                    inpKat.name = 'alasan_kategori';
+                    form.appendChild(inpKat);
+                }
+                inpKat.value = result.value.kategori;
+
+                let inpDet = form.querySelector('input[name="alasan_detail"]');
+                if (!inpDet) {
+                    inpDet = document.createElement('input');
+                    inpDet.type = 'hidden';
+                    inpDet.name = 'alasan_detail';
+                    form.appendChild(inpDet);
+                }
+                inpDet.value = result.value.detail;
+
+                form.submit();
+            } else {
+                selectEl.value = origStatus;
+            }
+        });
     } else {
         if(confirm('Ubah status pesanan ini?')) selectEl.form.submit();
         else selectEl.value = origStatus;
+    }
+}
+
+function toggleAdminLainnya(show) {
+    const box = document.getElementById('admin_lainnya_box');
+    if (box) {
+        if (show) box.classList.remove('hidden');
+        else box.classList.add('hidden');
     }
 }
 

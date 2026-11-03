@@ -102,13 +102,25 @@ if ($isPos) {
         $kurirDisplay = 'SICEPAT';
     } elseif ($k === 'tiki') {
         $kurirDisplay = 'TIKI';
+    } elseif ($k === 'internal') {
+        $kurirDisplay = 'KURIR TOKO';
     } elseif (!empty($k)) {
         $kurirDisplay = strtoupper($k);
     } else {
         $kurirDisplay = 'KURIR TOKO';
     }
     
-    $layananDisplay = !empty($order['layanan']) ? strtoupper($order['layanan']) : 'STANDAR';
+    // Format nama layanan agar ringkas, informatif & tidak meluap keluar stiker
+    $layananRaw = trim($order['layanan'] ?? '');
+    if ($k === 'internal' || stripos($layananRaw, 'ZenCare Direct') !== false) {
+        if (preg_match('/\(([^,)]+)/', $layananRaw, $mDist)) {
+            $layananDisplay = 'DIRECT DELIVERY (' . trim($mDist[1]) . ')';
+        } else {
+            $layananDisplay = 'DIRECT DELIVERY';
+        }
+    } else {
+        $layananDisplay = !empty($layananRaw) ? strtoupper($layananRaw) : 'STANDAR';
+    }
     $statusBayarDisplay = 'SUDAH DIBAYAR (ONLINE PAYMENT)';
     $bannerTujuan = $kotaTujuan;
 }
@@ -157,17 +169,24 @@ if ($isPos) {
         .brand-wrapper {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
         }
         .brand-logo-img {
             height: 38px;
             width: auto;
+            max-width: 38px;
             object-fit: contain;
             flex-shrink: 0;
             filter: grayscale(100%) contrast(150%);
         }
+        .brand-text {
+            flex: 1;
+            min-width: 0;
+        }
         .brand-title {
-            font-size: 13.5px;
+            font-size: 13px;
             font-weight: 900;
             letter-spacing: 0.5px;
             text-transform: uppercase;
@@ -175,34 +194,55 @@ if ($isPos) {
             color: #000;
         }
         .brand-sub {
-            font-size: 8px;
+            font-size: 7.5px;
             font-weight: bold;
             color: #222;
             margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .brand-address {
             font-size: 7px;
             color: #444;
+            line-height: 1.2;
             margin-top: 1px;
+        }
+        .courier-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2.5px;
+            max-width: 44%;
+            flex-shrink: 0;
+            text-align: right;
         }
         .courier-badge {
             display: inline-block;
             background: #000;
             color: #fff;
             font-weight: 900;
-            font-size: 13px;
-            padding: 3px 7px;
+            font-size: 11px;
+            padding: 2.5px 6px;
             border-radius: 3px;
             letter-spacing: 0.5px;
+            text-align: center;
+            line-height: 1.15;
+            max-width: 100%;
+            box-sizing: border-box;
         }
         .service-badge {
             display: inline-block;
             border: 1.5px solid #000;
             font-weight: 800;
-            font-size: 11px;
-            padding: 2.5px 6px;
+            font-size: 8.5px;
+            padding: 2px 5px;
             border-radius: 3px;
-            margin-left: 3px;
+            text-align: center;
+            line-height: 1.15;
+            word-break: break-word;
+            max-width: 100%;
+            box-sizing: border-box;
         }
         .barcode-section {
             text-align: center;
@@ -461,16 +501,16 @@ if ($isPos) {
     <div class="label-container">
         <!-- Header dengan Logo Resmi ZenCare Medical -->
         <div class="header-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
                 <div class="brand-wrapper">
                     <img src="/inventory_zencare/gambar/Logo.png" alt="Logo ZenCare" class="brand-logo-img" onerror="this.src='../gambar/Logo.png'">
-                    <div>
+                    <div class="brand-text">
                         <div class="brand-title">ZENCARE MEDICAL</div>
                         <div class="brand-sub">Toko Alat Kesehatan dan Obat Omnichannel</div>
                         <div class="brand-address">Jl. Muharto No. 1, Kota Malang &bull; Telp: 0812-3456-7890</div>
                     </div>
                 </div>
-                <div style="text-align: right; white-space: nowrap; flex-shrink: 0;">
+                <div class="courier-box">
                     <span class="courier-badge"><?= htmlspecialchars($kurirDisplay) ?></span>
                     <span class="service-badge"><?= htmlspecialchars($layananDisplay) ?></span>
                 </div>
@@ -564,7 +604,6 @@ if ($isPos) {
                 </div>
             </div>
             <div class="footer-right">
-                <div class="system-tag">ZenCare Fulfillment System</div>
                 <div class="system-sub">Resmi • Bukti Serah Terima</div>
             </div>
         </div>

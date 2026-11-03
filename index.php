@@ -22,22 +22,13 @@ $totalProdukVariasi = (int)$pdo->query("
     WHERE pv.is_active=1 AND pi.is_active=1
 ")->fetchColumn();
 
-// Stok Satuan Besar: Kemasan dus/box utuh (khusus Obat)
-$totalStokBesar = (int)$pdo->query("
+// Stok Satuan Besar: Kemasan dus/box utuh (Obat) + Kemasan Utuh Pabrikan (Alkes)
+$stokObatBesar = (int)$pdo->query("
     SELECT COALESCE(SUM(FLOOR(sb.stok_sisa / pv.rasio_konversi)), 0)
     FROM stok_batch sb
     JOIN produk_variasi pv ON sb.id_variasi = pv.id
     JOIN produk_induk pi ON pv.id_produk_induk = pi.id
     WHERE pi.kategori != 'Alat Kesehatan' AND sb.no_batch NOT LIKE '%.%' AND sb.stok_sisa > 0
-")->fetchColumn();
-
-// Stok Satuan Kecil: Eceran terbuka (Obat sub-batch) + Alkes (Unit fisik SN)
-$stokEceranObat = (int)$pdo->query("
-    SELECT COALESCE(SUM(sb.stok_sisa), 0)
-    FROM stok_batch sb
-    JOIN produk_variasi pv ON sb.id_variasi = pv.id
-    JOIN produk_induk pi ON pv.id_produk_induk = pi.id
-    WHERE pi.kategori != 'Alat Kesehatan' AND sb.no_batch LIKE '%.%' AND sb.stok_sisa > 0
 ")->fetchColumn();
 
 $stokAlkesUnit = (int)$pdo->query("
@@ -48,7 +39,18 @@ $stokAlkesUnit = (int)$pdo->query("
     WHERE pi.kategori = 'Alat Kesehatan' AND st.stok > 0
 ")->fetchColumn();
 
-$totalStokKecil   = $stokEceranObat + $stokAlkesUnit;
+$totalStokBesar   = $stokObatBesar + $stokAlkesUnit;
+
+// Stok Satuan Kecil: Eceran terbuka (khusus Obat sub-batch pecahan hasil konversi)
+$stokEceranObat = (int)$pdo->query("
+    SELECT COALESCE(SUM(sb.stok_sisa), 0)
+    FROM stok_batch sb
+    JOIN produk_variasi pv ON sb.id_variasi = pv.id
+    JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+    WHERE pi.kategori != 'Alat Kesehatan' AND sb.no_batch LIKE '%.%' AND sb.stok_sisa > 0
+")->fetchColumn();
+
+$totalStokKecil   = $stokEceranObat;
 $totalStokFisik   = (int)$pdo->query("SELECT COALESCE(SUM(stok),0) FROM stok_toko")->fetchColumn();
 $stokKritisCount  = (int)$pdo->query("
     SELECT COUNT(*) FROM (
@@ -97,7 +99,7 @@ $listAnomaliHariIni = $pdo->query("
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 $returMenungguCount = (int)$pdo->query("SELECT COUNT(*) FROM penerimaan_detail WHERE status_retur = 'menunggu_pengganti'")->fetchColumn();
-$returSelesaiCount  = (int)$pdo->query("SELECT COUNT(*) FROM penerimaan_detail WHERE status_retur = 'selesai_tukar_barang'")->fetchColumn();
+$returSelesaiCount  = (int)$pdo->query("SELECT COUNT(*) FROM penerimaan_detail WHERE status_retur IN ('selesai_tukar_barang', 'selesai_potong_faktur')")->fetchColumn();
 $listReturMonitoring = $pdo->query("
     SELECT pd.id, pd.status_retur, pd.qty_rusak, pd.qty_pengganti_diterima, pd.no_batch, pd.no_batch_pengganti, pd.tgl_selesai_retur, pd.catatan_retur,
            ps.no_referensi, ps.tanggal_terima,
@@ -109,7 +111,7 @@ $listReturMonitoring = $pdo->query("
     LEFT JOIN supplier s ON ps.id_supplier = s.id
     JOIN produk_variasi pv ON pd.id_variasi = pv.id
     JOIN produk_induk pi ON pv.id_produk_induk = pi.id
-    WHERE pd.status_retur IN ('menunggu_pengganti', 'selesai_tukar_barang')
+    WHERE pd.status_retur IN ('menunggu_pengganti', 'selesai_tukar_barang', 'selesai_potong_faktur')
     ORDER BY (pd.status_retur = 'menunggu_pengganti') DESC,
              CASE WHEN pd.status_retur = 'menunggu_pengganti' THEN ps.tanggal_terima END DESC,
              pd.tgl_selesai_retur DESC,
@@ -369,22 +371,22 @@ layoutHeader(
         <div style="font-size:11px;color:#0f2d5a;margin-top:5px;font-weight:600;"><?= number_format($totalProdukVariasi) ?> Variasi SKU Aktif</div>
     </a>
 
-    <!-- Stok Satuan Besar (Dus / Kemasan Pabrik Utuh) -->
+    <!-- Stok Satuan Besar (Dus Obat & Kemasan Utuh Alkes) -->
     <a href="laporan/ketersediaan_stok.php" style="text-decoration:none;display:block;background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;transition:box-shadow .15s ease;" onmouseover="this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:5px;letter-spacing:.04em;">
             STOK SATUAN BESAR
         </div>
-        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokBesar) ?> <span style="font-size:13px;font-weight:600;color:#64748b;">Dus/Box</span></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Kemasan Besar</div>
+        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokBesar) ?> <span style="font-size:13px;font-weight:600;color:#64748b;">Dus/Unit</span></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= number_format($stokObatBesar) ?> Dus Obat • <?= number_format($stokAlkesUnit) ?> Alkes</div>
     </a>
 
-    <!-- Stok Satuan Kecil (Eceran Obat & Unit Alkes SN) -->
+    <!-- Stok Satuan Kecil (Eceran Terbuka Hasil Konversi) -->
     <a href="laporan/ketersediaan_stok.php" style="text-decoration:none;display:block;background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;transition:box-shadow .15s ease;" onmouseover="this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:5px;letter-spacing:.04em;">
             STOK SATUAN KECIL
         </div>
-        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokKecil) ?> <span style="font-size:13px;font-weight:600;color:#64748b;">Unit/Pcs</span></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= number_format($stokEceranObat) ?> Eceran • <?= number_format($stokAlkesUnit) ?> Alkes</div>
+        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokKecil) ?> <span style="font-size:13px;font-weight:600;color:#64748b;">Eceran</span></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Eceran Terbuka (Sub-batch)</div>
     </a>
 
     <!-- Stok Menipis -->
@@ -838,22 +840,22 @@ layoutHeader(
         <div style="font-size:11px;color:#0f2d5a;margin-top:5px;font-weight:600;"><?= number_format($totalProdukVariasi) ?> Variasi SKU Aktif</div>
     </a>
 
-    <!-- Stok Satuan Besar (Dus / Kemasan Pabrik Utuh) -->
+    <!-- Stok Satuan Besar (Dus Obat & Kemasan Utuh Alkes) -->
     <a href="inventori/logistik_medis.php" style="text-decoration:none;display:block;background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;transition:box-shadow .15s ease;" onmouseover="this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:5px;letter-spacing:.04em;">
             STOK SATUAN BESAR
         </div>
-        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokBesar) ?> <span style="font-size:13px;font-weight:600;color:#64748b;">Dus/Box</span></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Kemasan Besar</div>
+        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokBesar) ?> <span style="font-size:13px;font-weight:600;color:#64748b;">Dus/Unit</span></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= number_format($stokObatBesar) ?> Dus Obat • <?= number_format($stokAlkesUnit) ?> Alkes</div>
     </a>
 
-    <!-- Stok Satuan Kecil (Eceran Obat & Unit Alkes SN) -->
+    <!-- Stok Satuan Kecil (Eceran Terbuka Hasil Konversi) -->
     <a href="inventori/logistik_medis.php" style="text-decoration:none;display:block;background:#fff;border:1px solid #e4e9f0;border-radius:10px;padding:16px 18px;transition:box-shadow .15s ease;" onmouseover="this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:5px;letter-spacing:.04em;">
             STOK SATUAN KECIL
         </div>
-        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokKecil) ?> <span style="font-size:13px;font-weight:600;color:#64748b;">Unit/Pcs</span></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= number_format($stokEceranObat) ?> Eceran • <?= number_format($stokAlkesUnit) ?> Alkes</div>
+        <div style="font-size:30px;font-weight:900;color:#1e293b;line-height:1;"><?= number_format($totalStokKecil) ?> <span style="font-size:13px;font-weight:600;color:#64748b;">Eceran</span></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;">Eceran Terbuka (Sub-batch)</div>
     </a>
     <a href="#" onclick="Swal.fire({title:'Informasi', text:'Silakan scroll ke bawah untuk melihat detail pada tabel Peringatan Stok Menipis.', icon:'info'}); return false;" style="text-decoration:none;display:block;background:#fff;border:1px solid <?= $stokKritisCount>0?'#fca5a5':'#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">STOK MENIPIS</div>
@@ -1426,9 +1428,14 @@ function renderReturModalPage(page) {
     let rowsHtml = '';
     pageItems.forEach(r => {
         const isWaiting = (r.status_retur === 'menunggu_pengganti');
-        const badge = isWaiting 
-            ? '<span style="padding:2px 8px;border-radius:4px;background:#fef3c7;color:#92400e;font-weight:700;font-size:10px;">Menunggu Penggantian</span>'
-            : `<span style="padding:2px 8px;border-radius:4px;background:#dcfce7;color:#166534;font-weight:700;font-size:10px;">Selesai Diganti (Batch: ${r.no_batch_pengganti || '-'})</span>`;
+        let badge = '';
+        if (isWaiting) {
+            badge = '<span style="padding:2px 8px;border-radius:4px;background:#fef3c7;color:#92400e;font-weight:700;font-size:10px;">Menunggu Penggantian</span>';
+        } else if (r.status_retur === 'selesai_potong_faktur') {
+            badge = '<span style="padding:2px 8px;border-radius:4px;background:#e0f2fe;color:#0369a1;font-weight:700;font-size:10px;">✓ Selesai (Potong Faktur / Credit Note)</span>';
+        } else {
+            badge = `<span style="padding:2px 8px;border-radius:4px;background:#dcfce7;color:#166534;font-weight:700;font-size:10px;">✓ Selesai Diganti (Batch: ${r.no_batch_pengganti || '-'})</span>`;
+        }
         rowsHtml += `
             <tr style="border-bottom:1px solid #e2e8f0;">
                 <td style="padding:8px;font-family:monospace;font-weight:700;">${r.no_referensi}</td>

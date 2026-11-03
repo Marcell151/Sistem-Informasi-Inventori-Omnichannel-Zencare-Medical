@@ -7,13 +7,26 @@ if (!function_exists('batalkanSatuPesananInternal')) {
     /**
      * Membatalkan 1 pesanan dan mengembalikan seluruh reserved stok (stok_toko, stok_batch FEFO, unit_serial).
      * Dibuat idempoten: jika pesanan sudah dibatalkan atau bukan 'Menunggu Pembayaran', proses langsung berhenti tanpa pengembalian ganda.
+     * Mencatat alasan pembatalan, pihak pembatal (Pelanggan/Admin/Sistem), dan waktu batal.
      */
-    function batalkanSatuPesananInternal($pdo, $idPesanan) {
-        // 1. Update status pesanan ke Dibatalkan secara bersyarat (Idempotency Protection)
-        $stmtCancel = $pdo->prepare("UPDATE penjualan SET status_pesanan = 'Dibatalkan' WHERE id = ? AND status_pesanan = 'Menunggu Pembayaran'");
-        $stmtCancel->execute([$idPesanan]);
+    function batalkanSatuPesananInternal($pdo, $idPesanan, $alasanBatal = null, $dibatalkanOleh = null) {
+        $alasan = !empty($alasanBatal) ? trim($alasanBatal) : 'Dibatalkan oleh sistem';
+        $pelaku = !empty($dibatalkanOleh) ? trim($dibatalkanOleh) : 'Sistem';
+
+        // 1. Update status pesanan ke Dibatalkan secara bersyarat (Idempotency Protection) + catat alasan pembatalan
+        // Mendukung pembatalan pesanan pada status 'Menunggu Pembayaran' maupun 'Diproses'
+        $stmtCancel = $pdo->prepare("
+            UPDATE penjualan 
+            SET status_pesanan = 'Dibatalkan',
+                alasan_batal = ?,
+                dibatalkan_oleh = ?,
+                waktu_batal = NOW(),
+                request_batal = 0
+            WHERE id = ? AND status_pesanan IN ('Menunggu Pembayaran', 'Diproses')
+        ");
+        $stmtCancel->execute([$alasan, $pelaku, $idPesanan]);
         if ($stmtCancel->rowCount() === 0) {
-            // Status pesanan sudah bukan Menunggu Pembayaran. Tidak ada stok yang dikembalikan ganda.
+            // Status pesanan sudah bukan Menunggu Pembayaran/Diproses (misal sudah Selesai/Dikirim). Tidak ada stok yang dikembalikan ganda.
             return false;
         }
 
@@ -132,15 +145,23 @@ if (!function_exists('batalkanPesananKadaluarsa')) {
             $countCancelled = 0;
             foreach ($expiredOrders as $exp) {
                 $idPesanan = intval($exp['id']);
-                $pdo->beginTransaction();
+                $weStarted = false;
+                if (!$pdo->inTransaction()) {
+                    $pdo->beginTransaction();
+                    $weStarted = true;
+                }
                 try {
-                    $cancelled = batalkanSatuPesananInternal($pdo, $idPesanan);
-                    $pdo->commit();
+                    $cancelled = batalkanSatuPesananInternal($pdo, $idPesanan, 'Waktu pembayaran habis (Expired)', 'Sistem (Timer)');
+                    if ($weStarted && $pdo->inTransaction()) {
+                        $pdo->commit();
+                    }
                     if ($cancelled) {
                         $countCancelled++;
                     }
                 } catch (Exception $e) {
-                    $pdo->rollBack();
+                    if ($weStarted && $pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
                     error_log("Gagal auto-cancel pesanan kadaluarsa #{$exp['no_invoice']}: " . $e->getMessage());
                 }
             }
