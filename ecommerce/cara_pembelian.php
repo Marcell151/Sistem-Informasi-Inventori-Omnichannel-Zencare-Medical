@@ -21,7 +21,7 @@ require_once __DIR__ . '/header.php';
         </div>
     </section>
 
-    <div class="max-w-4xl mx-auto px-4 lg:px-8 py-12 space-y-10">
+    <div class="max-w-4xl mx-auto px-4 lg:px-8 py-8 sm:py-12 pb-24 md:pb-12 space-y-8 sm:space-y-10">
 
         <!-- 2 Opsi Metode Pemenuhan -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

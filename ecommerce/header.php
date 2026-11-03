@@ -51,7 +51,7 @@ $currentScript = basename($_SERVER['PHP_SELF']);
 <html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ZenCare Medical' : 'ZenCare Medical' ?></title>
     <!-- Tailwind CSS (via CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -76,9 +76,21 @@ $currentScript = basename($_SERVER['PHP_SELF']);
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; background-color: #ffffff; color: #1e293b; }
+        body { 
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; 
+            background-color: #ffffff; 
+            color: #1e293b; 
+            -webkit-tap-highlight-color: transparent;
+        }
         
-        /* Hide scrollbar for smooth cart drawer */
+        /* Prevent iOS Safari auto-zoom on input focus */
+        @media screen and (max-width: 640px) {
+            input[type="text"], input[type="number"], input[type="email"], input[type="tel"], select, textarea {
+                font-size: 16px !important;
+            }
+        }
+        
+        /* Hide scrollbar for smooth cart drawer & mobile horizontal tabs */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -98,6 +110,11 @@ $currentScript = basename($_SERVER['PHP_SELF']);
         /* Header Scroll Shadow */
         #main-header.scrolled {
             box-shadow: 0 4px 20px -2px rgba(15, 45, 90, 0.08);
+        }
+
+        /* Safe area bottom padding for iPhone with home indicator */
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 16px);
         }
 
         /* Molecular Medical Pattern Banner */
@@ -155,12 +172,12 @@ $currentScript = basename($_SERVER['PHP_SELF']);
 <!-- MAIN NAVBAR (Single-Row Pharmify Layout)                     -->
 <!-- ============================================================ -->
 <header id="main-header" class="bg-white sticky top-0 z-40 border-b border-slate-100 transition-shadow duration-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-8">
-        <div class="flex items-center justify-between h-20 gap-4">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
             
             <!-- Left: Mobile Menu Button + Desktop Navigation Links -->
-            <div class="flex items-center gap-6 lg:gap-7">
-                <button class="lg:hidden p-2 -ml-2 text-slate-700 hover:text-[#0f2d5a]" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+            <div class="flex items-center gap-2 sm:gap-6 lg:gap-7">
+                <button type="button" aria-label="Buka Menu" class="lg:hidden p-2 -ml-1 text-slate-700 hover:text-[#0f2d5a] rounded-md transition" onclick="toggleMobileMenu()">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
 
@@ -263,20 +280,20 @@ $currentScript = basename($_SERVER['PHP_SELF']);
             </div>
 
             <!-- Center: Brand Logo (Pharmify Centered Style) -->
-            <a href="index.php" class="flex items-center gap-2.5 shrink-0 group">
-                <div class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-2xs">
+            <a href="index.php" class="flex items-center gap-2 sm:gap-2.5 shrink-0 group">
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-2xs">
                     <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
                 </div>
                 <div class="flex flex-col">
-                    <span class="text-xl font-extrabold tracking-tight text-[#0f2d5a] leading-none">ZenCare</span>
-                    <span class="text-[9px] font-bold text-[#1a75d2] uppercase tracking-widest mt-0.5">Medical Store</span>
+                    <span class="text-lg sm:text-xl font-extrabold tracking-tight text-[#0f2d5a] leading-none">ZenCare</span>
+                    <span class="text-[8px] sm:text-[9px] font-bold text-[#1a75d2] uppercase tracking-widest mt-0.5">Medical Store</span>
                 </div>
             </a>
 
             <!-- Right: Pill Search Input & Action Icons -->
-            <div class="flex items-center gap-3 sm:gap-4">
+            <div class="flex items-center gap-1.5 sm:gap-4">
                 <!-- Pill Search Bar (Desktop) -->
-                <form action="kategori.php" method="GET" class="hidden md:flex items-center relative w-52 xl:w-64">
+                <form action="kategori.php" method="GET" class="hidden md:flex items-center relative w-48 lg:w-56 xl:w-64">
                     <input type="text" name="q" placeholder="Cari obat atau alkes..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>"
                            class="w-full bg-white border border-slate-300 rounded-full pl-4 pr-9 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#0f2d5a] transition">
                     <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-[#0f2d5a] transition" title="Cari">
@@ -284,8 +301,13 @@ $currentScript = basename($_SERVER['PHP_SELF']);
                     </button>
                 </form>
 
+                <!-- Mobile Quick Search Trigger Button -->
+                <button type="button" onclick="toggleMobileSearch()" class="md:hidden p-2 text-slate-700 hover:text-[#0f2d5a] transition" title="Cari Produk">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </button>
+
                 <!-- Action Icons (Orders, Cart Drawer, Account) -->
-                <div class="flex items-center gap-2.5 sm:gap-3.5 text-slate-800">
+                <div class="flex items-center gap-1.5 sm:gap-3 text-slate-800">
                     <!-- Order Tracking Icon -->
                     <a href="profil.php" title="Riwayat Pesanan Saya" class="relative p-1.5 hover:text-[#1a75d2] transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
@@ -300,7 +322,7 @@ $currentScript = basename($_SERVER['PHP_SELF']);
                     <!-- User Account Icon / Dropdown -->
                     <?php if ($isLoggedIn): ?>
                         <div class="relative group">
-                            <a href="profil.php" class="flex items-center gap-2 p-1.5 hover:text-[#1a75d2] transition">
+                            <a href="profil.php" class="flex items-center gap-1.5 p-1.5 hover:text-[#1a75d2] transition">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 <span class="hidden xl:inline text-xs font-bold text-[#0f2d5a] max-w-[100px] truncate"><?= htmlspecialchars($namaPelanggan) ?></span>
                             </a>
@@ -327,33 +349,124 @@ $currentScript = basename($_SERVER['PHP_SELF']);
 
         </div>
     </div>
+
+    <!-- Mobile Quick Search Bar (Collapsible) -->
+    <div id="mobile-search-bar" class="hidden md:hidden px-4 pb-3 pt-1 border-t border-slate-100 bg-white">
+        <form action="kategori.php" method="GET" class="relative">
+            <input type="text" name="q" id="mobile-search-input" placeholder="Cari obat, variasi, atau alkes..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>"
+                   class="w-full bg-[#f8fafc] border border-slate-300 rounded-full pl-4 pr-10 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#0f2d5a]">
+            <button type="submit" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </button>
+        </form>
+    </div>
 </header>
 
-<!-- Mobile Menu Drawer (Hidden by default) -->
-<div id="mobile-menu" class="hidden lg:hidden bg-white border-b border-slate-200 px-4 py-4 space-y-3 shadow-lg">
-    <form action="kategori.php" method="GET" class="w-full relative">
-        <input type="text" name="q" placeholder="Cari obat atau alat kesehatan..." class="w-full bg-slate-50 border border-slate-300 rounded-full pl-4 pr-10 py-2 text-xs focus:outline-none focus:border-[#0f2d5a]">
-        <button type="submit" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+<!-- Mobile Menu Overlay & Drawer -->
+<div id="mobile-menu-overlay" class="hidden fixed inset-0 bg-[#0f2d5a]/40 z-50 backdrop-blur-xs transition-opacity duration-300 opacity-0" onclick="toggleMobileMenu()"></div>
+<div id="mobile-menu" class="fixed top-0 left-0 bottom-0 w-[82%] max-w-xs bg-white shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+    <!-- Drawer Header -->
+    <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-[#f8fafc]">
+        <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center overflow-hidden">
+                <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain">
+            </div>
+            <span class="text-sm font-extrabold text-[#0f2d5a]">Menu ZenCare</span>
+        </div>
+        <button type="button" onclick="toggleMobileMenu()" class="p-1.5 text-slate-400 hover:text-[#0f2d5a] transition cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
-    </form>
-    <div class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-        <a href="index.php" class="block py-2.5 hover:text-[#1a75d2]">Beranda</a>
-        <a href="kategori.php" class="block py-2.5 hover:text-[#1a75d2]">Semua Katalog Produk</a>
-        <a href="kategori.php?kategori=Obat" class="block py-2.5 pl-3 text-slate-500 hover:text-[#1a75d2]">&bull; Kategori Obat-obatan</a>
-        <a href="kategori.php?kategori=Alat+Kesehatan" class="block py-2.5 pl-3 text-slate-500 hover:text-[#1a75d2]">&bull; Kategori Alat Kesehatan</a>
-        <a href="tentang_kami.php" class="block py-2.5 hover:text-[#1a75d2]">Tentang Kami</a>
-        <a href="cara_pembelian.php" class="block py-2.5 hover:text-[#1a75d2]">Cara Pembelian</a>
-        <a href="profil.php" class="block py-2.5 hover:text-[#1a75d2]">Riwayat Pesanan Saya</a>
-        <?php if ($isLoggedIn): ?>
-            <a href="../logout.php" class="block py-2.5 text-rose-600 font-bold">Keluar (<?= htmlspecialchars($namaPelanggan) ?>)</a>
-        <?php else: ?>
-            <a href="../login_customer.php" class="block py-2.5 text-[#1a75d2] font-bold">Masuk / Daftar Pelanggan</a>
-        <?php endif; ?>
+    </div>
+
+    <!-- Drawer Navigation Links -->
+    <div class="flex-1 overflow-y-auto px-4 py-4 space-y-1 text-xs font-semibold text-slate-700 divide-y divide-slate-100">
+        <div class="space-y-1 pb-3">
+            <a href="index.php" class="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition <?= $currentScript === 'index.php' ? 'bg-[#eef6fb] text-[#1a75d2] font-bold' : '' ?>">
+                <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Beranda
+            </a>
+            <a href="kategori.php" class="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition <?= ($currentScript === 'kategori.php' && empty($_GET['kategori'])) ? 'bg-[#eef6fb] text-[#1a75d2] font-bold' : '' ?>">
+                <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                Semua Katalog Produk
+            </a>
+            <a href="kategori.php?kategori=Obat" class="flex items-center gap-3 px-3 py-2 rounded-md pl-9 text-slate-500 hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition">
+                &bull; Kategori Obat &amp; Farmasi
+            </a>
+            <a href="kategori.php?kategori=Alat+Kesehatan" class="flex items-center gap-3 px-3 py-2 rounded-md pl-9 text-slate-500 hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition">
+                &bull; Alat Kesehatan &amp; BMHP
+            </a>
+        </div>
+
+        <div class="space-y-1 py-3">
+            <a href="profil.php" class="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition <?= $currentScript === 'profil.php' ? 'bg-[#eef6fb] text-[#1a75d2] font-bold' : '' ?>">
+                <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                Riwayat Pesanan Saya
+            </a>
+            <a href="cart.php" class="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition <?= $currentScript === 'cart.php' ? 'bg-[#eef6fb] text-[#1a75d2] font-bold' : '' ?>">
+                <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                Keranjang Belanja
+            </a>
+        </div>
+
+        <div class="space-y-1 py-3">
+            <a href="tentang_kami.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition">
+                Tentang ZenCare
+            </a>
+            <a href="cara_pembelian.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition">
+                Cara Belanja &amp; Pengiriman
+            </a>
+            <a href="../login.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition text-slate-500">
+                Portal Staf &amp; Gudang
+            </a>
+        </div>
+
+        <div class="pt-3">
+            <?php if ($isLoggedIn): ?>
+                <div class="p-3 bg-slate-50 rounded mb-2">
+                    <span class="block text-[10px] text-slate-400">Masuk sebagai</span>
+                    <strong class="text-[#0f2d5a] block truncate"><?= htmlspecialchars($namaPelanggan) ?></strong>
+                </div>
+                <a href="../logout.php" class="block text-center py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded transition">
+                    Keluar dari Akun
+                </a>
+            <?php else: ?>
+                <a href="../login_customer.php" class="block text-center py-2.5 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white font-bold rounded transition">
+                    Masuk / Daftar Akun
+                </a>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 
 <script>
+function toggleMobileMenu() {
+    const overlay = document.getElementById('mobile-menu-overlay');
+    const drawer = document.getElementById('mobile-menu');
+    const isOpen = !drawer.classList.contains('-translate-x-full');
+
+    if (isOpen) {
+        drawer.classList.add('-translate-x-full');
+        overlay.classList.add('opacity-0');
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+        document.body.style.overflow = '';
+    } else {
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+        drawer.classList.remove('-translate-x-full');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function toggleMobileSearch() {
+    const s = document.getElementById('mobile-search-bar');
+    if (!s) return;
+    s.classList.toggle('hidden');
+    if (!s.classList.contains('hidden')) {
+        const inp = document.getElementById('mobile-search-input');
+        if (inp) inp.focus();
+    }
+}
+
 window.addEventListener('scroll', () => {
     const hdr = document.getElementById('main-header');
     if (!hdr) return;

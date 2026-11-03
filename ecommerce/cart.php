@@ -15,13 +15,13 @@ require_once __DIR__ . '/header.php';
     </div>
 </section>
 
-<main class="max-w-7xl mx-auto px-4 lg:px-8 py-10 flex-1 w-full">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200">
+<main class="max-w-7xl mx-auto px-4 lg:px-8 py-8 sm:py-10 pb-32 md:pb-12 flex-1 w-full">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 pb-4 border-b border-slate-200">
         <div>
             <h2 class="text-lg font-extrabold text-[#0f2d5a]">Daftar Produk di Keranjang</h2>
             <p class="text-xs text-slate-500 mt-0.5">Pilih produk yang ingin Anda checkout bersamaan atau simpan untuk pembelian berikutnya.</p>
         </div>
-        <a href="kategori.php" class="inline-flex items-center gap-2 px-4 py-2 border border-[#0f2d5a] text-xs font-bold text-[#0f2d5a] hover:bg-[#eef6fb] transition">
+        <a href="kategori.php" class="inline-flex items-center gap-2 px-4 py-2 border border-[#0f2d5a] text-xs font-bold text-[#0f2d5a] hover:bg-[#eef6fb] transition self-start sm:self-auto">
             &larr; Lanjutkan Belanja
         </a>
     </div>
@@ -98,6 +98,18 @@ require_once __DIR__ . '/header.php';
             </div>
         </div>
     </div>
+
+    <!-- Mobile Sticky Checkout Bar (sits above mobile bottom nav) -->
+    <div id="mobile-cart-sticky-bar" class="md:hidden fixed bottom-14 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 shadow-lg flex items-center justify-between gap-3">
+        <div>
+            <span class="text-[10px] text-slate-500 block uppercase font-bold">Total Pembayaran:</span>
+            <span class="text-base font-extrabold text-[#0f2d5a]" id="mobile-summary-grand-total">Rp 0</span>
+        </div>
+        <button type="button" onclick="proceedToCheckout()" id="btn-cart-checkout-mobile"
+            class="py-2.5 px-5 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white font-bold text-xs uppercase tracking-wider rounded transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+            Checkout (<span id="mobile-btn-checkout-count">0</span>)
+        </button>
+    </div>
 </main>
 
 <script>
@@ -111,22 +123,31 @@ function renderCartPage() {
     const grandTotalEl = document.getElementById('summary-grand-total');
     const btnCheckoutCount = document.getElementById('btn-checkout-count');
     const btnCheckout = document.getElementById('btn-cart-checkout');
+    const mobGrandTotal = document.getElementById('mobile-summary-grand-total');
+    const mobBtnCount = document.getElementById('mobile-btn-checkout-count');
+    const mobBtnCheckout = document.getElementById('btn-cart-checkout-mobile');
+    const mobStickyBar = document.getElementById('mobile-cart-sticky-bar');
 
     if (!Array.isArray(cartData) || cartData.length === 0) {
         listContainer.classList.add('hidden');
         emptyState.classList.remove('hidden');
+        if (mobStickyBar) mobStickyBar.classList.add('hidden');
         if (checkAll) checkAll.checked = false;
         totalItemCountEl.innerText = '0';
         selectedCountEl.innerText = '0';
         totalWeightEl.innerText = '0';
         grandTotalEl.innerText = 'Rp 0';
         btnCheckoutCount.innerText = '0';
+        if (mobGrandTotal) mobGrandTotal.innerText = 'Rp 0';
+        if (mobBtnCount) mobBtnCount.innerText = '0';
         if (btnCheckout) btnCheckout.disabled = true;
+        if (mobBtnCheckout) mobBtnCheckout.disabled = true;
         return;
     }
 
     listContainer.classList.remove('hidden');
     emptyState.classList.add('hidden');
+    if (mobStickyBar) mobStickyBar.classList.remove('hidden');
     totalItemCountEl.innerText = cartData.length;
 
     let selectedCount = 0;
@@ -152,66 +173,63 @@ function renderCartPage() {
 
         let stockBadge = '';
         if (maxStok <= 0) {
-            stockBadge = `<span class="inline-block px-2 py-0.5 text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Stok Habis</span>`;
+            stockBadge = `<span class="inline-block px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Stok Habis</span>`;
         } else if (maxStok <= 5) {
-            stockBadge = `<span class="inline-block px-2 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">Sisa Stok: ${maxStok} ${sat}</span>`;
+            stockBadge = `<span class="inline-block px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">Sisa ${maxStok} ${sat}</span>`;
         } else {
-            stockBadge = `<span class="inline-block px-2 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Stok Tersedia: ${maxStok} ${sat}</span>`;
+            stockBadge = `<span class="inline-block px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Stok: ${maxStok} ${sat}</span>`;
         }
 
         html += `
-        <div class="bg-white border border-slate-200 p-4 sm:p-5 transition hover:border-[#0f2d5a] flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <!-- Checkbox -->
-            <div class="shrink-0 flex items-center">
-                <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleItemSelect(${item.id})" 
-                    class="w-4 h-4 accent-[#0f2d5a] cursor-pointer">
-            </div>
+        <div class="bg-white border border-slate-200 p-3 sm:p-5 transition hover:border-[#0f2d5a]">
+            <!-- Top Part: Checkbox + Image + Title + Delete Button -->
+            <div class="flex items-start gap-3">
+                <div class="pt-1 shrink-0 flex items-center">
+                    <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleItemSelect(${item.id})" 
+                        class="w-4 h-4 accent-[#0f2d5a] cursor-pointer">
+                </div>
 
-            <!-- Product Image -->
-            <a href="produk.php?id=${item.id}" class="w-20 h-20 bg-[#f6f8fa] border border-slate-200/80 overflow-hidden shrink-0 flex items-center justify-center p-2">
-                <img src="${imgPath}" alt="${item.nama}" class="max-w-full max-h-full object-contain mix-blend-multiply" onerror="this.src='../assets/img/no-image.png'">
-            </a>
-
-            <!-- Product Info -->
-            <div class="flex-1 min-w-0">
-                <a href="produk.php?id=${item.id}" class="text-sm font-bold text-[#0f2d5a] hover:text-[#1a75d2] transition block leading-snug line-clamp-2">
-                    ${item.nama}
+                <a href="produk.php?id=${item.id}" class="w-16 h-16 sm:w-20 sm:h-20 bg-[#f6f8fa] border border-slate-200/80 overflow-hidden shrink-0 flex items-center justify-center p-2">
+                    <img src="${imgPath}" alt="${item.nama}" class="max-w-full max-h-full object-contain mix-blend-multiply" onerror="this.src='../assets/img/no-image.png'">
                 </a>
-                <div class="mt-1.5 flex flex-wrap items-center gap-2">
-                    ${stockBadge}
-                    <span class="text-[11px] text-slate-400 font-medium">&bull; Kemasan: ${sat}</span>
-                </div>
-                <div class="text-xs font-extrabold text-[#0f2d5a] mt-2 sm:hidden">
-                    ${formatRupiah(item.harga)} <span class="text-[10px] text-slate-400 font-normal">/ ${sat}</span>
-                </div>
-            </div>
 
-            <!-- Price Column (Desktop) -->
-            <div class="hidden sm:block text-right shrink-0 w-32">
-                <span class="text-[10px] text-slate-400 font-medium block">Harga Satuan</span>
-                <span class="text-sm font-extrabold text-[#0f2d5a] block">${formatRupiah(item.harga)}</span>
-            </div>
-
-            <!-- Qty Stepper -->
-            <div class="shrink-0 flex items-center gap-2">
-                <div class="flex items-center bg-[#f8fafc] border border-slate-200 h-9">
-                    <button type="button" onclick="updateCartItemQty(${item.id}, -1)" class="w-8 h-full flex items-center justify-center hover:bg-slate-200/60 text-[#0f2d5a] font-bold text-sm transition cursor-pointer">−</button>
-                    <input type="text" readonly value="${item.qty}" class="w-9 text-center font-bold text-xs text-[#0f2d5a] bg-transparent select-none">
-                    <button type="button" onclick="updateCartItemQty(${item.id}, 1)" ${item.qty >= maxStok ? 'disabled' : ''} class="w-8 h-full flex items-center justify-center font-bold text-sm transition ${item.qty >= maxStok ? 'opacity-30 cursor-not-allowed' : 'hover:bg-slate-200/60 text-[#0f2d5a] cursor-pointer'}">+</button>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-2">
+                        <a href="produk.php?id=${item.id}" class="text-xs sm:text-sm font-bold text-[#0f2d5a] hover:text-[#1a75d2] transition block leading-snug line-clamp-2">
+                            ${item.nama}
+                        </a>
+                        <button type="button" onclick="removeCartItem(${item.id})" class="p-1 text-slate-300 hover:text-rose-600 transition cursor-pointer shrink-0" title="Hapus Produk">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <div class="mt-1 flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        ${stockBadge}
+                        <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium">&bull; Kemasan: ${sat}</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Subtotal -->
-            <div class="text-right shrink-0 w-32">
-                <span class="text-[10px] text-slate-400 font-medium block">Subtotal</span>
-                <span class="text-sm font-extrabold text-[#0f2d5a] block">${formatRupiah(item.harga * item.qty)}</span>
-            </div>
+            <!-- Bottom Part: Price + Stepper + Subtotal -->
+            <div class="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <span class="text-[10px] text-slate-400 block sm:hidden">Harga Satuan</span>
+                    <span class="text-xs sm:text-sm font-extrabold text-[#0f2d5a]">${formatRupiah(item.harga)} <span class="text-[10px] font-normal text-slate-400">/ ${sat}</span></span>
+                </div>
 
-            <!-- Delete Action -->
-            <div class="shrink-0">
-                <button type="button" onclick="removeCartItem(${item.id})" class="p-2 text-slate-400 hover:text-rose-600 transition cursor-pointer" title="Hapus Produk">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
+                <div class="flex items-center gap-3 ml-auto">
+                    <!-- Qty Stepper -->
+                    <div class="flex items-center bg-[#f8fafc] border border-slate-200 h-8 sm:h-9">
+                        <button type="button" onclick="updateCartItemQty(${item.id}, -1)" class="w-7 sm:w-8 h-full flex items-center justify-center hover:bg-slate-200/60 text-[#0f2d5a] font-bold text-xs sm:text-sm transition cursor-pointer">−</button>
+                        <input type="text" readonly value="${item.qty}" class="w-8 sm:w-9 text-center font-bold text-xs text-[#0f2d5a] bg-transparent select-none">
+                        <button type="button" onclick="updateCartItemQty(${item.id}, 1)" ${item.qty >= maxStok ? 'disabled' : ''} class="w-7 sm:w-8 h-full flex items-center justify-center font-bold text-xs sm:text-sm transition ${item.qty >= maxStok ? 'opacity-30 cursor-not-allowed' : 'hover:bg-slate-200/60 text-[#0f2d5a] cursor-pointer'}">+</button>
+                    </div>
+
+                    <!-- Subtotal (Desktop & Mobile) -->
+                    <div class="text-right">
+                        <span class="text-[10px] text-slate-400 block sm:hidden">Subtotal</span>
+                        <span class="text-xs sm:text-sm font-extrabold text-[#0f2d5a]">${formatRupiah(item.harga * item.qty)}</span>
+                    </div>
+                </div>
             </div>
         </div>
         `;
@@ -223,7 +241,10 @@ function renderCartPage() {
     totalWeightEl.innerText = totalWeight.toLocaleString('id-ID');
     grandTotalEl.innerText = formatRupiah(grandTotal);
     btnCheckoutCount.innerText = selectedCount;
+    if (mobGrandTotal) mobGrandTotal.innerText = formatRupiah(grandTotal);
+    if (mobBtnCount) mobBtnCount.innerText = selectedCount;
     if (btnCheckout) btnCheckout.disabled = (selectedCount <= 0);
+    if (mobBtnCheckout) mobBtnCheckout.disabled = (selectedCount <= 0);
 }
 
 function toggleItemSelect(id) {

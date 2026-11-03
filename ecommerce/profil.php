@@ -263,7 +263,7 @@ if (!empty($orderIds)) {
     </div>
 </section>
 
-<main class="max-w-7xl mx-auto px-4 lg:px-8 py-10 flex-1 w-full">
+<main class="max-w-7xl mx-auto px-4 lg:px-8 py-8 sm:py-10 pb-28 md:pb-12 flex-1 w-full">
 
     <!-- ── Alerts ── -->
     <?php if ($successMsg): ?>
@@ -279,18 +279,18 @@ if (!empty($orderIds)) {
         </div>
     <?php endif; ?>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
         
         <!-- ── LEFT: Edit Profile Card (4 cols - Pharmify #eef6fb Account Container) ── -->
-        <div class="lg:col-span-4 bg-[#eef6fb] p-6 sm:p-7">
+        <div class="lg:col-span-4 bg-[#eef6fb] p-4 sm:p-6 sm:p-7">
             
             <div class="flex items-center gap-3.5 pb-5 border-b border-[#cbe4f5] mb-5">
-                <div class="w-12 h-12 bg-[#0f2d5a] text-white font-extrabold text-lg flex items-center justify-center">
+                <div class="w-11 h-11 sm:w-12 sm:h-12 bg-[#0f2d5a] text-white font-extrabold text-base sm:text-lg flex items-center justify-center">
                     <?= strtoupper(substr($user['nama_lengkap'] ?? 'P', 0, 1)) ?>
                 </div>
-                <div>
-                    <h2 class="text-sm font-extrabold text-[#0f2d5a] leading-tight"><?= htmlspecialchars($user['nama_lengkap'] ?? '') ?></h2>
-                    <span class="text-xs text-slate-500">@<?= htmlspecialchars($user['username'] ?? '') ?></span>
+                <div class="min-w-0">
+                    <h2 class="text-sm font-extrabold text-[#0f2d5a] leading-tight truncate"><?= htmlspecialchars($user['nama_lengkap'] ?? '') ?></h2>
+                    <span class="text-xs text-slate-500 block truncate">@<?= htmlspecialchars($user['username'] ?? '') ?></span>
                     <span class="inline-block mt-0.5 px-2 py-0.5 bg-white text-[#0f2d5a] border border-[#cbe4f5] font-bold text-[9px] uppercase tracking-wider">
                         <?= htmlspecialchars($user['role'] ?? 'pelanggan') ?>
                     </span>
@@ -335,21 +335,21 @@ if (!empty($orderIds)) {
         </div>
 
         <!-- ── RIGHT: Order History (8 cols) ── -->
-        <div class="lg:col-span-8 bg-white border border-slate-200 p-6 sm:p-7">
+        <div class="lg:col-span-8 bg-white border border-slate-200 p-4 sm:p-6 sm:p-7">
             
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-200 mb-5">
                 <div>
                     <span class="text-[10px] font-bold uppercase tracking-widest text-[#1a75d2] block mb-0.5">TRANSAKSI ONLINE</span>
-                    <h2 class="text-lg font-extrabold text-[#0f2d5a] tracking-tight">Riwayat Pesanan Saya</h2>
+                    <h2 class="text-base sm:text-lg font-extrabold text-[#0f2d5a] tracking-tight">Riwayat Pesanan Saya</h2>
                     <p class="text-xs text-slate-500 mt-0.5">Lihat status dan rincian transaksi pesanan online Anda</p>
                 </div>
-                <span class="self-start sm:self-auto text-[11px] font-extrabold uppercase tracking-wider bg-[#eef6fb] text-[#0f2d5a] border border-[#dcebf7] px-3.5 py-1.5">
+                <span class="self-start sm:self-auto text-[11px] font-extrabold uppercase tracking-wider bg-[#eef6fb] text-[#0f2d5a] border border-[#dcebf7] px-3 py-1 sm:px-3.5 sm:py-1.5">
                     <?= $filteredCount ?> Pesanan
                 </span>
             </div>
 
-            <!-- Filter Status Tabs (Pharmify Clean Editorial Tabs) -->
-            <div class="flex flex-wrap items-center gap-1.5 mb-6 text-xs border-b border-slate-200 pb-4">
+            <!-- Filter Status Tabs (Scrollable on Mobile) -->
+            <div class="flex items-center gap-1.5 mb-6 text-xs border-b border-slate-200 pb-4 overflow-x-auto no-scrollbar whitespace-nowrap">
                 <a href="?status=semua" class="px-3.5 py-2 font-bold whitespace-nowrap transition border <?= $statusFilter === 'semua' ? 'bg-[#0f2d5a] text-white border-[#0f2d5a]' : 'bg-white text-slate-600 border-slate-200 hover:border-[#0f2d5a] hover:text-[#0f2d5a]' ?>">
                     Semua (<?= $totalCustomerOrders ?>)
                 </a>

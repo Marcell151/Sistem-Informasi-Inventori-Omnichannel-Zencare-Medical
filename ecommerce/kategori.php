@@ -138,11 +138,25 @@ foreach ($stmtSidebar->fetchAll() as $row) {
     <!-- ============================================================ -->
     <!-- 2-COLUMN COLLECTION LAYOUT (Sidebar Left + Grid Right)       -->
     <!-- ============================================================ -->
-    <div class="max-w-7xl mx-auto px-4 lg:px-8 py-10 lg:py-12">
+    <div class="max-w-7xl mx-auto px-4 lg:px-8 py-8 sm:py-10 lg:py-12">
+        
+        <!-- Mobile Filter Trigger Button (Sticky / Prominent on < lg) -->
+        <div class="lg:hidden mb-4">
+            <button type="button" onclick="toggleMobileFilter()" class="w-full flex items-center justify-between px-4 py-3 bg-[#eef6fb] border border-[#cbe4f5] text-[#0f2d5a] font-bold text-xs uppercase tracking-wider transition hover:bg-[#dfeef9] shadow-2xs">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-[#1a75d2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                    <span>Filter &amp; Kategori Produk</span>
+                </div>
+                <span class="text-[11px] font-semibold text-[#1a75d2] flex items-center gap-1">
+                    Buka Filter &rarr;
+                </span>
+            </button>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
 
-            <!-- LEFT SIDEBAR (Pharmify Reference 7) -->
-            <aside class="lg:col-span-3 space-y-8">
+            <!-- LEFT SIDEBAR (Desktop only - Pharmify Reference 7) -->
+            <aside class="hidden lg:block lg:col-span-3 space-y-8">
                 
                 <!-- 1. Category Accordion List -->
                 <div>
@@ -247,10 +261,10 @@ foreach ($stmtSidebar->fetchAll() as $row) {
             </aside>
 
             <!-- RIGHT MAIN PRODUCT GRID (Pharmify Reference 7) -->
-            <div class="lg:col-span-9">
+            <div class="w-full lg:col-span-9">
 
                 <!-- Top Sort & Column Switcher Toolbar -->
-                <div class="bg-[#eef6fb] px-4 py-3 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div class="bg-[#eef6fb] px-3 sm:px-4 py-3 mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div class="flex items-center gap-3 w-full sm:w-auto">
                         <label for="sort_select" class="text-xs font-bold text-[#0f2d5a] shrink-0">Urutkan:</label>
                         <select id="sort_select" onchange="sortProducts()" class="text-xs border border-slate-200 bg-white px-3 py-2 text-[#0f2d5a] font-semibold focus:outline-none focus:border-[#0f2d5a] w-full sm:w-52">
@@ -280,7 +294,7 @@ foreach ($stmtSidebar->fetchAll() as $row) {
                 </div>
 
                 <!-- PRODUCT GRID -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-10" id="product-grid">
+                <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6" id="product-grid">
                     <?php foreach ($products as $p):
                         $rasio    = intval($p['rasio_konversi']) ?: 1;
                         $stokBox  = ($p['kategori'] === 'Obat')
@@ -319,65 +333,65 @@ foreach ($stmtSidebar->fetchAll() as $row) {
                          data-id="<?= $p['id'] ?>">
 
                         <!-- Image Container -->
-                        <a href="produk.php?id=<?= $p['id'] ?>" class="card-img-box relative block aspect-square w-full overflow-hidden mb-3.5">
+                        <a href="produk.php?id=<?= $p['id'] ?>" class="card-img-box relative block aspect-square w-full overflow-hidden mb-2 sm:mb-3.5">
                             <?php if (!empty($firstSrc)): ?>
                                 <img src="<?= htmlspecialchars($firstSrc) ?>" alt="<?= htmlspecialchars($p['nama_induk']) ?>"
-                                     class="w-full h-full object-contain p-6 mix-blend-multiply"
+                                     class="w-full h-full object-contain p-3 sm:p-6 mix-blend-multiply"
                                      onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
                             <?php else: ?>
                                 <div class="w-full h-full flex items-center justify-center text-slate-300">
-                                    <svg class="w-14 h-14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                                    <svg class="w-10 h-10 sm:w-14 sm:h-14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                                 </div>
                             <?php endif; ?>
 
-                            <span class="absolute top-3 left-3 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide <?= $stokBadge ?>">
+                            <span class="absolute top-2 left-2 sm:top-3 sm:left-3 px-1.5 sm:px-2.5 py-0.5 text-[9px] sm:text-[10px] font-semibold tracking-wide <?= $stokBadge ?>">
                                 <?= $stokLbl ?>
                             </span>
                         </a>
 
                         <!-- Card Content -->
                         <div class="flex flex-col flex-1">
-                            <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                            <div class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5 sm:mb-1 truncate">
                                 <?= htmlspecialchars($p['kategori']) ?> &bull; 1 <?= $satB ?><?= $rasio > 1 ? " ($rasio $satK)" : "" ?>
                             </div>
 
-                            <a href="produk.php?id=<?= $p['id'] ?>" class="block mb-2">
-                                <h3 class="text-[15px] font-bold text-[#0f2d5a] group-hover:text-[#1a75d2] transition-colors leading-snug line-clamp-1">
+                            <a href="produk.php?id=<?= $p['id'] ?>" class="block mb-1.5 sm:mb-2">
+                                <h3 class="text-xs sm:text-[15px] font-bold text-[#0f2d5a] group-hover:text-[#1a75d2] transition-colors leading-snug line-clamp-2">
                                     <?= htmlspecialchars($p['nama_induk']) ?>
                                 </h3>
-                                <p class="text-xs text-slate-500 line-clamp-1 mt-0.5"><?= htmlspecialchars($p['nama_variasi']) ?></p>
+                                <p class="text-[11px] sm:text-xs text-slate-500 line-clamp-1 mt-0.5"><?= htmlspecialchars($p['nama_variasi']) ?></p>
                             </a>
 
                             <!-- Price -->
-                            <div class="flex items-baseline gap-2 mb-3.5 mt-auto pt-1">
-                                <span class="text-base font-extrabold text-[#0f2d5a]">Rp <?= number_format($harga, 0, ',', '.') ?></span>
-                                <span class="text-xs text-slate-400 font-medium">/ <?= $satB ?></span>
+                            <div class="flex flex-wrap items-baseline gap-1 sm:gap-2 mb-2 sm:mb-3.5 mt-auto pt-1">
+                                <span class="text-sm sm:text-base font-extrabold text-[#0f2d5a]">Rp <?= number_format($harga, 0, ',', '.') ?></span>
+                                <span class="text-[10px] sm:text-xs text-slate-400 font-medium">/ <?= $satB ?></span>
                             </div>
 
                             <!-- Action Controls -->
                             <?php if ($stokBox >= 1): ?>
-                            <div class="flex items-center gap-2">
-                                <div class="flex items-center border border-slate-200 bg-[#f8fafc] h-9 shrink-0">
+                            <div class="flex items-center gap-1.5 sm:gap-2">
+                                <div class="flex items-center border border-slate-200 bg-[#f8fafc] h-8 sm:h-9 shrink-0">
                                     <button type="button" onclick="adjustQty(<?= $p['id'] ?>, -1, <?= $stokBox ?>)"
-                                        class="w-7 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-700 font-bold transition text-sm cursor-pointer">−</button>
+                                        class="w-5 sm:w-7 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-700 font-bold transition text-xs sm:text-sm cursor-pointer">−</button>
                                     <input type="number" id="qty_<?= $p['id'] ?>" value="1" min="1" max="<?= $stokBox ?>" readonly
-                                        class="w-8 text-center text-xs font-bold bg-transparent text-[#0f2d5a] focus:outline-none select-none">
+                                        class="w-6 sm:w-8 text-center text-[11px] sm:text-xs font-bold bg-transparent text-[#0f2d5a] focus:outline-none select-none">
                                     <button type="button" onclick="adjustQty(<?= $p['id'] ?>, 1, <?= $stokBox ?>)"
-                                        class="w-7 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-700 font-bold transition text-sm cursor-pointer">+</button>
+                                        class="w-5 sm:w-7 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-700 font-bold transition text-xs sm:text-sm cursor-pointer">+</button>
                                 </div>
 
                                 <button type="button" onclick="addToCart(<?= $p['id'] ?>, '<?= addslashes(htmlspecialchars_decode($p['nama_produk'])) ?>', <?= $harga ?>, <?= intval($p['berat_gram']) ?>, '<?= addslashes($p['gambar'] ?? '') ?>', '<?= addslashes($satB) ?>', <?= $rasio ?>, <?= $stokBox ?>, document.getElementById('qty_<?= $p['id'] ?>').value)"
-                                    class="flex-1 h-9 px-3 rounded-full bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[11px] font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1">
-                                    + Keranjang
+                                    class="flex-1 h-8 sm:h-9 px-2 sm:px-3 rounded-full bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1">
+                                    <span>+ Keranjang</span>
                                 </button>
 
                                 <button type="button" title="Beli Sekarang" onclick="buyNow(<?= $p['id'] ?>, '<?= addslashes(htmlspecialchars_decode($p['nama_produk'])) ?>', <?= $harga ?>, <?= intval($p['berat_gram']) ?>, '<?= addslashes($p['gambar'] ?? '') ?>', '<?= addslashes($satB) ?>', <?= $rasio ?>, <?= $stokBox ?>, document.getElementById('qty_<?= $p['id'] ?>').value)"
-                                    class="h-9 px-3 rounded-full border border-[#0f2d5a] text-[#0f2d5a] hover:bg-[#eef6fb] text-[11px] font-bold transition cursor-pointer shrink-0">
+                                    class="h-8 sm:h-9 px-2.5 sm:px-3 rounded-full border border-[#0f2d5a] text-[#0f2d5a] hover:bg-[#eef6fb] text-[10px] sm:text-[11px] font-bold transition cursor-pointer shrink-0 hidden md:block">
                                     Beli
                                 </button>
                             </div>
                             <?php else: ?>
-                            <div class="w-full h-9 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-[11px] font-bold uppercase tracking-wider border border-slate-200">
+                            <div class="w-full h-8 sm:h-9 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-[10px] sm:text-[11px] font-bold uppercase tracking-wider border border-slate-200">
                                 Stok Habis
                             </div>
                             <?php endif; ?>
@@ -405,7 +419,114 @@ foreach ($stmtSidebar->fetchAll() as $row) {
     </div>
 </main>
 
+<!-- Mobile Filter Drawer (Slide-over from right) -->
+<div id="mobile-filter-overlay" class="hidden fixed inset-0 bg-[#0f2d5a]/40 z-50 backdrop-blur-xs transition-opacity duration-300 opacity-0" onclick="toggleMobileFilter()"></div>
+<div id="mobile-filter-drawer" class="fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+    <!-- Drawer Header -->
+    <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-[#f8fafc]">
+        <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-[#1a75d2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+            <h3 class="text-sm font-extrabold text-[#0f2d5a] uppercase tracking-wider">Filter &amp; Kategori</h3>
+        </div>
+        <button type="button" onclick="toggleMobileFilter()" class="p-1.5 text-slate-400 hover:text-[#0f2d5a] transition cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
+
+    <!-- Drawer Body -->
+    <div class="flex-1 overflow-y-auto p-5 space-y-6 text-xs">
+        <!-- 1. Categories in Drawer -->
+        <div>
+            <h4 class="font-extrabold text-[#0f2d5a] uppercase tracking-wider mb-3 pb-1 border-b border-slate-200">Pilih Kategori</h4>
+            <ul class="space-y-2 text-sm">
+                <li>
+                    <a href="kategori.php" class="flex items-center justify-between py-1 transition <?= (empty($kategori) && !$indukId) ? 'font-bold text-[#0f2d5a]' : 'text-slate-600 hover:text-[#0f2d5a]' ?>">
+                        <span>Semua Koleksi</span>
+                        <span class="text-xs text-slate-400">(<?= count($sidebarInduk['Obat']) + count($sidebarInduk['Alat Kesehatan']) ?>)</span>
+                    </a>
+                </li>
+                <?php foreach (['Obat' => 'Obat & Farmasi', 'Alat Kesehatan' => 'Alat Kesehatan Medis'] as $catKey => $catTitle): ?>
+                <li class="border-t border-slate-100 pt-2">
+                    <a href="kategori.php?kategori=<?= urlencode($catKey) ?>" class="block py-1 <?= ($kategori === $catKey && !$indukId) ? 'font-bold text-[#0f2d5a]' : 'text-slate-700 hover:text-[#0f2d5a] font-medium' ?>">
+                        <?= htmlspecialchars($catTitle) ?>
+                    </a>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+
+        <!-- 2. Stock Filter in Drawer -->
+        <div>
+            <h4 class="font-extrabold text-[#0f2d5a] uppercase tracking-wider mb-3 pb-1 border-b border-slate-200">Ketersediaan Stok</h4>
+            <div class="space-y-2 text-xs text-slate-600">
+                <label class="flex items-center justify-between cursor-pointer hover:text-[#0f2d5a]">
+                    <span class="flex items-center gap-2">
+                        <input type="checkbox" id="chk_instock_m" onchange="syncMobileFilter(this, 'chk_instock')" class="w-3.5 h-3.5 accent-[#0f2d5a] rounded-none">
+                        <span>Tersedia (Stok Ada)</span>
+                    </span>
+                    <span class="text-slate-400">(<?= $inStockCount ?>)</span>
+                </label>
+                <label class="flex items-center justify-between cursor-pointer hover:text-[#0f2d5a]">
+                    <span class="flex items-center gap-2">
+                        <input type="checkbox" id="chk_outstock_m" onchange="syncMobileFilter(this, 'chk_outstock')" class="w-3.5 h-3.5 accent-[#0f2d5a] rounded-none">
+                        <span>Stok Habis</span>
+                    </span>
+                    <span class="text-slate-400">(<?= $outStockCount ?>)</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 3. Search in Drawer -->
+        <div>
+            <h4 class="font-extrabold text-[#0f2d5a] uppercase tracking-wider mb-3 pb-1 border-b border-slate-200">Pencarian</h4>
+            <form action="kategori.php" method="GET" class="space-y-2">
+                <?php if ($kategori): ?>
+                    <input type="hidden" name="kategori" value="<?= htmlspecialchars($kategori) ?>">
+                <?php endif; ?>
+                <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Ketik nama obat / alkes..." class="w-full px-3 py-2 text-xs border border-slate-200 focus:outline-none focus:border-[#0f2d5a]">
+                <button type="submit" class="w-full py-2 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-xs font-bold uppercase tracking-wider transition">
+                    Cari Produk
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Drawer Footer -->
+    <div class="p-4 border-t border-slate-200 bg-[#f8fafc] pb-safe">
+        <button type="button" onclick="toggleMobileFilter()" class="w-full py-3 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-xs font-bold uppercase tracking-widest transition text-center">
+            Terapkan &amp; Tutup
+        </button>
+    </div>
+</div>
+
 <script>
+function toggleMobileFilter() {
+    const overlay = document.getElementById('mobile-filter-overlay');
+    const drawer = document.getElementById('mobile-filter-drawer');
+    if (!drawer || !overlay) return;
+    const isHidden = drawer.classList.contains('translate-x-full');
+
+    if (isHidden) {
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+        drawer.classList.remove('translate-x-full');
+        document.body.style.overflow = 'hidden';
+    } else {
+        overlay.classList.add('opacity-0');
+        drawer.classList.add('translate-x-full');
+        document.body.style.overflow = '';
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+    }
+}
+
+function syncMobileFilter(el, targetId) {
+    const target = document.getElementById(targetId);
+    if (target) {
+        target.checked = el.checked;
+        applyClientFilters();
+    }
+}
+
 function toggleSidebarCat(id, btn) {
     const el = document.getElementById(id);
     if (!el) return;

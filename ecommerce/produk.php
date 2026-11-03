@@ -122,12 +122,12 @@ $totalImages = count($formattedImages);
     <!-- ============================================================ -->
     <!-- 2. MAIN PRODUCT DETAIL 2-COLUMN SHOWCASE (Reference 3)       -->
     <!-- ============================================================ -->
-    <div class="max-w-7xl mx-auto px-4 lg:px-8 py-12">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+    <div class="max-w-7xl mx-auto px-4 lg:px-8 py-8 sm:py-12 pb-32 md:pb-16">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
 
             <!-- LEFT: Product Image Viewport & Thumbnails (5 Cols) -->
             <div class="lg:col-span-5">
-                <div class="relative w-full aspect-square bg-[#f6f8fa] border border-slate-200/70 flex items-center justify-center p-8 overflow-hidden group select-none">
+                <div class="relative w-full aspect-square bg-[#f6f8fa] border border-slate-200/70 flex items-center justify-center p-4 sm:p-8 overflow-hidden group select-none">
                     <?php if ($totalImages > 0): ?>
                         <img id="main_product_image" 
                              src="<?= htmlspecialchars($formattedImages[0]) ?>"
@@ -144,16 +144,16 @@ $totalImages = count($formattedImages);
 
                     <?php if ($totalImages > 1): ?>
                     <button type="button" onclick="prevProductSlide(event)" 
-                            class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 hover:bg-[#0f2d5a] text-[#0f2d5a] hover:text-white border border-slate-200 flex items-center justify-center transition z-20 cursor-pointer" 
+                            class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 bg-white/90 hover:bg-[#0f2d5a] text-[#0f2d5a] hover:text-white border border-slate-200 flex items-center justify-center transition z-20 cursor-pointer" 
                             title="Foto Sebelumnya">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                     </button>
                     <button type="button" onclick="nextProductSlide(event)" 
-                            class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 hover:bg-[#0f2d5a] text-[#0f2d5a] hover:text-white border border-slate-200 flex items-center justify-center transition z-20 cursor-pointer" 
+                            class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 bg-white/90 hover:bg-[#0f2d5a] text-[#0f2d5a] hover:text-white border border-slate-200 flex items-center justify-center transition z-20 cursor-pointer" 
                             title="Foto Selanjutnya">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </button>
-                    <div class="absolute bottom-3 right-3 px-2.5 py-1 bg-white/90 text-[#0f2d5a] text-[11px] font-bold border border-slate-200 z-10">
+                    <div class="absolute bottom-3 right-3 px-2 py-0.5 sm:px-2.5 sm:py-1 bg-white/90 text-[#0f2d5a] text-[10px] sm:text-[11px] font-bold border border-slate-200 z-10">
                         <span id="curr_slide_number">1</span> / <span><?= $totalImages ?></span>
                     </div>
                     <?php endif; ?>
@@ -265,38 +265,38 @@ $totalImages = count($formattedImages);
 
                 <!-- Pharmify Aligned Metadata Rows (Reference 3) -->
                 <div class="space-y-3 text-sm border-b border-slate-200 pb-6 mb-6">
-                    <div class="flex items-center">
-                        <span class="w-40 shrink-0 font-bold text-[#0f2d5a]">Ketersediaan:</span>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
+                        <span class="w-36 sm:w-40 shrink-0 font-bold text-[#0f2d5a]">Ketersediaan:</span>
                         <?php if ($stokBox > 0): ?>
-                            <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 w-fit">
                                 Tersedia (<?= $stokBox ?> <?= htmlspecialchars($satBesar) ?>)
                             </span>
                         <?php else: ?>
-                            <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                            <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 w-fit">
                                 Stok Habis
                             </span>
                         <?php endif; ?>
                     </div>
 
-                    <div class="flex items-center">
-                        <span class="w-40 shrink-0 font-bold text-[#0f2d5a]">Kategori Produk:</span>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
+                        <span class="w-36 sm:w-40 shrink-0 font-bold text-[#0f2d5a]">Kategori Produk:</span>
                         <span class="text-slate-600"><?= htmlspecialchars($p['kategori']) ?></span>
                     </div>
 
-                    <div class="flex items-center">
-                        <span class="w-40 shrink-0 font-bold text-[#0f2d5a]">Kemasan Grosir:</span>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
+                        <span class="w-36 sm:w-40 shrink-0 font-bold text-[#0f2d5a]">Kemasan Grosir:</span>
                         <span class="text-slate-700 font-semibold">
                             1 <?= htmlspecialchars($satBesar) ?><?= $rasio > 1 ? " (Isi $rasio " . htmlspecialchars($satKecil) . ")" : "" ?>
                         </span>
                     </div>
 
-                    <div class="flex items-center">
-                        <span class="w-40 shrink-0 font-bold text-[#0f2d5a]">Kode SKU:</span>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
+                        <span class="w-36 sm:w-40 shrink-0 font-bold text-[#0f2d5a]">Kode SKU:</span>
                         <span class="font-mono text-xs text-slate-600"><?= htmlspecialchars($p['sku_variasi'] ?: '-') ?></span>
                     </div>
 
-                    <div class="flex items-center">
-                        <span class="w-40 shrink-0 font-bold text-[#0f2d5a]">Pengiriman:</span>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
+                        <span class="w-36 sm:w-40 shrink-0 font-bold text-[#0f2d5a]">Pengiriman:</span>
                         <span class="text-slate-600">Kurir Ekspedisi Nasional &amp; Ambil di Toko (Bebas Ongkir)</span>
                     </div>
                 </div>
@@ -318,7 +318,7 @@ $totalImages = count($formattedImages);
                 </div>
                 <?php endif; ?>
 
-                <!-- Quantity Stepper & Primary CTA Buttons -->
+                <!-- Quantity Stepper & Primary CTA Buttons (Desktop) -->
                 <?php if ($stokBox >= 1): ?>
                 <div class="space-y-4">
                     <div class="flex items-center gap-4">
@@ -355,6 +355,32 @@ $totalImages = count($formattedImages);
                     Stok Produk Sedang Habis
                 </div>
                 <?php endif; ?>
+
+            </div>
+
+        </div>
+
+        <!-- Mobile Sticky Purchase Bar (Native App Style, sits above mobile nav) -->
+        <div class="md:hidden fixed bottom-14 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-2 flex items-center gap-2 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+            <a href="https://wa.me/6281234567890?text=Halo%20ZenCare%2C%20saya%20ingin%20tanya%20produk%20<?= urlencode($p['nama_lengkap']) ?>" target="_blank"
+               class="h-10 px-3 border border-slate-300 text-slate-700 rounded flex items-center justify-center transition" title="Tanya Produk via WhatsApp">
+                <svg class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a5.225 5.225 0 00-.571-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 2C6.477 2 2 6.477 2 12c0 1.755.454 3.412 1.254 4.856L2 22l5.293-1.189A9.96 9.96 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
+            </a>
+            <?php if ($stokBox >= 1): ?>
+            <button type="button" onclick="addToCart(<?= $p['id'] ?>, '<?= addslashes($p['nama_lengkap']) ?>', <?= $harga ?>, <?= intval($p['berat_gram']) ?>, '<?= addslashes($p['gambar'] ?? '') ?>', '<?= addslashes($satBesar) ?>', <?= $rasio ?>, <?= $stokBox ?>, document.getElementById('qty_<?= $p['id'] ?>')?.value || 1)"
+                class="flex-1 h-10 px-3 bg-[#eef6fb] text-[#0f2d5a] border border-[#0f2d5a]/20 font-bold text-xs uppercase tracking-wider rounded transition flex items-center justify-center gap-1.5">
+                + Keranjang
+            </button>
+            <button type="button" onclick="buyNow(<?= $p['id'] ?>, '<?= addslashes($p['nama_lengkap']) ?>', <?= $harga ?>, <?= intval($p['berat_gram']) ?>, '<?= addslashes($p['gambar'] ?? '') ?>', '<?= addslashes($satBesar) ?>', <?= $rasio ?>, <?= $stokBox ?>, document.getElementById('qty_<?= $p['id'] ?>')?.value || 1)"
+                class="flex-1 h-10 px-3 bg-[#0f2d5a] text-white font-bold text-xs uppercase tracking-wider rounded transition flex items-center justify-center">
+                Beli Sekarang
+            </button>
+            <?php else: ?>
+            <div class="flex-1 h-10 bg-slate-100 text-slate-400 font-bold text-xs uppercase tracking-wider flex items-center justify-center rounded border border-slate-200">
+                Stok Habis
+            </div>
+            <?php endif; ?>
+        </div>
 
             </div>
 

@@ -4,7 +4,7 @@
     <!-- ============================================================ -->
     <!-- FOOTER (Pharmify Editorial 4-Column Layout)                  -->
     <!-- ============================================================ -->
-    <footer class="bg-white border-t border-slate-200 mt-auto">
+    <footer class="bg-white border-t border-slate-200 mt-auto pb-20 md:pb-0">
         <div class="max-w-7xl mx-auto px-4 lg:px-8 py-12 md:py-16">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
                 
@@ -115,7 +115,7 @@
         </div>
 
         <!-- Drawer Footer / Checkout Summary -->
-        <div class="p-6 border-t border-slate-200 bg-[#f8fafc]">
+        <div class="p-6 border-t border-slate-200 bg-[#f8fafc] pb-safe">
             <div class="flex items-center justify-between mb-3 text-xs">
                 <label class="flex items-center gap-2 cursor-pointer font-semibold text-slate-700 select-none">
                     <input type="checkbox" id="drawer-check-all" onchange="toggleSelectAllDrawer(this.checked)" class="w-3.5 h-3.5 accent-[#0f2d5a] cursor-pointer">
@@ -136,6 +136,37 @@
             </div>
         </div>
     </div>
+
+    <!-- ============================================================ -->
+    <!-- MOBILE BOTTOM APP NAVIGATION (iOS Safari / Android Chrome)   -->
+    <!-- ============================================================ -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-3px_12px_rgba(0,0,0,0.06)] pb-safe">
+        <div class="grid grid-cols-5 h-14">
+            <a href="index.php" class="flex flex-col items-center justify-center py-1 transition <?= ($currentScript ?? '') === 'index.php' ? 'text-[#0f2d5a] font-bold' : 'text-slate-500 hover:text-[#0f2d5a]' ?>">
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="<?= ($currentScript ?? '') === 'index.php' ? '2.2' : '1.8' ?>" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                <span class="text-[10px] leading-tight">Beranda</span>
+            </a>
+            <a href="kategori.php" class="flex flex-col items-center justify-center py-1 transition <?= in_array($currentScript ?? '', ['kategori.php', 'produk.php']) ? 'text-[#0f2d5a] font-bold' : 'text-slate-500 hover:text-[#0f2d5a]' ?>">
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="<?= in_array($currentScript ?? '', ['kategori.php', 'produk.php']) ? '2.2' : '1.8' ?>" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                <span class="text-[10px] leading-tight">Katalog</span>
+            </a>
+            <button type="button" onclick="toggleCart()" class="relative flex flex-col items-center justify-center py-1 text-slate-500 hover:text-[#0f2d5a] transition cursor-pointer">
+                <div class="relative">
+                    <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    <span id="mobile-bottom-cart-badge" class="absolute -top-1 -right-2.5 min-w-[16px] h-[16px] px-1 rounded-full bg-[#0f2d5a] text-white text-[9px] font-bold flex items-center justify-center hidden">0</span>
+                </div>
+                <span class="text-[10px] leading-tight">Keranjang</span>
+            </button>
+            <a href="profil.php" class="flex flex-col items-center justify-center py-1 transition <?= ($currentScript ?? '') === 'profil.php' ? 'text-[#0f2d5a] font-bold' : 'text-slate-500 hover:text-[#0f2d5a]' ?>">
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="<?= ($currentScript ?? '') === 'profil.php' ? '2.2' : '1.8' ?>" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                <span class="text-[10px] leading-tight">Pesanan</span>
+            </a>
+            <a href="<?= isset($_SESSION['user_id']) ? 'profil.php' : '../login_customer.php' ?>" class="flex flex-col items-center justify-center py-1 text-slate-500 hover:text-[#0f2d5a] transition">
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="text-[10px] leading-tight"><?= isset($_SESSION['user_id']) ? 'Akun' : 'Masuk' ?></span>
+            </a>
+        </div>
+    </nav>
 
     <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed bottom-6 right-6 z-[60] flex flex-col gap-3"></div>
@@ -325,6 +356,7 @@
     function renderCart() {
         const badge1 = document.getElementById('cart-count-badge');
         const badge2 = document.getElementById('cart-drawer-count');
+        const badgeMobile = document.getElementById('mobile-bottom-cart-badge');
         const itemsContainer = document.getElementById('cart-items');
         const emptyState = document.getElementById('cart-empty');
         const totalLabel = document.getElementById('cart-total');
@@ -342,6 +374,14 @@
             }
         }
         if (badge2) badge2.textContent = totalItems;
+        if (badgeMobile) {
+            badgeMobile.textContent = totalItems;
+            if (totalItems > 0) {
+                badgeMobile.classList.remove('hidden');
+            } else {
+                badgeMobile.classList.add('hidden');
+            }
+        }
 
         if (cartData.length === 0) {
             if (itemsContainer) {

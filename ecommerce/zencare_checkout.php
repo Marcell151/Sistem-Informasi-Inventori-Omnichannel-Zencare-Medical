@@ -43,6 +43,9 @@ require_once __DIR__ . '/header.php';
 <script src="<?= MIDTRANS_SNAP_URL ?>" data-client-key="<?= MIDTRANS_CLIENT_KEY ?>"></script>
 
 <style>
+  .select2-container {
+    width: 100% !important;
+  }
   .select2-container--default .select2-selection--single {
     height: 42px !important;
     border: 1px solid #cbd5e1 !important;
@@ -51,6 +54,7 @@ require_once __DIR__ . '/header.php';
     display: flex !important;
     align-items: center !important;
     background-color: #fff !important;
+    width: 100% !important;
   }
   .select2-container--default .select2-selection--single:focus {
     border-color: #0f2d5a !important;
@@ -70,6 +74,7 @@ require_once __DIR__ . '/header.php';
     border-radius: 0px !important;
     box-shadow: 0 10px 25px -5px rgba(15,45,90,0.12) !important;
     overflow: hidden !important;
+    max-width: 100% !important;
   }
   .select2-results__option {
     font-size: 0.75rem !important;
@@ -99,38 +104,38 @@ require_once __DIR__ . '/header.php';
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-1 w-full bg-white">
     
     <!-- Top Info Bar -->
-    <div class="mb-8 pb-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="mb-6 sm:mb-8 pb-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-            <h2 class="text-lg font-extrabold text-[#0f2d5a]">Formulir Pengiriman &amp; Konfirmasi Pesanan</h2>
+            <h2 class="text-base sm:text-lg font-extrabold text-[#0f2d5a]">Formulir Pengiriman &amp; Konfirmasi Pesanan</h2>
             <p class="text-xs text-slate-500 mt-0.5">Lengkapi data penerima dan pilih layanan ekspedisi atau pengambilan langsung di toko.</p>
         </div>
-        <div class="flex items-center gap-3">
-            <span class="text-xs font-bold px-3.5 py-1.5 bg-[#eef6fb] text-[#0f2d5a] border border-[#cbe4f5]">
-                Gudang Pengirim: <?= htmlspecialchars($cabangAktif['nama'] ?? 'ZenCare Malang') ?>
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+            <span class="text-xs font-bold px-3 py-1.5 bg-[#eef6fb] text-[#0f2d5a] border border-[#cbe4f5]">
+                Gudang: <?= htmlspecialchars($cabangAktif['nama'] ?? 'ZenCare Malang') ?>
             </span>
-            <a href="cart.php" class="text-xs font-bold text-[#0f2d5a] hover:text-[#1a75d2] border border-slate-300 px-3.5 py-1.5 transition">
-                &larr; Kembali ke Keranjang
+            <a href="cart.php" class="text-xs font-bold text-[#0f2d5a] hover:text-[#1a75d2] border border-slate-300 px-3 py-1.5 transition">
+                &larr; Keranjang
             </a>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
         
         <!-- ============================================================ -->
         <!-- LEFT PANEL: SHIPPING & RECIPIENT FORM (7 Cols)               -->
         <!-- ============================================================ -->
-        <div class="lg:col-span-7 space-y-8">
+        <div class="lg:col-span-7 space-y-6 sm:space-y-8">
             
             <!-- 1. Identitas Penerima -->
-            <div class="bg-white border border-slate-200 p-6 sm:p-8">
+            <div class="bg-white border border-slate-200 p-4 sm:p-6 lg:p-8">
                 <div class="border-b border-slate-200 pb-3.5 mb-5 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <span class="w-7 h-7 bg-[#0f2d5a] text-white text-xs font-extrabold flex items-center justify-center">01</span>
-                        <h3 class="text-base font-extrabold text-[#0f2d5a]">Identitas Penerima</h3>
+                        <h3 class="text-sm sm:text-base font-extrabold text-[#0f2d5a]">Identitas Penerima</h3>
                     </div>
                     <?php if ($savedUser): ?>
-                        <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5">
-                            Data Profil Terhubung
+                        <span class="text-[10px] sm:text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5">
+                            Data Terhubung
                         </span>
                     <?php endif; ?>
                 </div>
@@ -150,11 +155,11 @@ require_once __DIR__ . '/header.php';
             </div>
 
             <!-- 2. Alamat & RajaOngkir API -->
-            <div class="bg-white border border-slate-200 p-6 sm:p-8">
+            <div class="bg-white border border-slate-200 p-4 sm:p-6 lg:p-8">
                 <div class="border-b border-slate-200 pb-3.5 mb-5 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <span class="w-7 h-7 bg-[#0f2d5a] text-white text-xs font-extrabold flex items-center justify-center">02</span>
-                        <h3 class="text-base font-extrabold text-[#0f2d5a]">Alamat Tujuan &amp; Metode Pengiriman</h3>
+                        <h3 class="text-sm sm:text-base font-extrabold text-[#0f2d5a]">Alamat Tujuan &amp; Pengiriman</h3>
                     </div>
                 </div>
                 
@@ -221,9 +226,9 @@ require_once __DIR__ . '/header.php';
                             <label class="block font-bold text-[#0f2d5a]">Titik Koordinat Lokasi Pengiriman (Peta Interaktif)</label>
                             <span id="distance_info" class="font-bold text-[#1a75d2]">Jarak: ~0 km</span>
                         </div>
-                        <div id="map" class="w-full h-56 border border-slate-300 z-10"></div>
-                        <div class="flex justify-between text-[11px] text-slate-500 pt-1">
-                            <span>Geser penanda (pin) atau klik pada peta untuk menyesuaikan titik pengantaran.</span>
+                        <div id="map" class="w-full h-52 sm:h-56 border border-slate-300 z-10"></div>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-500 pt-1 gap-1">
+                            <span>Geser pin atau sentuh peta untuk menyesuaikan titik pengantaran.</span>
                             <span>Koordinat: <strong id="disp_lat" class="text-[#0f2d5a]"><?= $savedUser['lat'] ?? $branchLat ?></strong>, <strong id="disp_lng" class="text-[#0f2d5a]"><?= $savedUser['lng'] ?? $branchLng ?></strong></span>
                         </div>
                     </div>
@@ -246,7 +251,7 @@ require_once __DIR__ . '/header.php';
         <!-- RIGHT PANEL: ORDER SUMMARY & PAYMENT (5 Cols - Pharmify Box) -->
         <!-- ============================================================ -->
         <div class="lg:col-span-5">
-            <div class="bg-[#eef6fb] border border-[#cbe4f5] p-6 sm:p-8 sticky top-24">
+            <div class="bg-[#eef6fb] border border-[#cbe4f5] p-4 sm:p-6 lg:p-8 sticky top-24">
                 
                 <div class="flex items-center justify-between border-b border-[#cbe4f5] pb-3.5 mb-5">
                     <div class="flex items-center gap-2.5">
