@@ -74,11 +74,11 @@ $pesananMenunggu  = (int)$pdo->query("SELECT COUNT(*) FROM penjualan WHERE statu
 $transaksiHariIni = (int)$pdo->query("SELECT COUNT(*) FROM penjualan WHERE DATE(created_at)=CURDATE() AND status_pesanan NOT IN ('Dibatalkan')")->fetchColumn();
 
 // ─── ANOMALI FEFO & MONITORING RETUR (Bimbingan Dosen Poin 2) ─────────────
-$anomaliPendingCount = (int)$pdo->query("SELECT COUNT(*) FROM log_anomali_fefo WHERE status = 'terlewat'")->fetchColumn();
+$anomaliPendingCount = (int)$pdo->query("SELECT COUNT(*) FROM log_anomali_fefo WHERE status IN ('terlewat', 'sebagian')")->fetchColumn();
 $anomaliSelesaiCount = (int)$pdo->query("SELECT COUNT(*) FROM log_anomali_fefo WHERE status = 'disesuaikan'")->fetchColumn();
-$anomaliHariIniCount = (int)$pdo->query("SELECT COUNT(*) FROM log_anomali_fefo WHERE (DATE(created_at) = CURDATE() OR status = 'terlewat')")->fetchColumn();
+$anomaliHariIniCount = (int)$pdo->query("SELECT COUNT(*) FROM log_anomali_fefo WHERE (DATE(created_at) = CURDATE() OR status IN ('terlewat', 'sebagian'))")->fetchColumn();
 $listAnomaliHariIni = $pdo->query("
-    SELECT a.id, a.id_penjualan, a.batch_diambil, a.batch_seharusnya, a.qty, a.satuan_tipe, a.status, a.created_at, a.resolved_at,
+    SELECT a.id, a.id_penjualan, a.batch_diambil, a.batch_seharusnya, a.qty, a.qty_disesuaikan, a.satuan_tipe, a.status, a.created_at, a.resolved_at,
            COALESCE(p.no_invoice, CONCAT('TRX-', a.id_penjualan)) AS no_invoice,
            p_res.no_invoice AS no_invoice_resolved,
            COALESCE(p.tipe_transaksi, 'pos') AS tipe_transaksi,
@@ -92,7 +92,8 @@ $listAnomaliHariIni = $pdo->query("
     LEFT JOIN produk_induk pi ON pv.id_produk_induk = pi.id
     LEFT JOIN users u ON a.id_user = u.id
     ORDER BY (a.status = 'terlewat') DESC,
-             CASE WHEN a.status = 'terlewat' THEN a.created_at END DESC,
+             (a.status = 'sebagian') DESC,
+             CASE WHEN a.status IN ('terlewat', 'sebagian') THEN a.created_at END DESC,
              COALESCE(a.resolved_at, a.created_at) DESC,
              a.id DESC
     LIMIT 50
@@ -290,7 +291,7 @@ layoutHeader(
             <a href="admin/pesanan.php" style="font-size:11px;color:#1a75d2;text-decoration:none;font-weight:600;">Kelola Semua →</a>
         </div>
         <?php if (empty($pesananProses)): ?>
-        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Antrean kosong ✓</div>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Antrean kosong</div>
         <?php else: ?>
         <table style="width:100%;border-collapse:collapse;font-size:12px;">
             <thead>
@@ -414,7 +415,7 @@ layoutHeader(
     <div onclick="openAnomaliModal()" style="cursor:pointer;background:#fff;border:1px solid <?= $anomaliPendingCount > 0 ? '#fed7aa' : '#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">ANOMALI FEFO</div>
         <div style="font-size:30px;font-weight:900;color:<?= $anomaliPendingCount > 0 ? '#d97706' : '#1e293b' ?>;line-height:1;"><?= number_format($anomaliPendingCount) ?> <span style="font-size:13px;font-weight:600;color:#94a3b8;">/ <?= number_format($anomaliSelesaiCount) ?> disesuaikan</span></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $anomaliPendingCount > 0 ? 'Menunggu dikeluarkan kasir' : 'Semua deviasi disesuaikan' ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $anomaliPendingCount > 0 ? 'Perlu tindak lanjut kasir' : 'Semua deviasi disesuaikan' ?></div>
     </div>
 
     <!-- Widget Monitoring Retur Barang (Superadmin - Desain Seragam) -->
@@ -523,7 +524,7 @@ layoutHeader(
             <span style="font-size:10px;color:#94a3b8;">Pusat (Muharto)</span>
         </div>
         <?php if (empty($stokMenipis)): ?>
-        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Semua item stok aman (di atas batas minimum) ✓</div>
+        <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Semua item stok aman (di atas batas minimum)</div>
         <?php else: ?>
         <div id="rop-superadmin-list">
         <?php foreach ($stokMenipis as $index => $s): 
@@ -877,7 +878,7 @@ layoutHeader(
     <div onclick="openAnomaliModal()" style="cursor:pointer;background:#fff;border:1px solid <?= $anomaliPendingCount > 0 ? '#fed7aa' : '#e4e9f0' ?>;border-radius:10px;padding:16px 18px;">
         <div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:8px;letter-spacing:.04em;">ANOMALI FEFO</div>
         <div style="font-size:30px;font-weight:900;color:<?= $anomaliPendingCount > 0 ? '#d97706' : '#1e293b' ?>;line-height:1;"><?= number_format($anomaliPendingCount) ?> <span style="font-size:13px;font-weight:600;color:#94a3b8;">/ <?= number_format($anomaliSelesaiCount) ?> disesuaikan</span></div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $anomaliPendingCount > 0 ? 'Menunggu dikeluarkan kasir' : 'Semua deviasi disesuaikan' ?></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;"><?= $anomaliPendingCount > 0 ? 'Perlu tindak lanjut kasir' : 'Semua deviasi disesuaikan' ?></div>
     </div>
 
     <!-- Widget Monitoring Retur Barang (Admin - Desain Seragam) -->
@@ -1305,11 +1306,20 @@ function renderAnomaliModalPage(page) {
             ? '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:#eef2ff;color:#4338ca;font-weight:600;display:inline-block;margin-top:2px;">Satuan Besar (Grosir)</span>'
             : '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:#f1f5f9;color:#475569;font-weight:600;display:inline-block;margin-top:2px;">Satuan Kecil (Eceran)</span>';
         
+        const qtyTotal = Number(an.qty) || 0;
+        const qtyDis = Number(an.qty_disesuaikan) || 0;
+        
+        let qtyDisplay = '';
         let statusBadge = '';
         if (an.status === 'disesuaikan') {
-            statusBadge = `<span style="background:#dcfce7;color:#166534;border:1px solid #bbf7d0;padding:2px 8px;border-radius:12px;font-weight:700;font-size:10px;white-space:nowrap;">Sudah Disesuaikan</span><div style="font-size:9px;color:#64748b;font-family:monospace;margin-top:2px;">di ${an.no_invoice_resolved || '-'}</div>`;
+            qtyDisplay = `<span style="color:#166534;font-family:monospace;font-weight:700;">${qtyTotal}/${qtyTotal}</span> <span style="font-size:10px;color:#64748b;font-weight:normal;">${satLabel}</span>`;
+            statusBadge = `<span style="display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#166534;border:1px solid #bbf7d0;padding:2px 8px;border-radius:12px;font-weight:700;font-size:10px;white-space:nowrap;"><svg style="width:11px;height:11px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Sudah Disesuaikan</span><div style="font-size:9px;color:#64748b;font-family:monospace;margin-top:2px;">di ${an.no_invoice_resolved || '-'}</div>`;
+        } else if (an.status === 'sebagian') {
+            qtyDisplay = `<span style="color:#d97706;font-family:monospace;font-weight:700;">${qtyDis}/${qtyTotal}</span> <span style="font-size:10px;color:#64748b;font-weight:normal;">${satLabel}</span>`;
+            statusBadge = `<span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#b45309;border:1px solid #fde68a;padding:2px 8px;border-radius:12px;font-weight:700;font-size:10px;white-space:nowrap;"><svg style="width:11px;height:11px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Sebagian (${qtyDis}/${qtyTotal})</span><div style="font-size:9px;color:#b45309;margin-top:2px;">Sisa ${qtyTotal - qtyDis} ${satLabel} terlewat</div>`;
         } else {
-            statusBadge = `<span style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:2px 8px;border-radius:12px;font-weight:700;font-size:10px;white-space:nowrap;">Menunggu Dikeluarkan</span><div style="font-size:9px;color:#b45309;margin-top:2px;">Prioritaskan berikutnya</div>`;
+            qtyDisplay = `<span style="color:#dc2626;font-family:monospace;font-weight:700;">0/${qtyTotal}</span> <span style="font-size:10px;color:#64748b;font-weight:normal;">${satLabel}</span>`;
+            statusBadge = `<span style="display:inline-flex;align-items:center;gap:4px;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;padding:2px 8px;border-radius:12px;font-weight:700;font-size:10px;white-space:nowrap;"><svg style="width:11px;height:11px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Menunggu Dikeluarkan</span><div style="font-size:9px;color:#64748b;margin-top:2px;">Prioritaskan berikutnya</div>`;
         }
 
         rowsHtml += `
@@ -1324,7 +1334,7 @@ function renderAnomaliModalPage(page) {
                 </td>
                 <td style="padding:8px;color:#1e40af;font-family:monospace;font-weight:700;background:#eff6ff;">${an.batch_seharusnya}</td>
                 <td style="padding:8px;color:#991b1b;font-family:monospace;font-weight:700;background:#fef2f2;">${an.batch_diambil}</td>
-                <td style="padding:8px;text-align:right;font-weight:700;color:#dc2626;">${Number(an.qty).toLocaleString('id-ID')} <span style="font-size:10px;color:#64748b;font-weight:normal;">${satLabel}</span></td>
+                <td style="padding:8px;text-align:right;font-weight:700;">${qtyDisplay}</td>
                 <td style="padding:8px;text-align:center;">${statusBadge}</td>
                 <td style="padding:8px;color:#64748b;font-size:10px;">${an.operator}</td>
             </tr>
@@ -1358,7 +1368,7 @@ window.navigateAnomaliModal = function(delta) {
 function openAnomaliModal() {
     if (!dataAnomaliMaster || dataAnomaliMaster.length === 0) {
         Swal.fire({
-            title: 'Kepatuhan FEFO Tertib ✓',
+            title: 'Kepatuhan FEFO Tertib',
             html: '<div class="text-sm text-slate-600 mt-2">Tidak ada anomali atau penukaran batch fisik yang terjadi.<br><br><span class="text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 font-bold inline-block">Seluruh transaksi tertib mengikuti urutan First-Expired, First-Out (FEFO)</span></div>',
             icon: 'success',
             confirmButtonColor: '#1a75d2'
@@ -1432,9 +1442,9 @@ function renderReturModalPage(page) {
         if (isWaiting) {
             badge = '<span style="padding:2px 8px;border-radius:4px;background:#fef3c7;color:#92400e;font-weight:700;font-size:10px;">Menunggu Penggantian</span>';
         } else if (r.status_retur === 'selesai_potong_faktur') {
-            badge = '<span style="padding:2px 8px;border-radius:4px;background:#e0f2fe;color:#0369a1;font-weight:700;font-size:10px;">✓ Selesai (Potong Faktur / Credit Note)</span>';
+            badge = '<span style="padding:2px 8px;border-radius:4px;background:#e0f2fe;color:#0369a1;font-weight:700;font-size:10px;">Selesai (Potong Faktur / Credit Note)</span>';
         } else {
-            badge = `<span style="padding:2px 8px;border-radius:4px;background:#dcfce7;color:#166534;font-weight:700;font-size:10px;">✓ Selesai Diganti (Batch: ${r.no_batch_pengganti || '-'})</span>`;
+            badge = `<span style="padding:2px 8px;border-radius:4px;background:#dcfce7;color:#166534;font-weight:700;font-size:10px;">Selesai Diganti (Batch: ${r.no_batch_pengganti || '-'})</span>`;
         }
         rowsHtml += `
             <tr style="border-bottom:1px solid #e2e8f0;">
@@ -1474,7 +1484,7 @@ window.navigateReturModal = function(delta) {
 function openReturModal() {
     if (!listReturMaster || listReturMaster.length === 0) {
         Swal.fire({
-            title: 'Monitoring Retur Bersih ✓',
+            title: 'Monitoring Retur Bersih',
             text: 'Tidak ada barang rusak penerimaan PO yang sedang menunggu penggantian.',
             icon: 'info',
             confirmButtonColor: '#1a75d2'

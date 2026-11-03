@@ -17,8 +17,6 @@ if (!isset($_SESSION['cabang_ecommerce'])) {
 // Branch Selection Handler
 if (isset($_GET['cabang_ecommerce'])) {
     $_SESSION['cabang_ecommerce'] = intval($_GET['cabang_ecommerce']);
-    // Option: clear cart when changing branch
-    // $_SESSION['cart'] = []; 
     header("Location: " . strtok($_SERVER["REQUEST_URI"], '?'));
     exit;
 }
@@ -26,8 +24,28 @@ if (isset($_GET['cabang_ecommerce'])) {
 // Categories for Mega Menu
 $kategoriMenu = $pdo->query("SELECT DISTINCT kategori FROM produk_induk WHERE is_active = 1")->fetchAll(PDO::FETCH_COLUMN);
 
+// Group sample parent products for the Mega Menu columns
+$megaStmt = $pdo->query("
+    SELECT i.id, i.nama_produk, i.kategori, MIN(v.id) AS id_variasi
+    FROM produk_induk i
+    JOIN produk_variasi v ON v.id_produk_induk = i.id
+    WHERE i.is_active = 1 AND v.is_active = 1 AND v.tampil_di_online = 1
+    GROUP BY i.id, i.nama_produk, i.kategori
+    ORDER BY i.nama_produk ASC
+");
+$allMegaItems = $megaStmt->fetchAll(PDO::FETCH_ASSOC);
+
+$megaObat = array_values(array_filter($allMegaItems, fn($x) => $x['kategori'] === 'Obat'));
+$megaAlkes = array_values(array_filter($allMegaItems, fn($x) => $x['kategori'] === 'Alat Kesehatan'));
+
+$megaCol1 = array_slice($megaObat, 0, 6);
+$megaCol2 = array_slice($megaObat, 6, 6);
+$megaCol3 = array_slice($megaObat, 12, 6);
+$megaCol4 = array_slice($megaAlkes, 0, 6);
+
 $isLoggedIn = isset($_SESSION['user_id']) && $_SESSION['role'] === 'pelanggan';
 $namaPelanggan = $isLoggedIn ? $_SESSION['nama_lengkap'] : '';
+$currentScript = basename($_SERVER['PHP_SELF']);
 ?>
 <!DOCTYPE html>
 <html lang="id" class="scroll-smooth">
@@ -41,11 +59,12 @@ $namaPelanggan = $isLoggedIn ? $_SESSION['nama_lengkap'] : '';
       tailwind.config = {
         theme: {
           extend: {
-            fontFamily: { sans: ['Inter', 'sans-serif'] },
+            fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'] },
             colors: {
               zc:    '#1a75d2',
-              zcHv:  '#1562b3',
-              zcLt:  '#e8f2ff',
+              zcHv:  '#0f2d5a',
+              zcNavy:'#0f2d5a',
+              zcLt:  '#eef6fb',
               zcEm:  '#059669',
               zcBrd: '#e4e9f0',
               zcTxt: '#1e293b',
@@ -56,9 +75,8 @@ $namaPelanggan = $isLoggedIn ? $_SESSION['nama_lengkap'] : '';
       }
     </script>
     <style>
-        /* Custom Font */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; background-color: #ffffff; color: #1e293b; }
         
         /* Hide scrollbar for smooth cart drawer */
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -68,8 +86,8 @@ $namaPelanggan = $isLoggedIn ? $_SESSION['nama_lengkap'] : '';
         .mega-menu {
             opacity: 0;
             visibility: hidden;
-            transform: translateY(10px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(8px);
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .mega-menu-trigger:hover .mega-menu, .mega-menu:hover {
             opacity: 1;
@@ -79,183 +97,270 @@ $namaPelanggan = $isLoggedIn ? $_SESSION['nama_lengkap'] : '';
         
         /* Header Scroll Shadow */
         #main-header.scrolled {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 20px -2px rgba(15, 45, 90, 0.08);
+        }
+
+        /* Molecular Medical Pattern Banner */
+        .pharmify-banner {
+            background-color: #0b2948;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(26, 117, 210, 0.28) 0%, transparent 50%),
+                radial-gradient(circle at 80% 30%, rgba(14, 165, 233, 0.2) 0%, transparent 45%),
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg stroke='%2338bdf8' stroke-width='0.6' stroke-opacity='0.18' fill='none'%3E%3Cpolygon points='50,8 85,28 85,68 50,88 15,68 15,28'/%3E%3Cline x1='50' y1='8' x2='50' y2='0'/%3E%3Cline x1='85' y1='28' x2='100' y2='20'/%3E%3Cline x1='85' y1='68' x2='100' y2='76'/%3E%3Ccircle cx='50' cy='8' r='2' fill='%2338bdf8' fill-opacity='0.25'/%3E%3Ccircle cx='85' cy='28' r='2' fill='%2338bdf8' fill-opacity='0.25'/%3E%3Ccircle cx='15' cy='68' r='2' fill='%2338bdf8' fill-opacity='0.25'/%3E%3C/g%3E%3C/svg%3E");
         }
     </style>
 </head>
-<body class="flex flex-col min-h-screen relative">
+<body class="flex flex-col min-h-screen relative bg-white">
 
 <!-- ============================================================ -->
-<!-- TOP BAR (Dark Navy) -->
+<!-- TOP UTILITY BAR (Deep Navy - Pharmify Style)                 -->
 <!-- ============================================================ -->
-<div class="bg-[#0f2d5a] text-blue-100 text-xs py-2 px-4 sm:px-8 border-b border-white/10 z-50 relative hidden sm:block">
+<div class="bg-[#0f2d5a] text-white text-xs py-2.5 px-4 sm:px-8 z-50 relative hidden sm:block">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <div class="flex items-center gap-4">
-            <span class="flex items-center gap-1.5 opacity-80 hover:opacity-100 transition">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                Melayani Pengiriman Seluruh Indonesia
-            </span>
-            <span class="w-px h-3 bg-white/20"></span>
-            <a href="#" class="flex items-center gap-1.5 opacity-80 hover:opacity-100 transition">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                CS: +62 812-3456-7890
-            </a>
+        <!-- Left: Social & Store Hours -->
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+                <a href="https://wa.me/6281234567890" target="_blank" title="WhatsApp Resmi" class="w-5 h-5 rounded-full bg-white text-[#0f2d5a] flex items-center justify-center hover:bg-blue-100 transition">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a5.225 5.225 0 00-.571-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 2C6.477 2 2 6.477 2 12c0 1.755.454 3.412 1.254 4.856L2 22l5.293-1.189A9.96 9.96 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
+                </a>
+                <a href="tentang_kami.php" title="Informasi Apotek" class="w-5 h-5 rounded-full bg-white text-[#0f2d5a] flex items-center justify-center hover:bg-blue-100 transition">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                </a>
+                <a href="cara_pembelian.php" title="Panduan Belanja" class="w-5 h-5 rounded-full bg-white text-[#0f2d5a] flex items-center justify-center hover:bg-blue-100 transition">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                </a>
+            </div>
+            <span class="w-px h-3.5 bg-white/20 mx-1"></span>
+            <span class="text-[11px] text-blue-100 font-medium">Distributor Resmi Obat &amp; Alat Kesehatan</span>
         </div>
-        <div class="flex items-center gap-4">
-            <a href="tentang_kami.php" class="opacity-80 hover:opacity-100 transition">Tentang Kami</a>
-            <span class="w-px h-3 bg-white/20"></span>
-            <a href="profil.php#riwayat" class="opacity-80 hover:opacity-100 transition">Lacak Pesanan</a>
-            <span class="w-px h-3 bg-white/20"></span>
-            <a href="../login.php" class="opacity-80 hover:opacity-100 transition font-semibold text-white">Login Staf</a>
+
+        <!-- Right: Address, Email & Staff Login -->
+        <div class="flex items-center gap-5 text-[11px]">
+            <span class="flex items-center gap-1.5 text-blue-100">
+                <svg class="w-3.5 h-3.5 text-sky-300 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+                Jl. Muharto No. 1, Kota Malang, Jawa Timur
+            </span>
+            <span class="w-px h-3.5 bg-white/20 hidden md:block"></span>
+            <a href="mailto:cs@zencare.id" class="hidden md:flex items-center gap-1.5 text-blue-100 hover:text-white transition">
+                <svg class="w-3.5 h-3.5 text-sky-300 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+                cs@zencare.id
+            </a>
+            <span class="w-px h-3.5 bg-white/20"></span>
+            <a href="../login.php" class="text-blue-200 hover:text-white font-semibold transition">Portal Staf</a>
         </div>
     </div>
 </div>
 
 <!-- ============================================================ -->
-<!-- MAIN NAVBAR -->
+<!-- MAIN NAVBAR (Single-Row Pharmify Layout)                     -->
 <!-- ============================================================ -->
-<header id="main-header" class="bg-white sticky top-0 z-40 transition-shadow duration-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-8 py-4">
-        <div class="flex items-center justify-between gap-4 lg:gap-8">
+<header id="main-header" class="bg-white sticky top-0 z-40 border-b border-slate-100 transition-shadow duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="flex items-center justify-between h-20 gap-4">
             
-            <!-- Mobile Menu Toggle -->
-            <button class="lg:hidden p-2 text-slate-600" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-            </button>
+            <!-- Left: Mobile Menu Button + Desktop Navigation Links -->
+            <div class="flex items-center gap-6 lg:gap-7">
+                <button class="lg:hidden p-2 -ml-2 text-slate-700 hover:text-[#0f2d5a]" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
 
-            <!-- Brand Logo -->
-            <a href="index.php" class="flex items-center gap-2.5 shrink-0 group">
-                <div class="w-12 h-12 rounded-full bg-white border border-slate-200 flex items-center justify-center group-hover:scale-105 transition shadow-sm overflow-hidden">
-                    <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
-                </div>
-                <div>
-                    <h1 class="text-xl font-black tracking-tight text-[#0f2d5a] leading-none">ZenCare</h1>
-                    <span class="text-[10px] font-bold text-[#1a75d2] uppercase tracking-wider">Medical Store</span>
-                </div>
-            </a>
+                <nav class="hidden lg:flex items-center gap-7 text-[13px] font-semibold">
+                    <a href="index.php" class="<?= $currentScript === 'index.php' ? 'text-[#1a75d2] font-bold' : 'text-slate-800 hover:text-[#1a75d2]' ?> transition py-7">
+                        Beranda
+                    </a>
 
-            <!-- Search Bar (Desktop) -->
-            <div class="hidden md:flex flex-1 max-w-2xl relative group">
-                <form action="kategori.php" method="GET" class="w-full flex">
-                    <input type="text" name="q" placeholder="Cari obat, alat kesehatan, atau merk..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-l-xl px-5 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#1a75d2]/20 focus:border-[#1a75d2] focus:bg-white transition" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
-                    <button type="submit" class="bg-[#1a75d2] hover:bg-[#0f2d5a] text-white px-6 rounded-r-xl transition flex items-center justify-center">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    </button>
-                </form>
-            </div>
-
-            <!-- Right Actions -->
-            <div class="flex items-center gap-2 sm:gap-4 shrink-0">
-                <div class="w-px h-8 bg-slate-200 hidden sm:block"></div>
-
-                <!-- Account -->
-                <?php if ($isLoggedIn): ?>
-                    <div class="relative group">
-                        <a href="profil.php" class="hidden sm:flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-200">
-                            <div class="w-9 h-9 rounded-full bg-[#1a75d2]/10 text-[#1a75d2] flex items-center justify-center font-bold">
-                                <?= strtoupper(substr($namaPelanggan, 0, 1)) ?>
-                            </div>
-                            <div class="text-left">
-                                <span class="block text-[10px] text-slate-500 font-medium">Pelanggan</span>
-                                <span class="block text-sm font-bold text-[#0f2d5a] leading-none"><?= htmlspecialchars($namaPelanggan) ?></span>
-                            </div>
+                    <!-- Mega Menu Trigger: Katalog -->
+                    <div class="mega-menu-trigger static py-7">
+                        <a href="kategori.php" class="<?= ($currentScript === 'kategori.php' || $currentScript === 'produk.php') ? 'text-[#1a75d2] font-bold' : 'text-slate-800 hover:text-[#1a75d2]' ?> flex items-center gap-1 transition">
+                            Katalog
+                            <svg class="w-3.5 h-3.5 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </a>
-                        <div class="absolute right-0 top-full mt-1 w-48 bg-white border border-slate-200 shadow-xl rounded-xl p-2 hidden group-hover:block z-50">
-                            <a href="profil.php" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#1a75d2] rounded-lg">Profil & Riwayat</a>
-                            <a href="../logout.php" class="block px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg">Keluar</a>
+
+                        <!-- Full-Width Pharmify Mega Menu Panel -->
+                        <div class="mega-menu absolute left-0 right-0 top-full bg-white border-t border-b border-slate-200 shadow-2xl z-50">
+                            <div class="max-w-7xl mx-auto px-8 py-7">
+                                <div class="grid grid-cols-12 gap-8">
+                                    <!-- Column 1: Left Category Selector Box (Pharmify Style) -->
+                                    <div class="col-span-3 bg-[#eef6fb] rounded-md overflow-hidden flex flex-col">
+                                        <a href="kategori.php?kategori=Obat" class="flex items-center justify-between px-4 py-3 bg-[#0f2d5a] text-white text-xs font-bold tracking-wide">
+                                            <span>Obat &amp; Farmasi</span>
+                                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                                        </a>
+                                        <a href="kategori.php?kategori=Alat+Kesehatan" class="flex items-center justify-between px-4 py-3 text-slate-700 hover:bg-[#dcecf8] hover:text-[#0f2d5a] text-xs font-medium border-b border-slate-200/60 transition">
+                                            <span>Alat Kesehatan Resmi</span>
+                                            <svg class="w-3.5 h-3.5 opacity-40" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                                        </a>
+                                        <a href="kategori.php?q=Vitamin" class="flex items-center justify-between px-4 py-3 text-slate-700 hover:bg-[#dcecf8] hover:text-[#0f2d5a] text-xs font-medium border-b border-slate-200/60 transition">
+                                            <span>Vitamin &amp; Suplemen</span>
+                                            <svg class="w-3.5 h-3.5 opacity-40" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                                        </a>
+                                        <a href="kategori.php?q=Sirup" class="flex items-center justify-between px-4 py-3 text-slate-700 hover:bg-[#dcecf8] hover:text-[#0f2d5a] text-xs font-medium border-b border-slate-200/60 transition">
+                                            <span>Sirup &amp; Obat Anak</span>
+                                            <svg class="w-3.5 h-3.5 opacity-40" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                                        </a>
+                                        <a href="kategori.php" class="flex items-center justify-between px-4 py-3 text-[#1a75d2] hover:bg-[#dcecf8] text-xs font-bold transition mt-auto">
+                                            <span>Lihat Seluruh Koleksi</span>
+                                            <span>&rarr;</span>
+                                        </a>
+                                    </div>
+
+                                    <!-- Column 2: Obat Umum & Tablet -->
+                                    <div class="col-span-2">
+                                        <h4 class="text-xs font-bold text-slate-900 mb-3 pb-1.5 border-b border-slate-100">Obat Tablet &amp; Kaplet</h4>
+                                        <ul class="space-y-2 text-xs text-slate-600">
+                                            <?php foreach ($megaCol1 as $m): ?>
+                                                <li><a href="produk.php?id=<?= $m['id_variasi'] ?>" class="hover:text-[#1a75d2] transition block truncate"><?= htmlspecialchars($m['nama_produk']) ?></a></li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
+
+                                    <!-- Column 3: Sirup & Perawatan -->
+                                    <div class="col-span-2">
+                                        <h4 class="text-xs font-bold text-slate-900 mb-3 pb-1.5 border-b border-slate-100">Sirup &amp; Perawatan</h4>
+                                        <ul class="space-y-2 text-xs text-slate-600">
+                                            <?php foreach ($megaCol2 as $m): ?>
+                                                <li><a href="produk.php?id=<?= $m['id_variasi'] ?>" class="hover:text-[#1a75d2] transition block truncate"><?= htmlspecialchars($m['nama_produk']) ?></a></li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
+
+                                    <!-- Column 4: Vitamin & Herbal -->
+                                    <div class="col-span-2">
+                                        <h4 class="text-xs font-bold text-slate-900 mb-3 pb-1.5 border-b border-slate-100">Suplemen &amp; Lainnya</h4>
+                                        <ul class="space-y-2 text-xs text-slate-600">
+                                            <?php foreach ($megaCol3 as $m): ?>
+                                                <li><a href="produk.php?id=<?= $m['id_variasi'] ?>" class="hover:text-[#1a75d2] transition block truncate"><?= htmlspecialchars($m['nama_produk']) ?></a></li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
+
+                                    <!-- Column 5: Alat Kesehatan -->
+                                    <div class="col-span-3">
+                                        <h4 class="text-xs font-bold text-slate-900 mb-3 pb-1.5 border-b border-slate-100">Alat Kesehatan &amp; BMHP</h4>
+                                        <ul class="space-y-2 text-xs text-slate-600">
+                                            <?php foreach ($megaCol4 as $m): ?>
+                                                <li><a href="produk.php?id=<?= $m['id_variasi'] ?>" class="hover:text-[#1a75d2] transition block truncate"><?= htmlspecialchars($m['nama_produk']) ?></a></li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                <?php else: ?>
-                    <a href="../login_customer.php" class="hidden sm:block px-5 py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 font-bold text-sm hover:border-[#1a75d2] hover:text-[#1a75d2] transition">
-                        Masuk / Daftar
-                    </a>
-                <?php endif; ?>
 
-                <!-- Cart Button -->
-                <button onclick="toggleCart()" class="relative p-2.5 rounded-xl bg-[#1a75d2]/10 text-[#1a75d2] hover:bg-[#1a75d2] hover:text-white transition group">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                    <span id="cart-count-badge" class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-white shadow-sm">0</span>
-                </button>
+                    <a href="tentang_kami.php" class="<?= $currentScript === 'tentang_kami.php' ? 'text-[#1a75d2] font-bold' : 'text-slate-800 hover:text-[#1a75d2]' ?> transition py-7">
+                        Tentang Kami
+                    </a>
+
+                    <a href="cara_pembelian.php" class="<?= $currentScript === 'cara_pembelian.php' ? 'text-[#1a75d2] font-bold' : 'text-slate-800 hover:text-[#1a75d2]' ?> transition py-7">
+                        Cara Belanja
+                    </a>
+
+                    <a href="profil.php" class="<?= $currentScript === 'profil.php' ? 'text-[#1a75d2] font-bold' : 'text-slate-800 hover:text-[#1a75d2]' ?> transition py-7">
+                        Pesanan
+                    </a>
+                </nav>
             </div>
-        </div>
-        
-        <!-- Navigation Links (Desktop) -->
-        <div class="hidden lg:flex items-center gap-8 mt-4 pt-4 border-t border-slate-100">
-            <a href="index.php" class="text-sm font-bold text-[#0f2d5a] hover:text-[#1a75d2] transition">Beranda</a>
-            
-            <!-- Mega Menu Dropdown for "Kategori" -->
-            <div class="relative group mega-menu-trigger pb-4 -mb-4">
-                <a href="kategori.php" class="text-sm font-bold text-slate-600 group-hover:text-[#1a75d2] flex items-center gap-1 transition">
-                    Kategori Produk
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </a>
-                
-                <!-- Mega Menu Panel -->
-                <div class="mega-menu absolute top-full left-0 w-[600px] bg-white border border-slate-200 shadow-2xl rounded-2xl p-6 z-50 flex gap-6">
-                    <div class="flex-1">
-                        <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider mb-4">Kategori Medis</h3>
-                        <ul class="space-y-3">
-                            <?php foreach ($kategoriMenu as $kat): ?>
-                            <li>
-                                <a href="kategori.php?kategori=<?= urlencode($kat) ?>" class="text-sm font-semibold text-slate-700 hover:text-[#1a75d2] flex items-center gap-2 group/item">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-200 group-hover/item:bg-[#1a75d2] transition"></span>
-                                    <?= htmlspecialchars($kat) ?>
-                                </a>
-                            </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                    <div class="w-[240px] bg-blue-50 rounded-xl p-4 border border-blue-100 flex flex-col justify-end relative overflow-hidden group">
-                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-[#1a75d2]/10 rounded-full"></div>
-                        <h4 class="text-sm font-black text-[#0f2d5a] mb-1 relative z-10">Katalog Alat Kesehatan</h4>
-                        <p class="text-xs text-blue-600 mb-4 relative z-10">Produk bergaransi resmi untuk kebutuhan klinik & pasien.</p>
-                        <a href="kategori.php?kategori=Alat+Kesehatan" class="text-xs font-bold bg-[#1a75d2] text-white py-2 px-4 rounded-lg text-center hover:bg-[#0f2d5a] transition relative z-10">Lihat Katalog</a>
-                    </div>
+
+            <!-- Center: Brand Logo (Pharmify Centered Style) -->
+            <a href="index.php" class="flex items-center gap-2.5 shrink-0 group">
+                <div class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-2xs">
+                    <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-xl font-extrabold tracking-tight text-[#0f2d5a] leading-none">ZenCare</span>
+                    <span class="text-[9px] font-bold text-[#1a75d2] uppercase tracking-widest mt-0.5">Medical Store</span>
+                </div>
+            </a>
+
+            <!-- Right: Pill Search Input & Action Icons -->
+            <div class="flex items-center gap-3 sm:gap-4">
+                <!-- Pill Search Bar (Desktop) -->
+                <form action="kategori.php" method="GET" class="hidden md:flex items-center relative w-52 xl:w-64">
+                    <input type="text" name="q" placeholder="Cari obat atau alkes..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>"
+                           class="w-full bg-white border border-slate-300 rounded-full pl-4 pr-9 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#0f2d5a] transition">
+                    <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-[#0f2d5a] transition" title="Cari">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </button>
+                </form>
+
+                <!-- Action Icons (Orders, Cart Drawer, Account) -->
+                <div class="flex items-center gap-2.5 sm:gap-3.5 text-slate-800">
+                    <!-- Order Tracking Icon -->
+                    <a href="profil.php" title="Riwayat Pesanan Saya" class="relative p-1.5 hover:text-[#1a75d2] transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                    </a>
+
+                    <!-- Cart Bag Icon -->
+                    <button type="button" onclick="toggleCart()" title="Keranjang Belanja" class="relative p-1.5 hover:text-[#1a75d2] transition cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                        <span id="cart-count-badge" class="absolute -top-1 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#0f2d5a] text-white text-[10px] font-bold flex items-center justify-center">0</span>
+                    </button>
+
+                    <!-- User Account Icon / Dropdown -->
+                    <?php if ($isLoggedIn): ?>
+                        <div class="relative group">
+                            <a href="profil.php" class="flex items-center gap-2 p-1.5 hover:text-[#1a75d2] transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span class="hidden xl:inline text-xs font-bold text-[#0f2d5a] max-w-[100px] truncate"><?= htmlspecialchars($namaPelanggan) ?></span>
+                            </a>
+                            <div class="absolute right-0 top-full pt-2 w-48 hidden group-hover:block z-50">
+                                <div class="bg-white border border-slate-200 shadow-xl rounded-lg py-1.5 text-xs">
+                                    <div class="px-4 py-2 border-b border-slate-100">
+                                        <span class="block text-[10px] text-slate-400">Akun Pelanggan</span>
+                                        <strong class="text-slate-800 truncate block"><?= htmlspecialchars($namaPelanggan) ?></strong>
+                                    </div>
+                                    <a href="profil.php" class="block px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-[#1a75d2] font-medium">Profil &amp; Pesanan</a>
+                                    <a href="cart.php" class="block px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-[#1a75d2] font-medium">Keranjang Penuh</a>
+                                    <a href="../logout.php" class="block px-4 py-2 text-rose-600 hover:bg-rose-50 font-semibold border-t border-slate-100">Keluar</a>
+                                </div>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <a href="../login_customer.php" title="Masuk / Daftar Akun" class="flex items-center gap-1.5 p-1.5 hover:text-[#1a75d2] transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span class="hidden sm:inline text-xs font-bold text-[#0f2d5a]">Masuk</span>
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
-            
-            <a href="cara_pembelian.php" class="text-sm font-bold text-slate-600 hover:text-[#1a75d2] transition">
-                Cara Pembelian
-            </a>
-            <a href="tentang_kami.php" class="text-sm font-bold text-slate-600 hover:text-[#1a75d2] transition">
-                Tentang Kami
-            </a>
-            <a href="https://wa.me/6281234567890?text=Halo%20ZenCare%20Medical,%20saya%20ingin%20bertanya%20mengenai%20produk%20kesehatan" target="_blank" class="text-sm font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1.5 transition">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a5.225 5.225 0 00-.571-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 21a8.96 8.96 0 01-4.588-1.257l-.329-.195-3.411.895.912-3.326-.214-.341A8.961 8.961 0 013 12c0-4.97 4.03-9 9-9s9 4.03 9-9 9-4.03 9-9 9zm0-10.706C8.869 1.294 6.327.031 3.515.031.703.031-1.839 1.294-1.839 4.106c0 2.812 2.542 4.075 5.354 4.075s5.354-1.263 5.354-4.075zM12 2C6.477 2 2 6.477 2 12c0 1.755.454 3.412 1.254 4.856L2 22l5.293-1.189A9.96 9.96 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
-                Hubungi Kami
-            </a>
+
         </div>
     </div>
 </header>
 
-<!-- Mobile Menu (Hidden by default) -->
-<div id="mobile-menu" class="hidden lg:hidden bg-white border-b border-slate-200 px-4 py-4 space-y-4">
+<!-- Mobile Menu Drawer (Hidden by default) -->
+<div id="mobile-menu" class="hidden lg:hidden bg-white border-b border-slate-200 px-4 py-4 space-y-3 shadow-lg">
     <form action="kategori.php" method="GET" class="w-full relative">
-        <input type="text" name="q" placeholder="Cari..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2.5 focus:outline-none focus:border-[#1a75d2]">
-        <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" name="q" placeholder="Cari obat atau alat kesehatan..." class="w-full bg-slate-50 border border-slate-300 rounded-full pl-4 pr-10 py-2 text-xs focus:outline-none focus:border-[#0f2d5a]">
+        <button type="submit" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         </button>
     </form>
-    <div class="space-y-2 font-bold text-slate-700">
-        <a href="index.php" class="block py-2">Beranda</a>
-        <a href="kategori.php" class="block py-2">Semua Kategori</a>
-        <a href="cara_pembelian.php" class="block py-2">Cara Pembelian</a>
-        <a href="tentang_kami.php" class="block py-2">Tentang Kami</a>
+    <div class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+        <a href="index.php" class="block py-2.5 hover:text-[#1a75d2]">Beranda</a>
+        <a href="kategori.php" class="block py-2.5 hover:text-[#1a75d2]">Semua Katalog Produk</a>
+        <a href="kategori.php?kategori=Obat" class="block py-2.5 pl-3 text-slate-500 hover:text-[#1a75d2]">&bull; Kategori Obat-obatan</a>
+        <a href="kategori.php?kategori=Alat+Kesehatan" class="block py-2.5 pl-3 text-slate-500 hover:text-[#1a75d2]">&bull; Kategori Alat Kesehatan</a>
+        <a href="tentang_kami.php" class="block py-2.5 hover:text-[#1a75d2]">Tentang Kami</a>
+        <a href="cara_pembelian.php" class="block py-2.5 hover:text-[#1a75d2]">Cara Pembelian</a>
+        <a href="profil.php" class="block py-2.5 hover:text-[#1a75d2]">Riwayat Pesanan Saya</a>
         <?php if ($isLoggedIn): ?>
-            <a href="../login_customer.php?logout=1" class="block py-2 text-rose-500">Keluar (<?= htmlspecialchars($namaPelanggan) ?>)</a>
+            <a href="../logout.php" class="block py-2.5 text-rose-600 font-bold">Keluar (<?= htmlspecialchars($namaPelanggan) ?>)</a>
         <?php else: ?>
-            <a href="../login_customer.php" class="block py-2 text-[#1a75d2]">Masuk / Daftar</a>
+            <a href="../login_customer.php" class="block py-2.5 text-[#1a75d2] font-bold">Masuk / Daftar Pelanggan</a>
         <?php endif; ?>
     </div>
 </div>
 
 <script>
-// Header shadow on scroll
 window.addEventListener('scroll', () => {
-    if(window.scrollY > 10) {
-        document.getElementById('main-header').classList.add('scrolled');
+    const hdr = document.getElementById('main-header');
+    if (!hdr) return;
+    if (window.scrollY > 10) {
+        hdr.classList.add('scrolled');
     } else {
-        document.getElementById('main-header').classList.remove('scrolled');
+        hdr.classList.remove('scrolled');
     }
 });
 </script>

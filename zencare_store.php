@@ -500,7 +500,7 @@ foreach ($products as $p) {
                 <span class="text-xs font-semibold text-zcMut">Subtotal:</span>
                 <span id="cart-drawer-total" class="text-lg font-extrabold text-zcTxt tracking-tight">Rp 0</span>
             </div>
-            <a href="zencare_checkout.php" class="flex items-center justify-center w-full py-3 bg-zc hover:bg-zcHv text-white text-xs font-bold rounded-xl transition shadow-md">
+            <a href="ecommerce/zencare_checkout.php" class="flex items-center justify-center w-full py-3 bg-zc hover:bg-zcHv text-white text-xs font-bold rounded-xl transition shadow-md">
                 Lanjut ke Pembayaran
             </a>
             <a href="ecommerce/cart.php" class="flex items-center justify-center w-full py-2.5 mt-2 bg-white border border-zcBrd hover:border-zc text-zc text-xs font-bold rounded-xl transition">

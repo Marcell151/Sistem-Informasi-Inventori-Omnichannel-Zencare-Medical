@@ -12,33 +12,11 @@ require_once __DIR__ . '/../config/layout.php';
 
 requireRole(['superadmin']);
 
-$dari     = $_GET['dari']    ?? date('Y-m-01');
+$dari     = $_GET['dari']    ?? date('Y-m-d', strtotime('-30 days'));
 $sampai   = $_GET['sampai']  ?? date('Y-m-d');
 $kanal    = $_GET['kanal']   ?? 'semua';
 $idVarSel = intval($_GET['id_variasi'] ?? 0);
 $searchQ  = trim($_GET['q'] ?? '');
-
-// Auto-seed demo anomali jika tabel kosong agar laporan siap diverifikasi
-$countExisting = $pdo->query("SELECT COUNT(*) FROM log_anomali_fefo")->fetchColumn();
-if ($countExisting == 0) {
-    $sampleP = $pdo->query("SELECT id, id_user FROM penjualan WHERE tipe_transaksi = 'pos' ORDER BY id DESC LIMIT 1")->fetch();
-    $sampleVar = $pdo->query("SELECT pv.id, pi.nama_produk, pv.nama_variasi FROM produk_variasi pv JOIN produk_induk pi ON pi.id = pv.id_produk_induk WHERE pi.kategori = 'Obat' LIMIT 2")->fetchAll();
-    
-    if ($sampleP && !empty($sampleVar)) {
-        $pId = $sampleP['id'];
-        $uId = $sampleP['id_user'] ?: 1;
-        
-        $v1 = $sampleVar[0]['id'];
-        $pdo->prepare("INSERT INTO log_anomali_fefo (id_penjualan, id_user, id_variasi, batch_diambil, batch_seharusnya, qty, satuan_tipe, status, created_at) VALUES (?, ?, ?, 'SNM-2026-A', 'SNM-EXP-22', 2, 'kecil', 'disesuaikan', DATE_SUB(NOW(), INTERVAL 2 DAY))")
-            ->execute([$pId, $uId, $v1]);
-            
-        if (isset($sampleVar[1])) {
-            $v2 = $sampleVar[1]['id'];
-            $pdo->prepare("INSERT INTO log_anomali_fefo (id_penjualan, id_user, id_variasi, batch_diambil, batch_seharusnya, qty, satuan_tipe, status, created_at) VALUES (?, ?, ?, 'BDR-2028', 'BDR-EXP-23', 1, 'kecil', 'disesuaikan', DATE_SUB(NOW(), INTERVAL 1 DAY))")
-                ->execute([$pId, $uId, $v2]);
-        }
-    }
-}
 
 // Master Dropdown Produk Obat
 $produkObat = $pdo->query("
@@ -108,6 +86,7 @@ $totalQtyFisik    = array_sum(array_column($anomaliList, 'qty'));
 $totalPos         = count(array_filter($anomaliList, fn($r) => strtolower($r['kanal_transaksi']) === 'pos'));
 $totalOnline      = count(array_filter($anomaliList, fn($r) => strtolower($r['kanal_transaksi']) === 'ecommerce'));
 $totalDisesuaikan = count(array_filter($anomaliList, fn($r) => ($r['status'] ?? '') === 'disesuaikan'));
+$totalSebagian    = count(array_filter($anomaliList, fn($r) => ($r['status'] ?? '') === 'sebagian'));
 $totalPending     = count(array_filter($anomaliList, fn($r) => ($r['status'] ?? '') === 'terlewat'));
 
 $prodFreq = [];
@@ -227,12 +206,17 @@ layoutHeader('Laporan Anomali FEFO', 'Pencatatan deviasi batch fisik obat yang d
     <div class="bg-white rounded-2xl border border-zcBrd p-4 shadow-sm">
         <div class="text-[11px] font-bold text-zcMut mb-1">Sudah Disesuaikan</div>
         <div class="text-2xl font-extrabold text-emerald-600"><?= number_format($totalDisesuaikan) ?></div>
-        <span class="text-[10px] text-emerald-600 font-semibold">Tuntas di POS ✓</span>
+        <span class="inline-flex items-center gap-1.5 text-[10px] text-emerald-600 font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Tuntas Terselesaikan</span>
+    </div>
+    <div class="bg-white rounded-2xl border border-zcBrd p-4 shadow-sm">
+        <div class="text-[11px] font-bold text-zcMut mb-1">Sebagian Disesuaikan</div>
+        <div class="text-2xl font-extrabold text-amber-600"><?= number_format($totalSebagian) ?></div>
+        <span class="inline-flex items-center gap-1.5 text-[10px] text-amber-600 font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Sebagian Dikeluarkan</span>
     </div>
     <div class="bg-white rounded-2xl border border-zcBrd p-4 shadow-sm">
         <div class="text-[11px] font-bold text-zcMut mb-1">Menunggu Dikeluarkan</div>
-        <div class="text-2xl font-extrabold text-amber-600"><?= number_format($totalPending) ?></div>
-        <span class="text-[10px] text-amber-600 font-semibold">Prioritas Kasir</span>
+        <div class="text-2xl font-extrabold text-slate-700"><?= number_format($totalPending) ?></div>
+        <span class="inline-flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Belum Dikeluarkan</span>
     </div>
     <div class="bg-white rounded-2xl border border-zcBrd p-4 shadow-sm">
         <div class="text-[11px] font-bold text-zcMut mb-1">Total Fisik Terkena</div>
@@ -243,11 +227,6 @@ layoutHeader('Laporan Anomali FEFO', 'Pencatatan deviasi batch fisik obat yang d
         <div class="text-[11px] font-bold text-zcMut mb-1">Kanal Transaksi</div>
         <div class="text-lg font-extrabold text-slate-700"><?= $totalPos ?> <span class="text-xs font-semibold text-blue-600">POS</span> / <?= $totalOnline ?> <span class="text-xs font-semibold text-purple-600">Web</span></div>
         <span class="text-[10px] text-zcMut">Distribusi Transaksi</span>
-    </div>
-    <div class="col-span-2 md:col-span-1 bg-white rounded-2xl border border-zcBrd p-4 shadow-sm">
-        <div class="text-[11px] font-bold text-zcMut mb-1">Sering Deviasi</div>
-        <div class="text-xs font-bold text-zcTxt truncate" title="<?= htmlspecialchars($topProdName) ?>"><?= htmlspecialchars($topProdName) ?></div>
-        <span class="text-[10px] text-rose-600 font-semibold">Tingkat Evaluasi Tinggi</span>
     </div>
 </div>
 
@@ -329,9 +308,21 @@ layoutHeader('Laporan Anomali FEFO', 'Pencatatan deviasi batch fisik obat yang d
                                     <span class="text-zcMut text-[10px]">-</span>
                                 <?php endif; ?>
                             </td>
+                            <?php 
+                                $qtyTotal = (int)$r['qty'];
+                                $qtyDis = (int)($r['qty_disesuaikan'] ?? 0);
+                                $rowStatus = $r['status'] ?? 'terlewat';
+                            ?>
                             <td class="py-3 px-4 text-right">
                                 <div class="font-mono font-bold text-sm text-slate-800">
-                                    <?= number_format($r['qty']) ?> <span class="text-xs text-slate-600 font-semibold"><?= htmlspecialchars($satLabel) ?></span>
+                                    <?php if ($rowStatus === 'disesuaikan'): ?>
+                                        <span class="text-emerald-700"><?= $qtyTotal ?>/<?= $qtyTotal ?></span>
+                                    <?php elseif ($rowStatus === 'sebagian'): ?>
+                                        <span class="text-amber-700"><?= $qtyDis ?>/<?= $qtyTotal ?></span>
+                                    <?php else: ?>
+                                        <span class="text-slate-800">0/<?= $qtyTotal ?></span>
+                                    <?php endif; ?>
+                                    <span class="text-xs text-slate-600 font-semibold"><?= htmlspecialchars($satLabel) ?></span>
                                 </div>
                                 <div class="mt-0.5">
                                     <span class="inline-block px-1.5 py-0.2 rounded text-[9px] font-semibold <?= $isBesar ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-600 border border-slate-200' ?>">
@@ -340,9 +331,10 @@ layoutHeader('Laporan Anomali FEFO', 'Pencatatan deviasi batch fisik obat yang d
                                 </div>
                             </td>
                             <td class="py-3 px-4 text-center">
-                                <?php if (($r['status'] ?? '') === 'disesuaikan'): ?>
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                        ✓ Sudah Disesuaikan
+                                <?php if ($rowStatus === 'disesuaikan'): ?>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <svg class="w-3 h-3 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                        <span>Sudah Disesuaikan (<?= $qtyTotal ?>/<?= $qtyTotal ?>)</span>
                                     </span>
                                     <div class="text-[9px] text-slate-500 font-mono mt-0.5">
                                         di <?= htmlspecialchars($r['no_invoice_resolved'] ?: 'Invoice Berikutnya') ?>
@@ -350,11 +342,23 @@ layoutHeader('Laporan Anomali FEFO', 'Pencatatan deviasi batch fisik obat yang d
                                     <?php if ($r['resolved_at']): ?>
                                         <div class="text-[9px] text-slate-400 font-mono"><?= date('d/m/Y H:i', strtotime($r['resolved_at'])) ?></div>
                                     <?php endif; ?>
-                                <?php else: ?>
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                        ⏳ Menunggu Dikeluarkan
+                                <?php elseif ($rowStatus === 'sebagian'): ?>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-300">
+                                        <svg class="w-3 h-3 text-amber-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                        <span>Sebagian (<?= $qtyDis ?>/<?= $qtyTotal ?>)</span>
                                     </span>
-                                    <div class="text-[9px] text-amber-600 mt-0.5">Prioritaskan penjualan berikutnya</div>
+                                    <div class="text-[9px] text-amber-700 font-medium mt-0.5">
+                                        Sisa <?= ($qtyTotal - $qtyDis) ?> <?= htmlspecialchars($satLabel) ?> terlewat
+                                    </div>
+                                    <div class="text-[9px] text-slate-500 font-mono mt-0.5">
+                                        di <?= htmlspecialchars($r['no_invoice_resolved'] ?: 'Invoice Terakhir') ?>
+                                    </div>
+                                <?php else: ?>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-300">
+                                        <svg class="w-3 h-3 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        <span>Menunggu Dikeluarkan (0/<?= $qtyTotal ?>)</span>
+                                    </span>
+                                    <div class="text-[9px] text-slate-500 mt-0.5">Prioritaskan penjualan berikutnya</div>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -409,25 +413,29 @@ layoutHeader('Laporan Anomali FEFO', 'Pencatatan deviasi batch fisik obat yang d
     <!-- Ringkasan Statistik Cetak -->
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 8pt;">
         <tr>
-            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 20%;">
-                <span style="color: #64748b; font-size: 7.5pt; display: block;">Total Insiden Deviasi:</span>
-                <strong style="font-size: 9.5pt; color: #0f172a;"><?= number_format($totalKejadian) ?> insiden</strong>
+            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 16%;">
+                <span style="color: #64748b; font-size: 7.5pt; display: block;">Total Deviasi:</span>
+                <strong style="font-size: 9pt; color: #0f172a;"><?= number_format($totalKejadian) ?> insiden</strong>
             </td>
-            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 20%;">
+            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 17%;">
                 <span style="color: #64748b; font-size: 7.5pt; display: block;">Sudah Disesuaikan:</span>
-                <strong style="font-size: 9.5pt; color: #047857;"><?= number_format($totalDisesuaikan) ?> insiden ✓</strong>
+                <strong style="font-size: 9pt; color: #047857;"><?= number_format($totalDisesuaikan) ?> tuntas</strong>
             </td>
-            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 20%;">
+            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 17%;">
+                <span style="color: #64748b; font-size: 7.5pt; display: block;">Sebagian Disesuaikan:</span>
+                <strong style="font-size: 9pt; color: #b45309;"><?= number_format($totalSebagian) ?> sebagian</strong>
+            </td>
+            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 17%;">
                 <span style="color: #64748b; font-size: 7.5pt; display: block;">Menunggu Dikeluarkan:</span>
-                <strong style="font-size: 9.5pt; color: #b45309;"><?= number_format($totalPending) ?> pending ⏳</strong>
+                <strong style="font-size: 9pt; color: #475569;"><?= number_format($totalPending) ?> pending</strong>
             </td>
-            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 20%;">
+            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 17%;">
                 <span style="color: #64748b; font-size: 7.5pt; display: block;">Total Fisik Terkena:</span>
-                <strong style="font-size: 9.5pt; color: #e11d48;"><?= number_format($totalQtyFisik) ?> unit obat</strong>
+                <strong style="font-size: 9pt; color: #e11d48;"><?= number_format($totalQtyFisik) ?> unit obat</strong>
             </td>
-            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 20%;">
+            <td style="border: 1px solid #cbd5e1; padding: 5px 8px; background: #f8fafc; width: 16%;">
                 <span style="color: #64748b; font-size: 7.5pt; display: block;">Distribusi Kanal:</span>
-                <strong style="font-size: 9pt; color: #1e293b;"><?= number_format($totalPos) ?> POS / <?= number_format($totalOnline) ?> Web</strong>
+                <strong style="font-size: 8.5pt; color: #1e293b;"><?= number_format($totalPos) ?> POS / <?= number_format($totalOnline) ?> Web</strong>
             </td>
         </tr>
     </table>
@@ -452,6 +460,9 @@ layoutHeader('Laporan Anomali FEFO', 'Pencatatan deviasi batch fisik obat yang d
                 $isBesar = (($r['satuan_tipe'] ?? 'kecil') === 'besar');
                 $satLabel = $isBesar ? ($r['satuan_besar'] ?: 'Box') : ($r['satuan_kecil'] ?: 'Pcs');
                 $badgeSat = $isBesar ? 'Satuan Besar (Grosir)' : 'Satuan Kecil (Eceran)';
+                $qtyTotal = (int)$r['qty'];
+                $qtyDis = (int)($r['qty_disesuaikan'] ?? 0);
+                $rowStatus = $r['status'] ?? 'terlewat';
             ?>
                 <tr>
                     <td style="border: 1px solid #94a3b8; padding: 4px; text-align: center;"><?= $idx + 1 ?></td>
@@ -476,16 +487,28 @@ layoutHeader('Laporan Anomali FEFO', 'Pencatatan deviasi batch fisik obat yang d
                         <?= $r['selisih_hari'] !== null ? ($r['selisih_hari'] > 0 ? "+{$r['selisih_hari']} Hari" : "{$r['selisih_hari']} Hari") : '-' ?>
                     </td>
                     <td style="border: 1px solid #94a3b8; padding: 4px; text-align: right;">
-                        <strong style="color: #0f172a; font-family: monospace;"><?= number_format($r['qty']) ?> <?= htmlspecialchars($satLabel) ?></strong><br>
+                        <strong style="color: #0f172a; font-family: monospace;">
+                            <?php if ($rowStatus === 'disesuaikan'): ?>
+                                <?= $qtyTotal ?>/<?= $qtyTotal ?>
+                            <?php elseif ($rowStatus === 'sebagian'): ?>
+                                <?= $qtyDis ?>/<?= $qtyTotal ?>
+                            <?php else: ?>
+                                0/<?= $qtyTotal ?>
+                            <?php endif; ?>
+                            <?= htmlspecialchars($satLabel) ?>
+                        </strong><br>
                         <span style="font-size: 6.5pt; color: #475569; font-weight: 600;">(<?= $badgeSat ?>)</span>
                     </td>
                     <td style="border: 1px solid #94a3b8; padding: 4px; text-align: center;">
-                        <?php if (($r['status'] ?? '') === 'disesuaikan'): ?>
-                            <strong style="color: #047857;">✓ Sudah Disesuaikan</strong><br>
+                        <?php if ($rowStatus === 'disesuaikan'): ?>
+                            <strong style="color: #047857;">Sudah Disesuaikan (<?= $qtyTotal ?>/<?= $qtyTotal ?>)</strong><br>
                             <span style="font-size: 6.5pt; color: #475569;">di <?= htmlspecialchars($r['no_invoice_resolved'] ?: '-') ?></span>
+                        <?php elseif ($rowStatus === 'sebagian'): ?>
+                            <strong style="color: #b45309;">Sebagian Disesuaikan (<?= $qtyDis ?>/<?= $qtyTotal ?>)</strong><br>
+                            <span style="font-size: 6.5pt; color: #b45309;">sisa <?= ($qtyTotal - $qtyDis) ?> terlewat</span>
                         <?php else: ?>
-                            <strong style="color: #b45309;">⏳ Menunggu Dikeluarkan</strong><br>
-                            <span style="font-size: 6.5pt; color: #b45309;">(Prioritas transaksi)</span>
+                            <strong style="color: #475569;">Menunggu Dikeluarkan</strong><br>
+                            <span style="font-size: 6.5pt; color: #475569;">(Prioritas transaksi)</span>
                         <?php endif; ?>
                     </td>
                 </tr>

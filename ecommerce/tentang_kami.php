@@ -1,6 +1,5 @@
 <?php
-// File: ecommerce/tentang_kami.php
-// Tentang Kami - ZenCare Medical Store
+// File: ecommerce/tentang_kami.php — Tentang ZenCare Medical (Pharmify Editorial Style)
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -8,64 +7,104 @@ $pageTitle = "Tentang Kami";
 require_once __DIR__ . '/header.php';
 ?>
 
-<main class="bg-[#f5f7fa] flex-1">
+<main class="bg-white flex-1">
     
-    <!-- Hero Banner -->
-    <div class="relative bg-gradient-to-br from-[#0f2d5a] to-[#1a75d2] text-white py-20 lg:py-28 overflow-hidden">
-        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAzNHYtNGgtMnY0aC00djJoNHY0aDJ2LTRoNHYtMmgtNHptMC0zMFYwaC0ydjRoLTR2Mmg0djRoMnYtNGg0VjRoLTR6bS0xOCAyNHYtNGgtMnY0SDEydjJoNHY0aDJ2LTRoNHYtMmgtNHoiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvZz48L3N2Zz4=')] opacity-30"></div>
-        <div class="max-w-4xl mx-auto px-4 text-center relative z-10">
-            <h1 class="text-4xl md:text-5xl font-black mb-4">Tentang ZenCare Medical</h1>
-            <p class="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto">Solusi penyediaan alat kesehatan dan obat-obatan yang terpercaya, cepat, dan terintegrasi untuk kebutuhan klinik maupun individu.</p>
+    <!-- Pharmify Subpage Molecular Banner -->
+    <section class="pharmify-banner py-11 lg:py-14 text-center text-white">
+        <div class="max-w-7xl mx-auto px-4 lg:px-8 relative z-10">
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight mb-2.5">Tentang ZenCare Medical</h1>
+            <nav class="flex items-center justify-center gap-2 text-xs font-medium text-sky-200/90">
+                <a href="index.php" class="hover:text-white transition">Beranda</a>
+                <span>&rsaquo;</span>
+                <span class="text-white font-semibold">Tentang Kami</span>
+            </nav>
         </div>
-    </div>
+    </section>
 
-    <!-- Content Section -->
-    <div class="max-w-4xl mx-auto px-4 py-16 -mt-10 relative z-20">
-        <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-8 md:p-12 border border-slate-100">
-            
-            <div class="prose prose-slate prose-blue max-w-none">
-                <h2 class="text-2xl font-bold text-[#1e293b] mb-4">Visi Kami</h2>
-                <p class="text-slate-600 mb-8 leading-relaxed">
-                    Menjadi distributor alat kesehatan dan obat omnichannel terpercaya di Indonesia yang memberikan kemudahan akses produk berkualitas dengan jaminan keaslian, harga kompetitif, dan kecepatan pelayanan. Kami memadukan pengalaman belanja online yang mudah dengan ketersediaan stok fisik toko yang selalu terpantau.
+    <div class="max-w-5xl mx-auto px-4 lg:px-8 py-12 space-y-12">
+
+        <!-- Editorial Intro -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+            <div class="md:col-span-7 space-y-4">
+                <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#1a75d2] block">DISTRIBUTOR FARMASI &amp; ALAT KESEHATAN</span>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-[#0f2d5a] leading-tight">
+                    Komitmen Mutu &amp; Keaslian Produk untuk Kesehatan Masyarakat
+                </h2>
+                <p class="text-sm text-slate-600 leading-relaxed">
+                    ZenCare Medical hadir sebagai pusat penyediaan obat-obatan resmi dan alat kesehatan terstandarisasi yang menghubungkan ketersediaan stok gudang fisik secara langsung dengan kemudahan pemesanan daring.
                 </p>
-
-                <div class="grid md:grid-cols-3 gap-6 mb-12">
-                    <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 text-center">
-                        <div class="w-12 h-12 bg-[#1a75d2] text-white rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                        </div>
-                        <h3 class="font-bold text-[#0f2d5a] mb-2">Terjamin Asli</h3>
-                        <p class="text-sm text-slate-500">Semua produk terjamin asli, tersegel rapi, dan bersumber langsung dari produsen/distributor resmi.</p>
-                    </div>
-                    <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 text-center">
-                        <div class="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        </div>
-                        <h3 class="font-bold text-[#0f2d5a] mb-2">Stok Real-time</h3>
-                        <p class="text-sm text-slate-500">Sistem inventori kami tersinkronisasi otomatis dengan toko fisik untuk memastikan ketersediaan.</p>
-                    </div>
-                    <div class="bg-amber-50 p-6 rounded-2xl border border-amber-100 text-center">
-                        <div class="w-12 h-12 bg-amber-600 text-white rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        </div>
-                        <h3 class="font-bold text-[#0f2d5a] mb-2">Pengiriman Cepat</h3>
-                        <p class="text-sm text-slate-500">Opsi kurir instan dan reguler untuk memastikan alat kesehatan Anda tiba saat dibutuhkan.</p>
-                    </div>
+                <p class="text-sm text-slate-600 leading-relaxed">
+                    Seluruh sediaan farmasi kami dikelola menggunakan sistem pelacakan nomor batch <strong>FEFO (First Expired, First Out)</strong> dan pencatatan nomor seri unit alat kesehatan untuk memastikan setiap produk yang sampai ke tangan pelanggan memiliki masa kedaluwarsa aman serta jaminan garansi resmi.
+                </p>
+            </div>
+            <div class="md:col-span-5 bg-[#eef6fb] p-8 border border-[#cbe4f5] space-y-5">
+                <div>
+                    <span class="text-3xl font-extrabold text-[#0f2d5a] block">100%</span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-[#1a75d2]">Produk Resmi &amp; Bersegel Pabrik</span>
                 </div>
-
-                <h2 class="text-2xl font-bold text-[#1e293b] mb-4">Layanan Informasi Produk & Customer Care</h2>
-                <p class="text-slate-600 mb-6 leading-relaxed">
-                    Kami memahami bahwa memilih alat kesehatan dan kebutuhan medis memerlukan informasi yang jelas dan akurat. Tim Customer Care ZenCare Medical siap melayani pertanyaan Anda mengenai spesifikasi alat, ketersediaan stok, tata cara pemesanan, hingga panduan pengiriman.
-                </p>
-                <a href="https://wa.me/6281234567890?text=Halo%20CS%20ZenCare%20Medical,%20saya%20ingin%20bertanya%20mengenai%20produk%20kesehatan" target="_blank" class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold transition shadow-md shadow-emerald-500/20">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a5.225 5.225 0 00-.571-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 21a8.96 8.96 0 01-4.588-1.257l-.329-.195-3.411.895.912-3.326-.214-.341A8.961 8.961 0 013 12c0-4.97 4.03-9 9-9s9 4.03 9-9 9-4.03 9-9 9zm0-10.706C8.869 1.294 6.327.031 3.515.031.703.031-1.839 1.294-1.839 4.106c0 2.812 2.542 4.075 5.354 4.075s5.354-1.263 5.354-4.075zM12 2C6.477 2 2 6.477 2 12c0 1.755.454 3.412 1.254 4.856L2 22l5.293-1.189A9.96 9.96 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
-                    Hubungi Customer Service
-                </a>
-
+                <div class="border-t border-[#cbe4f5] pt-4">
+                    <span class="text-3xl font-extrabold text-[#0f2d5a] block">FEFO &amp; SN</span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-[#1a75d2]">Kontrol Batch Obat &amp; Serial Alkes</span>
+                </div>
+                <div class="border-t border-[#cbe4f5] pt-4">
+                    <span class="text-3xl font-extrabold text-[#0f2d5a] block">Omnichannel</span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-[#1a75d2]">Sinkronisasi Stok Toko &amp; E-Commerce</span>
+                </div>
             </div>
         </div>
-    </div>
 
+        <!-- 3 Pilar Layanan -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="border border-slate-200 p-6 bg-white">
+                <div class="w-10 h-10 bg-[#0f2d5a] text-white flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                </div>
+                <h3 class="text-base font-extrabold text-[#0f2d5a] mb-2">Jaminan Keaslian Mutu</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Semua produk obat dan alat kesehatan bersumber dari distributor resmi dengan penyimpanan higienis dan kontrol suhu ruang yang terjaga.
+                </p>
+            </div>
+
+            <div class="border border-slate-200 p-6 bg-white">
+                <div class="w-10 h-10 bg-[#0f2d5a] text-white flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h3 class="text-base font-extrabold text-[#0f2d5a] mb-2">Stok Akurat Real-Time</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Ketersediaan stok kemasan box pada katalog online terhubung langsung dengan inventori gudang utama sehingga bebas dari risiko selisih stok.
+                </p>
+            </div>
+
+            <div class="border border-slate-200 p-6 bg-white">
+                <div class="w-10 h-10 bg-[#0f2d5a] text-white flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+                </div>
+                <h3 class="text-base font-extrabold text-[#0f2d5a] mb-2">Pengiriman &amp; Pick-Up</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Mendukung pengiriman ekspedisi ke seluruh Indonesia maupun pengambilan langsung di outlet fisik Cabang Muharto tanpa biaya ongkos kirim.
+                </p>
+            </div>
+        </div>
+
+        <!-- Customer Care Strip -->
+        <div class="bg-[#0f2d5a] text-white p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+                <h3 class="text-lg font-extrabold mb-1">Layanan Informasi Produk &amp; Pelanggan</h3>
+                <p class="text-xs text-sky-200 max-w-xl leading-relaxed">
+                    Tim kami siap membantu Anda terkait informasi spesifikasi alat kesehatan, ketersediaan kemasan grosir, maupun panduan pemesanan.
+                </p>
+            </div>
+            <div class="flex gap-3 shrink-0">
+                <a href="kategori.php" class="px-6 py-3 bg-white text-[#0f2d5a] font-bold text-xs uppercase tracking-widest hover:bg-sky-50 transition">
+                    LIHAT KATALOG
+                </a>
+                <a href="https://wa.me/6281234567890?text=Halo%20CS%20ZenCare%20Medical,%20saya%20ingin%20bertanya%20mengenai%20produk%20kesehatan" target="_blank" class="px-6 py-3 bg-[#1a75d2] hover:bg-[#1562b3] text-white font-bold text-xs uppercase tracking-widest transition">
+                    HUBUNGI WHATSAPP
+                </a>
+            </div>
+        </div>
+
+    </div>
 </main>
 
 <?php require_once __DIR__ . '/footer.php'; ?>

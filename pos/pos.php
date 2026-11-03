@@ -109,7 +109,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['aksi'] ?? '') === 
                                     ->execute([$idPenjualan, $_SESSION['user_id'], $idVar, $alBatch, $al['batch_seharusnya'], $alQtyPotong, $satuanTipe]);
                             }
 
-                            $allBatchesSold[] = ['id_variasi' => $idVar, 'batch' => $alBatch];
+                            $allBatchesSold[] = ['id_variasi' => $idVar, 'batch' => $alBatch, 'qty' => $alQtyPotong];
                             $satLableItem = ($satuanTipe === 'besar') ? $varData['satuan_besar'] : $varData['satuan_kecil'];
                             $catatanLogistik[] = "$alBatch ({$alQtySatuan} $satLableItem)";
                             $kartuStokBatches[] = [
@@ -138,7 +138,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['aksi'] ?? '') === 
                                 ->execute([$idPenjualan, $_SESSION['user_id'], $idVar, $scannedCode, $batchSeharusnya, $qtyPotong, $satuanTipe]);
                         }
 
-                        $allBatchesSold[] = ['id_variasi' => $idVar, 'batch' => $scannedCode];
+                        $allBatchesSold[] = ['id_variasi' => $idVar, 'batch' => $scannedCode, 'qty' => $qtyPotong];
                         $satLableItem = ($satuanTipe === 'besar') ? $varData['satuan_besar'] : $varData['satuan_kecil'];
                         $catatanLogistik[] = $scannedCode . " ({$qtyInput} $satLableItem)";
                         $kartuStokBatches[] = [
@@ -161,7 +161,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['aksi'] ?? '') === 
                             $potongBatch = min($b['stok_sisa'], $sisaPotong);
                             $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$potongBatch, $b['id']]);
                             
-                            $allBatchesSold[] = ['id_variasi' => $idVar, 'batch' => $b['no_batch']];
+                            $allBatchesSold[] = ['id_variasi' => $idVar, 'batch' => $b['no_batch'], 'qty' => $potongBatch];
                             $qtyBatchSatuan = ($satuanTipe === 'besar') ? floor($potongBatch / $rasio) : $potongBatch;
                             $catatanLogistik[] = $b['no_batch'] . " ({$qtyBatchSatuan} $satLableItem)";
                             $kartuStokBatches[] = [
@@ -254,21 +254,51 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['aksi'] ?? '') === 
 
             $pdo->prepare("UPDATE penjualan SET total_harga=? WHERE id=?")->execute([$totalHarga, $idPenjualan]);
 
-            // Auto-rekonsiliasi Anomali FEFO:
-            // Jika ada deviasi batch sebelumnya yang statusnya masih 'terlewat', dan pada transaksi ini
-            // kasir berhasil menjual batch_seharusnya tersebut, tandai sebagai 'disesuaikan'.
+            // Auto-rekonsiliasi Anomali FEFO Berkelanjutan (Progressive / Partial Reconciliation)
+            // Menyesuaikan kuantitas secara bertahap (0/2 -> 1/2 -> 2/2) jika batch rekomendasi yang sempat terlewat terjual
             if (!empty($allBatchesSold)) {
-                $stmtReconcile = $pdo->prepare("
-                    UPDATE log_anomali_fefo
-                    SET status = 'disesuaikan',
-                        resolved_in_penjualan = ?,
-                        resolved_at = NOW()
-                    WHERE status = 'terlewat'
+                $stmtFindOpen = $pdo->prepare("
+                    SELECT id, qty, qty_disesuaikan
+                    FROM log_anomali_fefo
+                    WHERE status IN ('terlewat', 'sebagian')
                       AND id_variasi = ?
                       AND batch_seharusnya = ?
+                    ORDER BY created_at ASC, id ASC
+                    FOR UPDATE
                 ");
+                $stmtUpdateAnomali = $pdo->prepare("
+                    UPDATE log_anomali_fefo
+                    SET qty_disesuaikan = ?,
+                        status = ?,
+                        resolved_in_penjualan = ?,
+                        resolved_at = NOW()
+                    WHERE id = ?
+                ");
+
                 foreach ($allBatchesSold as $abs) {
-                    $stmtReconcile->execute([$idPenjualan, $abs['id_variasi'], $abs['batch']]);
+                    $varId = $abs['id_variasi'];
+                    $batchSold = $abs['batch'];
+                    $remainingSoldQty = intval($abs['qty'] ?? 0);
+                    if ($remainingSoldQty <= 0) continue;
+
+                    $stmtFindOpen->execute([$varId, $batchSold]);
+                    $openAnomalies = $stmtFindOpen->fetchAll(PDO::FETCH_ASSOC);
+
+                    foreach ($openAnomalies as $oa) {
+                        if ($remainingSoldQty <= 0) break;
+                        $anomaliId = (int)$oa['id'];
+                        $totalQty = (int)$oa['qty'];
+                        $currDisesuaikan = (int)$oa['qty_disesuaikan'];
+                        $butuh = max(0, $totalQty - $currDisesuaikan);
+                        if ($butuh <= 0) continue;
+
+                        $applied = min($remainingSoldQty, $butuh);
+                        $newDisesuaikan = $currDisesuaikan + $applied;
+                        $newStatus = ($newDisesuaikan >= $totalQty) ? 'disesuaikan' : 'sebagian';
+
+                        $stmtUpdateAnomali->execute([$newDisesuaikan, $newStatus, $idPenjualan, $anomaliId]);
+                        $remainingSoldQty -= $applied;
+                    }
                 }
             }
 
@@ -320,10 +350,10 @@ $kasirUserId = $_SESSION["user_id"] ?? 0;
 $userRole = $_SESSION["role"] ?? "kasir";
 
 if ($userRole === "superadmin") {
-    $stmtPendingKasir = $pdo->query("SELECT COUNT(*) FROM log_anomali_fefo WHERE status = 'terlewat'");
+    $stmtPendingKasir = $pdo->query("SELECT COUNT(*) FROM log_anomali_fefo WHERE status IN ('terlewat', 'sebagian')");
     $anomaliPendingKasir = (int)$stmtPendingKasir->fetchColumn();
 
-    $stmtTotalKasir = $pdo->query("SELECT COUNT(*) FROM log_anomali_fefo WHERE (status = 'terlewat' OR DATE(created_at) = CURDATE())");
+    $stmtTotalKasir = $pdo->query("SELECT COUNT(*) FROM log_anomali_fefo WHERE (status IN ('terlewat', 'sebagian') OR DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY))");
     $anomaliHariIniKasir = (int)$stmtTotalKasir->fetchColumn();
 
     $stmtListAnomaliKasir = $pdo->query("
@@ -337,16 +367,16 @@ if ($userRole === "superadmin") {
         LEFT JOIN penjualan p ON la.id_penjualan = p.id
         LEFT JOIN penjualan p_res ON la.resolved_in_penjualan = p_res.id
         LEFT JOIN users u ON la.id_user = u.id
-        WHERE (la.status = 'terlewat' OR DATE(la.created_at) = CURDATE())
-        ORDER BY (la.status = 'terlewat') DESC, la.created_at DESC
+        WHERE (la.status IN ('terlewat', 'sebagian') OR DATE(la.created_at) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY))
+        ORDER BY (la.status = 'terlewat') DESC, (la.status = 'sebagian') DESC, la.created_at DESC
     ");
     $listAnomaliKasir = $stmtListAnomaliKasir->fetchAll();
 } else {
-    $stmtPendingKasir = $pdo->prepare("SELECT COUNT(*) FROM log_anomali_fefo WHERE status = 'terlewat' AND id_user = ?");
+    $stmtPendingKasir = $pdo->prepare("SELECT COUNT(*) FROM log_anomali_fefo WHERE status IN ('terlewat', 'sebagian') AND id_user = ?");
     $stmtPendingKasir->execute([$kasirUserId]);
     $anomaliPendingKasir = (int)$stmtPendingKasir->fetchColumn();
 
-    $stmtTotalKasir = $pdo->prepare("SELECT COUNT(*) FROM log_anomali_fefo WHERE (status = 'terlewat' OR DATE(created_at) = CURDATE()) AND id_user = ?");
+    $stmtTotalKasir = $pdo->prepare("SELECT COUNT(*) FROM log_anomali_fefo WHERE (status IN ('terlewat', 'sebagian') OR DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)) AND id_user = ?");
     $stmtTotalKasir->execute([$kasirUserId]);
     $anomaliHariIniKasir = (int)$stmtTotalKasir->fetchColumn();
 
@@ -361,8 +391,8 @@ if ($userRole === "superadmin") {
         LEFT JOIN penjualan p ON la.id_penjualan = p.id
         LEFT JOIN penjualan p_res ON la.resolved_in_penjualan = p_res.id
         LEFT JOIN users u ON la.id_user = u.id
-        WHERE (la.status = 'terlewat' OR DATE(la.created_at) = CURDATE()) AND la.id_user = ?
-        ORDER BY (la.status = 'terlewat') DESC, la.created_at DESC
+        WHERE (la.status IN ('terlewat', 'sebagian') OR DATE(la.created_at) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)) AND la.id_user = ?
+        ORDER BY (la.status = 'terlewat') DESC, (la.status = 'sebagian') DESC, la.created_at DESC
     ");
     $stmtListAnomaliKasir->execute([$kasirUserId]);
     $listAnomaliKasir = $stmtListAnomaliKasir->fetchAll();
@@ -384,7 +414,7 @@ if ($userRole === "superadmin") {
         theme: {
           extend: {
             fontFamily: { sans: ['"Inter"', 'sans-serif'] },
-            colors: { zc:'#1a75d2', zcHv:'#1562b3', zcLt:'#e8f2ff', zcEm:'#059669', zcBrd:'#e4e9f0', zcMut:'#64748b', zcTxt:'#1e293b' }
+            colors: { zc:'#1a75d2', zcHv:'#1562b3', zcNavy:'#0f2d5a', zcLt:'#eef6fb', zcEm:'#059669', zcBrd:'#e2e8f0', zcMut:'#64748b', zcTxt:'#0f172a' }
           }
         }
       }
@@ -393,101 +423,135 @@ if ($userRole === "superadmin") {
     <script src="<?= MIDTRANS_SNAP_URL ?>" data-client-key="<?= MIDTRANS_CLIENT_KEY ?>"></script>
     <script src="../assets/js/html5-qrcode.min.js"></script>
     <style>
-        ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:99px; }
-        body { animation: fadeIn .15s ease; } @keyframes fadeIn { from{opacity:.7;} to{opacity:1;} }
+        ::-webkit-scrollbar { width:5px; height:5px; } ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+        body { animation: fadeIn .15s ease; background-color: #f4f7fa; } @keyframes fadeIn { from{opacity:.85;} to{opacity:1;} }
         
         /* Fix live camera viewport - menghilangkan potongan & garis hitam samping */
-        #camera_scanner_view { width: 100% !important; overflow: hidden !important; border-radius: 0.75rem !important; background: #0f172a !important; }
+        #camera_scanner_view { width: 100% !important; overflow: hidden !important; border-radius: 0.375rem !important; background: #0f172a !important; }
         #camera_scanner_view video {
             width: 100% !important;
             height: 100% !important;
             min-height: 280px !important;
             max-height: 360px !important;
             object-fit: cover !important;
-            border-radius: 0.75rem !important;
+            border-radius: 0.375rem !important;
             display: block !important;
             margin: 0 auto !important;
         }
-        #camera_scanner_view canvas { border-radius: 0.75rem !important; }
-        #camera_scanner_view #qr-shaded-region { border-radius: 0.75rem !important; }
+        #camera_scanner_view canvas { border-radius: 0.375rem !important; }
+        #camera_scanner_view #qr-shaded-region { border-radius: 0.375rem !important; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans antialiased text-zcTxt">
+<body class="bg-[#f4f7fa] font-sans antialiased text-zcTxt min-h-screen flex flex-col">
 
-    <!-- Topbar -->
-    <header class="bg-white border-b border-zcBrd px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-zc to-zcHv text-white flex items-center justify-center shadow-lg shadow-zc/30">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    <!-- Top Utility Bar -->
+    <div class="bg-[#0f2d5a] text-white text-[11px] py-1.5 px-6 border-b border-[#163a70]">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="font-bold tracking-wider uppercase text-sky-300">TERMINAL KASIR LURING (POS)</span>
+                <span class="text-white/25">|</span>
+                <span class="text-slate-200">Cabang Utama (Muharto) &mdash; Sinkronisasi Stok &amp; Batch FEFO Realtime</span>
             </div>
-            <div>
-                <h1 class="text-xl font-black text-zcTxt tracking-tight">POS ZenCare Medical</h1>
-                <div class="flex items-center gap-3 mt-1 text-xs text-zcMut font-medium">
-                    <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-zc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Kasir') ?></span>
-                    <span class="text-slate-300">&#8226;</span>
-                    <?php if ($anomaliPendingKasir > 0): ?>
-                    <button type="button" onclick="toggleBatchTerlewatPanel()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 shadow-2xs" title="Klik untuk membuka rincian deviasi batch obat">
-                        <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        <span>Batch Terlewat (<?= $anomaliPendingKasir ?>)</span>
-                        <span id="pill_arrow_indicator" class="text-[10px] text-slate-500 font-mono">▾</span>
-                    </button>
-                    <?php elseif ($anomaliHariIniKasir > 0): ?>
-                    <button type="button" onclick="toggleBatchTerlewatPanel()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 shadow-2xs" title="Klik untuk membuka riwayat batch yang sudah disesuaikan">
-                        <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
-                        <span>Batch Selesai (<?= $anomaliHariIniKasir ?>)</span>
-                        <span id="pill_arrow_indicator" class="text-[10px] text-slate-500 font-mono">▾</span>
-                    </button>
-                    <?php else: ?>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-50 text-slate-600 border border-slate-200" title="Seluruh transaksi mematuhi batch terdepan FEFO">
-                        <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
-                        <span>Batch Sesuai</span>
-                    </span>
-                    <?php endif; ?>
-                    <span class="text-slate-300">&#8226;</span>
-                    <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-zc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Pusat (Muharto)</span>
-                </div>
+            <div class="hidden sm:flex items-center gap-3 text-slate-200 font-mono text-[11px]">
+                <span><?= date('d M Y') ?></span>
             </div>
         </div>
-        <div class="flex items-center gap-2">
-            <a href="../index.php" class="text-sm font-semibold bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-xs"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Dashboard Utama</a>
-            <a href="../ecommerce/index.php" target="_blank" class="text-sm font-semibold bg-zc hover:bg-zcHv text-white px-4 py-2.5 rounded-xl shadow-md shadow-zc/20 transition">Toko Online</a>
-            <a href="../logout.php" class="text-sm font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 border border-rose-200 px-4 py-2.5 rounded-xl transition">Keluar</a>
+    </div>
+
+    <!-- Main Topbar -->
+    <header class="bg-white border-b border-slate-200 px-6 py-3.5 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-full bg-white border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden p-0.5">
+                    <img src="../gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full" onerror="this.style.display='none'">
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg font-extrabold text-[#0f2d5a] tracking-tight leading-none">POS ZenCare Medical</h1>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2.5 mt-1.5 text-xs text-slate-600 font-medium">
+                        <span class="flex items-center gap-1.5 text-[#0f2d5a] font-semibold">
+                            <svg class="w-3.5 h-3.5 text-[#1a75d2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Kasir') ?>
+                        </span>
+                        <span class="text-slate-300">|</span>
+                        <?php if ($anomaliPendingKasir > 0): ?>
+                        <button type="button" onclick="toggleBatchTerlewatPanel()" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-bold transition bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300" title="Klik untuk membuka rincian deviasi batch obat">
+                            <svg class="w-3.5 h-3.5 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span>Batch Terlewat (<?= $anomaliPendingKasir ?>)</span>
+                            <span id="pill_arrow_indicator" class="text-[10px] text-amber-700 font-mono">▾</span>
+                        </button>
+                        <?php elseif ($anomaliHariIniKasir > 0): ?>
+                        <button type="button" onclick="toggleBatchTerlewatPanel()" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300" title="Klik untuk membuka riwayat batch yang sudah disesuaikan">
+                            <svg class="w-3.5 h-3.5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                            <span>Batch Selesai (<?= $anomaliHariIniKasir ?>)</span>
+                            <span id="pill_arrow_indicator" class="text-[10px] text-slate-500 font-mono">▾</span>
+                        </button>
+                        <?php else: ?>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-[#eef6fb] text-[#0f2d5a] border border-[#cde3f5]" title="Seluruh transaksi mematuhi batch terdepan FEFO">
+                            <svg class="w-3.5 h-3.5 text-[#1a75d2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                            <span>Batch Sesuai FEFO</span>
+                        </span>
+                        <?php endif; ?>
+                        <span class="text-slate-300">|</span>
+                        <span class="flex items-center gap-1 text-slate-500">
+                            <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            Pusat (Muharto)
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 self-start sm:self-auto">
+                <a href="../index.php" class="text-xs font-bold bg-white hover:bg-slate-50 text-[#0f2d5a] border border-slate-300 px-3.5 py-2 rounded transition flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    Dashboard Utama
+                </a>
+                <a href="../ecommerce/index.php" target="_blank" class="text-xs font-bold bg-[#0f2d5a] hover:bg-[#1a75d2] text-white border border-[#0f2d5a] hover:border-[#1a75d2] px-3.5 py-2 rounded transition flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
+                    Toko Online
+                </a>
+                <a href="../logout.php" class="text-xs font-bold text-rose-600 hover:bg-rose-50 bg-white border border-rose-200 hover:border-rose-300 px-3.5 py-2 rounded transition">
+                    Keluar
+                </a>
+            </div>
         </div>
     </header>
 
     <?php if ($sesiOpnameAktif): ?>
-        <div class="bg-rose-600 text-white px-6 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-md">
-            <div class="flex items-center gap-3">
-                <svg class="w-6 h-6 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <div>
-                    <strong class="text-sm font-bold block">SESI STOK OPNAME SEDANG BERLANGSUNG (Kode Sesi: <?= htmlspecialchars($sesiOpnameAktif['kode_sesi']) ?>)</strong>
-                    <span class="text-xs text-rose-100">Seluruh transaksi penjualan kasir offline dinonaktifkan sementara demi integritas perhitungan fisik gudang &amp; etalase.</span>
+        <div class="bg-rose-700 text-white px-6 py-3 border-b border-rose-800">
+            <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <div>
+                        <strong class="text-xs font-extrabold uppercase tracking-wider block">SESI STOK OPNAME SEDANG BERLANGSUNG (Kode Sesi: <?= htmlspecialchars($sesiOpnameAktif['kode_sesi']) ?>)</strong>
+                        <span class="text-xs text-rose-100">Seluruh transaksi penjualan kasir offline dinonaktifkan sementara demi integritas perhitungan fisik gudang &amp; etalase.</span>
+                    </div>
                 </div>
+                <span class="bg-rose-900 border border-rose-400 px-3 py-1 rounded text-[11px] font-mono font-bold uppercase tracking-wider self-start sm:self-auto">Freeze Mode Aktif</span>
             </div>
-            <span class="bg-rose-800/80 border border-rose-400 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider self-start sm:self-auto">Freeze Mode Aktif</span>
         </div>
     <?php endif; ?>
 
-    <div class="max-w-7xl mx-auto px-4 py-5">
+    <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-5 flex-1">
 
         <?php if ($anomaliHariIniKasir > 0): ?>
             <!-- Panel Buka-Tutup Rincian Batch Terlewat (Default: Terminimize agar tidak mengganggu transaksi kasir) -->
-            <div id="panel_batch_terlewat" class="mb-4 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden transition-all duration-200">
+            <div id="panel_batch_terlewat" class="mb-4 bg-white border border-slate-200 rounded-lg overflow-hidden transition-all duration-200">
                 <!-- Header Bar (Netral & Minimalis, Bisa diklik untuk buka/tutup rincian) -->
-                <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between cursor-pointer select-none hover:bg-slate-100/70 transition" onclick="toggleBatchTerlewatPanel()">
+                <div class="px-4 py-2.5 bg-[#f8fafc] border-b border-slate-200 flex items-center justify-between cursor-pointer select-none hover:bg-slate-100/70 transition" onclick="toggleBatchTerlewatPanel()">
                     <div class="flex items-center gap-2.5">
-                        <div class="w-6 h-6 rounded-md bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                        <div class="w-6 h-6 rounded bg-[#eef6fb] border border-[#cde3f5] text-[#0f2d5a] flex items-center justify-center font-bold text-xs flex-shrink-0">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                         </div>
-                        <div class="text-xs font-medium text-slate-700 flex items-center gap-2">
-                            <span class="font-semibold"><?= $anomaliPendingKasir > 0 ? 'Peringatan Batch Obat Terlewat (FEFO)' : 'Riwayat Penyesuaian Batch Obat' ?></span>
-                            <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-mono text-[10px] font-bold">
+                        <div class="text-xs font-medium text-[#0f2d5a] flex items-center gap-2">
+                            <span class="font-bold"><?= $anomaliPendingKasir > 0 ? 'Peringatan Batch Obat Terlewat (FEFO)' : 'Riwayat Penyesuaian Batch Obat' ?></span>
+                            <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-800 font-mono text-[10px] font-bold">
                                 <?= $anomaliPendingKasir > 0 ? ($anomaliPendingKasir . ' Menunggu Dikeluarkan') : ($anomaliHariIniKasir . ' Sudah Disesuaikan') ?>
                             </span>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 flex-shrink-0">
-                        <button type="button" class="text-xs font-medium text-slate-600 bg-white hover:bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 transition flex items-center gap-1.5 shadow-2xs">
+                        <button type="button" class="text-xs font-semibold text-[#0f2d5a] bg-white hover:bg-slate-50 px-2.5 py-1 rounded border border-slate-300 transition flex items-center gap-1.5">
                             <span id="label_toggle_drawer">Buka Rincian</span>
                             <span id="icon_toggle_drawer" class="text-xs font-mono text-slate-500">▾</span>
                         </button>
@@ -498,7 +562,7 @@ if ($userRole === "superadmin") {
                 <div id="drawer_batch_content" style="display: none;" class="p-4 bg-white max-h-64 overflow-y-auto">
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-[11px]">
+                            <tr class="bg-[#f8fafc] border-b border-slate-200 text-[#0f2d5a] font-bold text-[11px] uppercase tracking-wider">
                                 <th class="py-2 px-3 text-center w-10">#</th>
                                 <th class="py-2 px-3">Invoice / Waktu</th>
                                 <th class="py-2 px-3">Nama Obat &amp; Satuan</th>
@@ -512,31 +576,49 @@ if ($userRole === "superadmin") {
                             <?php foreach ($listAnomaliKasir as $i => $row): 
                                 $isBesar = (($row['satuan_tipe'] ?? 'kecil') === 'besar');
                                 $satLabel = $isBesar ? ($row['satuan_besar'] ?: 'Box') : ($row['satuan_kecil'] ?: 'Pcs');
+                                $qtyTotal = (int)$row['qty'];
+                                $qtyDis   = (int)($row['qty_disesuaikan'] ?? 0);
+                                $rowStatus = $row['status'] ?? 'terlewat';
                             ?>
                                 <tr class="hover:bg-slate-50/70">
                                     <td class="py-2 px-3 text-center text-slate-400 font-mono text-[11px]"><?= $i + 1 ?></td>
-                                    <td class="py-2 px-3 font-mono font-bold text-slate-800 text-[11px]">
+                                    <td class="py-2 px-3 font-mono font-bold text-[#0f2d5a] text-[11px]">
                                         <?= htmlspecialchars($row['no_invoice'] ?? '-') ?>
                                         <div class="text-[10px] text-slate-400 font-normal"><?= date('d/m H:i', strtotime($row['created_at'])) ?> WIB</div>
                                     </td>
                                     <td class="py-2 px-3">
-                                        <div class="font-medium text-slate-800"><?= htmlspecialchars($row['nama_produk'] ?? '-') ?></div>
+                                        <div class="font-semibold text-slate-800"><?= htmlspecialchars($row['nama_produk'] ?? '-') ?></div>
                                         <div class="mt-0.5"><span class="inline-block px-1.5 py-0.2 rounded text-[9px] font-semibold bg-slate-100 text-slate-600 border border-slate-200"><?= $isBesar ? 'Satuan Besar (Grosir)' : 'Satuan Kecil (Eceran)' ?></span></div>
                                     </td>
                                     <td class="py-2 px-3 text-center"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-mono text-[11px] font-bold"><?= htmlspecialchars($row['batch_seharusnya'] ?? '-') ?></span></td>
                                     <td class="py-2 px-3 text-center"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-mono text-[11px] font-bold"><?= htmlspecialchars($row['batch_diambil'] ?? '-') ?></span></td>
                                     <td class="py-2 px-3 text-center font-bold text-slate-800">
-                                        <?= number_format($row['qty'], 0, ',', '.') ?> <span class="text-[10px] font-normal text-slate-500"><?= htmlspecialchars($satLabel) ?></span>
+                                        <?php if ($rowStatus === 'disesuaikan'): ?>
+                                            <span class="text-emerald-700 font-mono"><?= $qtyTotal ?>/<?= $qtyTotal ?></span>
+                                        <?php elseif ($rowStatus === 'sebagian'): ?>
+                                            <span class="text-amber-700 font-mono"><?= $qtyDis ?>/<?= $qtyTotal ?></span>
+                                        <?php else: ?>
+                                            <span class="text-slate-800 font-mono">0/<?= $qtyTotal ?></span>
+                                        <?php endif; ?>
+                                        <span class="text-[10px] font-normal text-slate-500"><?= htmlspecialchars($satLabel) ?></span>
                                     </td>
                                     <td class="py-2 px-3 text-center">
-                                        <?php if ($row['status'] === 'disesuaikan'): ?>
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                                                ✓ Sudah Disesuaikan
+                                        <?php if ($rowStatus === 'disesuaikan'): ?>
+                                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                <svg class="w-3 h-3 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                                <span>Disesuaikan (<?= $qtyTotal ?>/<?= $qtyTotal ?>)</span>
                                             </span>
                                             <div class="text-[9px] text-slate-500 mt-0.5 font-mono">di <?= htmlspecialchars($row['no_invoice_resolved'] ?? '-') ?></div>
+                                        <?php elseif ($rowStatus === 'sebagian'): ?>
+                                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-300">
+                                                <svg class="w-3 h-3 text-amber-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                <span>Sebagian (<?= $qtyDis ?>/<?= $qtyTotal ?>)</span>
+                                            </span>
+                                            <div class="text-[9px] text-amber-700 mt-0.5 font-medium">Sisa <?= ($qtyTotal - $qtyDis) ?> <?= htmlspecialchars($satLabel) ?> terlewat</div>
                                         <?php else: ?>
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-800 border border-slate-300">
-                                                Menunggu Dikeluarkan
+                                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-300">
+                                                <svg class="w-3 h-3 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                                <span>Menunggu Dikeluarkan</span>
                                             </span>
                                             <div class="text-[9px] text-slate-500 mt-0.5">Prioritaskan penjualan</div>
                                         <?php endif; ?>
@@ -545,7 +627,7 @@ if ($userRole === "superadmin") {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-                    <div class="mt-3 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-600 flex items-center justify-between">
+                    <div class="mt-3 px-3 py-2 bg-[#f8fafc] border border-slate-200 rounded text-[11px] text-slate-600 flex items-center justify-between">
                         <span>Panel ini bersifat pendukung dan tidak memblokir aktivitas kasir.</span>
                         <button type="button" onclick="document.getElementById('panel_batch_terlewat').style.display='none'" class="text-[10px] text-slate-500 hover:text-slate-800 underline">Sembunyikan Panel</button>
                     </div>
@@ -554,21 +636,27 @@ if ($userRole === "superadmin") {
         <?php endif; ?>
 
         <?php if ($msg): ?>
-            <div class="mb-4 p-4 rounded-2xl border text-xs font-semibold <?= $msgType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-800' ?>">
+            <div class="mb-4 p-3.5 rounded-lg border text-xs font-semibold <?= $msgType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-800' ?>">
                 <?= $msg ?>
             </div>
         <?php endif; ?>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
             <!-- Katalog Produk -->
-            <div class="lg:col-span-7 bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden">
-                <div class="flex items-center justify-between px-5 py-4 border-b border-zcBrd">
-                    <h2 class="text-sm font-bold text-zcTxt">Katalog Stok Cabang</h2>
-                    <input type="text" id="pos_search" onkeyup="filterPos()" placeholder="Cari SKU / nama..."
-                        class="text-xs border border-zcBrd rounded-xl px-3 py-2 w-52 focus:outline-none focus:border-zc bg-slate-50">
+            <div class="lg:col-span-7 bg-white border border-slate-200 rounded-lg overflow-hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-5 py-3.5 bg-[#f8fafc] border-b border-slate-200">
+                    <div>
+                        <h2 class="text-sm font-extrabold text-[#0f2d5a] tracking-tight">Katalog Stok Cabang</h2>
+                        <p class="text-[11px] text-slate-500">Pilih produk manual atau scan barcode kemasan fisik</p>
+                    </div>
+                    <div class="relative w-full sm:w-64">
+                        <input type="text" id="pos_search" onkeyup="filterPos()" placeholder="Cari SKU / nama / batch / SN..."
+                            class="w-full text-xs border border-slate-300 rounded px-3 py-2 pl-8 focus:outline-none focus:border-[#0f2d5a] bg-white text-slate-800">
+                        <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </div>
                 </div>
-                <div class="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-3.5 p-4 max-h-[640px] overflow-y-auto" id="product_grid">
+                <div class="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-3.5 p-4 max-h-[680px] overflow-y-auto" id="product_grid">
                     <?php foreach ($katalog as $item): ?>
                         <?php 
                         $rawGambar = $item['gambar'] ?? '';
@@ -593,7 +681,7 @@ if ($userRole === "superadmin") {
                             $stokDusAttr = 0;
                         }
                         ?>
-                        <div class="product-card group bg-white border border-zcBrd hover:border-zc rounded-2xl p-3 hover:shadow-md transition-all flex flex-col justify-between"
+                        <div class="product-card group bg-white border border-slate-200 hover:border-[#1a75d2] rounded-lg p-3 transition-colors flex flex-col justify-between"
                              data-id="<?= intval($item['id']) ?>"
                              data-search="<?= strtolower($item['nama'] . ' ' . $item['sku_variasi']) ?>"
                              data-sn="<?= strtolower($item['sn_list'] ?? '') ?>"
@@ -602,21 +690,21 @@ if ($userRole === "superadmin") {
                              data-stok-eceran="<?= $eceranSisa ?>"
                              data-stok-dus="<?= $stokDusAttr ?>">
                             
-                            <!-- Large High-Visibility Product Image Showcase -->
-                            <div class="relative w-full aspect-[4/3] bg-gradient-to-br from-slate-50 to-slate-100/70 rounded-xl border border-slate-200/80 p-2.5 overflow-hidden flex items-center justify-center mb-2.5 shadow-2xs group-hover:bg-blue-50/20 transition-colors">
+                            <!-- Product Image Showcase -->
+                            <div class="relative w-full aspect-[4/3] bg-[#f8fafc] rounded border border-slate-200/80 p-2.5 overflow-hidden flex items-center justify-center mb-2.5 group-hover:bg-[#eef6fb]/50 transition-colors">
                                 <img src="<?= htmlspecialchars($imgSrc) ?>" alt="img" 
-                                     class="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300" 
+                                     class="w-full h-full object-contain mix-blend-multiply" 
                                      onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
 
                                 <!-- Category Badge -->
-                                <span class="absolute top-2 left-2 px-2 py-0.5 bg-white/95 text-[9px] font-extrabold rounded-md border shadow-2xs <?= $item['kategori'] === 'Obat' ? 'text-indigo-700 border-indigo-200/80' : 'text-teal-700 border-teal-200/80' ?>">
+                                <span class="absolute top-2 left-2 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider border <?= $item['kategori'] === 'Obat' ? 'bg-[#eef6fb] text-[#0f2d5a] border-[#cde3f5]' : 'bg-slate-100 text-slate-700 border-slate-300' ?>">
                                     <?= htmlspecialchars($item['kategori']) ?>
                                 </span>
 
                                 <!-- Multi-photo badge if available -->
                                 <?php if (count($arrGambar) > 1): ?>
-                                    <span class="absolute bottom-2 right-2 px-1.5 py-0.5 bg-slate-900/75 text-white text-[8px] font-bold rounded shadow-2xs flex items-center gap-0.5">
-                                        <svg class="w-2.5 h-2.5 text-blue-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                                    <span class="absolute bottom-2 right-2 px-1.5 py-0.5 bg-[#0f2d5a]/85 text-white text-[8px] font-bold rounded flex items-center gap-0.5">
+                                        <svg class="w-2.5 h-2.5 text-sky-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                                         <?= count($arrGambar) ?>
                                     </span>
                                 <?php endif; ?>
@@ -624,71 +712,71 @@ if ($userRole === "superadmin") {
 
                             <!-- Title, SKU & Batch/SN Tags -->
                             <div class="mb-2.5">
-                                <span class="text-[9px] font-mono text-zcMut block uppercase tracking-wider"><?= htmlspecialchars($item['sku_variasi']) ?></span>
-                                <h4 class="text-xs font-extrabold text-zcTxt leading-snug line-clamp-2 mt-0.5 group-hover:text-zc transition-colors" title="<?= htmlspecialchars($item['nama']) ?>">
-                                    <?= htmlspecialchars($item['nama']) ?>
+                                <span class="text-[9.5px] font-mono font-semibold text-slate-400 block uppercase tracking-wider"><?= htmlspecialchars($item['sku_variasi']) ?></span>
+                                <h4 class="text-xs font-extrabold text-[#0f2d5a] leading-snug line-clamp-2 mt-0.5 group-hover:text-[#1a75d2] transition-colors" title="<?= htmlspecialchars($item['nama']) ?>">
+                                    <span class="text-xs font-bold"><?= htmlspecialchars($item['nama']) ?></span>
                                 </h4>
                                 
                                 <?php if (!empty($item['batch_list'])): ?>
-                                    <div class="mt-1.5 flex flex-wrap gap-1">
+                                    <div class="mt-2 flex flex-wrap gap-1.5">
                                         <?php foreach(array_slice(explode(',', $item['batch_list']), 0, 2) as $b): ?>
-                                            <span class="inline-block px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[9px] font-bold">B: <?= htmlspecialchars($b) ?></span>
+                                            <span class="inline-block px-1.5 py-0.5 bg-[#eef6fb] text-[#0f2d5a] border border-[#cde3f5] rounded text-[9px] font-mono font-bold">B: <?= htmlspecialchars($b) ?></span>
                                         <?php endforeach; ?>
                                         <?php if (count(explode(',', $item['batch_list'])) > 2): ?>
-                                            <span class="inline-block px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-bold">+<?= count(explode(',', $item['batch_list'])) - 2 ?></span>
+                                            <span class="inline-block px-1.5 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded text-[9px] font-mono font-bold">+<?= count(explode(',', $item['batch_list'])) - 2 ?></span>
                                         <?php endif; ?>
                                     </div>
                                 <?php endif; ?>
                                 
                                 <?php if (!empty($item['sn_list'])): ?>
-                                    <div class="mt-1.5 flex flex-wrap gap-1">
+                                    <div class="mt-2 flex flex-wrap gap-1.5">
                                         <?php foreach(array_slice(explode(',', $item['sn_list']), 0, 2) as $sn): ?>
-                                            <span class="inline-block px-1.5 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded text-[9px] font-bold">SN: <?= htmlspecialchars($sn) ?></span>
+                                            <span class="inline-block px-1.5 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 rounded text-[9px] font-mono font-bold">SN: <?= htmlspecialchars($sn) ?></span>
                                         <?php endforeach; ?>
                                         <?php if (count(explode(',', $item['sn_list'])) > 2): ?>
-                                            <span class="inline-block px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-bold">+<?= count(explode(',', $item['sn_list'])) - 2 ?></span>
+                                            <span class="inline-block px-1.5 py-0.5 bg-slate-100 text-slate-500 border border-slate-200 rounded text-[9px] font-mono font-bold">+<?= count(explode(',', $item['sn_list'])) - 2 ?></span>
                                         <?php endif; ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
-                            <div class="pt-2.5 border-t border-zcBrd flex flex-col gap-2">
+                            <div class="pt-2.5 border-t border-slate-200 flex flex-col gap-2">
                                 <!-- Pilihan Harga Seimbang & Berpembatas -->
                                 <?php if ($item['rasio_konversi'] > 1): ?>
-                                    <div class="grid grid-cols-2 gap-1.5 p-1.5 bg-slate-100/70 rounded-xl border border-slate-200 text-center">
-                                        <div class="bg-white rounded-lg p-1.5 shadow-xs border border-slate-200/60">
+                                    <div class="grid grid-cols-2 gap-1.5 p-1 bg-[#f8fafc] rounded border border-slate-200 text-center">
+                                        <div class="bg-white rounded-sm p-1.5 border border-slate-200/80">
                                             <span class="text-[9px] font-bold text-slate-400 block uppercase tracking-wide">Eceran</span>
-                                            <span class="text-xs font-black text-slate-800 block">Rp <?= number_format($item['harga_jual_kecil'], 0, ',', '.') ?></span>
-                                            <span class="text-[9px] font-semibold text-slate-500 block">/ <?= htmlspecialchars($item['satuan_kecil']) ?></span>
+                                            <span class="text-xs font-extrabold text-[#0f2d5a] block">Rp <?= number_format($item['harga_jual_kecil'], 0, ',', '.') ?></span>
+                                            <span class="text-[9px] font-medium text-slate-500 block">/ <?= htmlspecialchars($item['satuan_kecil']) ?></span>
                                         </div>
-                                        <div class="bg-white rounded-lg p-1.5 shadow-xs border border-slate-200/60">
+                                        <div class="bg-white rounded-sm p-1.5 border border-slate-200/80">
                                             <span class="text-[9px] font-bold text-slate-400 block uppercase tracking-wide">Grosir</span>
-                                            <span class="text-xs font-black text-slate-800 block">Rp <?= number_format($item['harga_jual_besar'], 0, ',', '.') ?></span>
-                                            <span class="text-[9px] font-semibold text-slate-500 block">/ <?= htmlspecialchars($item['satuan_besar']) ?></span>
+                                            <span class="text-xs font-extrabold text-[#0f2d5a] block">Rp <?= number_format($item['harga_jual_besar'], 0, ',', '.') ?></span>
+                                            <span class="text-[9px] font-medium text-slate-500 block">/ <?= htmlspecialchars($item['satuan_besar']) ?></span>
                                         </div>
                                     </div>
                                 <?php else: ?>
                                     <!-- Produk Kemasan Utuh Tunggal (Alkes / Non-Konversi) -->
-                                    <div class="p-1 bg-slate-100/70 rounded-xl border border-slate-200 text-center">
-                                        <div class="bg-white rounded-lg py-1.5 px-3 shadow-xs border border-slate-200/60 flex items-center justify-between">
+                                    <div class="p-1 bg-[#f8fafc] rounded border border-slate-200 text-center">
+                                        <div class="bg-white rounded-sm py-1.5 px-2.5 border border-slate-200/80 flex items-center justify-between">
                                             <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Harga Satuan</span>
                                             <div class="text-right">
-                                                <span class="text-xs font-black text-slate-900">Rp <?= number_format($item['harga_jual_kecil'], 0, ',', '.') ?></span>
-                                                <span class="text-[9px] font-semibold text-slate-500">/ <?= htmlspecialchars($item['satuan_besar'] ?: $item['satuan_kecil']) ?></span>
+                                                <span class="text-xs font-extrabold text-[#0f2d5a]">Rp <?= number_format($item['harga_jual_kecil'], 0, ',', '.') ?></span>
+                                                <span class="text-[9px] font-medium text-slate-500">/ <?= htmlspecialchars($item['satuan_besar'] ?: $item['satuan_kecil']) ?></span>
                                             </div>
                                         </div>
                                     </div>
                                 <?php endif; ?>
 
                                 <!-- Sisa Stok Terpisah (Besar vs Kecil) -->
-                                <div class="sisa-stok-container p-1.5 rounded-lg border text-[10px] <?= $stok > 0 ? 'bg-emerald-50/60 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-700' ?> flex items-center justify-between">
+                                <div class="sisa-stok-container px-2 py-1.5 rounded border text-[10px] <?= $stok > 0 ? 'bg-emerald-50/50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-700' ?> flex items-center justify-between">
                                     <span class="font-bold">Sisa Stok:</span>
                                     <div class="flex items-center gap-1 font-extrabold text-[10px]">
                                         <?php if ($item['rasio_konversi'] > 1): ?>
-                                            <span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700"><?= $dusUtuh ?> <?= htmlspecialchars($item['satuan_besar']) ?></span>
-                                            <span class="text-slate-400">•</span>
-                                            <span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700"><?= $eceranSisa ?> <?= htmlspecialchars($item['satuan_kecil']) ?></span>
+                                            <span class="bg-white px-1.5 py-0.5 rounded-sm border border-emerald-200/80 text-slate-700"><?= $dusUtuh ?> <?= htmlspecialchars($item['satuan_besar']) ?></span>
+                                            <span class="text-slate-400">&bull;</span>
+                                            <span class="bg-white px-1.5 py-0.5 rounded-sm border border-emerald-200/80 text-slate-700"><?= $eceranSisa ?> <?= htmlspecialchars($item['satuan_kecil']) ?></span>
                                         <?php else: ?>
-                                            <span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700"><?= $stok ?> <?= htmlspecialchars($item['satuan_besar'] ?: $item['satuan_kecil']) ?></span>
+                                            <span class="bg-white px-1.5 py-0.5 rounded-sm border border-emerald-200/80 text-slate-700"><?= $stok ?> <?= htmlspecialchars($item['satuan_besar'] ?: $item['satuan_kecil']) ?></span>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -697,14 +785,14 @@ if ($userRole === "superadmin") {
                                 <div class="flex items-center gap-1.5">
                                     <?php if ($item['rasio_konversi'] > 1): ?>
                                     <div class="w-1/2">
-                                        <select id="uom_<?= $item['id'] ?>" class="text-[11px] font-bold border border-zcBrd rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:border-zc w-full shadow-xs" <?= $stok <= 0 ? 'disabled' : '' ?>>
+                                        <select id="uom_<?= $item['id'] ?>" class="text-[11px] font-bold border border-slate-300 rounded px-2 py-1.5 bg-white text-[#0f2d5a] focus:outline-none focus:border-[#0f2d5a] w-full" <?= $stok <= 0 ? 'disabled' : '' ?>>
                                             <option value="kecil" selected>Ecer (<?= htmlspecialchars($item['satuan_kecil']) ?>)</option>
                                             <option value="besar" <?= $dusUtuh <= 0 ? 'disabled' : '' ?>>Grosir (<?= htmlspecialchars($item['satuan_besar']) ?>)</option>
                                         </select>
                                     </div>
                                     <?php else: ?>
                                     <input type="hidden" id="uom_<?= $item['id'] ?>" value="besar" data-label="<?= htmlspecialchars($item['satuan_besar'] ?: $item['satuan_kecil']) ?>">
-                                    <div class="w-1/2 text-[10px] border border-zcBrd rounded-lg px-2 py-1.5 bg-slate-100 text-slate-600 text-center font-bold">
+                                    <div class="w-1/2 text-[10px] border border-slate-200 rounded px-2 py-1.5 bg-[#f8fafc] text-slate-600 text-center font-bold">
                                         <?= htmlspecialchars($item['satuan_besar'] ?: $item['satuan_kecil']) ?>
                                     </div>
                                     <?php endif; ?>
@@ -719,7 +807,7 @@ if ($userRole === "superadmin") {
                                         data-kat="<?= htmlspecialchars($item['kategori'], ENT_QUOTES, 'UTF-8') ?>"
                                         onclick="addToPos(this, null)"
                                         <?= $stok <= 0 ? 'disabled' : '' ?>
-                                        class="w-1/2 text-[11px] font-bold px-2 py-1.5 rounded-lg border transition <?= $stok > 0 ? 'bg-zc hover:bg-zcHv text-white border-zc shadow-xs' : 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed' ?>">
+                                        class="w-1/2 text-[11px] font-bold px-2 py-1.5 rounded border transition <?= $stok > 0 ? 'bg-[#0f2d5a] hover:bg-[#1a75d2] text-white border-[#0f2d5a] hover:border-[#1a75d2]' : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' ?>">
                                         + Pilih
                                     </button>
                                 </div>
@@ -727,8 +815,8 @@ if ($userRole === "superadmin") {
                                 <?php if ($item['kategori'] === 'Obat' && (isset($item['stok_dus']) && $item['stok_dus'] > 0)): ?>
                                     <button type="button" 
                                         onclick="triggerManualBongkar(<?= intval($item['id']) ?>, '<?= htmlspecialchars($item['nama'], ENT_QUOTES, 'UTF-8') ?>', '<?= htmlspecialchars($item['batch_list'] ?? '') ?>', <?= floatval($item['harga_jual_kecil']) ?>, <?= floatval($item['harga_jual_besar']) ?>, <?= intval($item['stok']) ?>, <?= intval($item['rasio_konversi']) ?: 1 ?>)" 
-                                        class="w-full text-[9px] font-bold px-2 py-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 transition shadow-xs flex items-center justify-center gap-1">
-                                        <svg class="w-3 h-3 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                        class="w-full text-[9.5px] font-bold px-2 py-1 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition flex items-center justify-center gap-1">
+                                        <svg class="w-3 h-3 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                                         <span>Bongkar Box (Tersisa: <?= isset($item['stok_eceran']) ? $item['stok_eceran'] : 0 ?> <?= htmlspecialchars($item['satuan_kecil']) ?>)</span>
                                     </button>
                                 <?php endif; ?>
@@ -739,38 +827,41 @@ if ($userRole === "superadmin") {
             </div>
 
             <!-- Billing POS -->
-            <div class="lg:col-span-5 bg-white border border-zcBrd rounded-2xl shadow-sm flex flex-col">
-                <div class="px-5 py-4 border-b border-zcBrd flex items-center justify-between gap-2">
-                    <h2 class="text-sm font-bold text-zcTxt">Billing Transaksi Karyawan</h2>
+            <div class="lg:col-span-5 bg-white border border-slate-200 rounded-lg flex flex-col sticky top-20">
+                <div class="px-5 py-3.5 bg-[#f8fafc] border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <h2 class="text-sm font-extrabold text-[#0f2d5a] tracking-tight">Billing Transaksi</h2>
+                        <p class="text-[11px] text-slate-500">Verifikasi fisik barcode sebelum bayar</p>
+                    </div>
                     <div class="flex items-center gap-1.5">
-                        <button type="button" onclick="openCameraScannerModal()" class="px-2.5 py-1.5 bg-blue-50 hover:bg-zc text-zc hover:text-white border border-blue-200 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Scan Barcode via Kamera Webcam Laptop">
+                        <button type="button" onclick="openCameraScannerModal()" class="px-2.5 py-1.5 bg-[#eef6fb] hover:bg-[#0f2d5a] text-[#0f2d5a] hover:text-white border border-[#cde3f5] hover:border-[#0f2d5a] rounded text-xs font-bold transition flex items-center gap-1.5" title="Scan Barcode via Kamera Webcam Laptop">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             <span>Scan Kamera</span>
                         </button>
-                        <input type="text" id="manual_barcode_input" placeholder="Scan / Ketik Barcode..." autocomplete="off" onkeydown="handleManualBarcode(event)" class="text-xs border border-zcBrd rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-zc focus:ring-1 focus:ring-zc bg-slate-50 w-32 sm:w-40 shadow-inner transition-colors">
+                        <input type="text" id="manual_barcode_input" placeholder="Scan / Ketik Barcode..." autocomplete="off" onkeydown="handleManualBarcode(event)" class="text-xs border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none focus:border-[#0f2d5a] bg-white w-36 sm:w-40 transition-colors">
                     </div>
                 </div>
 
-                <div class="flex-1 overflow-y-auto">
+                <div class="flex-1 overflow-y-auto max-h-[450px]">
                     <table class="w-full text-xs" id="pos_cart_table">
-                        <thead class="bg-slate-50 border-b border-zcBrd text-zcMut font-bold uppercase">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-[#0f2d5a] text-[10px] font-extrabold uppercase tracking-wider">
                             <tr>
-                                <th class="px-4 py-2.5 text-left">Item</th>
-                                <th class="px-4 py-2.5 text-center">Qty</th>
+                                <th class="px-4 py-2.5 text-left">Item &amp; Validasi Batch/SN</th>
+                                <th class="px-3 py-2.5 text-center">Qty</th>
                                 <th class="px-4 py-2.5 text-right">Subtotal</th>
-                                <th class="px-4 py-2.5"></th>
+                                <th class="px-3 py-2.5 w-8"></th>
                             </tr>
                         </thead>
-                        <tbody id="pos_cart_body" class="divide-y divide-zcBorder/60">
-                            <tr><td colspan="4" class="px-4 py-10 text-center text-zcMut italic">Pilih barang dari katalog...</td></tr>
+                        <tbody id="pos_cart_body" class="divide-y divide-slate-200">
+                            <tr><td colspan="4" class="px-4 py-12 text-center text-slate-400 text-xs">Belum ada item. Pilih barang dari katalog atau scan barcode fisik.</td></tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div class="p-5 border-t border-zcBrd space-y-3">
-                    <div class="flex justify-between items-baseline">
-                        <span class="text-xs font-bold text-zcMut uppercase tracking-wider">Total Pembayaran</span>
-                        <span id="pos_total" class="text-2xl font-bold text-zcEm">Rp 0</span>
+                <div class="p-5 bg-[#f8fafc] border-t border-slate-200 space-y-3">
+                    <div class="flex justify-between items-baseline pb-2 border-b border-slate-200">
+                        <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Total Pembayaran</span>
+                        <span id="pos_total" class="text-2xl font-black text-[#0f2d5a]">Rp 0</span>
                     </div>
                     <form method="POST" id="form_pos">
                         <input type="hidden" name="aksi" value="bayar_pos">
@@ -778,12 +869,13 @@ if ($userRole === "superadmin") {
                         <input type="hidden" name="metode_pembayaran" id="form_metode_pembayaran" value="Tunai">
                         <input type="hidden" name="custom_invoice" id="form_custom_invoice" value="">
                         <button type="button" id="btn_pay" disabled onclick="openPaymentModal()"
-                            class="w-full py-3.5 rounded-xl text-xs font-bold transition shadow-sm bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed">
+                            class="w-full py-3 rounded text-xs font-extrabold uppercase tracking-wider transition bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed">
                             <?= $sesiOpnameAktif ? 'Kasir Dibekukan (Stok Opname Aktif)' : 'Proses Pembayaran' ?>
                         </button>
                     </form>
-                    <button onclick="clearCart()" class="w-full py-2 rounded-xl text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg> Kosongkan Keranjang
+                    <button onclick="clearCart()" class="w-full py-2 rounded text-xs font-bold text-rose-600 bg-white hover:bg-rose-50 border border-rose-200 transition flex items-center justify-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
+                        Kosongkan Keranjang
                     </button>
                 </div>
             </div>
@@ -792,23 +884,23 @@ if ($userRole === "superadmin") {
     </div>
 
     <!-- Modal Pembayaran POS -->
-    <div id="payment_modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden transform transition-all scale-95 opacity-0 duration-200" id="modal_content">
-            <div class="bg-zc px-5 py-4 flex items-center justify-between">
-                <h3 class="text-white font-bold text-sm tracking-wide">PROSES PEMBAYARAN</h3>
-                <button onclick="closePaymentModal()" class="text-zcLt hover:text-white transition">
+    <div id="payment_modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-lg border border-slate-200 shadow-xl overflow-hidden transform transition-all scale-95 opacity-0 duration-200" id="modal_content">
+            <div class="bg-[#0f2d5a] px-5 py-3.5 flex items-center justify-between">
+                <h3 class="text-white font-extrabold text-xs uppercase tracking-wider">Proses Pembayaran Kasir</h3>
+                <button onclick="closePaymentModal()" class="text-slate-300 hover:text-white transition">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
             </div>
-            <div class="p-6 space-y-5">
-                <div class="text-center p-4 bg-slate-50 rounded-xl border border-zcBrd shadow-inner">
-                    <p class="text-xs font-bold text-zcMut uppercase tracking-wider mb-1">Total Tagihan</p>
-                    <p class="text-4xl font-black text-zcTxt" id="modal_total_tagihan">Rp 0</p>
+            <div class="p-6 space-y-4">
+                <div class="text-center p-4 bg-[#eef6fb] rounded border border-[#cde3f5]">
+                    <p class="text-[11px] font-bold text-[#1a75d2] uppercase tracking-wider mb-1">Total Tagihan</p>
+                    <p class="text-3xl font-black text-[#0f2d5a]" id="modal_total_tagihan">Rp 0</p>
                 </div>
                 
                 <div>
-                    <label class="block text-xs font-bold text-zcTxt mb-2">Metode Pembayaran</label>
-                    <select id="modal_metode" onchange="toggleNominalInput()" class="w-full text-sm font-bold border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-zc focus:ring-4 focus:ring-zcLt transition appearance-none bg-white mb-4">
+                    <label class="block text-xs font-bold text-[#0f2d5a] mb-1.5">Metode Pembayaran</label>
+                    <select id="modal_metode" onchange="toggleNominalInput()" class="w-full text-sm font-bold border border-slate-300 rounded px-3.5 py-2.5 focus:outline-none focus:border-[#0f2d5a] transition bg-white mb-2">
                         <option value="Tunai">Uang Tunai</option>
                         <option value="QRIS">QRIS / E-Wallet</option>
                         <option value="Transfer Bank">Transfer Bank</option>
@@ -817,87 +909,87 @@ if ($userRole === "superadmin") {
                 </div>
                 
                 <div id="nominal_section">
-                    <label class="block text-xs font-bold text-zcTxt mb-2">Nominal Uang Diberikan (Rp)</label>
-                    <input type="text" id="modal_nominal" onkeyup="calcKembalian()" placeholder="Rp 0" class="w-full text-2xl font-bold border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-zc focus:ring-4 focus:ring-zcLt transition text-right">
-                    <div class="flex gap-2 mt-3">
-                        <button type="button" onclick="setNominal(50000)" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold py-2.5 rounded-lg border border-slate-200 transition shadow-sm">50.000</button>
-                        <button type="button" onclick="setNominal(100000)" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold py-2.5 rounded-lg border border-slate-200 transition shadow-sm">100.000</button>
-                        <button type="button" onclick="setNominalUangPas()" class="flex-1 bg-zcLt hover:bg-blue-100 text-zc text-sm font-bold py-2.5 rounded-lg border border-blue-200 transition shadow-sm">Uang Pas</button>
+                    <label class="block text-xs font-bold text-[#0f2d5a] mb-1.5">Nominal Uang Diberikan (Rp)</label>
+                    <input type="text" id="modal_nominal" onkeyup="calcKembalian()" placeholder="Rp 0" class="w-full text-2xl font-bold border border-slate-300 rounded px-3.5 py-2.5 focus:outline-none focus:border-[#0f2d5a] transition text-right text-[#0f2d5a]">
+                    <div class="flex gap-2 mt-2.5">
+                        <button type="button" onclick="setNominal(50000)" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold py-2 rounded border border-slate-300 transition">50.000</button>
+                        <button type="button" onclick="setNominal(100000)" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold py-2 rounded border border-slate-300 transition">100.000</button>
+                        <button type="button" onclick="setNominalUangPas()" class="flex-1 bg-[#eef6fb] hover:bg-[#dcebf7] text-[#0f2d5a] text-xs font-bold py-2 rounded border border-[#cde3f5] transition">Uang Pas</button>
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between p-4 rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors" id="box_kembalian">
-                    <span class="text-sm font-bold text-zcMut" id="lbl_kembalian">Menunggu Pembayaran</span>
-                    <span class="text-2xl font-bold text-zcTxt" id="val_kembalian">-</span>
+                <div class="flex items-center justify-between p-3.5 rounded border border-slate-200 bg-slate-50 transition-colors" id="box_kembalian">
+                    <span class="text-xs font-bold text-slate-500" id="lbl_kembalian">Menunggu Pembayaran</span>
+                    <span class="text-xl font-bold text-[#0f2d5a]" id="val_kembalian">-</span>
                 </div>
                 
                 <!-- Dynamic QRIS Midtrans Section -->
-                <div id="qris_dynamic_section" class="hidden p-4 rounded-xl border-2 border-blue-200 bg-gradient-to-b from-blue-50/70 to-white text-center space-y-3">
+                <div id="qris_dynamic_section" class="hidden p-4 rounded border border-[#cde3f5] bg-[#eef6fb]/60 text-center space-y-3">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-zc uppercase tracking-wider flex items-center gap-1.5">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        <span class="text-xs font-extrabold text-[#0f2d5a] uppercase tracking-wider flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-[#1a75d2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                             QRIS KASIR LANGSUNG
                         </span>
-                        <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800" id="qris_status_badge">Siap Dimunculkan</span>
+                        <span class="text-[10px] font-bold px-2.5 py-0.5 rounded bg-white border border-[#cde3f5] text-[#0f2d5a]" id="qris_status_badge">Siap Dimunculkan</span>
                     </div>
 
                     <!-- Live Countdown Timer 5 Menit Kasir Walk-in -->
-                    <div id="qris_timer_box" class="hidden p-2.5 rounded-xl bg-amber-50/90 border border-amber-200 text-amber-900 text-xs flex items-center justify-between shadow-2xs">
+                    <div id="qris_timer_box" class="hidden p-2.5 rounded bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between">
                         <div class="flex items-center gap-1.5 font-semibold text-slate-700">
                             <svg class="w-4 h-4 text-amber-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                             <span>Batas Waktu Bayar Kasir:</span>
                         </div>
                         <div class="flex items-center gap-1">
-                            <span id="qris_countdown_display" class="font-mono font-black text-xs px-2.5 py-0.5 rounded-lg bg-amber-200/80 text-amber-950">05:00</span>
+                            <span id="qris_countdown_display" class="font-mono font-black text-xs px-2.5 py-0.5 rounded bg-white border border-amber-300 text-amber-950">05:00</span>
                         </div>
                     </div>
 
                     <p class="text-xs text-slate-600">Klik tombol di bawah untuk membuka QRIS dengan nominal presisi tagihan kasir (Batas bayar langsung di counter: <strong>5 Menit</strong>).</p>
 
                     <div class="pt-1">
-                        <button type="button" id="btn_open_snap_qris" onclick="triggerMidtransPosQRIS()" class="w-full py-3 px-4 rounded-xl font-bold text-xs bg-zc hover:bg-zcHv text-white shadow-md shadow-zc/30 transition flex items-center justify-center gap-2">
+                        <button type="button" id="btn_open_snap_qris" onclick="triggerMidtransPosQRIS()" class="w-full py-2.5 px-4 rounded font-bold text-xs bg-[#0f2d5a] hover:bg-[#1a75d2] text-white transition flex items-center justify-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
                             Tampilkan QRIS Kasir
                         </button>
                     </div>
 
-                    <div class="text-[10px] text-slate-400 flex items-center justify-center gap-1.5">
+                    <div class="text-[10px] text-slate-500 flex items-center justify-center gap-1.5">
                         <span>Mendukung GoPay, BCA, Mandiri, ShopeePay, DANA, LinkAja, dsb.</span>
                     </div>
                 </div>
 
-                <div id="non_tunai_info" class="hidden p-4 rounded-xl border border-blue-200 bg-blue-50 text-blue-800 text-xs text-center font-medium">
+                <div id="non_tunai_info" class="hidden p-3.5 rounded border border-[#cde3f5] bg-[#eef6fb] text-[#0f2d5a] text-xs text-center font-medium">
                     Pastikan pembayaran melalui EDC / Transfer telah berhasil masuk sebelum menyelesaikan transaksi.
                 </div>
             </div>
-            <div class="p-5 border-t border-zcBrd bg-slate-50 flex gap-3">
-                <button onclick="closePaymentModal()" class="flex-1 py-3.5 rounded-xl text-sm font-bold bg-white text-slate-600 border border-slate-300 hover:bg-slate-100 transition shadow-sm">Batal</button>
-                <button id="btn_submit_pay" onclick="submitPayment()" disabled class="flex-[2] py-3.5 rounded-xl text-sm font-bold bg-slate-300 text-slate-500 cursor-not-allowed transition">Selesaikan Transaksi</button>
+            <div class="p-4 border-t border-slate-200 bg-[#f8fafc] flex gap-2.5">
+                <button onclick="closePaymentModal()" class="flex-1 py-2.5 rounded text-xs font-bold bg-white text-slate-600 border border-slate-300 hover:bg-slate-100 transition">Batal</button>
+                <button id="btn_submit_pay" onclick="submitPayment()" disabled class="flex-[2] py-2.5 rounded text-xs font-extrabold uppercase tracking-wider bg-slate-200 text-slate-400 cursor-not-allowed transition">Selesaikan Transaksi</button>
             </div>
         </div>
     </div>
 
     <!-- Modal Barcode Scanner Webcam / Kamera -->
-    <div id="camera_modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0 duration-200 border border-slate-200" id="camera_modal_content">
-            <div class="bg-gradient-to-r from-zc to-zcHv px-5 py-4 flex items-center justify-between text-white">
+    <div id="camera_modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-lg shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0 duration-200 border border-slate-200" id="camera_modal_content">
+            <div class="bg-[#0f2d5a] px-5 py-3.5 flex items-center justify-between text-white">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+                    <div class="w-8 h-8 rounded bg-white/10 border border-white/15 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
                     </div>
                     <div>
                         <h3 class="font-bold text-sm leading-tight">Live Barcode Scanner Kamera</h3>
-                        <p class="text-[11px] text-blue-100">Arahkan barcode / SN produk ke kamera laptop atau webcam</p>
+                        <p class="text-[11px] text-slate-300">Arahkan barcode / SN produk ke kamera laptop atau webcam</p>
                     </div>
                 </div>
-                <button type="button" onclick="closeCameraScannerModal()" class="text-blue-100 hover:text-white transition p-1">
+                <button type="button" onclick="closeCameraScannerModal()" class="text-slate-300 hover:text-white transition p-1">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
             </div>
             
             <div class="p-5 space-y-4">
                 <!-- Camera Viewport Box -->
-                <div class="relative bg-slate-900 rounded-xl overflow-hidden shadow-inner border-2 border-slate-700 min-h-[250px] flex items-center justify-center">
+                <div class="relative bg-slate-900 rounded-md overflow-hidden border border-slate-700 min-h-[250px] flex items-center justify-center">
                     <div id="camera_scanner_view" class="w-full"></div>
                     <div id="camera_loading_indicator" class="text-center p-4 text-white text-xs">
                         <div class="inline-block w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin mb-2"></div>
@@ -908,13 +1000,13 @@ if ($userRole === "superadmin") {
                 <!-- Camera Selector & Feedback -->
                 <div class="flex items-center justify-between gap-3 text-xs">
                     <div class="flex-1">
-                        <label class="block text-[11px] font-bold text-zcMut mb-1">Pilih Perangkat Kamera:</label>
-                        <select id="camera_device_select" onchange="changeCameraDevice(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-semibold focus:outline-none focus:border-zc">
+                        <label class="block text-[11px] font-bold text-slate-500 mb-1">Pilih Perangkat Kamera:</label>
+                        <select id="camera_device_select" onchange="changeCameraDevice(this.value)" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs text-slate-700 font-semibold focus:outline-none focus:border-[#0f2d5a]">
                             <option value="">Deteksi kamera...</option>
                         </select>
                     </div>
                     <div class="text-right">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800" id="scan_status_badge">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-800" id="scan_status_badge">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                             <span>Scanner Aktif</span>
                         </span>
@@ -922,14 +1014,14 @@ if ($userRole === "superadmin") {
                 </div>
 
                 <!-- Live Status & Feedback Transaksi (Anti-Bingung & Anti-Double Scan) -->
-                <div id="cam_feedback_card" class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs transition-all shadow-sm">
+                <div id="cam_feedback_card" class="p-3 rounded bg-[#f8fafc] border border-slate-200 text-xs transition-all">
                     <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-200">
                         <div class="flex items-center gap-1.5">
-                            <span class="text-[11px] font-bold text-slate-700">Keranjang Kasir Realtime:</span>
+                            <span class="text-[11px] font-bold text-[#0f2d5a]">Keranjang Kasir Realtime:</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span id="cam_cart_count_badge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 border border-blue-200">0 Item</span>
-                            <span id="cam_cart_total_badge" class="text-xs font-black text-slate-800">Rp 0</span>
+                            <span id="cam_cart_count_badge" class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-[#eef6fb] text-[#0f2d5a] border border-[#cde3f5]">0 Item</span>
+                            <span id="cam_cart_total_badge" class="text-xs font-black text-[#0f2d5a]">Rp 0</span>
                         </div>
                     </div>
                     
@@ -938,25 +1030,25 @@ if ($userRole === "superadmin") {
                             <span class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block">Scan Terakhir:</span>
                             <span id="cam_last_product_label" class="font-bold text-xs text-slate-700 truncate block">Arahkan barcode ke kotak kamera</span>
                         </div>
-                        <span id="cam_cooldown_indicator" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 shrink-0">
+                        <span id="cam_cooldown_indicator" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200 shrink-0">
                             Siap Scan
                         </span>
                     </div>
                 </div>
 
                 <!-- Last Scanned Info Card (Compact) -->
-                <div id="last_scanned_box" class="px-3 py-2 rounded-xl bg-blue-50/70 border border-blue-200 text-xs text-blue-900 flex items-center justify-between">
+                <div id="last_scanned_box" class="px-3 py-2 rounded bg-[#eef6fb] border border-[#cde3f5] text-xs text-[#0f2d5a] flex items-center justify-between">
                     <div>
-                        <span class="text-[9.5px] font-bold text-zc uppercase tracking-wider inline mr-1">Barcode:</span>
-                        <span id="last_scanned_code" class="font-mono font-bold text-xs text-zcTxt">-</span>
+                        <span class="text-[9.5px] font-bold text-[#1a75d2] uppercase tracking-wider inline mr-1">Barcode:</span>
+                        <span id="last_scanned_code" class="font-mono font-bold text-xs text-[#0f2d5a]">-</span>
                     </div>
                     <span id="last_scanned_time" class="text-[10px] text-slate-500 font-medium">Belum ada scan</span>
                 </div>
             </div>
 
-            <div class="p-4 border-t border-zcBrd bg-slate-50 flex justify-between items-center">
-                <span class="text-[11px] text-zcMut">Otomatis berbunyi bip saat barcode terbaca.</span>
-                <button type="button" onclick="closeCameraScannerModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 transition">
+            <div class="p-4 border-t border-slate-200 bg-[#f8fafc] flex justify-between items-center">
+                <span class="text-[11px] text-slate-500">Otomatis berbunyi bip saat barcode terbaca.</span>
+                <button type="button" onclick="closeCameraScannerModal()" class="px-4 py-2 rounded text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 transition">
                     Tutup Scanner
                 </button>
             </div>
@@ -1600,10 +1692,10 @@ if ($userRole === "superadmin") {
                         bItems.forEach(function(b) {
                             var bCode = b.split('|')[0];
                             var bStok = b.split('|')[1] || '';
-                            bHtml += '<span class="inline-block px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold shadow-sm">B: ' + bCode + (bStok ? ' | ' + bStok : '') + '</span> ';
+                            bHtml += '<span class="inline-block px-1.5 py-0.5 bg-[#eef6fb] text-[#0f2d5a] border border-[#cde3f5] rounded text-[9px] font-mono font-bold">B: ' + bCode + (bStok ? '|' + bStok : '') + '</span> ';
                         });
                         if (updatedBatchList.split(',').length > 3) {
-                            bHtml += '<span class="inline-block px-2 py-1 bg-slate-50 text-slate-500 border border-slate-200 rounded text-[10px] font-bold shadow-sm">...</span>';
+                            bHtml += '<span class="inline-block px-1.5 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded text-[9px] font-mono font-bold">...</span>';
                         }
                         badgeContainer.innerHTML = bHtml;
                     }
@@ -1613,11 +1705,11 @@ if ($userRole === "superadmin") {
                     if (sisaContainer) {
                         var dusUtuh = Math.floor(updatedDus / rasio);
                         sisaContainer.innerHTML = '<span class="font-bold">Sisa Stok:</span><div class="flex items-center gap-1 font-extrabold text-[10px]">' +
-                            '<span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700">' + dusUtuh + ' ' + (data.satuan_besar || 'Karton') + '</span>' +
+                            '<span class="bg-white px-1.5 py-0.5 rounded-sm border border-emerald-200/80 text-slate-700">' + dusUtuh + ' ' + (data.satuan_besar || 'Karton') + '</span>' +
                             '<span class="text-slate-400">•</span>' +
-                            '<span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700">' + updatedEceran + ' ' + (data.satuan_kecil || 'Box') + '</span>' +
+                            '<span class="bg-white px-1.5 py-0.5 rounded-sm border border-emerald-200/80 text-slate-700">' + updatedEceran + ' ' + (data.satuan_kecil || 'Box') + '</span>' +
                             '</div>';
-                        sisaContainer.className = 'sisa-stok-container p-1.5 rounded-lg border text-[10px] bg-emerald-50/60 border-emerald-200 text-emerald-800 flex items-center justify-between';
+                        sisaContainer.className = 'sisa-stok-container px-2 py-1.5 rounded border text-[10px] bg-emerald-50/50 border-emerald-200 text-emerald-900 flex items-center justify-between';
                     }
 
                     // Update tombol bongkar
@@ -1713,10 +1805,10 @@ if ($userRole === "superadmin") {
         var inp = document.getElementById('cart_input');
 
         if (cart.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-10 text-center text-zcMut italic">Pilih barang dari katalog...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-12 text-center text-slate-400 text-xs">Belum ada item. Pilih barang dari katalog atau scan barcode fisik.</td></tr>';
             totalEl.innerText = 'Rp 0';
             btn.disabled = true;
-            btn.className = 'w-full py-3.5 rounded-xl text-xs font-bold bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed';
+            btn.className = 'w-full py-3 rounded text-xs font-extrabold uppercase tracking-wider bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed';
             inp.value = '[]';
             try { sessionStorage.removeItem('zencare_pos_cart'); } catch(e) {}
             updateCameraModalCartPreview();
@@ -1736,14 +1828,14 @@ if ($userRole === "superadmin") {
                         if (al.verified) {
                             var displayBatch = (al.scanned_batch || al.batch).toUpperCase();
                             var swappedTag = al.is_anomaly ? '<span class="ml-1 px-1.5 py-0.2 bg-amber-200 text-amber-900 rounded text-[8px] font-extrabold uppercase">DITUKAR</span>' : '';
-                            badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold shadow-xs">' +
-                                '<span class="text-blue-600 font-extrabold">✔</span>' +
-                                '<span>Fisik Tervalidasi: <b class="font-mono text-blue-900">' + displayBatch + '</b> (' + al.qty + ' ' + i.satuan_label + ')</span>' +
+                            badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-[#eef6fb] border border-[#cde3f5] text-[#0f2d5a] text-[10px] font-bold">' +
+                                '<span class="text-[#1a75d2] font-extrabold">✔</span>' +
+                                '<span>Fisik Tervalidasi: <b class="font-mono text-[#0f2d5a]">' + displayBatch + '</b> (' + al.qty + ' ' + i.satuan_label + ')</span>' +
                                 swappedTag +
                             '</div>';
                         } else {
                             var expectedBatch = (al.batch || '').toUpperCase();
-                            badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold animate-pulse shadow-xs">' +
+                            badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold animate-pulse">' +
                                 '<span class="text-rose-600 font-extrabold">⚠</span>' +
                                 '<span>Ambil Fisik: <b class="font-mono text-rose-900">' + expectedBatch + '</b> (' + al.qty + ' ' + i.satuan_label + ')</span>' +
                             '</div>';
@@ -1754,12 +1846,12 @@ if ($userRole === "superadmin") {
                     badgesHtml += '<div class="mt-1.5 space-y-1">';
                     i.alkes_allocations.forEach(function(u, idx) {
                         if (u.verified) {
-                            badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold shadow-xs">' +
-                                '<span class="text-blue-600 font-extrabold">✔</span>' +
-                                '<span>SN Tervalidasi: <b class="font-mono text-blue-900">' + u.sn.toUpperCase() + '</b> (Unit ' + (idx + 1) + ')</span>' +
+                            badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-[#eef6fb] border border-[#cde3f5] text-[#0f2d5a] text-[10px] font-bold">' +
+                                '<span class="text-[#1a75d2] font-extrabold">✔</span>' +
+                                '<span>SN Tervalidasi: <b class="font-mono text-[#0f2d5a]">' + u.sn.toUpperCase() + '</b> (Unit ' + (idx + 1) + ')</span>' +
                             '</div>';
                         } else {
-                            badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold animate-pulse shadow-xs">' +
+                            badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold animate-pulse">' +
                                 '<span class="text-rose-600 font-extrabold">⚠</span>' +
                                 '<span>Ambil Unit ' + (idx + 1) + ': <b class="font-mono text-rose-900">Scan SN Fisik</b></span>' +
                             '</div>';
@@ -1768,7 +1860,7 @@ if ($userRole === "superadmin") {
                     badgesHtml += '</div>';
                 } else if (i.kategori === 'Obat') {
                     badgesHtml += '<div class="mt-1.5 space-y-1">' +
-                        '<div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold shadow-xs">' +
+                        '<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold">' +
                             '<span class="text-amber-600 font-extrabold">⚠</span>' +
                             '<span>Perlu Robek Kardus (Sub-batch Belum Ada)</span>' +
                         '</div>' +
@@ -1777,23 +1869,23 @@ if ($userRole === "superadmin") {
             }
 
             var maxAllowed = Math.floor(i.maxPcs / i.rasio);
-            var stokInfo = '<span class="flex items-center gap-1 text-[9px] text-slate-500 font-medium mt-1"><svg class="w-3 h-3 text-slate-400 shrink-0 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Total Tersedia: ' + maxAllowed + ' ' + i.satuan_label + '</span>';
+            var stokInfo = '<span class="flex items-center gap-1 text-[9.5px] text-slate-500 font-medium mt-1"><svg class="w-3 h-3 text-slate-400 shrink-0 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Total Tersedia: ' + maxAllowed + ' ' + i.satuan_label + '</span>';
 
-            html += '<tr class="hover:bg-slate-50/60 transition-colors">' +
+            html += '<tr class="hover:bg-slate-50/70 transition-colors">' +
                 '<td class="px-4 py-3 font-semibold text-zcTxt text-xs align-top">' +
-                    '<div class="font-bold text-slate-800">' + i.nama + '</div>' +
-                    '<span class="inline-block text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 font-bold mt-0.5">' + i.satuan_label + ' @ Rp ' + i.harga.toLocaleString('id-ID') + '</span>' +
+                    '<div class="font-bold text-[#0f2d5a]">' + i.nama + '</div>' +
+                    '<span class="inline-block text-[10px] text-[#0f2d5a] bg-[#eef6fb] px-1.5 py-0.5 rounded border border-[#cde3f5] font-bold mt-0.5">' + i.satuan_label + ' @ Rp ' + i.harga.toLocaleString('id-ID') + '</span>' +
                     badgesHtml + stokInfo +
                 '</td>' +
-                '<td class="px-4 py-3 text-center align-top">' +
-                    '<div class="flex items-center justify-center gap-1.5 pt-1">' +
-                        '<button type="button" onclick="changeQty(\'' + i.cartId + '\',-1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition flex items-center justify-center cursor-pointer">-</button>' +
-                        '<input type="number" min="1" max="' + maxAllowed + '" value="' + i.qty + '" onchange="setQtyManual(\'' + i.cartId + '\', this.value)" class="w-12 text-center font-bold text-xs border border-zcBrd rounded-lg py-1 px-1 focus:outline-none focus:border-zc bg-white shadow-xs">' +
-                        '<button type="button" onclick="changeQty(\'' + i.cartId + '\',1)" class="w-6 h-6 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold border border-slate-300 transition flex items-center justify-center cursor-pointer">+</button>' +
+                '<td class="px-3 py-3 text-center align-top">' +
+                    '<div class="flex items-center justify-center gap-1 pt-1">' +
+                        '<button type="button" onclick="changeQty(\'' + i.cartId + '\',-1)" class="w-6 h-6 bg-white hover:bg-slate-100 rounded text-xs font-bold border border-slate-300 text-slate-700 transition flex items-center justify-center cursor-pointer">-</button>' +
+                        '<input type="number" min="1" max="' + maxAllowed + '" value="' + i.qty + '" onchange="setQtyManual(\'' + i.cartId + '\', this.value)" class="w-11 text-center font-bold text-xs border border-slate-300 rounded py-0.5 px-1 focus:outline-none focus:border-[#0f2d5a] bg-white">' +
+                        '<button type="button" onclick="changeQty(\'' + i.cartId + '\',1)" class="w-6 h-6 bg-white hover:bg-slate-100 rounded text-xs font-bold border border-slate-300 text-slate-700 transition flex items-center justify-center cursor-pointer">+</button>' +
                     '</div>' +
                 '</td>' +
-                '<td class="px-4 py-3 text-right font-black text-xs text-slate-800 align-top pt-2.5">Rp ' + sub.toLocaleString('id-ID') + '</td>' +
-                '<td class="px-4 py-3 text-center align-top pt-2"><button type="button" onclick="removeItem(\'' + i.cartId + '\')" class="text-rose-500 hover:text-rose-700 text-xs font-bold transition p-1 hover:bg-rose-50 rounded cursor-pointer">[X]</button></td>' +
+                '<td class="px-4 py-3 text-right font-extrabold text-xs text-[#0f2d5a] align-top pt-2.5">Rp ' + sub.toLocaleString('id-ID') + '</td>' +
+                '<td class="px-3 py-3 text-center align-top pt-2"><button type="button" onclick="removeItem(\'' + i.cartId + '\')" class="text-slate-400 hover:text-rose-600 text-xs font-bold transition p-1 hover:bg-rose-50 rounded cursor-pointer" title="Hapus Item">&times;</button></td>' +
             '</tr>';
         });
 
@@ -1802,11 +1894,11 @@ if ($userRole === "superadmin") {
         if (<?= $sesiOpnameAktif ? 'true' : 'false' ?>) {
             btn.disabled = true;
             btn.innerText = 'Kasir Dibekukan (Stok Opname Aktif)';
-            btn.className = 'w-full py-3.5 rounded-xl text-xs font-bold bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed';
+            btn.className = 'w-full py-3 rounded text-xs font-extrabold uppercase tracking-wider bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed';
         } else {
             btn.disabled = false;
             btn.innerText = 'Proses Pembayaran';
-            btn.className = 'w-full py-3.5 rounded-xl text-xs font-bold bg-zc hover:bg-zcHv text-white transition shadow-sm cursor-pointer';
+            btn.className = 'w-full py-3 rounded text-xs font-extrabold uppercase tracking-wider bg-[#0f2d5a] hover:bg-[#1a75d2] text-white transition cursor-pointer';
         }
         inp.value = JSON.stringify(cart);
         try {
@@ -1919,7 +2011,7 @@ if ($userRole === "superadmin") {
         if (metode !== 'Tunai') {
             box.classList.add('hidden');
             btn.disabled = false;
-            btn.className = 'flex-[2] py-3.5 rounded-xl text-sm font-bold bg-zc hover:bg-zcHv text-white transition shadow-sm cursor-pointer shadow-zc/30';
+            btn.className = 'flex-[2] py-2.5 rounded text-xs font-extrabold uppercase tracking-wider bg-[#0f2d5a] hover:bg-[#1a75d2] text-white transition cursor-pointer';
             return;
         }
         
@@ -1930,29 +2022,29 @@ if ($userRole === "superadmin") {
         var nom = parseInt(raw) || 0;
         
         if (nom === 0) {
-            box.className = "flex items-center justify-between p-4 rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors";
-            lbl.className = "text-sm font-bold text-zcMut";
+            box.className = "flex items-center justify-between p-3.5 rounded border border-slate-200 bg-slate-50 transition-colors";
+            lbl.className = "text-xs font-bold text-slate-500";
             lbl.innerText = "Menunggu Nominal";
-            val.className = "text-2xl font-bold text-zcMut";
+            val.className = "text-xl font-bold text-slate-500";
             val.innerText = "-";
             btn.disabled = true;
-            btn.className = "flex-[2] py-3.5 rounded-xl text-sm font-bold bg-slate-300 text-slate-500 cursor-not-allowed transition";
+            btn.className = "flex-[2] py-2.5 rounded text-xs font-extrabold uppercase tracking-wider bg-slate-200 text-slate-400 cursor-not-allowed transition";
         } else if (nom < currentTotal) {
-            box.className = "flex items-center justify-between p-4 rounded-xl border-2 border-rose-300 bg-rose-50 transition-colors";
-            lbl.className = "text-sm font-bold text-rose-600";
+            box.className = "flex items-center justify-between p-3.5 rounded border border-rose-300 bg-rose-50 transition-colors";
+            lbl.className = "text-xs font-bold text-rose-600";
             lbl.innerText = "Kekurangan Bayar";
-            val.className = "text-2xl font-black text-rose-600";
+            val.className = "text-xl font-black text-rose-600";
             val.innerText = "Rp " + formatRupiah(currentTotal - nom);
             btn.disabled = true;
-            btn.className = "flex-[2] py-3.5 rounded-xl text-sm font-bold bg-slate-300 text-slate-500 cursor-not-allowed transition";
+            btn.className = "flex-[2] py-2.5 rounded text-xs font-extrabold uppercase tracking-wider bg-slate-200 text-slate-400 cursor-not-allowed transition";
         } else {
-            box.className = "flex items-center justify-between p-4 rounded-xl border-2 border-emerald-300 bg-emerald-50 transition-colors";
-            lbl.className = "text-sm font-bold text-emerald-600";
+            box.className = "flex items-center justify-between p-3.5 rounded border border-emerald-300 bg-emerald-50 transition-colors";
+            lbl.className = "text-xs font-bold text-emerald-700";
             lbl.innerText = "Uang Kembalian";
-            val.className = "text-2xl font-black text-emerald-600";
+            val.className = "text-xl font-black text-emerald-700";
             val.innerText = "Rp " + formatRupiah(nom - currentTotal);
             btn.disabled = false;
-            btn.className = "flex-[2] py-3.5 rounded-xl text-sm font-bold bg-zc hover:bg-zcHv text-white shadow-lg shadow-zc/30 transition cursor-pointer";
+            btn.className = "flex-[2] py-2.5 rounded text-xs font-extrabold uppercase tracking-wider bg-[#0f2d5a] hover:bg-[#1a75d2] text-white transition cursor-pointer";
         }
     }
 
@@ -2061,7 +2153,7 @@ if ($userRole === "superadmin") {
                 currentPosOrderId = data.order_id;
                 badge.innerText = 'Menunggu Scan (5 Menit)...';
                 badge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800';
-                btn.innerHTML = '⚡ Tampilkan Ulang QRIS Midtrans';
+                btn.innerHTML = 'Tampilkan Ulang QRIS Midtrans';
                 btn.disabled = false;
 
                 // Mulai visual live countdown timer 5 menit di kasir
@@ -2071,7 +2163,7 @@ if ($userRole === "superadmin") {
                     snap.pay(data.token, {
                         onSuccess: function(result) {
                             stopPosQrisTimer();
-                            badge.innerText = '✅ Lunas';
+                            badge.innerText = 'Lunas';
                             badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800';
                             Swal.fire({
                                 title: 'Pembayaran QRIS Berhasil!',
@@ -2112,7 +2204,7 @@ if ($userRole === "superadmin") {
         } catch (err) {
             stopPosQrisTimer();
             btn.disabled = false;
-            btn.innerHTML = '⚡ Coba Lagi QRIS Midtrans';
+            btn.innerHTML = 'Coba Lagi QRIS Midtrans';
             badge.innerText = 'Error API';
             Swal.fire('Midtrans Error', 'Gagal memanggil API Midtrans: ' + err.message, 'warning');
         }
@@ -2603,11 +2695,11 @@ if ($userRole === "superadmin") {
                     var sel = document.getElementById('uom_' + item.id);
                     if (newTotalStok <= 0) {
                         btn.disabled = true;
-                        btn.className = 'w-1/2 text-[11px] font-bold px-2 py-1.5 rounded-lg border transition bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed';
+                        btn.className = 'w-1/2 text-[11px] font-bold px-2 py-1.5 rounded border transition bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed';
                         if (sel) sel.disabled = true;
                     } else {
                         btn.disabled = false;
-                        btn.className = 'w-1/2 text-[11px] font-bold px-2 py-1.5 rounded-lg border transition bg-zc hover:bg-zcHv text-white border-zc shadow-xs';
+                        btn.className = 'w-1/2 text-[11px] font-bold px-2 py-1.5 rounded border transition bg-[#0f2d5a] hover:bg-[#1a75d2] text-white border-[#0f2d5a] hover:border-[#1a75d2]';
                         if (sel) sel.disabled = false;
                     }
                     
@@ -2618,10 +2710,10 @@ if ($userRole === "superadmin") {
                             var bItems = item.batch_list.split(',').slice(0, 2);
                             var bHtml = '';
                             bItems.forEach(function(b) {
-                                bHtml += '<span class="inline-block px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[10px] font-bold shadow-sm">B: ' + b + '</span> ';
+                                bHtml += '<span class="inline-block px-1.5 py-0.5 bg-[#eef6fb] text-[#0f2d5a] border border-[#cde3f5] rounded text-[9px] font-mono font-bold">B: ' + b + '</span> ';
                             });
                             if (item.batch_list.split(',').length > 2) {
-                                bHtml += '<span class="inline-block px-2 py-1 bg-slate-50 text-slate-500 border border-slate-200 rounded text-[10px] font-bold shadow-sm">...</span>';
+                                bHtml += '<span class="inline-block px-1.5 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded text-[9px] font-mono font-bold">+' + (item.batch_list.split(',').length - 2) + '</span>';
                             }
                             badgeContainer.innerHTML = bHtml;
                         } else {
@@ -2637,15 +2729,15 @@ if ($userRole === "superadmin") {
                         
                         var stokContent = '';
                         if (rasio > 1) {
-                            stokContent = '<span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700">' + dusUtuh + ' ' + (item.satuan_besar || 'Karton') + '</span>' +
+                            stokContent = '<span class="bg-white px-1.5 py-0.5 rounded-sm border border-emerald-200/80 text-slate-700">' + dusUtuh + ' ' + (item.satuan_besar || 'Karton') + '</span>' +
                                           '<span class="text-slate-400">•</span>' +
-                                          '<span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700">' + eceranSisa + ' ' + (item.satuan_kecil || 'Box') + '</span>';
+                                          '<span class="bg-white px-1.5 py-0.5 rounded-sm border border-emerald-200/80 text-slate-700">' + eceranSisa + ' ' + (item.satuan_kecil || 'Box') + '</span>';
                         } else {
-                            stokContent = '<span class="bg-white px-1.5 py-0.5 rounded border border-emerald-200/60 text-slate-700">' + newTotalStok + ' ' + (item.satuan_kecil || 'Pcs') + '</span>';
+                            stokContent = '<span class="bg-white px-1.5 py-0.5 rounded-sm border border-emerald-200/80 text-slate-700">' + newTotalStok + ' ' + (item.satuan_kecil || 'Pcs') + '</span>';
                         }
                         
                         sisaContainer.innerHTML = '<span class="font-bold">Sisa Stok:</span><div class="flex items-center gap-1 font-extrabold text-[10px]">' + stokContent + '</div>';
-                        sisaContainer.className = 'sisa-stok-container p-1.5 rounded-lg border text-[10px] ' + (newTotalStok > 0 ? 'bg-emerald-50/60 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-700') + ' flex items-center justify-between';
+                        sisaContainer.className = 'sisa-stok-container px-2 py-1.5 rounded border text-[10px] ' + (newTotalStok > 0 ? 'bg-emerald-50/50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-700') + ' flex items-center justify-between';
                     }
                     
                     // Update tombol bongkar
@@ -2799,14 +2891,19 @@ function openKasirAnomaliModal() {
             $isBesar = (($row['satuan_tipe'] ?? 'kecil') === 'besar');
             $satLabel = $isBesar ? ($row['satuan_besar'] ?: 'Box') : ($row['satuan_kecil'] ?: 'Pcs');
             $satBadge = $isBesar ? '<span class=\"px-1.5 py-0.5 rounded text-[9px] bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold\">Satuan Besar (Grosir)</span>' : '<span class=\"px-1.5 py-0.5 rounded text-[9px] bg-slate-100 text-slate-600 border border-slate-200 font-semibold\">Satuan Kecil (Eceran)</span>';
-            $qty = number_format($row['qty'], 0, ',', '.') . " " . htmlspecialchars($satLabel);
-            $jam = date('d/m H:i', strtotime($row['created_at']));
-            $kasir = htmlspecialchars($row['nama_kasir'] ?? 'Kasir');
+            $qtyTotal = (int)$row['qty'];
+            $qtyDis = (int)($row['qty_disesuaikan'] ?? 0);
+            $rowStatus = $row['status'] ?? 'terlewat';
             
-            if ($row['status'] === 'disesuaikan') {
-                $statusBadge = '<span class=\"px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200\">✓ Sudah Disesuaikan</span><div class=\"text-[9px] text-slate-500 font-mono mt-0.5\">di ' . htmlspecialchars($row['no_invoice_resolved'] ?? '-') . '</div>';
+            if ($rowStatus === 'disesuaikan') {
+                $qtyDisplay = "{$qtyTotal}/{$qtyTotal} " . htmlspecialchars($satLabel);
+                $statusBadge = '<span class=\"inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200\"><svg class=\"w-3 h-3 text-emerald-600 inline\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\"><polyline points=\"20 6 9 17 4 12\"/></svg> Disesuaikan (' . $qtyTotal . '/' . $qtyTotal . ')</span><div class=\"text-[9px] text-slate-500 font-mono mt-0.5\">di ' . htmlspecialchars($row['no_invoice_resolved'] ?? '-') . '</div>';
+            } elseif ($rowStatus === 'sebagian') {
+                $qtyDisplay = "<span class=\"text-amber-700 font-bold\">{$qtyDis}/{$qtyTotal}</span> " . htmlspecialchars($satLabel);
+                $statusBadge = '<span class=\"inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-300\"><svg class=\"w-3 h-3 text-amber-600 inline\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/></svg> Sebagian (' . $qtyDis . '/' . $qtyTotal . ')</span><div class=\"text-[9px] text-amber-700 font-medium mt-0.5\">Sisa ' . ($qtyTotal - $qtyDis) . ' ' . htmlspecialchars($satLabel) . ' terlewat</div>';
             } else {
-                $statusBadge = '<span class=\"px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-800 border border-slate-300\">Menunggu Dikeluarkan</span>';
+                $qtyDisplay = "0/{$qtyTotal} " . htmlspecialchars($satLabel);
+                $statusBadge = '<span class=\"inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-300\"><svg class=\"w-3 h-3 text-slate-500 inline\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"/><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"/></svg> Menunggu Dikeluarkan</span>';
             }
 
             $rowsHtml .= "<tr class='border-b border-slate-100 hover:bg-slate-50 transition'>";
@@ -2815,7 +2912,7 @@ function openKasirAnomaliModal() {
             $rowsHtml .= "<td class='px-3 py-2 font-semibold text-xs text-slate-700'>{$prod}<div class='mt-0.5'>{$satBadge}</div></td>";
             $rowsHtml .= "<td class='px-3 py-2 text-center'><span class='px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-mono text-xs font-bold'>{$seharusnya}</span></td>";
             $rowsHtml .= "<td class='px-3 py-2 text-center'><span class='px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-mono text-xs font-bold'>{$diambil}</span></td>";
-            $rowsHtml .= "<td class='px-3 py-2 text-center font-bold text-xs text-slate-800'>{$qty}</td>";
+            $rowsHtml .= "<td class='px-3 py-2 text-center font-bold text-xs text-slate-800'>{$qtyDisplay}</td>";
             $rowsHtml .= "<td class='px-3 py-2 text-center text-xs'>{$statusBadge}</td>";
             $rowsHtml .= "</tr>";
         }

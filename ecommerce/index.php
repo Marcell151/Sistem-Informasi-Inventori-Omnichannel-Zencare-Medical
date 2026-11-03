@@ -1,5 +1,5 @@
 <?php
-// File: ecommerce/index.php — ZenCare Medical Store (Redesign Toko Online Modern & Otentik)
+// File: ecommerce/index.php — ZenCare Medical Store (Pharmify Editorial Redesign)
 $pageTitle = "Toko Alat Kesehatan & Obat";
 require_once __DIR__ . '/header.php';
 
@@ -72,335 +72,459 @@ function getFirstProductImage($rawGambar) {
     return '../assets/img/produk/' . $first;
 }
 
+// Cari gambar sampel berdasarkan kata kunci nama produk untuk banner & kategori
+function findSampleProductImg($products, array $keywords, $fallbackKategori = null) {
+    foreach ($products as $p) {
+        if (empty($p['gambar'])) continue;
+        $haystack = strtolower($p['nama_produk']);
+        foreach ($keywords as $kw) {
+            if (str_contains($haystack, strtolower($kw))) {
+                return getFirstProductImage($p['gambar']);
+            }
+        }
+    }
+    if ($fallbackKategori) {
+        foreach ($products as $p) {
+            if (!empty($p['gambar']) && $p['kategori'] === $fallbackKategori) {
+                return getFirstProductImage($p['gambar']);
+            }
+        }
+    }
+    foreach ($products as $p) {
+        if (!empty($p['gambar'])) return getFirstProductImage($p['gambar']);
+    }
+    return '';
+}
+
 // Ambil sampel produk bergambar untuk showcase slide
-$imgProds = array_values(array_filter($products, fn($p) => !empty($p['gambar'])));
+$imgProds  = array_values(array_filter($products, fn($p) => !empty($p['gambar'])));
 $alkesProd = array_values(array_filter($imgProds, fn($p) => $p['kategori'] === 'Alat Kesehatan'))[0] ?? ($imgProds[0] ?? null);
-$obatProd = array_values(array_filter($imgProds, fn($p) => $p['kategori'] === 'Obat'))[0] ?? ($imgProds[1] ?? null);
-$leadProd = $imgProds[0] ?? ($products[0] ?? null);
+$obatProd  = array_values(array_filter($imgProds, fn($p) => $p['kategori'] === 'Obat'))[0] ?? ($imgProds[1] ?? null);
+$leadProd  = $imgProds[0] ?? ($products[0] ?? null);
+
+// Gambar khusus untuk Bento Grid & Kategori
+$imgSirup      = findSampleProductImg($products, ['sirup', 'syrup', 'obh', 'sanmol', 'mylanta'], 'Obat');
+$imgVitamin    = findSampleProductImg($products, ['enervon', 'imboost', 'neurobion', 'sangobion', 'cdr', 'vitamin'], 'Obat');
+$imgDiagnostik = findSampleProductImg($products, ['tensi', 'termometer', 'oximeter', 'easytouch', 'nesco'], 'Alat Kesehatan');
+$imgTablet     = findSampleProductImg($products, ['amox', 'paracetamol', 'bodrex', 'panadol', 'promag'], 'Obat');
+$imgBmhp       = findSampleProductImg($products, ['alkohol', 'betadine', 'masker', 'kasa', 'handscoon', 'hansaplast'], 'Alat Kesehatan');
+$imgTerapi     = findSampleProductImg($products, ['nebulizer', 'kursi', 'stetoskop', 'timbangan'], 'Alat Kesehatan');
 
 $initCategory = $_GET['kategori'] ?? 'all';
+$initInduk    = $_GET['induk'] ?? 'all';
+$initQuery    = trim($_GET['q'] ?? '');
 ?>
 
 <style>
-/* ── Hero Slideshow ── */
-.hero-slide { display: none; opacity: 0; transition: opacity .6s ease; }
+/* ── Pharmify Hero Slideshow ── */
+.hero-slide { display: none; opacity: 0; transition: opacity .5s ease; }
 .hero-slide.active { display: flex; opacity: 1; }
-.slide-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.35); cursor: pointer; transition: all .25s; }
-.slide-dot.active { background: #fff; width: 28px; border-radius: 4px; }
+.slide-dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(15, 45, 90, 0.22); cursor: pointer; transition: all .25s ease; }
+.slide-dot.active { background: #0f2d5a; transform: scale(1.15); }
 
-/* ── Product Card ── */
+/* ── Pharmify Product Card ── */
 .prod-card {
-    transition: transform .22s cubic-bezier(.4,0,.2,1), box-shadow .22s;
-    border: 1.5px solid #e2e8f0;
+    transition: transform .25s ease, box-shadow .25s ease;
 }
-.prod-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 16px 36px rgba(15,45,90,.09);
-    border-color: #1a75d2;
+.prod-card .card-img-box {
+    background-color: #f6f8fa;
+    transition: background-color .25s ease;
 }
-.prod-card:hover .card-img img { transform: scale(1.05); }
-.card-img img { transition: transform .3s ease; }
+.prod-card:hover .card-img-box {
+    background-color: #eef4fa;
+}
+.prod-card .card-img-box img {
+    transition: transform .35s cubic-bezier(.16,1,.3,1);
+}
+.prod-card:hover .card-img-box img {
+    transform: scale(1.05);
+}
 
-/* ── Filter Pills ── */
-.cat-filter-btn { transition: all .2s; }
+/* ── Pharmify Category Underline Tabs ── */
+.cat-filter-btn {
+    position: relative;
+    padding-bottom: 10px;
+    color: #64748b;
+    font-weight: 600;
+    transition: color .2s ease;
+}
+.cat-filter-btn:hover {
+    color: #0f2d5a;
+}
 .cat-filter-btn.active {
-    background-color: #1a75d2 !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(26,117,210,.25);
+    color: #0f2d5a !important;
+    font-weight: 700;
+}
+.cat-filter-btn.active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2.5px;
+    background-color: #0f2d5a;
 }
 </style>
 
-<main class="flex-1 w-full bg-[#f8fafc]">
+<main class="flex-1 w-full bg-white">
 
     <!-- ============================================================ -->
-    <!-- HERO PROMOTIONAL BANNER SLIDESHOW (Commercial E-Commerce)     -->
+    <!-- 1. PHARMIFY CLINICAL HERO SLIDER                             -->
     <!-- ============================================================ -->
-    <section class="relative overflow-hidden bg-gradient-to-br from-[#0f2d5a] via-[#154689] to-[#1a75d2]" style="min-height:360px;">
-        <div class="absolute inset-0 opacity-[.05]" style="background-image:radial-gradient(circle,white 1px,transparent 1px);background-size:24px 24px;"></div>
+    <section class="relative overflow-hidden bg-gradient-to-r from-[#d8eefb] via-[#e7f4fc] to-[#d4ecf9] border-b border-[#cbe4f5]" style="min-height: 440px;">
+        <!-- Subtle Molecular Background Vector (Pharmify Signature) -->
+        <svg class="absolute inset-0 w-full h-full pointer-events-none opacity-45" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 500" preserveAspectRatio="xMidYMid slice">
+            <g stroke="#ffffff" stroke-width="2" fill="none">
+                <polygon points="180,70 230,40 280,70 280,130 230,160 180,130" />
+                <polygon points="280,70 330,40 380,70 380,130 330,160 280,130" />
+                <polygon points="230,160 280,130 330,160 330,220 280,250 230,220" />
+                <line x1="180" y1="70" x2="130" y2="45" />
+                <circle cx="130" cy="45" r="5" fill="#ffffff" />
+                <circle cx="380" cy="70" r="6" fill="#7dd3fc" stroke="none" />
+                <circle cx="230" cy="160" r="5" fill="#38bdf8" stroke="none" />
+                
+                <polygon points="1050,60 1110,25 1170,60 1170,130 1110,165 1050,130" />
+                <polygon points="1170,60 1230,25 1290,60 1290,130 1230,165 1170,130" />
+                <polygon points="1110,165 1170,130 1230,165 1230,235 1170,270 1110,235" />
+                <circle cx="1050" cy="60" r="6" fill="#38bdf8" stroke="none" />
+                <circle cx="1290" cy="130" r="7" fill="#ffffff" />
+                <circle cx="960" cy="360" r="14" stroke="#ffffff" stroke-width="2.5" />
+                <circle cx="680" cy="95" r="10" fill="#bae6fd" stroke="none" />
+                <circle cx="590" cy="370" r="8" fill="#ffffff" stroke="none" />
+            </g>
+        </svg>
 
-        <!-- SLIDE 1: PUSAT ALKES & OBAT RESMI -->
-        <div class="hero-slide active absolute inset-0 flex flex-col md:flex-row items-center justify-between gap-6 px-6 sm:px-12 lg:px-20 py-10" data-slide="0">
-            <div class="flex-1 text-white z-10 max-w-xl mb-4 md:mb-0">
-                <div class="flex items-center gap-2 mb-3 flex-wrap">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full border border-white/20 bg-white/10 text-xs font-bold uppercase tracking-wider text-blue-100 backdrop-blur-md">
-                        Distributor Resmi &bull; Toko Terpercaya
-                    </span>
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-900/50 border border-blue-400/30 text-[11px] font-semibold text-blue-200">
-                        100% Produk Terjamin Asli
-                    </span>
+        <div class="max-w-7xl mx-auto px-4 lg:px-8 relative" style="min-height: 440px;">
+            
+            <!-- SLIDE 1: LAYANAN KESEHATAN & OBAT GROSIR -->
+            <div class="hero-slide active absolute inset-0 flex flex-col md:flex-row items-center justify-between gap-8 px-4 lg:px-8 py-12" data-slide="0">
+                <div class="flex-1 z-10 max-w-xl">
+                    <p class="text-xs font-bold uppercase tracking-[0.2em] text-[#1a75d2] mb-3">
+                        DISTRIBUTOR FARMASI &amp; ALAT KESEHATAN RESMI
+                    </p>
+                    <h1 class="text-3xl sm:text-4xl lg:text-[44px] font-extrabold text-[#0f2d5a] leading-[1.15] tracking-tight mb-4">
+                        Peduli Kesehatan Keluarga Dengan Obat &amp; Alat Medis Terjamin
+                    </h1>
+                    <p class="text-[#334155] text-sm sm:text-base leading-relaxed mb-7 max-w-lg">
+                        Menyediakan obat-obatan kemasan box utuh bersegel resmi dan peralatan medis terkalibrasi untuk kebutuhan apotek, klinik, maupun keluarga Anda.
+                    </p>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <a href="#katalog" class="px-7 py-3.5 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white font-bold text-xs uppercase tracking-widest transition">
+                            BELANJA SEKARANG
+                        </a>
+                        <a href="kategori.php" class="px-6 py-3.5 bg-white/85 hover:bg-white text-[#0f2d5a] border border-[#0f2d5a]/15 font-bold text-xs uppercase tracking-wider transition">
+                            LIHAT SEMUA KATEGORI
+                        </a>
+                    </div>
                 </div>
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight tracking-tight mb-3">
-                    Pusat Belanja Alat Kesehatan &amp; Obat
-                </h1>
-                <p class="text-blue-100/90 text-sm sm:text-base leading-relaxed mb-6 line-clamp-2 max-w-lg">
-                    Menyediakan perlengkapan medis berstandar mutu dan obat-obatan resmi dengan harga grosir kompetitif serta jaminan segel pabrik.
-                </p>
-                <div class="flex items-center gap-3 flex-wrap">
-                    <a href="#katalog" class="px-6 py-3 bg-white text-[#0f2d5a] font-extrabold text-sm rounded-xl hover:bg-blue-50 transition shadow-lg active:scale-95 flex items-center gap-2">
-                        Mulai Belanja
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </a>
-                    <a href="cara_pembelian.php" class="px-5 py-3 bg-white/10 border border-white/25 text-white font-bold text-sm rounded-xl hover:bg-white/20 transition backdrop-blur-sm">
-                        Cara Pembelian
-                    </a>
-                </div>
-            </div>
-            <div class="shrink-0 flex items-center justify-center md:w-80 lg:w-96 relative">
-                <div class="relative bg-white/10 backdrop-blur-md p-4 sm:p-6 rounded-3xl border border-white/20 shadow-2xl flex items-center justify-center">
-                    <?php 
-                    $leadImg = $leadProd ? getFirstProductImage($leadProd['gambar']) : '';
-                    if (!empty($leadImg)): 
-                    ?>
-                        <img src="<?= htmlspecialchars($leadImg) ?>" alt="<?= htmlspecialchars($leadProd['nama_induk']) ?>"
-                             class="h-44 sm:h-52 lg:h-60 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500">
-                    <?php else: ?>
-                        <div class="w-44 h-44 rounded-2xl bg-white/10 flex items-center justify-center text-white">
-                            <svg class="w-16 h-16 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                        </div>
-                    <?php endif; ?>
+                <div class="shrink-0 flex items-center justify-center md:w-[380px] lg:w-[440px] z-10">
+                    <div class="relative flex items-center justify-center w-full h-64 sm:h-80">
+                        <div class="absolute w-60 h-60 sm:w-72 sm:h-72 rounded-full bg-white/65 border border-white shadow-sm"></div>
+                        <?php 
+                        $leadImg = $leadProd ? getFirstProductImage($leadProd['gambar']) : '';
+                        if (!empty($leadImg)): 
+                        ?>
+                            <img src="<?= htmlspecialchars($leadImg) ?>" alt="<?= htmlspecialchars($leadProd['nama_induk']) ?>"
+                                 class="relative z-10 h-52 sm:h-64 lg:h-72 object-contain mix-blend-multiply transition-transform duration-500 hover:scale-105">
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
+
+            <!-- SLIDE 2: ALAT KESEHATAN DIAGNOSTIK -->
+            <div class="hero-slide absolute inset-0 flex flex-col md:flex-row items-center justify-between gap-8 px-4 lg:px-8 py-12" data-slide="1">
+                <div class="flex-1 z-10 max-w-xl">
+                    <p class="text-xs font-bold uppercase tracking-[0.2em] text-[#0d9488] mb-3">
+                        DIAGNOSTIK KLINIS &amp; PERAWATAN RUMAH
+                    </p>
+                    <h1 class="text-3xl sm:text-4xl lg:text-[44px] font-extrabold text-[#0f2d5a] leading-[1.15] tracking-tight mb-4">
+                        Alat Kesehatan Akurat &amp; Bergaransi Resmi
+                    </h1>
+                    <p class="text-[#334155] text-sm sm:text-base leading-relaxed mb-7 max-w-lg">
+                        Tensimeter digital, termometer klinis, pulse oximeter, hingga strip pengecekan darah dengan akurasi tinggi dan perlindungan garansi toko.
+                    </p>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <button type="button" onclick="setCategoryFilter('Alat Kesehatan'); document.getElementById('katalog').scrollIntoView({behavior:'smooth'});" class="px-7 py-3.5 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white font-bold text-xs uppercase tracking-widest transition cursor-pointer">
+                            JELAJAHI ALAT KESEHATAN
+                        </button>
+                        <a href="cara_pembelian.php" class="px-6 py-3.5 bg-white/85 hover:bg-white text-[#0f2d5a] border border-[#0f2d5a]/15 font-bold text-xs uppercase tracking-wider transition">
+                            PANDUAN BELANJA
+                        </a>
+                    </div>
+                </div>
+                <div class="shrink-0 flex items-center justify-center md:w-[380px] lg:w-[440px] z-10">
+                    <div class="relative flex items-center justify-center w-full h-64 sm:h-80">
+                        <div class="absolute w-60 h-60 sm:w-72 sm:h-72 rounded-full bg-white/65 border border-white shadow-sm"></div>
+                        <?php 
+                        $alkesImg = $alkesProd ? getFirstProductImage($alkesProd['gambar']) : '';
+                        if (!empty($alkesImg)): 
+                        ?>
+                            <img src="<?= htmlspecialchars($alkesImg) ?>" alt="<?= htmlspecialchars($alkesProd['nama_induk']) ?>"
+                                 class="relative z-10 h-52 sm:h-64 lg:h-72 object-contain mix-blend-multiply transition-transform duration-500 hover:scale-105">
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: OBAT KEMASAN BOX RESMI -->
+            <div class="hero-slide absolute inset-0 flex flex-col md:flex-row items-center justify-between gap-8 px-4 lg:px-8 py-12" data-slide="2">
+                <div class="flex-1 z-10 max-w-xl">
+                    <p class="text-xs font-bold uppercase tracking-[0.2em] text-[#1a75d2] mb-3">
+                        JAMINAN MUTU &amp; KEDALUWARSA TERJAGA
+                    </p>
+                    <h1 class="text-3xl sm:text-4xl lg:text-[44px] font-extrabold text-[#0f2d5a] leading-[1.15] tracking-tight mb-4">
+                        Sediaan Obat &amp; Vitamin Kemasan Utuh Pabrik
+                    </h1>
+                    <p class="text-[#334155] text-sm sm:text-base leading-relaxed mb-7 max-w-lg">
+                        Setiap produk obat dikelola menggunakan sistem kontrol batch FEFO ketat. Tersedia pengiriman kurir nasional maupun layanan ambil langsung di toko.
+                    </p>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <button type="button" onclick="setCategoryFilter('Obat'); document.getElementById('katalog').scrollIntoView({behavior:'smooth'});" class="px-7 py-3.5 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white font-bold text-xs uppercase tracking-widest transition cursor-pointer">
+                            LIHAT KATALOG OBAT
+                        </button>
+                        <a href="tentang_kami.php" class="px-6 py-3.5 bg-white/85 hover:bg-white text-[#0f2d5a] border border-[#0f2d5a]/15 font-bold text-xs uppercase tracking-wider transition">
+                            TENTANG ZENCARE
+                        </a>
+                    </div>
+                </div>
+                <div class="shrink-0 flex items-center justify-center md:w-[380px] lg:w-[440px] z-10">
+                    <div class="relative flex items-center justify-center w-full h-64 sm:h-80">
+                        <div class="absolute w-60 h-60 sm:w-72 sm:h-72 rounded-full bg-white/65 border border-white shadow-sm"></div>
+                        <?php 
+                        $obatImg = $obatProd ? getFirstProductImage($obatProd['gambar']) : '';
+                        if (!empty($obatImg)): 
+                        ?>
+                            <img src="<?= htmlspecialchars($obatImg) ?>" alt="<?= htmlspecialchars($obatProd['nama_induk']) ?>"
+                                 class="relative z-10 h-52 sm:h-64 lg:h-72 object-contain mix-blend-multiply transition-transform duration-500 hover:scale-105">
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <!-- SLIDE 2: ALAT KESEHATAN BERGARANSI -->
-        <div class="hero-slide absolute inset-0 flex flex-col md:flex-row items-center justify-between gap-6 px-6 sm:px-12 lg:px-20 py-10" data-slide="1">
-            <div class="flex-1 text-white z-10 max-w-xl mb-4 md:mb-0">
-                <div class="flex items-center gap-2 mb-3 flex-wrap">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full border border-emerald-300/30 bg-emerald-900/40 text-xs font-bold uppercase tracking-wider text-emerald-200 backdrop-blur-md">
-                        Diagnostik &bull; Perlengkapan Medis
-                    </span>
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-900/50 border border-emerald-400/30 text-[11px] font-semibold text-emerald-200">
-                        Garansi Mutu Terjamin
-                    </span>
-                </div>
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight tracking-tight mb-3">
-                    Alat Kesehatan Akurat &amp; Teruji
-                </h1>
-                <p class="text-emerald-100/90 text-sm sm:text-base leading-relaxed mb-6 line-clamp-2 max-w-lg">
-                    Tensimeter digital, termometer inframerah, kursi roda, dan kebutuhan medis esensial untuk klinik maupun penggunaan pribadi di rumah.
-                </p>
-                <div class="flex items-center gap-3 flex-wrap">
-                    <button onclick="setCategoryFilter('Alat Kesehatan'); document.getElementById('katalog').scrollIntoView({behavior:'smooth'});" class="px-6 py-3 bg-white text-emerald-900 font-extrabold text-sm rounded-xl hover:bg-emerald-50 transition shadow-lg active:scale-95 flex items-center gap-2">
-                        Lihat Alat Kesehatan
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </button>
-                    <a href="https://wa.me/6281234567890?text=Halo%20ZenCare%20Medical,%20saya%20ingin%20konsultasi%20mengenai%20alat%20kesehatan" target="_blank" class="px-5 py-3 bg-white/10 border border-white/25 text-white font-bold text-sm rounded-xl hover:bg-white/20 transition backdrop-blur-sm">
-                        Konsultasi Produk
-                    </a>
-                </div>
-            </div>
-            <div class="shrink-0 flex items-center justify-center md:w-80 lg:w-96 relative">
-                <div class="relative bg-white/10 backdrop-blur-md p-4 sm:p-6 rounded-3xl border border-white/20 shadow-2xl flex items-center justify-center">
-                    <?php 
-                    $alkesImg = $alkesProd ? getFirstProductImage($alkesProd['gambar']) : '';
-                    if (!empty($alkesImg)): 
-                    ?>
-                        <img src="<?= htmlspecialchars($alkesImg) ?>" alt="<?= htmlspecialchars($alkesProd['nama_induk']) ?>"
-                             class="h-44 sm:h-52 lg:h-60 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500">
-                    <?php else: ?>
-                        <div class="w-44 h-44 rounded-2xl bg-white/10 flex items-center justify-center text-white">
-                            <svg class="w-16 h-16 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- SLIDE 3: OBAT RESMI BERMUTU -->
-        <div class="hero-slide absolute inset-0 flex flex-col md:flex-row items-center justify-between gap-6 px-6 sm:px-12 lg:px-20 py-10" data-slide="2">
-            <div class="flex-1 text-white z-10 max-w-xl mb-4 md:mb-0">
-                <div class="flex items-center gap-2 mb-3 flex-wrap">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full border border-blue-300/30 bg-blue-950/40 text-xs font-bold uppercase tracking-wider text-blue-200 backdrop-blur-md">
-                        Obat &bull; Obat Bebas &amp; Terbatas
-                    </span>
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-900/50 border border-blue-400/30 text-[11px] font-semibold text-blue-200">
-                        Kedaluwarsa Aman Terjaga
-                    </span>
-                </div>
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight tracking-tight mb-3">
-                    Obat-Obatan Resmi &amp; Tersegel
-                </h1>
-                <p class="text-blue-100/90 text-sm sm:text-base leading-relaxed mb-6 line-clamp-2 max-w-lg">
-                    Setiap kemasan disimpan dalam kondisi higienis dengan kontrol tanggal kedaluwarsa ketat. Tersedia opsi Ambil di Toko tanpa antre &amp; bebas ongkir.
-                </p>
-                <div class="flex items-center gap-3 flex-wrap">
-                    <button onclick="setCategoryFilter('Obat'); document.getElementById('katalog').scrollIntoView({behavior:'smooth'});" class="px-6 py-3 bg-white text-blue-950 font-extrabold text-sm rounded-xl hover:bg-blue-50 transition shadow-lg active:scale-95 flex items-center gap-2">
-                        Lihat Obat-obatan
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </button>
-                    <a href="cara_pembelian.php" class="px-5 py-3 bg-white/10 border border-white/25 text-white font-bold text-sm rounded-xl hover:bg-white/20 transition backdrop-blur-sm">
-                        Panduan Pengiriman
-                    </a>
-                </div>
-            </div>
-            <div class="shrink-0 flex items-center justify-center md:w-80 lg:w-96 relative">
-                <div class="relative bg-white/10 backdrop-blur-md p-4 sm:p-6 rounded-3xl border border-white/20 shadow-2xl flex items-center justify-center">
-                    <?php 
-                    $obatImg = $obatProd ? getFirstProductImage($obatProd['gambar']) : '';
-                    if (!empty($obatImg)): 
-                    ?>
-                        <img src="<?= htmlspecialchars($obatImg) ?>" alt="<?= htmlspecialchars($obatProd['nama_induk']) ?>"
-                             class="h-44 sm:h-52 lg:h-60 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500">
-                    <?php else: ?>
-                        <div class="w-44 h-44 rounded-2xl bg-white/10 flex items-center justify-center text-white">
-                            <svg class="w-16 h-16 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Slide Navigation Dots & Arrows -->
-        <div class="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-2 z-20">
+        <!-- Slide Navigation Dots -->
+        <div class="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-2.5 z-20">
             <span class="slide-dot active" onclick="goSlide(0)"></span>
             <span class="slide-dot" onclick="goSlide(1)"></span>
             <span class="slide-dot" onclick="goSlide(2)"></span>
         </div>
-        <button onclick="prevSlide()" class="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/10 hover:bg-white/25 border border-white/20 rounded-full flex items-center justify-center text-white transition backdrop-blur-sm">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <button onclick="nextSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/10 hover:bg-white/25 border border-white/20 rounded-full flex items-center justify-center text-white transition backdrop-blur-sm">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-        </button>
     </section>
 
     <!-- ============================================================ -->
-    <!-- TRUST BADGES (Keunggulan Belanja di ZenCare)                  -->
+    <!-- 2. PHARMIFY 5-CARD PROMOTIONAL BENTO GRID                    -->
     <!-- ============================================================ -->
-    <div class="bg-white border-b border-slate-200 shadow-2xs">
-        <div class="max-w-7xl mx-auto px-4 lg:px-8 py-4">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#1a75d2] border border-blue-100 flex items-center justify-center shrink-0">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-slate-800 leading-snug">100% Produk Original</p>
-                        <p class="text-[11px] text-slate-500">Segel Pabrik &amp; Mutu Terjaga</p>
-                    </div>
+    <section class="max-w-7xl mx-auto px-4 lg:px-8 pt-10 pb-6">
+        <!-- Top Row: 3 Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            
+            <!-- Card 1: Soft Ice Blue -->
+            <div class="relative overflow-hidden bg-[#d7edf9] p-7 flex items-center justify-between min-h-[210px] group">
+                <div class="z-10 max-w-[60%]">
+                    <span class="text-[11px] font-bold uppercase tracking-[0.18em] text-[#0f2d5a]/80 block mb-1.5">SEDIAAN KELUARGA</span>
+                    <h3 class="text-xl font-extrabold text-[#0f2d5a] leading-tight mb-4">Sirup &amp; Suspensi Anak</h3>
+                    <button type="button" onclick="quickFilterKeyword('Sirup')" class="px-5 py-2.5 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[11px] font-bold uppercase tracking-wider transition cursor-pointer">
+                        BELANJA SEKARANG
+                    </button>
                 </div>
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-slate-800 leading-snug">Pengiriman Nasional</p>
-                        <p class="text-[11px] text-slate-500">Ekspedisi JNE, POS &amp; TIKI</p>
-                    </div>
+                <?php if ($imgSirup): ?>
+                <div class="w-28 h-32 shrink-0 flex items-center justify-center">
+                    <img src="<?= htmlspecialchars($imgSirup) ?>" alt="Sirup" class="max-h-full max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
                 </div>
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 border border-teal-100 flex items-center justify-center shrink-0">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-slate-800 leading-snug">Ambil di Toko</p>
-                        <p class="text-[11px] text-slate-500">Bebas Biaya Ongkos Kirim</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 border border-amber-100 flex items-center justify-center shrink-0">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-slate-800 leading-snug">Pembayaran Aman</p>
-                        <p class="text-[11px] text-slate-500">Midtrans &amp; Transfer Bank</p>
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
+
+            <!-- Card 2: Deep Navy -->
+            <div class="relative overflow-hidden bg-[#0c2454] p-7 flex items-center justify-between min-h-[210px] text-white group">
+                <div class="z-10 max-w-[62%]">
+                    <span class="text-[11px] font-bold uppercase tracking-[0.18em] text-sky-300 block mb-1.5">DAYA TAHAN TUBUH</span>
+                    <h3 class="text-xl font-extrabold text-white leading-tight mb-1">Vitamin &amp; Suplemen</h3>
+                    <p class="text-xs text-sky-200 mb-4">Kemasan Box Grosir Resmi</p>
+                    <button type="button" onclick="setCategoryFilter('Obat'); document.getElementById('katalog').scrollIntoView({behavior:'smooth'});" class="px-5 py-2.5 bg-[#86d5df] hover:bg-white text-[#0c2454] text-[11px] font-bold uppercase tracking-wider transition cursor-pointer">
+                        LIHAT PRODUK
+                    </button>
+                </div>
+                <?php if ($imgVitamin): ?>
+                <div class="w-28 h-32 shrink-0 flex items-center justify-center bg-white/90 p-2 rounded">
+                    <img src="<?= htmlspecialchars($imgVitamin) ?>" alt="Vitamin" class="max-h-full max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
+                </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Card 3: Clinical Aqua Teal -->
+            <div class="relative overflow-hidden bg-[#82d3dc] p-7 flex items-center justify-between min-h-[210px] group">
+                <div class="z-10 max-w-[60%]">
+                    <span class="text-[11px] font-bold uppercase tracking-[0.18em] text-[#0f2d5a]/80 block mb-1.5">AKURASI KLINIS</span>
+                    <h3 class="text-xl font-extrabold text-[#0f2d5a] leading-tight mb-4">Alat Cek &amp; Diagnostik</h3>
+                    <button type="button" onclick="setCategoryFilter('Alat Kesehatan'); document.getElementById('katalog').scrollIntoView({behavior:'smooth'});" class="px-5 py-2.5 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[11px] font-bold uppercase tracking-wider transition cursor-pointer">
+                        BELANJA SEKARANG
+                    </button>
+                </div>
+                <?php if ($imgDiagnostik): ?>
+                <div class="w-28 h-32 shrink-0 flex items-center justify-center">
+                    <img src="<?= htmlspecialchars($imgDiagnostik) ?>" alt="Diagnostik" class="max-h-full max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
+                </div>
+                <?php endif; ?>
+            </div>
+
         </div>
-    </div>
+
+        <!-- Bottom Row: 2 Wide Promotional Banners -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Wide Banner Left -->
+            <div class="relative overflow-hidden bg-[#cbe6f8] px-8 py-6 flex items-center justify-between min-h-[120px]">
+                <svg class="absolute right-0 top-0 h-full opacity-35 pointer-events-none" viewBox="0 0 200 120" fill="none">
+                    <polygon points="120,10 155,-10 190,10 190,50 155,70 120,50" stroke="#ffffff" stroke-width="2"/>
+                    <polygon points="85,60 120,40 155,60 155,100 120,120 85,100" stroke="#ffffff" stroke-width="2"/>
+                </svg>
+                <div class="z-10">
+                    <span class="text-[11px] font-bold uppercase tracking-[0.15em] text-[#1a75d2] block mb-1">KEMASAN SATUAN BESAR</span>
+                    <h4 class="text-lg sm:text-xl font-extrabold text-[#0f2d5a] tracking-tight">HARGA GROSIR APOTEK &amp; KLINIK</h4>
+                    <p class="text-xs text-[#334155] mt-0.5">Stok langsung terhubung dengan gudang utama ZenCare Medical</p>
+                </div>
+                <a href="#katalog" class="z-10 shrink-0 px-5 py-2.5 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[11px] font-bold uppercase tracking-wider transition">
+                    CEK KATALOG
+                </a>
+            </div>
+
+            <!-- Wide Banner Right -->
+            <div class="relative overflow-hidden bg-[#5d99ad] px-8 py-6 flex items-center justify-between min-h-[120px] text-white">
+                <!-- ECG Line Decoration -->
+                <svg class="absolute right-6 top-1/2 -translate-y-1/2 w-48 h-16 opacity-25 pointer-events-none" viewBox="0 0 200 60" fill="none" stroke="#ffffff" stroke-width="2.5">
+                    <polyline points="0,30 45,30 58,10 70,52 84,6 98,45 108,30 200,30" />
+                </svg>
+                <div class="z-10">
+                    <span class="text-[11px] font-bold uppercase tracking-[0.15em] text-sky-100 block mb-1">OPSI PENGIRIMAN FLEKSIBEL</span>
+                    <h4 class="text-lg sm:text-xl font-extrabold text-white tracking-tight">LAYANAN AMBIL DI TOKO BEBAS ONGKIR</h4>
+                    <p class="text-xs text-sky-100 mt-0.5">Pesan online dari rumah, ambil langsung tanpa antre di cabang Muharto</p>
+                </div>
+                <a href="cara_pembelian.php" class="z-10 shrink-0 px-5 py-2.5 bg-white hover:bg-sky-50 text-[#0f2d5a] text-[11px] font-bold uppercase tracking-wider transition">
+                    CARA PESAN
+                </a>
+            </div>
+
+        </div>
+    </section>
 
     <!-- ============================================================ -->
-    <!-- KATALOG PRODUK E-COMMERCE (Filter Produk Induk & Paginasi)   -->
+    <!-- 3. SHOP OUR CATEGORIES (6-Column Pharmify Showcase)          -->
     <!-- ============================================================ -->
-    <div class="max-w-7xl mx-auto px-4 lg:px-8 py-10">
-        
-        <section id="katalog" class="scroll-mt-6">
-            
-            <!-- Header Section -->
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 pb-4 border-b border-slate-200">
-                <div>
-                    <div class="flex items-center gap-2.5 mb-1">
-                        <span class="w-2.5 h-6 rounded-full bg-[#1a75d2]"></span>
-                        <h2 class="text-2xl font-black text-[#0f2d5a] tracking-tight">Katalog Produk</h2>
-                    </div>
-                    <p class="text-xs md:text-sm text-slate-500">Pilih obat dan alat kesehatan resmi dengan kemasan grosir terjamin</p>
+    <section class="max-w-7xl mx-auto px-4 lg:px-8 py-10">
+        <div class="text-center mb-8">
+            <h2 class="text-xl sm:text-2xl font-extrabold text-[#0f2d5a] uppercase tracking-wider">JELAJAHI KATEGORI PRODUK</h2>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
+            <?php
+            $showcaseCats = [
+                ['label' => 'Obat Tablet & Kaplet', 'img' => $imgTablet,     'action' => "setCategoryFilter('Obat')"],
+                ['label' => 'Sirup & Suspensi',     'img' => $imgSirup,      'action' => "quickFilterKeyword('Sirup')"],
+                ['label' => 'Vitamin & Suplemen',   'img' => $imgVitamin,    'action' => "quickFilterKeyword('Vitamin')"],
+                ['label' => 'Alat Cek Diagnostik',  'img' => $imgDiagnostik, 'action' => "setCategoryFilter('Alat Kesehatan')"],
+                ['label' => 'BMHP & Antiseptik',    'img' => $imgBmhp,       'action' => "quickFilterKeyword('Alkohol')"],
+                ['label' => 'Alat Bantu Medis',     'img' => $imgTerapi,     'action' => "setCategoryFilter('Alat Kesehatan')"],
+            ];
+            foreach ($showcaseCats as $sc):
+            ?>
+            <button type="button" onclick="<?= $sc['action'] ?>; document.getElementById('katalog').scrollIntoView({behavior:'smooth'});" class="group text-center focus:outline-none cursor-pointer">
+                <div class="aspect-square w-full bg-[#eef6fb] group-hover:bg-[#dfeef9] transition-colors flex items-center justify-center p-5 mb-3">
+                    <?php if (!empty($sc['img'])): ?>
+                        <img src="<?= htmlspecialchars($sc['img']) ?>" alt="<?= htmlspecialchars($sc['label']) ?>" class="max-h-full max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
+                    <?php else: ?>
+                        <svg class="w-12 h-12 text-[#1a75d2]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    <?php endif; ?>
                 </div>
+                <span class="text-xs sm:text-sm font-bold text-[#0f2d5a] group-hover:text-[#1a75d2] transition-colors block">
+                    <?= htmlspecialchars($sc['label']) ?>
+                </span>
+            </button>
+            <?php endforeach; ?>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 4. KOLEKSI PRODUK KESEHATAN (Katalog Utama & Filter)         -->
+    <!-- ============================================================ -->
+    <div class="max-w-7xl mx-auto px-4 lg:px-8 py-8 pb-16">
+        
+        <section id="katalog" class="scroll-mt-20">
+            
+            <!-- Centered Heading & Underline Category Tabs (Pharmify Reference 8) -->
+            <div class="text-center mb-8">
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-[#0f2d5a] tracking-tight mb-5">Koleksi Produk Kesehatan</h2>
+                <div class="inline-flex items-center justify-center gap-8 border-b border-slate-200 px-4 text-sm">
+                    <button type="button" onclick="setCategoryFilter('all')" id="cat_pill_all" class="cat-filter-btn cursor-pointer active">
+                        Semua Produk (<?= count($products) ?>)
+                    </button>
+                    <button type="button" onclick="setCategoryFilter('Obat')" id="cat_pill_Obat" class="cat-filter-btn cursor-pointer">
+                        Obat-obatan (<?= $catCounts['Obat'] ?? 0 ?>)
+                    </button>
+                    <button type="button" onclick="setCategoryFilter('Alat Kesehatan')" id="cat_pill_Alat_Kesehatan" class="cat-filter-btn cursor-pointer">
+                        Alat Kesehatan (<?= $catCounts['Alat Kesehatan'] ?? 0 ?>)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Minimalist Filter & Toolbar Row -->
+            <div class="bg-[#f8fafc] border border-slate-200/80 px-4 py-3.5 mb-8 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 text-xs">
                 
-                <!-- Display Controls: Limit Per Halaman & Urutan -->
-                <div class="flex items-center gap-3 flex-wrap">
-                    <div class="flex items-center gap-1.5 text-xs">
-                        <label for="per_page_select" class="font-bold text-slate-600">Tampilkan:</label>
-                        <select id="per_page_select" onchange="changePerPage(this.value)" class="text-xs border border-slate-200 rounded-xl px-2.5 py-2 bg-white font-bold text-[#0f2d5a] focus:outline-none focus:border-[#1a75d2] shadow-2xs">
-                            <option value="8">8 Produk</option>
-                            <option value="12" selected>12 Produk</option>
-                            <option value="16">16 Produk</option>
-                            <option value="20">20 Produk</option>
-                            <option value="all">Semua Produk</option>
+                <!-- Left: Filter Produk Induk + Search -->
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+                    <div class="relative flex-1 max-w-xs">
+                        <input type="text" id="catalog_search" value="<?= htmlspecialchars($initQuery) ?>" oninput="onSearchChange(this.value)" placeholder="Cari nama produk, variasi, atau SKU..." class="w-full text-xs pl-8 pr-3 py-2 border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-[#0f2d5a]">
+                        <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <label for="filter_induk" class="font-semibold text-slate-600 shrink-0">Produk Induk:</label>
+                        <select id="filter_induk" onchange="onParentFilterChange(this.value)" class="text-xs border border-slate-200 bg-white px-3 py-2 font-medium text-slate-700 focus:outline-none focus:border-[#0f2d5a] w-full sm:w-56">
+                            <option value="all">Semua Produk Induk</option>
+                            <?php foreach ($parentProducts as $pi): ?>
+                            <option value="<?= $pi['id'] ?>" data-kategori="<?= htmlspecialchars($pi['kategori']) ?>" <?= ($initInduk == $pi['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($pi['nama']) ?>
+                            </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="flex items-center gap-1.5 text-xs">
-                        <label for="sort_select" class="font-bold text-slate-600">Urutkan:</label>
-                        <select id="sort_select" onchange="sortAndFilterProducts()" class="text-xs border border-slate-200 rounded-xl px-2.5 py-2 bg-white font-bold text-[#0f2d5a] focus:outline-none focus:border-[#1a75d2] shadow-2xs">
-                            <option value="default">Urutan Standar</option>
+
+                    <button type="button" id="reset_filter_btn" onclick="resetFilters()" class="hidden px-3 py-2 text-xs text-rose-700 bg-rose-50 hover:bg-rose-100 font-semibold border border-rose-200 transition cursor-pointer">
+                        Reset Filter
+                    </button>
+                </div>
+
+                <!-- Right: Count + Sort + Per Page -->
+                <div class="flex items-center justify-between sm:justify-end gap-4 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-200/70">
+                    <span id="filter_result_count" class="text-slate-500">
+                        Menampilkan <strong class="text-[#0f2d5a]" id="count_display"><?= count($products) ?></strong> produk
+                    </span>
+
+                    <div class="flex items-center gap-1.5">
+                        <label for="sort_select" class="text-slate-500">Urutkan:</label>
+                        <select id="sort_select" onchange="sortAndFilterProducts()" class="text-xs border border-slate-200 bg-white px-2.5 py-1.5 font-semibold text-[#0f2d5a] focus:outline-none focus:border-[#0f2d5a]">
+                            <option value="default">Standar</option>
                             <option value="price_asc">Harga Terendah</option>
                             <option value="price_desc">Harga Tertinggi</option>
                             <option value="name_asc">Nama (A–Z)</option>
                             <option value="stok_desc">Stok Terbanyak</option>
                         </select>
                     </div>
-                </div>
-            </div>
 
-            <!-- Filter Card: Kategori Pills + Filter Produk Induk + Search -->
-            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs mb-8 space-y-4">
-                <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-                    
-                    <!-- Category Pills -->
-                    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar flex-wrap text-xs">
-                        <button type="button" onclick="setCategoryFilter('all')" id="cat_pill_all" class="cat-filter-btn px-4 py-2 rounded-xl font-bold transition shadow-xs active">
-                            Semua Produk (<?= count($products) ?>)
-                        </button>
-                        <button type="button" onclick="setCategoryFilter('Obat')" id="cat_pill_Obat" class="cat-filter-btn px-4 py-2 rounded-xl font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
-                            Obat-obatan (<?= $catCounts['Obat'] ?? 0 ?>)
-                        </button>
-                        <button type="button" onclick="setCategoryFilter('Alat Kesehatan')" id="cat_pill_Alat_Kesehatan" class="cat-filter-btn px-4 py-2 rounded-xl font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
-                            Alat Kesehatan (<?= $catCounts['Alat Kesehatan'] ?? 0 ?>)
-                        </button>
-                    </div>
-
-                    <!-- Search Input -->
-                    <div class="relative w-full lg:w-72">
-                        <input type="text" id="catalog_search" oninput="onSearchChange(this.value)" placeholder="Cari produk, variasi, SKU..." class="w-full text-xs pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#1a75d2] bg-slate-50/70">
-                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    </div>
-                </div>
-
-                <!-- Secondary Filter: Filter Berdasarkan Produk Induk -->
-                <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-                    <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap">
-                        <span class="font-bold text-slate-700 shrink-0">Filter Produk Induk:</span>
-                        <select id="filter_induk" onchange="onParentFilterChange(this.value)" class="text-xs border border-slate-200 rounded-xl px-3 py-1.5 bg-slate-50 font-semibold text-slate-700 focus:outline-none focus:border-[#1a75d2] w-full sm:w-64">
-                            <option value="all">Semua Produk Induk</option>
-                            <?php foreach ($parentProducts as $pi): ?>
-                            <option value="<?= $pi['id'] ?>" data-kategori="<?= htmlspecialchars($pi['kategori']) ?>">
-                                <?= htmlspecialchars($pi['nama']) ?> (<?= htmlspecialchars($pi['kategori']) ?>)
-                            </option>
-                            <?php endforeach; ?>
+                    <div class="flex items-center gap-1.5">
+                        <label for="per_page_select" class="text-slate-500 hidden sm:inline">Tampil:</label>
+                        <select id="per_page_select" onchange="changePerPage(this.value)" class="text-xs border border-slate-200 bg-white px-2.5 py-1.5 font-semibold text-[#0f2d5a] focus:outline-none focus:border-[#0f2d5a]">
+                            <option value="8">8</option>
+                            <option value="12" selected>12</option>
+                            <option value="16">16</option>
+                            <option value="20">20</option>
+                            <option value="all">Semua</option>
                         </select>
-                        <button type="button" id="reset_filter_btn" onclick="resetFilters()" class="hidden px-2.5 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded-lg font-bold border border-rose-200 transition">
-                            Reset Filter
-                        </button>
-                    </div>
-                    
-                    <div id="filter_result_count" class="text-slate-400 font-medium">
-                        Menampilkan <strong class="text-slate-700" id="count_display"><?= count($products) ?></strong> variasi produk
                     </div>
                 </div>
             </div>
 
-            <!-- Product Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="product-grid">
+            <!-- Product Grid (Pharmify Minimalist Cards - Reference 9) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10" id="product-grid">
                 <?php foreach ($products as $p):
                     $rasio    = intval($p['rasio_konversi']) ?: 1;
                     $stokBox  = ($p['kategori'] === 'Obat')
@@ -410,21 +534,19 @@ $initCategory = $_GET['kategori'] ?? 'all';
                     $hargaEcr = floatval($p['harga_eceran']);
                     $satB     = htmlspecialchars($p['satuan_besar'] ?: 'Box');
                     $satK     = htmlspecialchars($p['satuan_kecil'] ?: 'Pcs');
-                    $desc     = trim($p['deskripsi'] ?? '');
-                    $descSh   = $desc ? mb_strimwidth($desc, 0, 75, '…') : 'Produk medis berkualitas dengan jaminan mutu resmi.';
 
                     if ($stokBox <= 0) {
-                        $stokBadge = 'bg-rose-50 text-rose-700 border-rose-200';
-                        $stokLbl   = 'Habis';
+                        $stokBadge = 'bg-rose-600 text-white';
+                        $stokLbl   = 'Stok Habis';
                     } elseif ($stokBox <= 5) {
-                        $stokBadge = 'bg-amber-50 text-amber-800 border-amber-200';
-                        $stokLbl   = "Tersisa $stokBox $satB";
+                        $stokBadge = 'bg-amber-500 text-white';
+                        $stokLbl   = "Sisa $stokBox $satB";
                     } else {
-                        $stokBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                        $stokBadge = 'bg-white/90 text-[#0f2d5a] border border-slate-200/80';
                         $stokLbl   = "Stok: $stokBox $satB";
                     }
                 ?>
-                <div class="prod-card group bg-white rounded-2xl overflow-hidden flex flex-col"
+                <div class="prod-card group flex flex-col bg-white"
                      data-id="<?= $p['id'] ?>"
                      data-induk-id="<?= $p['id_produk_induk'] ?>"
                      data-kategori="<?= htmlspecialchars($p['kategori']) ?>"
@@ -433,100 +555,84 @@ $initCategory = $_GET['kategori'] ?? 'all';
                      data-price="<?= $harga ?>"
                      data-stok="<?= $stokBox ?>">
 
-                    <!-- Product Image & Header Badges -->
+                    <!-- Square Minimalist Image Container (#f6f8fa) -->
                     <?php 
                         $firstImg = getFirstProductImage($p['gambar'] ?? '');
                         $allImgs = array_filter(array_map('trim', explode(',', $p['gambar'] ?? '')));
                         $totalImgs = count($allImgs);
                     ?>
-                    <a href="produk.php?id=<?= $p['id'] ?>" class="card-img relative block bg-slate-50/70 border-b border-slate-100 overflow-hidden" style="height:210px;">
+                    <a href="produk.php?id=<?= $p['id'] ?>" class="card-img-box relative block aspect-square w-full overflow-hidden mb-3.5">
                         <?php if (!empty($firstImg)): ?>
                             <img src="<?= htmlspecialchars($firstImg) ?>" alt="<?= htmlspecialchars($p['nama_produk']) ?>"
-                                 class="w-full h-full object-contain p-4 mix-blend-multiply transition-transform duration-300 hover:scale-105"
+                                 class="w-full h-full object-contain p-6 mix-blend-multiply"
                                  onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
                         <?php else: ?>
-                            <div class="w-full h-full flex items-center justify-center">
-                                <svg class="w-16 h-16 text-slate-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12h6M12 9v6"/></svg>
+                            <div class="w-full h-full flex items-center justify-center text-slate-300">
+                                <svg class="w-14 h-14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                             </div>
                         <?php endif; ?>
 
-                        <!-- Category Badge (Clean, Non-blinking) -->
-                        <span class="absolute top-3 left-3 px-2.5 py-1 bg-white/95 text-[10px] font-bold rounded-lg border shadow-2xs <?= $p['kategori'] === 'Obat' ? 'text-indigo-700 border-indigo-100' : 'text-teal-700 border-teal-100' ?>">
-                            <?= htmlspecialchars($p['kategori']) ?>
-                        </span>
-
-                        <!-- Stock Badge (Clean, Non-blinking) -->
-                        <span class="absolute top-3 right-3 px-2.5 py-1 text-[10px] font-bold rounded-lg border shadow-2xs <?= $stokBadge ?>">
+                        <!-- Subtle Top-Left Stock Status Pill -->
+                        <span class="absolute top-3 left-3 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide <?= $stokBadge ?>">
                             <?= $stokLbl ?>
                         </span>
 
-                        <!-- Multi-image indicator badge -->
                         <?php if ($totalImgs > 1): ?>
-                            <span class="absolute bottom-2.5 right-2.5 px-2 py-0.5 bg-slate-900/75 backdrop-blur-sm text-white text-[9px] font-bold rounded-md flex items-center gap-1 shadow-2xs">
-                                <svg class="w-2.5 h-2.5 text-blue-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                            <span class="absolute bottom-2.5 right-2.5 px-2 py-0.5 bg-white/90 text-slate-600 text-[10px] font-medium border border-slate-200/70">
                                 <?= $totalImgs ?> Foto
                             </span>
                         <?php endif; ?>
                     </a>
 
-                    <!-- Card Body -->
-                    <div class="p-4 flex flex-col flex-1">
-                        <a href="produk.php?id=<?= $p['id'] ?>" class="block mb-2.5">
-                            <h3 class="text-sm font-extrabold text-[#1e293b] leading-snug line-clamp-2 group-hover:text-[#1a75d2] transition-colors">
-                                <?= htmlspecialchars($p['nama_induk']) ?>
-                            </h3>
-                            <span class="text-xs text-[#64748b]"><?= htmlspecialchars($p['nama_variasi']) ?></span>
-                        </a>
-
-                        <!-- Specs Mini Info -->
-                        <div class="rounded-xl bg-slate-50 border border-slate-100 divide-y divide-slate-100 mb-4 text-xs">
-                            <div class="flex gap-2 px-3 py-1.5">
-                                <span class="text-[#64748b] w-[70px] shrink-0 font-medium">Kemasan</span>
-                                <span class="font-bold text-[#1e293b]">1 <?= $satB ?> = <?= $rasio ?> <?= $satK ?></span>
-                            </div>
-                            <div class="flex gap-2 px-3 py-1.5">
-                                <span class="text-[#64748b] w-[70px] shrink-0 font-medium">SKU</span>
-                                <span class="font-mono text-[#475569] text-[11px]"><?= htmlspecialchars($p['sku_variasi']) ?></span>
-                            </div>
+                    <!-- Minimalist Card Info -->
+                    <div class="flex flex-col flex-1">
+                        <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                            <?= htmlspecialchars($p['kategori']) ?> &bull; 1 <?= $satB ?><?= $rasio > 1 ? " ($rasio $satK)" : "" ?>
                         </div>
 
-                        <!-- Price -->
-                        <div class="mb-4 mt-auto">
-                            <div class="flex items-baseline gap-1.5">
-                                <span class="text-lg font-black text-[#1e293b]">Rp <?= number_format($harga, 0, ',', '.') ?></span>
-                                <span class="text-xs text-[#64748b] font-medium">/ <?= $satB ?></span>
-                            </div>
-                            <?php if ($hargaEcr > 0 && $hargaEcr != $harga / $rasio): ?>
-                            <div class="text-[10px] text-slate-400 mt-0.5">~Rp <?= number_format($hargaEcr, 0, ',', '.') ?> / <?= $satK ?></div>
+                        <a href="produk.php?id=<?= $p['id'] ?>" class="block mb-2">
+                            <h3 class="text-[15px] font-bold text-[#0f2d5a] group-hover:text-[#1a75d2] transition-colors leading-snug line-clamp-1">
+                                <?= htmlspecialchars($p['nama_induk']) ?>
+                            </h3>
+                            <p class="text-xs text-slate-500 line-clamp-1 mt-0.5"><?= htmlspecialchars($p['nama_variasi']) ?></p>
+                        </a>
+
+                        <!-- Price Row -->
+                        <div class="flex items-baseline gap-2 mb-3.5 mt-auto pt-1">
+                            <span class="text-base font-extrabold text-[#0f2d5a]">Rp <?= number_format($harga, 0, ',', '.') ?></span>
+                            <span class="text-xs text-slate-400 font-medium">/ <?= $satB ?></span>
+                            <?php if ($p['kategori'] === 'Obat' && $hargaEcr > 0 && $rasio > 1): ?>
+                                <span class="text-[11px] text-slate-400 ml-auto">Eceran ~Rp <?= number_format($hargaEcr, 0, ',', '.') ?>/<?= $satK ?></span>
                             <?php endif; ?>
                         </div>
 
-                        <!-- Action Controls -->
+                        <!-- Action Controls (Pharmify Pill CTA + Compact Qty Stepper) -->
                         <?php if ($stokBox >= 1): ?>
-                        <div class="flex items-center gap-2 mb-2.5">
-                            <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl overflow-hidden flex-1">
+                        <div class="flex items-center gap-2">
+                            <!-- Compact Stepper -->
+                            <div class="flex items-center border border-slate-200 bg-[#f8fafc] h-9 shrink-0">
                                 <button type="button" onclick="adjustQty(<?= $p['id'] ?>, -1, <?= $stokBox ?>)"
-                                    class="w-9 h-9 flex items-center justify-center hover:bg-slate-100 text-[#1e293b] font-black border-r border-slate-200 transition text-base">−</button>
+                                    class="w-7 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-700 font-bold transition text-sm cursor-pointer">−</button>
                                 <input type="number" id="qty_<?= $p['id'] ?>" value="1" min="1" max="<?= $stokBox ?>" readonly
-                                    class="flex-1 text-center text-sm font-bold py-2 bg-transparent focus:outline-none select-none">
+                                    class="w-8 text-center text-xs font-bold bg-transparent text-[#0f2d5a] focus:outline-none select-none">
                                 <button type="button" onclick="adjustQty(<?= $p['id'] ?>, 1, <?= $stokBox ?>)"
-                                    class="w-9 h-9 flex items-center justify-center hover:bg-slate-100 text-[#1e293b] font-black border-l border-slate-200 transition text-base">+</button>
+                                    class="w-7 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-700 font-bold transition text-sm cursor-pointer">+</button>
                             </div>
-                            <span class="text-[10px] text-slate-400 shrink-0">Maks. <?= $stokBox ?></span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="addToCart(<?= $p['id'] ?>, '<?= addslashes(htmlspecialchars_decode($p['nama_produk'])) ?>', <?= $harga ?>, <?= intval($p['berat_gram']) ?>, '<?= addslashes($p['gambar'] ?? '') ?>', '<?= addslashes($satB) ?>', <?= $rasio ?>, <?= $stokBox ?>, document.getElementById('qty_<?= $p['id'] ?>').value)"
-                                class="flex items-center justify-center gap-1.5 text-xs font-bold py-2.5 rounded-xl bg-[#e8f2ff] hover:bg-blue-100 text-[#1a75d2] border border-[#1a75d2]/20 cursor-pointer active:scale-95 transition">
-                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.95-1.55L23 6H6"/></svg>
-                                Keranjang
+
+                            <!-- Solid Navy Pill Add To Cart Button -->
+                            <button type="button" onclick="addToCart(<?= $p['id'] ?>, '<?= addslashes(htmlspecialchars_decode($p['nama_produk'])) ?>', <?= $harga ?>, <?= intval($p['berat_gram']) ?>, '<?= addslashes($p['gambar'] ?? '') ?>', '<?= addslashes($satB) ?>', <?= $rasio ?>, <?= $stokBox ?>, document.getElementById('qty_<?= $p['id'] ?>').value)"
+                                class="flex-1 h-9 px-3 rounded-full bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[11px] font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5">
+                                + Keranjang
                             </button>
-                            <button onclick="buyNow(<?= $p['id'] ?>, '<?= addslashes(htmlspecialchars_decode($p['nama_produk'])) ?>', <?= $harga ?>, <?= intval($p['berat_gram']) ?>, '<?= addslashes($p['gambar'] ?? '') ?>', '<?= addslashes($satB) ?>', <?= $rasio ?>, <?= $stokBox ?>, document.getElementById('qty_<?= $p['id'] ?>').value)"
-                                class="flex items-center justify-center gap-1.5 text-xs font-bold py-2.5 rounded-xl bg-[#1a75d2] hover:bg-[#1562b3] text-white cursor-pointer active:scale-95 transition shadow-sm">
-                                Beli Sekarang
+
+                            <!-- Quick Buy Now Icon/Button -->
+                            <button type="button" title="Beli Sekarang" onclick="buyNow(<?= $p['id'] ?>, '<?= addslashes(htmlspecialchars_decode($p['nama_produk'])) ?>', <?= $harga ?>, <?= intval($p['berat_gram']) ?>, '<?= addslashes($p['gambar'] ?? '') ?>', '<?= addslashes($satB) ?>', <?= $rasio ?>, <?= $stokBox ?>, document.getElementById('qty_<?= $p['id'] ?>').value)"
+                                class="h-9 px-3 rounded-full border border-[#0f2d5a] text-[#0f2d5a] hover:bg-[#eef6fb] text-[11px] font-bold transition cursor-pointer shrink-0">
+                                Beli
                             </button>
                         </div>
                         <?php else: ?>
-                        <div class="w-full py-3 px-4 rounded-xl bg-slate-100 text-slate-400 text-center text-xs font-semibold border border-slate-200">
+                        <div class="w-full h-9 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-[11px] font-bold uppercase tracking-wider border border-slate-200">
                             Stok Habis
                         </div>
                         <?php endif; ?>
@@ -536,19 +642,19 @@ $initCategory = $_GET['kategori'] ?? 'all';
             </div>
 
             <!-- Empty Search / Filter State -->
-            <div id="empty_search_state" class="hidden py-16 text-center">
-                <div class="w-16 h-16 rounded-2xl bg-slate-100 mx-auto mb-3 flex items-center justify-center text-slate-400">
-                    <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <div id="empty_search_state" class="hidden py-16 text-center border border-slate-200/80 bg-[#f8fafc] my-4">
+                <div class="w-12 h-12 mx-auto mb-3 flex items-center justify-center text-slate-400">
+                    <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                 </div>
-                <h4 class="text-base font-bold text-slate-700 mb-1">Tidak ada produk yang cocok</h4>
-                <p class="text-xs text-slate-400 mb-4">Coba sesuaikan kata kunci pencarian atau ubah filter kategori/produk induk.</p>
-                <button type="button" onclick="resetFilters()" class="px-4 py-2 bg-[#1a75d2] text-white rounded-xl text-xs font-bold hover:bg-[#0f2d5a] transition">
-                    Kembalikan Semua Produk
+                <h4 class="text-base font-bold text-[#0f2d5a] mb-1">Tidak ada produk yang ditemukan</h4>
+                <p class="text-xs text-slate-500 mb-5">Coba ubah kata kunci pencarian atau reset filter kategori produk.</p>
+                <button type="button" onclick="resetFilters()" class="px-6 py-2.5 bg-[#0f2d5a] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#1a75d2] transition cursor-pointer">
+                    Tampilkan Semua Produk
                 </button>
             </div>
 
-            <!-- Pagination Controls (Next / Back) -->
-            <div id="pagination_container" class="mt-8 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+            <!-- Pagination Controls -->
+            <div id="pagination_container" class="mt-12 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
                 <span id="page_info" class="text-slate-500 font-medium">
                     Menampilkan 1 – 12 dari <?= count($products) ?> produk
                 </span>
@@ -560,6 +666,45 @@ $initCategory = $_GET['kategori'] ?? 'all';
         </section>
 
     </div>
+
+    <!-- ============================================================ -->
+    <!-- 5. MINIMALIST CLINICAL SERVICE STRIP                         -->
+    <!-- ============================================================ -->
+    <section class="border-t border-slate-200 bg-[#f6f9fc]">
+        <div class="max-w-7xl mx-auto px-4 lg:px-8 py-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="flex items-start gap-3.5">
+                    <svg class="w-6 h-6 text-[#0f2d5a] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <div>
+                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-[#0f2d5a]">100% Produk Resmi</h4>
+                        <p class="text-xs text-slate-500 mt-0.5">Jaminan segel pabrik &amp; kontrol batch FEFO</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3.5">
+                    <svg class="w-6 h-6 text-[#0f2d5a] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+                    <div>
+                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-[#0f2d5a]">Pengiriman Nasional</h4>
+                        <p class="text-xs text-slate-500 mt-0.5">Dukungan kurir JNE, POS, dan TIKI</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3.5">
+                    <svg class="w-6 h-6 text-[#0f2d5a] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    <div>
+                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-[#0f2d5a]">Ambil di Toko (Pick-Up)</h4>
+                        <p class="text-xs text-slate-500 mt-0.5">Bebas biaya ongkos kirim &amp; tanpa antre</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3.5">
+                    <svg class="w-6 h-6 text-[#0f2d5a] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    <div>
+                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-[#0f2d5a]">Transaksi Terproteksi</h4>
+                        <p class="text-xs text-slate-500 mt-0.5">Pembayaran otomatis via Midtrans &amp; Bank</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
 </main>
 
 <script>
@@ -570,6 +715,7 @@ const dots   = document.querySelectorAll('.slide-dot');
 let slideTimer = null;
 
 function goSlide(idx) {
+    if (!slides.length) return;
     slides[curSlide].classList.remove('active');
     dots[curSlide] && dots[curSlide].classList.remove('active');
     curSlide = (idx + slides.length) % slides.length;
@@ -580,32 +726,41 @@ function nextSlide() { goSlide(curSlide + 1); restartTimer(); }
 function prevSlide() { goSlide(curSlide - 1); restartTimer(); }
 function restartTimer() {
     clearInterval(slideTimer);
-    if (slides.length > 1) slideTimer = setInterval(() => goSlide(curSlide + 1), 5000);
+    if (slides.length > 1) slideTimer = setInterval(() => goSlide(curSlide + 1), 5500);
 }
 if (slides.length > 1) restartTimer();
 
 // ── Product Catalog Controller (Filter Induk, Limit & Pagination) ──
 let currentCategory = '<?= $initCategory !== "all" ? addslashes($initCategory) : "all" ?>';
-let currentParentId = 'all';
-let currentSearch   = '';
+let currentParentId = '<?= $initInduk !== "all" ? addslashes($initInduk) : "all" ?>';
+let currentSearch   = '<?= addslashes(strtolower($initQuery)) ?>';
 let currentSort     = 'default';
 let currentPage     = 1;
 let perPage         = 12;
+
+function quickFilterKeyword(kw) {
+    setCategoryFilter('all');
+    const searchInput = document.getElementById('catalog_search');
+    if (searchInput) {
+        searchInput.value = kw;
+    }
+    currentSearch = kw.trim().toLowerCase();
+    currentPage = 1;
+    renderCatalog();
+}
 
 function setCategoryFilter(cat) {
     currentCategory = cat;
     currentPage = 1;
 
-    // Update active pill styling
+    // Update active tab styling
     document.querySelectorAll('.cat-filter-btn').forEach(btn => {
-        btn.classList.remove('active', 'bg-[#1a75d2]', 'text-white', 'shadow-xs');
-        btn.classList.add('bg-slate-100', 'text-slate-600');
+        btn.classList.remove('active');
     });
 
     let activeBtnId = (cat === 'all') ? 'cat_pill_all' : (cat === 'Obat' ? 'cat_pill_Obat' : 'cat_pill_Alat_Kesehatan');
     let activeBtn = document.getElementById(activeBtnId);
     if (activeBtn) {
-        activeBtn.classList.remove('bg-slate-100', 'text-slate-600');
         activeBtn.classList.add('active');
     }
 
@@ -646,6 +801,10 @@ function onSearchChange(val) {
 function onSortChange() {
     currentSort = document.getElementById('sort_select').value;
     renderCatalog();
+}
+
+function sortAndFilterProducts() {
+    onSortChange();
 }
 
 function changePerPage(val) {
@@ -723,7 +882,7 @@ function renderCatalog() {
     // Tampilkan kartu yang masuk halaman aktif
     for (let i = startIndex; i < endIndex; i++) {
         filtered[i].style.display = 'flex';
-        grid.appendChild(filtered[i]); // Re-order sesuai sort
+        grid.appendChild(filtered[i]);
     }
 
     // 4. Update Info & Tombol Paginasi
@@ -741,18 +900,18 @@ function renderCatalog() {
 
         // Tombol Sebelumnya
         if (currentPage > 1) {
-            btnsHtml += `<button type="button" onclick="goToPage(${currentPage - 1})" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 font-semibold text-slate-700 transition">&larr; Sebelumnya</button>`;
+            btnsHtml += `<button type="button" onclick="goToPage(${currentPage - 1})" class="px-3.5 py-1.5 border border-slate-200 bg-white hover:bg-slate-50 font-semibold text-[#0f2d5a] transition cursor-pointer">&larr; Sebelumnya</button>`;
         } else {
-            btnsHtml += `<span class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-400 font-semibold cursor-not-allowed">&larr; Sebelumnya</span>`;
+            btnsHtml += `<span class="px-3.5 py-1.5 border border-slate-200 bg-slate-50 text-slate-300 font-semibold cursor-not-allowed">&larr; Sebelumnya</span>`;
         }
 
         // Nomor Halaman
         for (let p = 1; p <= totalPages; p++) {
             if (p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1)) {
                 let activeCls = (p === currentPage) 
-                    ? 'bg-[#1a75d2] border-[#1a75d2] text-white shadow-xs' 
+                    ? 'bg-[#0f2d5a] border-[#0f2d5a] text-white' 
                     : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50';
-                btnsHtml += `<button type="button" onclick="goToPage(${p})" class="w-8 h-8 rounded-xl border text-xs font-bold transition ${activeCls}">${p}</button>`;
+                btnsHtml += `<button type="button" onclick="goToPage(${p})" class="w-8 h-8 border text-xs font-bold transition cursor-pointer ${activeCls}">${p}</button>`;
             } else if (p === 2 || p === totalPages - 1) {
                 btnsHtml += `<span class="px-1 text-slate-400">&hellip;</span>`;
             }
@@ -760,9 +919,9 @@ function renderCatalog() {
 
         // Tombol Selanjutnya
         if (currentPage < totalPages) {
-            btnsHtml += `<button type="button" onclick="goToPage(${currentPage + 1})" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 font-semibold text-slate-700 transition">Selanjutnya &rarr;</button>`;
+            btnsHtml += `<button type="button" onclick="goToPage(${currentPage + 1})" class="px-3.5 py-1.5 border border-slate-200 bg-white hover:bg-slate-50 font-semibold text-[#0f2d5a] transition cursor-pointer">Selanjutnya &rarr;</button>`;
         } else {
-            btnsHtml += `<span class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-400 font-semibold cursor-not-allowed">Selanjutnya &rarr;</span>`;
+            btnsHtml += `<span class="px-3.5 py-1.5 border border-slate-200 bg-slate-50 text-slate-300 font-semibold cursor-not-allowed">Selanjutnya &rarr;</span>`;
         }
 
         pageButtons.innerHTML = btnsHtml;
@@ -781,6 +940,12 @@ document.addEventListener('DOMContentLoaded', function() {
     setCategoryFilter('<?= addslashes($initCategory) ?>');
     <?php else: ?>
     renderCatalog();
+    <?php endif; ?>
+    <?php if ($initCategory !== 'all' || $initInduk !== 'all' || $initQuery !== ''): ?>
+    setTimeout(() => {
+        const el = document.getElementById('katalog');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 150);
     <?php endif; ?>
 });
 </script>

@@ -4,26 +4,25 @@
 require_once __DIR__ . '/header.php';
 ?>
 
-<main class="max-w-7xl mx-auto px-4 lg:px-8 py-8 flex-1 w-full">
-    <!-- Breadcrumb -->
-    <nav class="flex items-center gap-2 text-xs text-zcMut mb-6">
-        <a href="index.php" class="hover:text-zc transition">Beranda</a>
-        <span>/</span>
-        <span class="text-zcTxt font-bold">Keranjang Belanja</span>
-    </nav>
+<section class="pharmify-banner py-11 lg:py-14 text-center text-white">
+    <div class="max-w-7xl mx-auto px-4 lg:px-8 relative z-10">
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight mb-2.5">Keranjang Belanja</h1>
+        <nav class="flex items-center justify-center gap-2 text-xs font-medium text-sky-200/90">
+            <a href="index.php" class="hover:text-white transition">Beranda</a>
+            <span>&rsaquo;</span>
+            <span class="text-white font-semibold">Keranjang Belanja</span>
+        </nav>
+    </div>
+</section>
 
-    <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+<main class="max-w-7xl mx-auto px-4 lg:px-8 py-10 flex-1 w-full">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200">
         <div>
-            <h1 class="text-2xl font-black text-[#0f2d5a] tracking-tight flex items-center gap-2.5">
-                <svg class="w-7 h-7 text-[#1a75d2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                Keranjang Belanja Anda
-            </h1>
-            <p class="text-xs text-slate-500 mt-1">Pilih produk yang ingin Anda beli bersamaan atau simpan untuk pembelian berikutnya.</p>
+            <h2 class="text-lg font-extrabold text-[#0f2d5a]">Daftar Produk di Keranjang</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Pilih produk yang ingin Anda checkout bersamaan atau simpan untuk pembelian berikutnya.</p>
         </div>
-        <a href="index.php" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-zc transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            Lanjut Belanja Katalog
+        <a href="kategori.php" class="inline-flex items-center gap-2 px-4 py-2 border border-[#0f2d5a] text-xs font-bold text-[#0f2d5a] hover:bg-[#eef6fb] transition">
+            &larr; Lanjutkan Belanja
         </a>
     </div>
 
@@ -32,12 +31,12 @@ require_once __DIR__ . '/header.php';
         <!-- LEFT: Items List (8 cols) -->
         <div class="lg:col-span-8 space-y-4">
             <!-- Select All Control Bar -->
-            <div class="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-xs">
+            <div class="bg-[#eef6fb] border border-[#cbe4f5] p-4 flex items-center justify-between">
                 <label class="flex items-center gap-3 cursor-pointer select-none">
-                    <input type="checkbox" id="check-all" onchange="toggleSelectAll(this.checked)" class="w-5 h-5 rounded text-[#1a75d2] border-slate-300 focus:ring-[#1a75d2] cursor-pointer">
-                    <span class="text-sm font-bold text-slate-800">Pilih Semua (<span id="cart-total-item-count">0</span> barang)</span>
+                    <input type="checkbox" id="check-all" onchange="toggleSelectAll(this.checked)" class="w-4 h-4 accent-[#0f2d5a] cursor-pointer">
+                    <span class="text-xs font-extrabold text-[#0f2d5a] uppercase tracking-wider">Pilih Semua (<span id="cart-total-item-count">0</span> produk)</span>
                 </label>
-                <button type="button" onclick="deleteSelectedItems()" class="text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                <button type="button" onclick="deleteSelectedItems()" class="text-xs font-bold text-rose-700 hover:bg-rose-50 px-3 py-1.5 border border-transparent hover:border-rose-200 transition flex items-center gap-1.5 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     Hapus Terpilih
                 </button>
@@ -49,58 +48,51 @@ require_once __DIR__ . '/header.php';
             </div>
 
             <!-- Empty State -->
-            <div id="cart-page-empty" class="hidden bg-white border border-slate-200 rounded-3xl p-12 text-center shadow-xs">
-                <div class="w-24 h-24 bg-blue-50 text-[#1a75d2] rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                </div>
-                <h3 class="text-lg font-black text-slate-800 mb-1">Keranjang Belanja Anda Kosong</h3>
-                <p class="text-xs text-slate-500 mb-6 max-w-sm mx-auto">Anda belum memilih obat atau alat kesehatan. Silakan cari kebutuhan medis Anda di katalog online.</p>
-                <a href="index.php" class="inline-flex items-center gap-2 px-6 py-3 bg-[#1a75d2] hover:bg-[#1562b3] text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20 transition">
-                    Mulai Belanja Sekarang
+            <div id="cart-page-empty" class="hidden bg-[#f8fafc] border border-slate-200 p-12 text-center">
+                <h3 class="text-lg font-extrabold text-[#0f2d5a] mb-1">Keranjang Belanja Anda Kosong</h3>
+                <p class="text-xs text-slate-500 mb-6 max-w-sm mx-auto">Anda belum memilih obat atau alat kesehatan. Silakan jelajahi katalog online kami.</p>
+                <a href="kategori.php" class="inline-flex items-center gap-2 px-7 py-3 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-xs font-bold uppercase tracking-widest transition">
+                    MULAI BELANJA SEKARANG
                 </a>
             </div>
         </div>
 
         <!-- RIGHT: Order Summary Card (4 cols) -->
         <div class="lg:col-span-4 sticky top-24 space-y-4">
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-                <h3 class="text-base font-black text-slate-800 border-b border-slate-100 pb-3 mb-4">
+            <div class="bg-[#eef6fb] border border-[#cbe4f5] p-6">
+                <h3 class="text-base font-extrabold text-[#0f2d5a] border-b border-[#cbe4f5] pb-3 mb-4">
                     Ringkasan Pesanan
                 </h3>
 
-                <div class="space-y-3 text-xs mb-5">
-                    <div class="flex justify-between text-slate-500">
+                <div class="space-y-3 text-xs mb-5 bg-white border border-[#cbe4f5] p-4">
+                    <div class="flex justify-between text-slate-600">
                         <span>Total Produk Terpilih:</span>
-                        <span class="font-bold text-slate-800"><span id="summary-selected-count">0</span> barang</span>
+                        <span class="font-bold text-[#0f2d5a]"><span id="summary-selected-count">0</span> barang</span>
                     </div>
-                    <div class="flex justify-between text-slate-500">
+                    <div class="flex justify-between text-slate-600">
                         <span>Total Estimasi Berat:</span>
-                        <span class="font-bold text-slate-800"><span id="summary-total-weight">0</span> gram</span>
+                        <span class="font-bold text-[#0f2d5a]"><span id="summary-total-weight">0</span> gram</span>
                     </div>
-                    <div class="pt-3 border-t border-slate-100 flex justify-between items-baseline">
-                        <span class="text-sm font-extrabold text-slate-800">Total Harga:</span>
-                        <span class="text-2xl font-black text-[#1a75d2]" id="summary-grand-total">Rp 0</span>
+                    <div class="pt-3 border-t border-slate-200 flex justify-between items-baseline">
+                        <span class="text-xs font-extrabold uppercase tracking-wider text-[#0f2d5a]">Total Harga:</span>
+                        <span class="text-xl font-extrabold text-[#0f2d5a]" id="summary-grand-total">Rp 0</span>
                     </div>
                 </div>
 
                 <button type="button" onclick="proceedToCheckout()" id="btn-cart-checkout" 
-                    class="w-full py-4 text-center rounded-2xl bg-[#1a75d2] hover:bg-[#1562b3] text-white font-extrabold text-sm shadow-lg shadow-blue-500/25 transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
-                    Checkout (<span id="btn-checkout-count">0</span>)
+                    class="w-full py-3.5 text-center bg-[#0f2d5a] hover:bg-[#1a75d2] text-white font-bold text-xs uppercase tracking-widest transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                    LANJUTKAN KE CHECKOUT (<span id="btn-checkout-count">0</span>)
                 </button>
 
                 <!-- Assurance Badges -->
-                <div class="mt-5 pt-4 border-t border-slate-100 space-y-2 text-[11px] text-slate-500">
+                <div class="mt-5 pt-4 border-t border-[#cbe4f5] space-y-2 text-[11px] text-slate-600">
                     <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        <span>Stok resmi toko obat & alkes terlindungi real-time</span>
+                        <svg class="w-4 h-4 text-[#0f2d5a] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span>Stok resmi gudang terlindungi secara real-time</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                        <span>Transaksi pembayaran aman &amp; otomatis</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                        <span>Pengiriman kurir terintegrasi (JNE, POS, Instant)</span>
+                        <svg class="w-4 h-4 text-[#0f2d5a] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        <span>Pembayaran otomatis via Midtrans</span>
                     </div>
                 </div>
             </div>
@@ -156,44 +148,40 @@ function renderCartPage() {
         const maxStok = parseInt(item.max) || 0;
         const sat = item.satuan || 'Box';
         let rawImg = item.gambar || item.image || '';
-        if (typeof rawImg === 'string' && rawImg.includes(',')) {
-            rawImg = rawImg.split(',')[0].trim();
-        }
-        const imgPath = rawImg ? (rawImg.startsWith('http') || rawImg.startsWith('../') ? rawImg : `../${rawImg}`) : '../assets/img/no-image.png';
+        const imgPath = (typeof resolveProductImg === 'function') ? resolveProductImg(rawImg) : '../assets/img/no-image.png';
 
-        // Stock status badge
         let stockBadge = '';
         if (maxStok <= 0) {
-            stockBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200"><svg class="w-3 h-3 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>Stok Habis di Toko</span>`;
+            stockBadge = `<span class="inline-block px-2 py-0.5 text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Stok Habis</span>`;
         } else if (maxStok <= 5) {
-            stockBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200"><svg class="w-3 h-3 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>Sisa Stok Kritis: ${maxStok} ${sat}</span>`;
+            stockBadge = `<span class="inline-block px-2 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">Sisa Stok: ${maxStok} ${sat}</span>`;
         } else {
-            stockBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200"><svg class="w-3 h-3 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Sisa Stok: ${maxStok} ${sat}</span>`;
+            stockBadge = `<span class="inline-block px-2 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Stok Tersedia: ${maxStok} ${sat}</span>`;
         }
 
         html += `
-        <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs transition hover:border-[#1a75d2]/40 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div class="bg-white border border-slate-200 p-4 sm:p-5 transition hover:border-[#0f2d5a] flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <!-- Checkbox -->
             <div class="shrink-0 flex items-center">
                 <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleItemSelect(${item.id})" 
-                    class="w-5 h-5 rounded text-[#1a75d2] border-slate-300 focus:ring-[#1a75d2] cursor-pointer">
+                    class="w-4 h-4 accent-[#0f2d5a] cursor-pointer">
             </div>
 
             <!-- Product Image -->
-            <a href="produk.php?id=${item.id}" class="w-20 h-20 bg-slate-50 border border-slate-100 rounded-xl overflow-hidden shrink-0 flex items-center justify-center p-2">
+            <a href="produk.php?id=${item.id}" class="w-20 h-20 bg-[#f6f8fa] border border-slate-200/80 overflow-hidden shrink-0 flex items-center justify-center p-2">
                 <img src="${imgPath}" alt="${item.nama}" class="max-w-full max-h-full object-contain mix-blend-multiply" onerror="this.src='../assets/img/no-image.png'">
             </a>
 
             <!-- Product Info -->
             <div class="flex-1 min-w-0">
-                <a href="produk.php?id=${item.id}" class="text-sm font-extrabold text-slate-800 hover:text-[#1a75d2] transition block leading-snug line-clamp-2">
+                <a href="produk.php?id=${item.id}" class="text-sm font-bold text-[#0f2d5a] hover:text-[#1a75d2] transition block leading-snug line-clamp-2">
                     ${item.nama}
                 </a>
-                <div class="mt-1 flex flex-wrap items-center gap-2">
+                <div class="mt-1.5 flex flex-wrap items-center gap-2">
                     ${stockBadge}
-                    <span class="text-[10px] text-slate-400 font-semibold">• Satuan: ${sat}</span>
+                    <span class="text-[11px] text-slate-400 font-medium">&bull; Kemasan: ${sat}</span>
                 </div>
-                <div class="text-xs font-black text-[#1a75d2] mt-2 sm:hidden">
+                <div class="text-xs font-extrabold text-[#0f2d5a] mt-2 sm:hidden">
                     ${formatRupiah(item.harga)} <span class="text-[10px] text-slate-400 font-normal">/ ${sat}</span>
                 </div>
             </div>
@@ -201,28 +189,28 @@ function renderCartPage() {
             <!-- Price Column (Desktop) -->
             <div class="hidden sm:block text-right shrink-0 w-32">
                 <span class="text-[10px] text-slate-400 font-medium block">Harga Satuan</span>
-                <span class="text-sm font-black text-slate-800 block">${formatRupiah(item.harga)}</span>
+                <span class="text-sm font-extrabold text-[#0f2d5a] block">${formatRupiah(item.harga)}</span>
             </div>
 
             <!-- Qty Stepper -->
             <div class="shrink-0 flex items-center gap-2">
-                <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl overflow-hidden h-9 shadow-2xs">
-                    <button type="button" onclick="updateCartItemQty(${item.id}, -1)" class="w-9 h-full flex items-center justify-center hover:bg-slate-200 text-slate-700 font-extrabold text-sm transition">−</button>
-                    <input type="text" readonly value="${item.qty}" class="w-10 text-center font-extrabold text-xs text-slate-800 bg-transparent select-none">
-                    <button type="button" onclick="updateCartItemQty(${item.id}, 1)" ${item.qty >= maxStok ? 'disabled' : ''} class="w-9 h-full flex items-center justify-center font-extrabold text-sm transition ${item.qty >= maxStok ? 'opacity-25 bg-slate-100 text-slate-300 cursor-not-allowed pointer-events-none' : 'hover:bg-slate-200 text-slate-700 cursor-pointer'}">+</button>
+                <div class="flex items-center bg-[#f8fafc] border border-slate-200 h-9">
+                    <button type="button" onclick="updateCartItemQty(${item.id}, -1)" class="w-8 h-full flex items-center justify-center hover:bg-slate-200/60 text-[#0f2d5a] font-bold text-sm transition cursor-pointer">−</button>
+                    <input type="text" readonly value="${item.qty}" class="w-9 text-center font-bold text-xs text-[#0f2d5a] bg-transparent select-none">
+                    <button type="button" onclick="updateCartItemQty(${item.id}, 1)" ${item.qty >= maxStok ? 'disabled' : ''} class="w-8 h-full flex items-center justify-center font-bold text-sm transition ${item.qty >= maxStok ? 'opacity-30 cursor-not-allowed' : 'hover:bg-slate-200/60 text-[#0f2d5a] cursor-pointer'}">+</button>
                 </div>
             </div>
 
             <!-- Subtotal -->
             <div class="text-right shrink-0 w-32">
-                <span class="text-[10px] text-slate-400 font-medium block">Total</span>
-                <span class="text-sm font-black text-[#1a75d2] block">${formatRupiah(item.harga * item.qty)}</span>
+                <span class="text-[10px] text-slate-400 font-medium block">Subtotal</span>
+                <span class="text-sm font-extrabold text-[#0f2d5a] block">${formatRupiah(item.harga * item.qty)}</span>
             </div>
 
             <!-- Delete Action -->
             <div class="shrink-0">
-                <button type="button" onclick="removeCartItem(${item.id})" class="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition" title="Hapus Produk">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                <button type="button" onclick="removeCartItem(${item.id})" class="p-2 text-slate-400 hover:text-rose-600 transition cursor-pointer" title="Hapus Produk">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
         </div>
@@ -275,7 +263,7 @@ function proceedToCheckout() {
         showToast('Pilih Produk', 'Centang minimal satu produk untuk melanjutkan pembayaran.', 'warning');
         return;
     }
-    window.location.href = '../zencare_checkout.php';
+    window.location.href = 'zencare_checkout.php';
 }
 
 document.addEventListener('DOMContentLoaded', () => {

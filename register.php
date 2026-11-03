@@ -1,5 +1,5 @@
 <?php
-// File: register.php – E-Commerce Customer Sign-Up
+// File: register.php – E-Commerce Customer Sign-Up (Pharmify Account Style - Reference 5)
 session_start();
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/koneksi.php';
@@ -28,7 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $hashed = password_hash($password, PASSWORD_BCRYPT);
             try {
-                // Because users table has 'role' enum which includes 'pelanggan'
                 $pdo->prepare("INSERT INTO users (username, password, nama_lengkap, role, is_active, email, telepon, alamat) VALUES (?, ?, ?, 'pelanggan', 1, ?, ?, ?)")
                     ->execute([$username, $hashed, $nama, $email, $telp, $alamat]);
                 $success = "Pendaftaran berhasil! Silakan masuk menggunakan akun baru Anda.";
@@ -37,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     } else {
-        $error = "Kolom Username, Password, dan Nama Lengkap wajib diisi.";
+        $error = "Kolom Username, Kata Sandi, dan Nama Lengkap wajib diisi.";
     }
 }
 ?>
@@ -48,111 +47,154 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Akun Pelanggan – ZenCare Medical Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         theme: {
           extend: {
-            fontFamily: { sans: ['Inter', 'sans-serif'] },
-            colors: { zc: '#1a75d2', zcHv: '#1562b3', zcLt: '#e8f2ff', zcBrd: '#e4e9f0', zcTxt: '#1e293b', zcMut: '#64748b' }
+            fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+            colors: { zc: '#1a75d2', zcHv: '#1562b3', zcLt: '#eef6fb', zcBrd: '#e2e8f0', zcTxt: '#0f2d5a', zcMut: '#64748b' }
           }
         }
       }
     </script>
+    <style>
+        .pharmify-banner {
+            background: linear-gradient(90deg, #092340 0%, #0f355e 50%, #0a2646 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .pharmify-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0.14;
+            background-image: url("data:image/svg+xml,%3Csvg width='180' height='180' viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%237dd3fc' stroke-width='1.5'%3E%3Cpolygon points='45,15 75,32 75,68 45,85 15,68 15,32'/%3E%3Cpolygon points='105,50 135,67 135,103 105,120 75,103 75,67'/%3E%3Ccircle cx='45' cy='15' r='3' fill='%2338bdf8'/%3E%3Ccircle cx='135' cy='67' r='3.5' fill='%2338bdf8'/%3E%3Ccircle cx='75' cy='103' r='2.5' fill='%23ffffff'/%3E%3C/g%3E%3C/svg%3E");
+            background-size: 220px 220px;
+            pointer-events: none;
+        }
+    </style>
 </head>
-<body class="font-sans antialiased bg-slate-900 min-h-screen flex items-center justify-center p-4">
+<body class="font-sans antialiased bg-white text-[#1e293b] min-h-screen flex flex-col">
 
-    <div class="w-full max-w-[450px] my-8">
-
-        <!-- Brand Mark -->
-        <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white border border-white/20 mb-3 overflow-hidden shadow-sm">
-                <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
-            </div>
-            <h1 class="text-xl font-bold text-white">Daftar Pelanggan ZenCare</h1>
-            <p class="text-xs text-slate-400 mt-1">Dapatkan akses penuh ke pembelian alkes secara e-commerce</p>
+    <!-- Top Announcement Bar -->
+    <div class="bg-[#0b2545] text-white text-[11px] font-medium py-2 px-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <span>ZenCare Medical Store &mdash; Distributor Resmi Obat &amp; Alat Kesehatan</span>
+            <a href="ecommerce/index.php" class="text-sky-200 hover:text-white transition font-semibold">&larr; Kembali ke Katalog Toko</a>
         </div>
-
-        <!-- Card -->
-        <div class="bg-white border border-zcBrd rounded-2xl shadow-xl overflow-hidden">
-
-            <!-- Form -->
-            <div class="p-6">
-                <?php if ($error): ?>
-                    <div class="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-semibold text-center">
-                        <?= htmlspecialchars($error) ?>
-                    </div>
-                <?php endif; ?>
-                
-                <?php if ($success): ?>
-                    <div class="mb-5 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm font-semibold text-center">
-                        <div class="w-10 h-10 rounded-full border-2 border-emerald-500 text-emerald-600 flex items-center justify-center mx-auto mb-3">
-                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg>
-                        </div>
-                        <?= htmlspecialchars($success) ?><br>
-                        <a href="ecommerce/index.php" class="inline-block mt-3 px-5 py-2.5 bg-zc text-white rounded-xl text-sm font-bold hover:bg-zcHv transition">Mulai Belanja</a>
-                    </div>
-                <?php else: ?>
-
-                <form method="POST" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-zcMut uppercase tracking-wider mb-2">Nama Lengkap *</label>
-                        <input type="text" name="nama_lengkap" required placeholder="Sesuai KTP / Nama Instansi"
-                            class="w-full text-sm border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-zcMut uppercase tracking-wider mb-2">Username *</label>
-                        <input type="text" name="username" required placeholder="Pilih username unik"
-                            class="w-full text-sm border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-zcMut uppercase tracking-wider mb-2">Kata Sandi *</label>
-                        <input type="password" name="password" required placeholder="Minimal 6 karakter"
-                            class="w-full text-sm border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400">
-                    </div>
-                    
-                    <div class="pt-3 border-t border-zcBrd">
-                        <label class="block text-sm font-bold text-zcMut uppercase tracking-wider mb-2">Alamat Email (Opsional)</label>
-                        <input type="email" name="email" placeholder="nama@email.com"
-                            class="w-full text-sm border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-bold text-zcMut uppercase tracking-wider mb-2">Nomor WhatsApp (Opsional)</label>
-                        <input type="text" name="telp" placeholder="0812xxxxxx"
-                            class="w-full text-sm border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-bold text-zcMut uppercase tracking-wider mb-2">Alamat Pengiriman (Opsional)</label>
-                        <textarea name="alamat" rows="2" placeholder="Nama Jalan, Kota, dll"
-                            class="w-full text-sm border border-zcBrd rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-zc focus:ring-2 focus:ring-zc/20 transition placeholder-slate-400"></textarea>
-                    </div>
-
-                    <div class="pt-2">
-                        <button type="submit" class="w-full bg-zc hover:bg-zcHv text-white font-bold text-sm py-3.5 rounded-xl transition shadow-sm">
-                            Buat Akun Pelanggan
-                        </button>
-                    </div>
-                </form>
-                
-                <?php endif; ?>
-            </div>
-            
-            <div class="p-5 border-t border-zcBrd bg-slate-50 text-center">
-                <p class="text-xs text-zcMut font-medium">Sudah punya akun? <a href="login_customer.php" class="text-zc font-bold hover:underline">Masuk di sini</a></p>
-            </div>
-
-        </div>
-        
-        <div class="mt-6 text-center">
-            <a href="ecommerce/index.php" class="text-sm text-slate-400 hover:text-white font-medium inline-flex items-center gap-1.5 transition">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-                Kembali ke Toko
-            </a>
-        </div>
-
     </div>
+
+    <!-- Minimal Storefront Header -->
+    <header class="bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 lg:px-8 h-20 flex items-center justify-between">
+            <nav class="hidden md:flex items-center gap-6 text-[13px] font-semibold text-[#0f2d5a]">
+                <a href="ecommerce/index.php" class="hover:text-[#1a75d2] transition">Beranda</a>
+                <a href="ecommerce/kategori.php" class="hover:text-[#1a75d2] transition">Katalog</a>
+                <a href="ecommerce/tentang_kami.php" class="hover:text-[#1a75d2] transition">Tentang Kami</a>
+                <a href="ecommerce/cara_pembelian.php" class="hover:text-[#1a75d2] transition">Cara Belanja</a>
+            </nav>
+
+            <a href="ecommerce/index.php" class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-full bg-[#eef6fb] border border-[#cde3f5] flex items-center justify-center overflow-hidden p-0.5">
+                    <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-xl font-extrabold tracking-tight text-[#0f2d5a] leading-none">ZenCare</span>
+                    <span class="text-[9px] font-bold uppercase tracking-[0.18em] text-[#1a75d2] mt-0.5">Medical Store</span>
+                </div>
+            </a>
+
+            <div class="flex items-center gap-3 text-xs font-semibold">
+                <a href="login_customer.php" class="px-4 py-2 border border-[#0f2d5a] text-[#0f2d5a] hover:bg-[#eef6fb] transition">Masuk</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Pharmify Molecular Breadcrumb Banner -->
+    <section class="pharmify-banner py-11 lg:py-14 text-center text-white">
+        <div class="max-w-7xl mx-auto px-4 lg:px-8 relative z-10">
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight mb-2.5">Buat Akun Pelanggan</h1>
+            <nav class="flex items-center justify-center gap-2 text-xs font-medium text-sky-200/90">
+                <a href="ecommerce/index.php" class="hover:text-white transition">Beranda</a>
+                <span>&rsaquo;</span>
+                <span class="text-white font-semibold">Pendaftaran Akun</span>
+            </nav>
+        </div>
+    </section>
+
+    <!-- Centered Soft Ice-Blue Form Box -->
+    <main class="flex-1 flex items-center justify-center py-14 px-4">
+        <div class="w-full max-w-[520px] bg-[#eef6fb] p-8 sm:p-11">
+            
+            <h2 class="text-2xl font-extrabold text-[#0f2d5a] text-center mb-6">Buat Akun</h2>
+
+            <?php if ($error): ?>
+                <div class="mb-5 p-3.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold text-center">
+                    <?= htmlspecialchars($error) ?>
+                </div>
+            <?php endif; ?>
+            
+            <?php if ($success): ?>
+                <div class="mb-5 p-6 bg-white border border-[#cbe4f5] text-[#0f2d5a] text-sm font-semibold text-center">
+                    <p class="mb-4"><?= htmlspecialchars($success) ?></p>
+                    <a href="login_customer.php" class="inline-block px-7 py-3 bg-[#0f2d5a] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#1a75d2] transition">
+                        MASUK SEKARANG
+                    </a>
+                </div>
+            <?php else: ?>
+
+            <form method="POST" class="space-y-3.5">
+                <div>
+                    <input type="text" name="nama_lengkap" required placeholder="Nama Lengkap / Nama Instansi *"
+                        class="w-full text-sm border border-slate-200/90 px-4 py-3 bg-white text-[#0f2d5a] focus:outline-none focus:border-[#0f2d5a] transition placeholder-slate-400">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <input type="text" name="username" required placeholder="Username *"
+                            class="w-full text-sm border border-slate-200/90 px-4 py-3 bg-white text-[#0f2d5a] focus:outline-none focus:border-[#0f2d5a] transition placeholder-slate-400">
+                    </div>
+                    <div>
+                        <input type="password" name="password" required placeholder="Kata Sandi *"
+                            class="w-full text-sm border border-slate-200/90 px-4 py-3 bg-white text-[#0f2d5a] focus:outline-none focus:border-[#0f2d5a] transition placeholder-slate-400">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <input type="email" name="email" placeholder="Alamat Email (Opsional)"
+                            class="w-full text-sm border border-slate-200/90 px-4 py-3 bg-white text-[#0f2d5a] focus:outline-none focus:border-[#0f2d5a] transition placeholder-slate-400">
+                    </div>
+                    <div>
+                        <input type="text" name="telp" placeholder="Nomor WhatsApp (Opsional)"
+                            class="w-full text-sm border border-slate-200/90 px-4 py-3 bg-white text-[#0f2d5a] focus:outline-none focus:border-[#0f2d5a] transition placeholder-slate-400">
+                    </div>
+                </div>
+                <div>
+                    <textarea name="alamat" rows="2" placeholder="Alamat Pengiriman Lengkap (Opsional)"
+                        class="w-full text-sm border border-slate-200/90 px-4 py-3 bg-white text-[#0f2d5a] focus:outline-none focus:border-[#0f2d5a] transition placeholder-slate-400"></textarea>
+                </div>
+
+                <div class="pt-3 text-center">
+                    <button type="submit" class="px-9 py-3 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white font-bold text-xs uppercase tracking-widest transition cursor-pointer">
+                        DAFTAR AKUN
+                    </button>
+                </div>
+            </form>
+            
+            <?php endif; ?>
+
+            <div class="mt-6 pt-5 border-t border-[#cbe4f5] flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#0f2d5a]">
+                <a href="login_customer.php" class="font-semibold hover:text-[#1a75d2] transition">Sudah punya akun? Masuk</a>
+                <a href="ecommerce/index.php" class="text-slate-500 hover:text-[#0f2d5a] transition">Kembali ke Toko</a>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Minimal Footer -->
+    <footer class="border-t border-slate-200 py-6 text-center text-xs text-slate-400">
+        &copy; <?= date('Y') ?> ZenCare Medical. Seluruh Hak Cipta Dilindungi.
+    </footer>
 
 </body>
 </html>
