@@ -88,7 +88,7 @@
     <div id="cart-drawer" class="fixed top-0 right-0 bottom-0 w-full sm:w-[400px] bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
         
         <!-- Drawer Header -->
-        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white z-10">
+        <div class="px-4 sm:px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white z-10">
             <div>
                 <h2 class="text-base font-bold text-[#0f2d5a]">Keranjang Belanja</h2>
                 <p class="text-[11px] text-slate-400 mt-0.5"><span id="cart-drawer-count">0</span> produk di keranjang</p>
@@ -99,7 +99,7 @@
         </div>
 
         <!-- Cart Items List (Scrollable) -->
-        <div class="flex-1 overflow-y-auto no-scrollbar p-6 bg-white">
+        <div class="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-6 bg-white">
             <div id="cart-items" class="space-y-4">
                 <!-- Items injected via JS -->
             </div>
@@ -115,7 +115,7 @@
         </div>
 
         <!-- Drawer Footer / Checkout Summary -->
-        <div class="p-6 border-t border-slate-200 bg-[#f8fafc] pb-safe">
+        <div class="p-4 sm:p-6 border-t border-slate-200 bg-[#f8fafc] pb-safe">
             <div class="flex items-center justify-between mb-3 text-xs">
                 <label class="flex items-center gap-2 cursor-pointer font-semibold text-slate-700 select-none">
                     <input type="checkbox" id="drawer-check-all" onchange="toggleSelectAllDrawer(this.checked)" class="w-3.5 h-3.5 accent-[#0f2d5a] cursor-pointer">
@@ -169,7 +169,7 @@
     </nav>
 
     <!-- Toast Notification Container -->
-    <div id="toast-container" class="fixed bottom-6 right-6 z-[60] flex flex-col gap-3"></div>
+    <div id="toast-container" class="fixed bottom-20 md:bottom-6 left-3 right-3 sm:left-auto sm:right-6 z-[60] flex flex-col gap-3 pointer-events-none"></div>
 
     <script>
     // --- Cart State Management (localStorage) ---
@@ -220,7 +220,7 @@
             ? '<svg class="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
             : '<svg class="w-5 h-5 text-amber-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>';
             
-        toast.className = `transform transition-all duration-300 translate-y-8 opacity-0 bg-white border border-slate-200 shadow-lg p-4 w-80 flex gap-3`;
+        toast.className = `pointer-events-auto transform transition-all duration-300 translate-y-8 opacity-0 bg-white border border-slate-200 shadow-lg p-4 w-full sm:w-80 max-w-sm ml-auto flex gap-3`;
         toast.innerHTML = `
             ${icon}
             <div>
@@ -435,7 +435,7 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 18L18 6M6 6l12 12"/></svg>
                         </button>
                     </div>
-                    <div class="flex items-center justify-between mt-2.5">
+                    <div class="flex flex-wrap items-center justify-between gap-1.5 mt-2.5">
                         <div class="text-[#0f2d5a] font-extrabold text-xs">${formatRupiah(item.harga)}</div>
                         <div class="flex items-center border border-slate-200 bg-[#f8fafc] h-7">
                             <button type="button" onclick="updateCartItemQty(${item.id}, -1)" class="w-6 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-600 font-bold transition cursor-pointer">−</button>

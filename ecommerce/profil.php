@@ -500,13 +500,13 @@ if (!empty($orderIds)) {
                             <!-- Purchased Items List -->
                             <div class="divide-y divide-slate-100 text-xs">
                                 <?php foreach ($items as $it): ?>
-                                <div class="py-2 first:pt-0 last:pb-0 flex items-center justify-between text-slate-700 gap-3">
-                                    <div class="flex items-center gap-2.5 min-w-0">
-                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0"></span>
-                                        <span class="font-bold text-[#0f2d5a] truncate"><?= htmlspecialchars($it['nama_produk']) ?> &mdash; <?= htmlspecialchars($it['nama_variasi']) ?></span>
+                                <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
+                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                        <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate"><?= htmlspecialchars($it['nama_produk']) ?> &mdash; <?= htmlspecialchars($it['nama_variasi']) ?></span>
                                         <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x<?= intval($it['qty']) ?> <?= htmlspecialchars($it['satuan_besar'] ?: 'Box') ?></span>
                                     </div>
-                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0">
+                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
                                         Rp <?= number_format($it['harga_satuan'] * $it['qty'], 0, ',', '.') ?>
                                     </span>
                                 </div>

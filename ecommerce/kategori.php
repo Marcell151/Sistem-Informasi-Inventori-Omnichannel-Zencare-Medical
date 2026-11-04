@@ -370,18 +370,18 @@ foreach ($stmtSidebar->fetchAll() as $row) {
 
                             <!-- Action Controls -->
                             <?php if ($stokBox >= 1): ?>
-                            <div class="flex items-center gap-1.5 sm:gap-2">
-                                <div class="flex items-center border border-slate-200 bg-[#f8fafc] h-8 sm:h-9 shrink-0">
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2">
+                                <div class="flex items-center justify-between border border-slate-200 bg-[#f8fafc] h-8 sm:h-9 shrink-0">
                                     <button type="button" onclick="adjustQty(<?= $p['id'] ?>, -1, <?= $stokBox ?>)"
-                                        class="w-5 sm:w-7 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-700 font-bold transition text-xs sm:text-sm cursor-pointer">−</button>
+                                        class="w-8 sm:w-7 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-700 font-bold transition text-xs sm:text-sm cursor-pointer">−</button>
                                     <input type="number" id="qty_<?= $p['id'] ?>" value="1" min="1" max="<?= $stokBox ?>" readonly
-                                        class="w-6 sm:w-8 text-center text-[11px] sm:text-xs font-bold bg-transparent text-[#0f2d5a] focus:outline-none select-none">
+                                        class="flex-1 sm:flex-none sm:w-8 text-center text-[11px] sm:text-xs font-bold bg-transparent text-[#0f2d5a] focus:outline-none select-none">
                                     <button type="button" onclick="adjustQty(<?= $p['id'] ?>, 1, <?= $stokBox ?>)"
-                                        class="w-5 sm:w-7 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-700 font-bold transition text-xs sm:text-sm cursor-pointer">+</button>
+                                        class="w-8 sm:w-7 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-700 font-bold transition text-xs sm:text-sm cursor-pointer">+</button>
                                 </div>
 
                                 <button type="button" onclick="addToCart(<?= $p['id'] ?>, '<?= addslashes(htmlspecialchars_decode($p['nama_produk'])) ?>', <?= $harga ?>, <?= intval($p['berat_gram']) ?>, '<?= addslashes($p['gambar'] ?? '') ?>', '<?= addslashes($satB) ?>', <?= $rasio ?>, <?= $stokBox ?>, document.getElementById('qty_<?= $p['id'] ?>').value)"
-                                    class="flex-1 h-8 sm:h-9 px-2 sm:px-3 rounded-full bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1">
+                                    class="w-full sm:flex-1 h-8 sm:h-9 px-2 sm:px-3 rounded-full bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1">
                                     <span>+ Keranjang</span>
                                 </button>
 
@@ -445,11 +445,29 @@ foreach ($stmtSidebar->fetchAll() as $row) {
                         <span class="text-xs text-slate-400">(<?= count($sidebarInduk['Obat']) + count($sidebarInduk['Alat Kesehatan']) ?>)</span>
                     </a>
                 </li>
-                <?php foreach (['Obat' => 'Obat & Farmasi', 'Alat Kesehatan' => 'Alat Kesehatan Medis'] as $catKey => $catTitle): ?>
+                <?php foreach (['Obat' => 'Obat & Farmasi', 'Alat Kesehatan' => 'Alat Kesehatan Medis'] as $catKey => $catTitle): 
+                    $isOpenMob = ($kategori === $catKey || empty($kategori));
+                ?>
                 <li class="border-t border-slate-100 pt-2">
-                    <a href="kategori.php?kategori=<?= urlencode($catKey) ?>" class="block py-1 <?= ($kategori === $catKey && !$indukId) ? 'font-bold text-[#0f2d5a]' : 'text-slate-700 hover:text-[#0f2d5a] font-medium' ?>">
-                        <?= htmlspecialchars($catTitle) ?>
-                    </a>
+                    <div class="flex items-center justify-between py-1">
+                        <a href="kategori.php?kategori=<?= urlencode($catKey) ?>" class="flex-1 <?= ($kategori === $catKey && !$indukId) ? 'font-bold text-[#0f2d5a]' : 'text-slate-700 hover:text-[#0f2d5a] font-medium' ?>">
+                            <?= htmlspecialchars($catTitle) ?>
+                        </a>
+                        <button type="button" onclick="toggleSidebarCat('mob_sub_<?= md5($catKey) ?>', this)" class="text-slate-400 hover:text-[#0f2d5a] px-2 font-bold cursor-pointer">
+                            <?= $isOpenMob ? '−' : '+' ?>
+                        </button>
+                    </div>
+                    <ul id="mob_sub_<?= md5($catKey) ?>" class="pl-3 mt-1.5 space-y-1.5 border-l border-slate-200 <?= $isOpenMob ? '' : 'hidden' ?>">
+                        <?php foreach ($sidebarInduk[$catKey] ?? [] as $si): ?>
+                        <li>
+                            <a href="kategori.php?kategori=<?= urlencode($catKey) ?>&induk_id=<?= $si['id'] ?>"
+                               class="flex items-center justify-between text-xs py-0.5 transition <?= ($indukId === intval($si['id'])) ? 'font-bold text-[#1a75d2]' : 'text-slate-500 hover:text-[#0f2d5a]' ?>">
+                                <span class="truncate pr-2"><?= htmlspecialchars($si['nama']) ?></span>
+                                <span class="text-[11px] text-slate-400">(<?= $si['jml_variasi'] ?>)</span>
+                            </a>
+                        </li>
+                        <?php endforeach; ?>
+                    </ul>
                 </li>
                 <?php endforeach; ?>
             </ul>

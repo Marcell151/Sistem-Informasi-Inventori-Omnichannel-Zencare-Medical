@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <!-- Top Announcement Bar -->
     <div class="bg-[#0b2545] text-white text-[11px] font-medium py-2 px-4">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1 text-center sm:text-left">
             <span>ZenCare Medical Store &mdash; Distributor Resmi Obat &amp; Alat Kesehatan</span>
             <a href="ecommerce/index.php" class="text-sky-200 hover:text-white transition font-semibold">&larr; Kembali ke Katalog Toko</a>
         </div>
@@ -136,10 +136,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </section>
 
     <!-- Centered Soft Ice-Blue Form Box (Reference 5) -->
-    <main class="flex-1 flex items-center justify-center py-14 px-4">
-        <div class="w-full max-w-[460px] bg-[#eef6fb] p-8 sm:p-11">
+    <main class="flex-1 flex items-center justify-center py-8 sm:py-14 px-4">
+        <div class="w-full max-w-[460px] bg-[#eef6fb] p-5 sm:p-11">
             
-            <h2 class="text-2xl font-extrabold text-[#0f2d5a] text-center mb-6">Masuk</h2>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-[#0f2d5a] text-center mb-6">Masuk</h2>
 
             <?php if ($error): ?>
                 <div class="mb-5 p-3.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold text-center">

@@ -314,54 +314,54 @@ $initQuery    = trim($_GET['q'] ?? '');
     <!-- ============================================================ -->
     <!-- 2. PHARMIFY 5-CARD PROMOTIONAL BENTO GRID                    -->
     <!-- ============================================================ -->
-    <section class="max-w-7xl mx-auto px-4 lg:px-8 pt-10 pb-6">
+    <section class="max-w-7xl mx-auto px-4 lg:px-8 pt-8 sm:pt-10 pb-6">
         <!-- Top Row: 3 Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
             
             <!-- Card 1: Soft Ice Blue -->
-            <div class="relative overflow-hidden bg-[#d7edf9] p-7 flex items-center justify-between min-h-[210px] group">
-                <div class="z-10 max-w-[60%]">
-                    <span class="text-[11px] font-bold uppercase tracking-[0.18em] text-[#0f2d5a]/80 block mb-1.5">SEDIAAN KELUARGA</span>
-                    <h3 class="text-xl font-extrabold text-[#0f2d5a] leading-tight mb-4">Sirup &amp; Suspensi Anak</h3>
-                    <button type="button" onclick="quickFilterKeyword('Sirup')" class="px-5 py-2.5 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[11px] font-bold uppercase tracking-wider transition cursor-pointer">
+            <div class="relative overflow-hidden bg-[#d7edf9] p-5 sm:p-7 flex items-center justify-between min-h-[185px] sm:min-h-[210px] group">
+                <div class="z-10 max-w-[62%]">
+                    <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.16em] text-[#0f2d5a]/80 block mb-1.5">SEDIAAN KELUARGA</span>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-[#0f2d5a] leading-tight mb-3.5 sm:mb-4">Sirup &amp; Suspensi Anak</h3>
+                    <button type="button" onclick="quickFilterKeyword('Sirup')" class="px-4 sm:px-5 py-2 sm:py-2.5 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition cursor-pointer">
                         BELANJA SEKARANG
                     </button>
                 </div>
                 <?php if ($imgSirup): ?>
-                <div class="w-28 h-32 shrink-0 flex items-center justify-center">
+                <div class="w-20 h-24 sm:w-28 sm:h-32 shrink-0 flex items-center justify-center">
                     <img src="<?= htmlspecialchars($imgSirup) ?>" alt="Sirup" class="max-h-full max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
                 </div>
                 <?php endif; ?>
             </div>
 
             <!-- Card 2: Deep Navy -->
-            <div class="relative overflow-hidden bg-[#0c2454] p-7 flex items-center justify-between min-h-[210px] text-white group">
+            <div class="relative overflow-hidden bg-[#0c2454] p-5 sm:p-7 flex items-center justify-between min-h-[185px] sm:min-h-[210px] text-white group">
                 <div class="z-10 max-w-[62%]">
-                    <span class="text-[11px] font-bold uppercase tracking-[0.18em] text-sky-300 block mb-1.5">DAYA TAHAN TUBUH</span>
-                    <h3 class="text-xl font-extrabold text-white leading-tight mb-1">Vitamin &amp; Suplemen</h3>
-                    <p class="text-xs text-sky-200 mb-4">Kemasan Box Grosir Resmi</p>
-                    <button type="button" onclick="setCategoryFilter('Obat'); document.getElementById('katalog').scrollIntoView({behavior:'smooth'});" class="px-5 py-2.5 bg-[#86d5df] hover:bg-white text-[#0c2454] text-[11px] font-bold uppercase tracking-wider transition cursor-pointer">
+                    <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.16em] text-sky-300 block mb-1.5">DAYA TAHAN TUBUH</span>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-white leading-tight mb-1">Vitamin &amp; Suplemen</h3>
+                    <p class="text-[11px] sm:text-xs text-sky-200 mb-3.5 sm:mb-4">Kemasan Box Grosir Resmi</p>
+                    <button type="button" onclick="setCategoryFilter('Obat'); document.getElementById('katalog').scrollIntoView({behavior:'smooth'});" class="px-4 sm:px-5 py-2 sm:py-2.5 bg-[#86d5df] hover:bg-white text-[#0c2454] text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition cursor-pointer">
                         LIHAT PRODUK
                     </button>
                 </div>
                 <?php if ($imgVitamin): ?>
-                <div class="w-28 h-32 shrink-0 flex items-center justify-center bg-white/90 p-2 rounded">
+                <div class="w-20 h-24 sm:w-28 sm:h-32 shrink-0 flex items-center justify-center bg-white/90 p-2 rounded">
                     <img src="<?= htmlspecialchars($imgVitamin) ?>" alt="Vitamin" class="max-h-full max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
                 </div>
                 <?php endif; ?>
             </div>
 
             <!-- Card 3: Clinical Aqua Teal -->
-            <div class="relative overflow-hidden bg-[#82d3dc] p-7 flex items-center justify-between min-h-[210px] group">
-                <div class="z-10 max-w-[60%]">
-                    <span class="text-[11px] font-bold uppercase tracking-[0.18em] text-[#0f2d5a]/80 block mb-1.5">AKURASI KLINIS</span>
-                    <h3 class="text-xl font-extrabold text-[#0f2d5a] leading-tight mb-4">Alat Cek &amp; Diagnostik</h3>
-                    <button type="button" onclick="setCategoryFilter('Alat Kesehatan'); document.getElementById('katalog').scrollIntoView({behavior:'smooth'});" class="px-5 py-2.5 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[11px] font-bold uppercase tracking-wider transition cursor-pointer">
+            <div class="relative overflow-hidden bg-[#82d3dc] p-5 sm:p-7 flex items-center justify-between min-h-[185px] sm:min-h-[210px] sm:col-span-2 lg:col-span-1 group">
+                <div class="z-10 max-w-[62%]">
+                    <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.16em] text-[#0f2d5a]/80 block mb-1.5">AKURASI KLINIS</span>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-[#0f2d5a] leading-tight mb-3.5 sm:mb-4">Alat Cek &amp; Diagnostik</h3>
+                    <button type="button" onclick="setCategoryFilter('Alat Kesehatan'); document.getElementById('katalog').scrollIntoView({behavior:'smooth'});" class="px-4 sm:px-5 py-2 sm:py-2.5 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition cursor-pointer">
                         BELANJA SEKARANG
                     </button>
                 </div>
                 <?php if ($imgDiagnostik): ?>
-                <div class="w-28 h-32 shrink-0 flex items-center justify-center">
+                <div class="w-20 h-24 sm:w-28 sm:h-32 shrink-0 flex items-center justify-center">
                     <img src="<?= htmlspecialchars($imgDiagnostik) ?>" alt="Diagnostik" class="max-h-full max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
                 </div>
                 <?php endif; ?>
@@ -415,7 +415,7 @@ $initQuery    = trim($_GET['q'] ?? '');
             <h2 class="text-lg sm:text-2xl font-extrabold text-[#0f2d5a] uppercase tracking-wider">JELAJAHI KATEGORI PRODUK</h2>
         </div>
 
-        <div class="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4 lg:gap-5">
+        <div class="grid grid-cols-2 min-[360px]:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4 lg:gap-5">
             <?php
             $showcaseCats = [
                 ['label' => 'Obat Tablet & Kaplet', 'img' => $imgTablet,     'action' => "setCategoryFilter('Obat')"],
@@ -471,7 +471,7 @@ $initQuery    = trim($_GET['q'] ?? '');
                 
                 <!-- Left: Filter Produk Induk + Search -->
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
-                    <div class="relative flex-1 max-w-xs">
+                    <div class="relative flex-1 w-full sm:max-w-xs">
                         <input type="text" id="catalog_search" value="<?= htmlspecialchars($initQuery) ?>" oninput="onSearchChange(this.value)" placeholder="Cari nama produk, variasi, atau SKU..." class="w-full text-xs pl-8 pr-3 py-2 border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-[#0f2d5a]">
                         <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
@@ -494,7 +494,7 @@ $initQuery    = trim($_GET['q'] ?? '');
                 </div>
 
                 <!-- Right: Count + Sort + Per Page -->
-                <div class="flex items-center justify-between sm:justify-end gap-4 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-200/70">
+                <div class="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-4 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-200/70">
                     <span id="filter_result_count" class="text-slate-500">
                         Menampilkan <strong class="text-[#0f2d5a]" id="count_display"><?= count($products) ?></strong> produk
                     </span>
@@ -608,20 +608,20 @@ $initQuery    = trim($_GET['q'] ?? '');
 
                         <!-- Action Controls (Pharmify Pill CTA + Compact Qty Stepper) -->
                         <?php if ($stokBox >= 1): ?>
-                        <div class="flex items-center gap-1.5 sm:gap-2">
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2">
                             <!-- Compact Stepper -->
-                            <div class="flex items-center border border-slate-200 bg-[#f8fafc] h-8 sm:h-9 shrink-0">
+                            <div class="flex items-center justify-between border border-slate-200 bg-[#f8fafc] h-8 sm:h-9 shrink-0">
                                 <button type="button" onclick="adjustQty(<?= $p['id'] ?>, -1, <?= $stokBox ?>)"
-                                    class="w-5 sm:w-7 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-700 font-bold transition text-xs sm:text-sm cursor-pointer">−</button>
+                                    class="w-8 sm:w-7 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-700 font-bold transition text-xs sm:text-sm cursor-pointer">−</button>
                                 <input type="number" id="qty_<?= $p['id'] ?>" value="1" min="1" max="<?= $stokBox ?>" readonly
-                                    class="w-6 sm:w-8 text-center text-[11px] sm:text-xs font-bold bg-transparent text-[#0f2d5a] focus:outline-none select-none">
+                                    class="flex-1 sm:flex-none sm:w-8 text-center text-[11px] sm:text-xs font-bold bg-transparent text-[#0f2d5a] focus:outline-none select-none">
                                 <button type="button" onclick="adjustQty(<?= $p['id'] ?>, 1, <?= $stokBox ?>)"
-                                    class="w-5 sm:w-7 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-700 font-bold transition text-xs sm:text-sm cursor-pointer">+</button>
+                                    class="w-8 sm:w-7 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-700 font-bold transition text-xs sm:text-sm cursor-pointer">+</button>
                             </div>
 
                             <!-- Solid Navy Pill Add To Cart Button -->
                             <button type="button" onclick="addToCart(<?= $p['id'] ?>, '<?= addslashes(htmlspecialchars_decode($p['nama_produk'])) ?>', <?= $harga ?>, <?= intval($p['berat_gram']) ?>, '<?= addslashes($p['gambar'] ?? '') ?>', '<?= addslashes($satB) ?>', <?= $rasio ?>, <?= $stokBox ?>, document.getElementById('qty_<?= $p['id'] ?>').value)"
-                                class="flex-1 h-8 sm:h-9 px-2 sm:px-3 rounded-full bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1">
+                                class="w-full sm:flex-1 h-8 sm:h-9 px-2 sm:px-3 rounded-full bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1">
                                 <span>+ Keranjang</span>
                             </button>
 

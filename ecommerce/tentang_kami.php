@@ -87,18 +87,18 @@ require_once __DIR__ . '/header.php';
         </div>
 
         <!-- Customer Care Strip -->
-        <div class="bg-[#0f2d5a] text-white p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="bg-[#0f2d5a] text-white p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 sm:gap-6">
             <div>
-                <h3 class="text-lg font-extrabold mb-1">Layanan Informasi Produk &amp; Pelanggan</h3>
+                <h3 class="text-base sm:text-lg font-extrabold mb-1">Layanan Informasi Produk &amp; Pelanggan</h3>
                 <p class="text-xs text-sky-200 max-w-xl leading-relaxed">
                     Tim kami siap membantu Anda terkait informasi spesifikasi alat kesehatan, ketersediaan kemasan grosir, maupun panduan pemesanan.
                 </p>
             </div>
-            <div class="flex gap-3 shrink-0">
-                <a href="kategori.php" class="px-6 py-3 bg-white text-[#0f2d5a] font-bold text-xs uppercase tracking-widest hover:bg-sky-50 transition">
+            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+                <a href="kategori.php" class="text-center px-6 py-3 bg-white text-[#0f2d5a] font-bold text-xs uppercase tracking-widest hover:bg-sky-50 transition">
                     LIHAT KATALOG
                 </a>
-                <a href="https://wa.me/6281234567890?text=Halo%20CS%20ZenCare%20Medical,%20saya%20ingin%20bertanya%20mengenai%20produk%20kesehatan" target="_blank" class="px-6 py-3 bg-[#1a75d2] hover:bg-[#1562b3] text-white font-bold text-xs uppercase tracking-widest transition">
+                <a href="https://wa.me/6281234567890?text=Halo%20CS%20ZenCare%20Medical,%20saya%20ingin%20bertanya%20mengenai%20produk%20kesehatan" target="_blank" class="text-center px-6 py-3 bg-[#1a75d2] hover:bg-[#1562b3] text-white font-bold text-xs uppercase tracking-widest transition">
                     HUBUNGI WHATSAPP
                 </a>
             </div>

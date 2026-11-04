@@ -31,7 +31,7 @@ require_once __DIR__ . '/header.php';
         <!-- LEFT: Items List (8 cols) -->
         <div class="lg:col-span-8 space-y-4">
             <!-- Select All Control Bar -->
-            <div class="bg-[#eef6fb] border border-[#cbe4f5] p-4 flex items-center justify-between">
+            <div class="bg-[#eef6fb] border border-[#cbe4f5] p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-2">
                 <label class="flex items-center gap-3 cursor-pointer select-none">
                     <input type="checkbox" id="check-all" onchange="toggleSelectAll(this.checked)" class="w-4 h-4 accent-[#0f2d5a] cursor-pointer">
                     <span class="text-xs font-extrabold text-[#0f2d5a] uppercase tracking-wider">Pilih Semua (<span id="cart-total-item-count">0</span> produk)</span>

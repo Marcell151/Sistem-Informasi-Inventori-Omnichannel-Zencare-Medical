@@ -34,10 +34,12 @@ $pageTitle = "Checkout Pembayaran";
 require_once __DIR__ . '/header.php';
 ?>
 
-<!-- jQuery, Select2, Leaflet & Midtrans Snap -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- jQuery, Select2, Leaflet & Midtrans Snap (Local offline assets first with CDN fallback) -->
+<script src="../assets/js/jquery-3.7.1.min.js"></script>
+<script>if (typeof window.jQuery === 'undefined') { document.write('<script src="https://code.jquery.com/jquery-3.7.1.min.js"><\/script>'); }</script>
+<link href="../assets/css/select2.min.css" rel="stylesheet" />
+<script src="../assets/js/select2.min.js"></script>
+<script>if (typeof $.fn.select2 === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"><\/script>'); }</script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="<?= MIDTRANS_SNAP_URL ?>" data-client-key="<?= MIDTRANS_CLIENT_KEY ?>"></script>
@@ -101,7 +103,7 @@ require_once __DIR__ . '/header.php';
     </div>
 </section>
 
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 flex-1 w-full bg-white">
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 pb-24 md:pb-12 flex-1 w-full bg-white">
     
     <!-- Top Info Bar -->
     <div class="mb-6 sm:mb-8 pb-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -848,24 +850,29 @@ require_once __DIR__ . '/header.php';
             let itemImg = resolveCheckoutImg(item.gambar || item.image || '');
 
             html += `
-                <div class="flex items-center justify-between text-xs bg-white border border-[#cbe4f5] p-3 gap-3">
-                    <div class="w-14 h-14 bg-[#f6f8fa] border border-slate-200/80 p-1.5 flex items-center justify-center shrink-0 overflow-hidden">
-                        <img src="${itemImg}" class="w-full h-full object-contain mix-blend-multiply" alt="${itemName}" onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <span class="font-bold text-[#0f2d5a] block truncate leading-snug">${itemName}</span>
-                        <span class="text-slate-500 text-[11px] font-medium">Rp ${price.toLocaleString('id-ID')} / ${satLabel} (${weight}g)</span>
-                        <span class="text-[10px] font-semibold ${maxStok <= 0 ? 'text-rose-600' : (maxStok <= 5 ? 'text-amber-600' : 'text-emerald-700')} block mt-0.5">
-                            Stok Tersedia: ${maxStok > 0 ? maxStok + ' ' + satLabel : 'Habis'}
-                        </span>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <div class="flex items-center border border-slate-200 bg-[#f8fafc] h-7">
-                            <button type="button" onclick="updateItemQty('${item.cartId || item.id}', -1)" class="w-6 h-full text-[#0f2d5a] font-bold text-xs hover:bg-slate-200/70 flex items-center justify-center cursor-pointer">−</button>
-                            <span class="font-bold text-xs px-2 text-[#0f2d5a]">${qty}</span>
-                            <button type="button" onclick="updateItemQty('${item.cartId || item.id}', 1)" class="w-6 h-full text-[#0f2d5a] font-bold text-xs hover:bg-slate-200/70 flex items-center justify-center cursor-pointer">+</button>
+                <div class="flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-xs bg-white border border-[#cbe4f5] p-3 gap-2.5 min-[420px]:gap-3">
+                    <div class="flex items-start min-[420px]:items-center gap-3 min-w-0 flex-1 w-full">
+                        <div class="w-14 h-14 bg-[#f6f8fa] border border-slate-200/80 p-1.5 flex items-center justify-center shrink-0 overflow-hidden">
+                            <img src="${itemImg}" class="w-full h-full object-contain mix-blend-multiply" alt="${itemName}" onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
                         </div>
-                        <button type="button" onclick="removeCheckoutItem('${item.cartId || item.id}')" class="text-slate-400 hover:text-rose-600 font-bold p-1 text-xs cursor-pointer" title="Hapus Produk">✕</button>
+                        <div class="min-w-0 flex-1">
+                            <span class="font-bold text-[#0f2d5a] block line-clamp-2 min-[420px]:truncate leading-snug">${itemName}</span>
+                            <span class="text-slate-500 text-[11px] font-medium block mt-0.5">Rp ${price.toLocaleString('id-ID')} / ${satLabel} (${weight}g)</span>
+                            <span class="text-[10px] font-semibold ${maxStok <= 0 ? 'text-rose-600' : (maxStok <= 5 ? 'text-amber-600' : 'text-emerald-700')} block mt-0.5">
+                                Stok Tersedia: ${maxStok > 0 ? maxStok + ' ' + satLabel : 'Habis'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between min-[420px]:justify-end gap-2 shrink-0 w-full min-[420px]:w-auto pt-2 min-[420px]:pt-0 border-t min-[420px]:border-t-0 border-slate-100">
+                        <span class="min-[420px]:hidden font-extrabold text-[#0f2d5a]">Rp ${(price * qty).toLocaleString('id-ID')}</span>
+                        <div class="flex items-center gap-2 ml-auto min-[420px]:ml-0">
+                            <div class="flex items-center border border-slate-200 bg-[#f8fafc] h-7">
+                                <button type="button" onclick="updateItemQty('${item.cartId || item.id}', -1)" class="w-6 h-full text-[#0f2d5a] font-bold text-xs hover:bg-slate-200/70 flex items-center justify-center cursor-pointer">−</button>
+                                <span class="font-bold text-xs px-2 text-[#0f2d5a]">${qty}</span>
+                                <button type="button" onclick="updateItemQty('${item.cartId || item.id}', 1)" class="w-6 h-full text-[#0f2d5a] font-bold text-xs hover:bg-slate-200/70 flex items-center justify-center cursor-pointer">+</button>
+                            </div>
+                            <button type="button" onclick="removeCheckoutItem('${item.cartId || item.id}')" class="text-slate-400 hover:text-rose-600 font-bold p-1 text-xs cursor-pointer" title="Hapus Produk">✕</button>
+                        </div>
                     </div>
                 </div>
             `;

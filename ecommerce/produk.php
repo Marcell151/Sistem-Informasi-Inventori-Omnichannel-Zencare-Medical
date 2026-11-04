@@ -245,14 +245,14 @@ $totalImages = count($formattedImages);
                     <?= htmlspecialchars($p['nama_induk']) ?> — <?= htmlspecialchars($p['nama_variasi']) ?>
                 </h2>
 
-                <div class="flex items-baseline gap-3 mb-5 pb-5 border-b border-slate-200">
+                <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-5 pb-5 border-b border-slate-200">
                     <span class="text-2xl font-extrabold text-[#0f2d5a]">
                         Rp <?= number_format($harga, 0, ',', '.') ?>
                     </span>
                     <span class="text-sm font-semibold text-slate-500">/ <?= htmlspecialchars($satBesar) ?></span>
 
                     <?php if ($p['kategori'] === 'Obat' && $hargaEceran > 0 && $rasio > 1): ?>
-                    <span class="text-xs text-slate-400 ml-auto">
+                    <span class="text-xs text-slate-400 sm:ml-auto w-full sm:w-auto">
                         Referensi Eceran Toko: ~Rp <?= number_format($hargaEceran, 0, ',', '.') ?> / <?= htmlspecialchars($satKecil) ?>
                     </span>
                     <?php endif; ?>
@@ -321,7 +321,7 @@ $totalImages = count($formattedImages);
                 <!-- Quantity Stepper & Primary CTA Buttons (Desktop) -->
                 <?php if ($stokBox >= 1): ?>
                 <div class="space-y-4">
-                    <div class="flex items-center gap-4">
+                    <div class="flex flex-wrap items-center gap-3 sm:gap-4">
                         <span class="text-sm font-bold text-[#0f2d5a]">Jumlah (<?= htmlspecialchars($satBesar) ?>):</span>
                         <div class="flex items-center border border-slate-300 bg-white h-10">
                             <button type="button" onclick="adjustQty(<?= $p['id'] ?>, -1, <?= $stokBox ?>)"
@@ -382,15 +382,11 @@ $totalImages = count($formattedImages);
             <?php endif; ?>
         </div>
 
-            </div>
-
-        </div>
-
         <!-- ============================================================ -->
         <!-- 3. PHARMIFY UNDERLINE TABS (Description, Specs, Shipping)    -->
         <!-- ============================================================ -->
-        <div class="mt-16 pt-8 border-t border-slate-200">
-            <div class="flex gap-8 border-b border-slate-200 mb-6 overflow-x-auto">
+        <div class="mt-12 sm:mt-16 pt-8 border-t border-slate-200">
+            <div class="flex gap-5 sm:gap-8 border-b border-slate-200 mb-6 overflow-x-auto no-scrollbar">
                 <button type="button" onclick="switchTab('tab-desc')" id="btn-tab-desc" class="pb-3.5 text-sm font-extrabold text-[#0f2d5a] border-b-2 border-[#0f2d5a] transition whitespace-nowrap cursor-pointer">
                     Deskripsi Produk
                 </button>
@@ -476,11 +472,11 @@ $totalImages = count($formattedImages);
         <!-- 4. RECOMMENDED PRODUCTS (4-Column Pharmify Grid)             -->
         <!-- ============================================================ -->
         <?php if (!empty($related)): ?>
-        <section class="mt-16 pt-12 border-t border-slate-200">
-            <div class="text-center mb-8">
+        <section class="mt-12 sm:mt-16 pt-10 sm:pt-12 border-t border-slate-200">
+            <div class="text-center mb-6 sm:mb-8">
                 <h3 class="text-xl sm:text-2xl font-extrabold text-[#0f2d5a]">Rekomendasi Produk Terkait</h3>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                 <?php foreach ($related as $rel): 
                     $relGbr = !empty($rel['gambar']) ? trim(explode(',', $rel['gambar'])[0]) : '';
                     $relSrc = getProductImageSrc($relGbr);
@@ -491,27 +487,27 @@ $totalImages = count($formattedImages);
                     $relSatB = $rel['satuan_besar'] ?: 'Box';
                 ?>
                 <div class="group flex flex-col bg-white">
-                    <a href="produk.php?id=<?= $rel['id'] ?>" class="block aspect-square w-full bg-[#f6f8fa] hover:bg-[#eef4fa] transition-colors p-6 mb-3.5 overflow-hidden">
+                    <a href="produk.php?id=<?= $rel['id'] ?>" class="block aspect-square w-full bg-[#f6f8fa] hover:bg-[#eef4fa] transition-colors p-3 sm:p-6 mb-2.5 sm:mb-3.5 overflow-hidden">
                         <?php if (!empty($relGbr)): ?>
                             <img src="<?= htmlspecialchars($relSrc) ?>" alt="<?= htmlspecialchars($rel['nama_induk']) ?>" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 mix-blend-multiply" onerror="this.onerror=null; this.src='../assets/img/no-image.png';">
                         <?php endif; ?>
                     </a>
                     <a href="produk.php?id=<?= $rel['id'] ?>" class="block mb-1.5">
-                        <h4 class="text-sm font-bold text-[#0f2d5a] group-hover:text-[#1a75d2] transition-colors line-clamp-1">
+                        <h4 class="text-xs sm:text-sm font-bold text-[#0f2d5a] group-hover:text-[#1a75d2] transition-colors line-clamp-1">
                             <?= htmlspecialchars($rel['nama_induk']) ?>
                         </h4>
-                        <p class="text-xs text-slate-500 line-clamp-1"><?= htmlspecialchars($rel['nama_variasi']) ?></p>
+                        <p class="text-[11px] sm:text-xs text-slate-500 line-clamp-1"><?= htmlspecialchars($rel['nama_variasi']) ?></p>
                     </a>
-                    <div class="text-sm font-extrabold text-[#0f2d5a] mb-3 mt-auto">
-                        Rp <?= number_format($rel['harga_jual'], 0, ',', '.') ?> <span class="text-xs font-normal text-slate-400">/ <?= htmlspecialchars($relSatB) ?></span>
+                    <div class="text-xs sm:text-sm font-extrabold text-[#0f2d5a] mb-2.5 sm:mb-3 mt-auto">
+                        Rp <?= number_format($rel['harga_jual'], 0, ',', '.') ?> <span class="text-[10px] sm:text-xs font-normal text-slate-400">/ <?= htmlspecialchars($relSatB) ?></span>
                     </div>
                     <?php if ($relStokBox >= 1): ?>
                     <button type="button" onclick="addToCart(<?= $rel['id'] ?>, '<?= addslashes(htmlspecialchars_decode($rel['nama_produk'])) ?>', <?= floatval($rel['harga_jual']) ?>, <?= intval($rel['berat_gram']) ?>, '<?= addslashes($rel['gambar'] ?? '') ?>', '<?= addslashes($relSatB) ?>', <?= $relRasio ?>, <?= $relStokBox ?>, 1)"
-                        class="w-full h-9 rounded-full bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[11px] font-bold uppercase tracking-wider transition cursor-pointer">
+                        class="w-full h-8 sm:h-9 rounded-full bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition cursor-pointer">
                         + Keranjang
                     </button>
                     <?php else: ?>
-                    <div class="w-full h-9 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-[11px] font-bold uppercase">
+                    <div class="w-full h-8 sm:h-9 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-[10px] sm:text-[11px] font-bold uppercase">
                         Stok Habis
                     </div>
                     <?php endif; ?>

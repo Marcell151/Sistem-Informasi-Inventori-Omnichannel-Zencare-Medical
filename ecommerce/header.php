@@ -83,6 +83,12 @@ $currentScript = basename($_SERVER['PHP_SELF']);
             -webkit-tap-highlight-color: transparent;
         }
         
+        /* Prevent horizontal overflow on all devices including foldables */
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        
         /* Prevent iOS Safari auto-zoom on input focus */
         @media screen and (max-width: 640px) {
             input[type="text"], input[type="number"], input[type="email"], input[type="tel"], select, textarea {
@@ -152,18 +158,18 @@ $currentScript = basename($_SERVER['PHP_SELF']);
         </div>
 
         <!-- Right: Address, Email & Staff Login -->
-        <div class="flex items-center gap-5 text-[11px]">
-            <span class="flex items-center gap-1.5 text-blue-100">
+        <div class="flex items-center gap-3 lg:gap-5 text-[11px]">
+            <span class="hidden lg:flex items-center gap-1.5 text-blue-100">
                 <svg class="w-3.5 h-3.5 text-sky-300 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
                 Jl. Muharto No. 1, Kota Malang, Jawa Timur
             </span>
-            <span class="w-px h-3.5 bg-white/20 hidden md:block"></span>
-            <a href="mailto:cs@zencare.id" class="hidden md:flex items-center gap-1.5 text-blue-100 hover:text-white transition">
+            <span class="w-px h-3.5 bg-white/20 hidden lg:block"></span>
+            <a href="mailto:cs@zencare.id" class=" flex items-center gap-1.5 text-blue-100 hover:text-white transition">
                 <svg class="w-3.5 h-3.5 text-sky-300 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
                 cs@zencare.id
             </a>
             <span class="w-px h-3.5 bg-white/20"></span>
-            <a href="../login.php" class="text-blue-200 hover:text-white font-semibold transition">Portal Staf</a>
+            <a href="../login.php" class="text-blue-200 hover:text-white font-semibold transition whitespace-nowrap">Portal Staf</a>
         </div>
     </div>
 </div>
@@ -176,12 +182,12 @@ $currentScript = basename($_SERVER['PHP_SELF']);
         <div class="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
             
             <!-- Left: Mobile Menu Button + Desktop Navigation Links -->
-            <div class="flex items-center gap-2 sm:gap-6 lg:gap-7">
-                <button type="button" aria-label="Buka Menu" class="lg:hidden p-2 -ml-1 text-slate-700 hover:text-[#0f2d5a] rounded-md transition" onclick="toggleMobileMenu()">
+            <div class="flex items-center gap-1.5 sm:gap-5 lg:gap-6">
+                <button type="button" aria-label="Buka Menu" class="lg:hidden p-1.5 sm:p-2 -ml-1 text-slate-700 hover:text-[#0f2d5a] rounded-md transition" onclick="toggleMobileMenu()">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
 
-                <nav class="hidden lg:flex items-center gap-7 text-[13px] font-semibold">
+                <nav class="hidden lg:flex items-center gap-5 xl:gap-7 text-[13px] font-semibold whitespace-nowrap">
                     <a href="index.php" class="<?= $currentScript === 'index.php' ? 'text-[#1a75d2] font-bold' : 'text-slate-800 hover:text-[#1a75d2]' ?> transition py-7">
                         Beranda
                     </a>
@@ -291,25 +297,25 @@ $currentScript = basename($_SERVER['PHP_SELF']);
             </a>
 
             <!-- Right: Pill Search Input & Action Icons -->
-            <div class="flex items-center gap-1.5 sm:gap-4">
+            <div class="flex items-center gap-1 sm:gap-3 lg:gap-4">
                 <!-- Pill Search Bar (Desktop) -->
-                <form action="kategori.php" method="GET" class="hidden md:flex items-center relative w-48 lg:w-56 xl:w-64">
+                <form action="kategori.php" method="GET" class="hidden md:flex items-center relative w-40 lg:w-48 xl:w-64">
                     <input type="text" name="q" placeholder="Cari obat atau alkes..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>"
-                           class="w-full bg-white border border-slate-300 rounded-full pl-4 pr-9 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#0f2d5a] transition">
+                           class="w-full bg-white border border-slate-300 rounded-full pl-3.5 pr-8 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#0f2d5a] transition">
                     <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-[#0f2d5a] transition" title="Cari">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </button>
                 </form>
 
                 <!-- Mobile Quick Search Trigger Button -->
-                <button type="button" onclick="toggleMobileSearch()" class="md:hidden p-2 text-slate-700 hover:text-[#0f2d5a] transition" title="Cari Produk">
+                <button type="button" onclick="toggleMobileSearch()" class="md:hidden p-1.5 text-slate-700 hover:text-[#0f2d5a] transition" title="Cari Produk">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </button>
 
                 <!-- Action Icons (Orders, Cart Drawer, Account) -->
-                <div class="flex items-center gap-1.5 sm:gap-3 text-slate-800">
+                <div class="flex items-center gap-1 sm:gap-2.5 text-slate-800">
                     <!-- Order Tracking Icon -->
-                    <a href="profil.php" title="Riwayat Pesanan Saya" class="relative p-1.5 hover:text-[#1a75d2] transition">
+                    <a href="profil.php" title="Riwayat Pesanan Saya" class="hidden min-[360px]:inline-flex relative p-1.5 hover:text-[#1a75d2] transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
                     </a>
 

@@ -124,9 +124,9 @@ require_once __DIR__ . '/header.php';
             </div>
 
             <!-- Bottom CTA -->
-            <div class="mt-10 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="mt-8 sm:mt-10 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <span class="text-xs text-slate-500">Siap memesan kebutuhan obat dan alat kesehatan Anda?</span>
-                <div class="flex gap-3 w-full sm:w-auto">
+                <div class="flex flex-col min-[380px]:flex-row gap-3 w-full sm:w-auto">
                     <a href="kategori.php" class="flex-1 sm:flex-initial text-center px-6 py-3 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white font-bold text-xs uppercase tracking-widest transition">
                         LIHAT KATALOG
                     </a>
