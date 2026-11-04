@@ -2522,7 +2522,7 @@ if ($userRole === "superadmin") {
                               `Status: <span class="text-rose-600 font-extrabold text-sm">SUDAH KADALUARSA</span> (Exp: <b>${expiredMatch.exp}</b>).<br><br>` +
                               `<div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 text-left font-medium">` +
                               `⚠️ <b>PERINGATAN KELAYAKAN OBAT:</b><br>` +
-                              `Sistem secara otomatis <b>MEMBLOKIR</b> penjualan obat yang telah melewati tanggal kadaluarsa demi keselamatan pasien dan kepatuhan BPOM.<br><br>` +
+                              `Sistem secara otomatis <b>MEMBLOKIR</b> penjualan obat yang telah melewati tanggal kadaluarsa demi keselamatan konsumen dan standar mutu ZenCare Medical.<br><br>` +
                               `Silakan pisahkan fisik obat ini ke karantina dan lakukan <b>Mutasi Keluar (Barang Rusak/Kadaluarsa)</b>.</div>`,
                         confirmButtonColor: '#e11d48',
                         confirmButtonText: 'Saya Mengerti'
@@ -2542,7 +2542,7 @@ if ($userRole === "superadmin") {
                                       `Status: <span class="text-rose-600 font-extrabold text-sm">SUDAH KADALUARSA</span> (Exp: <b>${res.tgl_exp}</b>).<br><br>` +
                                       `<div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 text-left font-medium">` +
                                       `⚠️ <b>PERINGATAN KELAYAKAN OBAT:</b><br>` +
-                                      `Sistem secara otomatis <b>MEMBLOKIR</b> penjualan obat yang telah melewati tanggal kadaluarsa demi keselamatan pasien dan kepatuhan BPOM.<br><br>` +
+                                      `Sistem secara otomatis <b>MEMBLOKIR</b> penjualan obat yang telah melewati tanggal kadaluarsa demi keselamatan konsumen dan standar mutu ZenCare Medical.<br><br>` +
                                       `Silakan pisahkan fisik obat ini ke karantina dan lakukan <b>Mutasi Keluar (Barang Rusak/Kadaluarsa)</b>.</div>`,
                                 confirmButtonColor: '#e11d48',
                                 confirmButtonText: 'Saya Mengerti'

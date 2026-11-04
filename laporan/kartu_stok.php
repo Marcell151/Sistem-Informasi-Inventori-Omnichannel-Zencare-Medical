@@ -490,11 +490,8 @@ layoutHeader('Kartu Stok Barang', 'Log mutasi fisik keluar/masuk (Pusat - Muhart
     </div>
     <?php endif; ?>
 
-    <!-- TABEL KARTU STOK ECERAN (KECIL) -->
-    <?php if ($produkData['kategori'] === 'Alat Kesehatan'): ?>
-    <?php endif; ?>
-    
-    <div id="tab_content_kecil" class="hidden bg-white p-8 md:p-12 shadow-sm rounded-none border border-slate-300 w-full max-w-5xl mx-auto font-sans print:m-0 print:border-none print:shadow-none print:p-0 print:block">
+    <!-- TABEL KARTU STOK ECERAN / ALKES TUNGGAL -->
+    <div id="tab_content_kecil" class="<?= ($produkData['kategori'] === 'Alat Kesehatan') ? '' : 'hidden' ?> bg-white p-8 md:p-12 shadow-sm rounded-none border border-slate-300 w-full max-w-5xl mx-auto font-sans print:m-0 print:border-none print:shadow-none print:p-0 print:block">
         <!-- Kop Surat Resmi Bersama Logo ZenCare (Khusus Print) -->
         <div class="hidden print:flex border-b-2 border-slate-900 pb-2 mb-4 justify-between items-center">
             <div class="flex items-center gap-3">
@@ -647,16 +644,22 @@ layoutHeader('Kartu Stok Barang', 'Log mutasi fisik keluar/masuk (Pusat - Muhart
 
 <script>
 function switchTab(tab) {
-    if(tab === 'besar') {
-        document.getElementById('tab_content_besar').classList.remove('hidden');
-        document.getElementById('tab_content_kecil').classList.add('hidden');
-        document.getElementById('tab_btn_besar').className = 'px-6 py-3 font-bold text-sm border-b-4 border-amber-600 text-amber-700 transition';
-        document.getElementById('tab_btn_kecil').className = 'px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition';
+    var cBesar = document.getElementById('tab_content_besar');
+    var cKecil = document.getElementById('tab_content_kecil');
+    var bBesar = document.getElementById('tab_btn_besar');
+    var bKecil = document.getElementById('tab_btn_kecil');
+    if (!cBesar || !cKecil) return;
+
+    if (tab === 'besar') {
+        cBesar.classList.remove('hidden');
+        cKecil.classList.add('hidden');
+        if (bBesar) bBesar.className = 'px-6 py-3 font-bold text-sm border-b-4 border-amber-600 text-amber-700 transition';
+        if (bKecil) bKecil.className = 'px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition';
     } else {
-        document.getElementById('tab_content_kecil').classList.remove('hidden');
-        document.getElementById('tab_content_besar').classList.add('hidden');
-        document.getElementById('tab_btn_kecil').className = 'px-6 py-3 font-bold text-sm border-b-4 border-emerald-600 text-emerald-700 transition';
-        document.getElementById('tab_btn_besar').className = 'px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition';
+        cKecil.classList.remove('hidden');
+        cBesar.classList.add('hidden');
+        if (bKecil) bKecil.className = 'px-6 py-3 font-bold text-sm border-b-4 border-emerald-600 text-emerald-700 transition';
+        if (bBesar) bBesar.className = 'px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition';
     }
 }
 
@@ -679,9 +682,6 @@ function handleKonversiChange(val) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    <?php if (!empty($produkData) && ($produkData['kategori'] ?? '') === 'Alat Kesehatan'): ?>
-    switchTab('kecil');
-    <?php endif; ?>
     
     let dari = document.querySelector('input[name="dari"]');
     let sampai = document.querySelector('input[name="sampai"]');

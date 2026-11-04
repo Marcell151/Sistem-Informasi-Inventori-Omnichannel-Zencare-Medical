@@ -12,12 +12,14 @@ function layoutHead(string $title = 'Dashboard') {
 <title>' . htmlspecialchars($title) . ' – ZenCare Medical</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- jQuery & Select2 for Searchable Dropdowns -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- jQuery & Select2 for Searchable Dropdowns (Offline Local Assets + CDN Fallback) -->
+<script src="/inventory_zencare/assets/js/jquery-3.7.1.min.js"></script>
+<script>if (typeof jQuery === \'undefined\') { document.write(\'<script src="https://code.jquery.com/jquery-3.7.1.min.js"><\\/script>\'); }</script>
+<link href="/inventory_zencare/assets/css/select2.min.css" rel="stylesheet" />
+<script src="/inventory_zencare/assets/js/select2.min.js"></script>
+<!-- SweetAlert2 (Offline Local Asset + CDN Fallback) -->
+<script src="/inventory_zencare/assets/js/sweetalert2.all.min.js"></script>
+<script>if (typeof Swal === \'undefined\') { document.write(\'<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"><\\/script>\'); }</script>
 <script>
   tailwind.config = {
     theme: {

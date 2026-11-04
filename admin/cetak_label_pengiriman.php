@@ -124,6 +124,8 @@ if ($isPos) {
     $statusBayarDisplay = 'SUDAH DIBAYAR (ONLINE PAYMENT)';
     $bannerTujuan = $kotaTujuan;
 }
+
+$printFormat = (isset($_GET['format']) && $_GET['format'] === 'a4') ? 'a4' : 'thermal';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -131,13 +133,25 @@ if ($isPos) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Label Pengiriman #<?= htmlspecialchars($order['no_invoice']) ?> - ZenCare Medical</title>
-    <!-- JsBarcode untuk rendering barcode thermal yang presisi -->
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <!-- JsBarcode Offline Asset (dengan Fallback CDN jika file lokal tidak ditemukan) -->
+    <script src="../assets/js/JsBarcode.all.min.js"></script>
+    <script>
+        if (typeof JsBarcode === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>');
+        }
+    </script>
     <style>
+        <?php if ($printFormat === 'a4'): ?>
+        @page {
+            size: A4 portrait;
+            margin: 15mm;
+        }
+        <?php else: ?>
         @page {
             size: 100mm 150mm;
             margin: 3mm;
         }
+        <?php endif; ?>
         * {
             box-sizing: border-box;
             -webkit-print-color-adjust: exact;
@@ -468,13 +482,23 @@ if ($isPos) {
             .print-btn-bar {
                 display: none;
             }
+            <?php if ($printFormat === 'a4'): ?>
             .label-container {
-                width: 100%;
-                min-height: 100%;
-                border: 2px solid #000;
-                margin: 0;
+                width: 105mm !important;
+                min-height: 148mm !important;
+                border: 2px dashed #000 !important;
+                margin: 0 !important;
                 page-break-inside: avoid;
             }
+            <?php else: ?>
+            .label-container {
+                width: 100% !important;
+                min-height: 100% !important;
+                border: 2px solid #000 !important;
+                margin: 0 !important;
+                page-break-inside: avoid;
+            }
+            <?php endif; ?>
         }
     </style>
 </head>
@@ -485,12 +509,21 @@ if ($isPos) {
         <div class="toolbar-info">
             <span class="toolbar-title">Pratinjau Label Pengiriman</span>
             <span class="toolbar-badge">#<?= htmlspecialchars($order['no_invoice']) ?></span>
-            <span style="font-size: 10px; color: #64748b;">(100 &times; 150 mm / A6)</span>
+            <span style="font-size: 10px; color: #64748b;">(<?= $printFormat === 'a4' ? 'Format Kertas A4' : 'Thermal 100 &times; 150 mm' ?>)</span>
         </div>
         <div class="toolbar-actions">
+            <?php if ($printFormat === 'a4'): ?>
+                <a href="?no_invoice=<?= urlencode($noInvoice) ?>&format=thermal" class="btn-action btn-close" style="font-size: 10.5px;">
+                    Mode Thermal 100x150
+                </a>
+            <?php else: ?>
+                <a href="?no_invoice=<?= urlencode($noInvoice) ?>&format=a4" class="btn-action btn-close" style="font-size: 10.5px;">
+                    Mode Kertas A4
+                </a>
+            <?php endif; ?>
             <button onclick="window.print()" class="btn-action btn-print">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                <span>Cetak Label Thermal</span>
+                <span>Cetak Label (<?= strtoupper($printFormat) ?>)</span>
             </button>
             <button onclick="window.close()" class="btn-action btn-close">
                 Tutup

@@ -1,7 +1,7 @@
 <?php
 // File: inventori/cetak_nota_penerimaan.php
 // Bukti Penerimaan Barang & Retur Fisik
-// Standar Operasional Gudang Farmasi & Apotek ZenCare Medical
+// Standar Operasional Gudang & Toko ZenCare Medical
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -530,7 +530,7 @@ $totalNilaiFisikAkhir = $totalNilaiTerimaAwal + $totalNilaiPengganti;
                             </div>
                         <?php elseif ($hasResolvedPotong && !$hasPendingRetur): ?>
                             <div style="font-weight: 600; color: #0f172a; margin-top: 2px;">
-                                Selesai Potong Faktur: Nilai tagihan invoice dikurangi Rp <?= number_format($totalNilaiPotongFaktur, 0, ',', '.') ?> (Credit Note).
+                                Status Klaim: Selesai Potong Faktur (Nilai Acuan Klaim: Rp <?= number_format($totalNilaiPotongFaktur, 0, ',', '.') ?>) tanpa penambahan stok fisik.
                             </div>
                         <?php else: ?>
                             <div style="color: #64748b; margin-top: 2px;">
@@ -563,7 +563,7 @@ $totalNilaiFisikAkhir = $totalNilaiTerimaAwal + $totalNilaiPengganti;
                 </tr>
                 <?php elseif ($hasResolvedPotong && !$hasPendingRetur): ?>
                 <tr style="border-top: 1.5px solid #0f172a; font-weight: 800; font-size: 10pt;">
-                    <td style="padding: 6px 0; color: #0f172a;">Total Tagihan Akhir Faktur:</td>
+                    <td style="padding: 6px 0; color: #0f172a;">Total Nilai Fisik Barang Diterima:</td>
                     <td style="padding: 6px 0; text-align: right; font-family: monospace; color: #0f172a;">Rp <?= number_format($totalNilaiFisikAkhir, 0, ',', '.') ?></td>
                 </tr>
                 <?php else: ?>

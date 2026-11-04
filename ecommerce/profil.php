@@ -813,6 +813,7 @@ if (!empty($orderIds)) {
     <input type="hidden" name="alasan_kategori" id="req_cancel_kategori_inp">
     <input type="hidden" name="alasan_detail" id="req_cancel_detail_inp">
 </form>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="../assets/js/sweetalert2.all.min.js"></script>
+<script>if (typeof Swal === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"><\/script>'); }</script>
 
 <?php require_once __DIR__ . '/footer.php'; ?>

@@ -23,6 +23,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['action']) && 
         if ($snVal) {
             $pdo->prepare("UPDATE unit_serial SET status = 'Retur/Rusak', catatan = ? WHERE id = ?")->execute([$catatanKarantina, $idSn]);
             $_SESSION['flash_msg'] = "Unit Serial Number '$snVal' berhasil diisolasi ke status Retur/Rusak (Karantina).";
+
             $redirectUrl = "logistik_medis.php?tab=sn";
             if (!empty($_GET['page_sn'])) $redirectUrl .= "&page_sn=" . intval($_GET['page_sn']);
             if (!empty($_GET['sn'])) $redirectUrl .= "&sn=" . urlencode($_GET['sn']);

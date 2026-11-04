@@ -531,7 +531,7 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                     </span>
                                     <?php if (!empty($o['request_batal']) && $o['status_pesanan'] === 'Diproses'): ?>
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-extrabold bg-amber-500 text-white shadow-2xs animate-pulse" title="Pelanggan mengajukan pembatalan">
-                                            ⚠️ Minta Batal
+                                            Minta Batal
                                         </span>
                                     <?php endif; ?>
                                 </div>
@@ -1484,7 +1484,7 @@ function handlePackScan(val, targetStatus, fromCamera = false) {
                            Status: <span class="text-rose-600 font-extrabold text-sm">SUDAH KADALUARSA</span> (Exp: <b>${res.tgl_exp}</b>).<br><br>
                            <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 text-left font-medium">
                            ⚠️ <b>SISTEM SAFETY GUARD E-COMMERCE:</b><br>
-                           Dilarang keras mem-packing atau mengirimkan obat yang telah melewati masa kadaluarsa kepada pelanggan online demi keselamatan pasien dan regulasi BPOM.<br><br>
+                           Dilarang keras mem-packing atau mengirimkan obat yang telah melewati masa kadaluarsa kepada pelanggan online demi keselamatan konsumen dan standar kendali mutu ZenCare Medical.<br><br>
                            Sistem secara otomatis <b>MEMBLOKIR</b> batch ini. Silakan pisahkan kardus obat ini ke karantina dan ambil batch yang masih aktif/valid!</div>`,
                     icon: "error",
                     confirmButtonColor: "#e11d48",

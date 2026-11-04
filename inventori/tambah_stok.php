@@ -1231,7 +1231,7 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
         </div>
 
         <div class="px-5 py-3 bg-slate-50 border-t border-zcBrd flex justify-between items-center text-xs text-zcMut">
-            <span>Data Terhubung: Katalog BPOM RI / KFA Kemenkes</span>
+            <span>Sumber Data: Katalog Produk Obat BPOM / Database Master ZenCare</span>
             <button type="button" onclick="closeBpomSearchModal()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition">
                 Tutup
             </button>

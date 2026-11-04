@@ -29,7 +29,7 @@ require_once __DIR__ . '/header.php';
                 <span class="text-[11px] font-bold uppercase tracking-[0.18em] text-[#1a75d2] block mb-1">OPSI PENGIRIMAN 1</span>
                 <h3 class="font-extrabold text-[#0f2d5a] text-base mb-2">Kirim via Kurir Ekspedisi Nasional</h3>
                 <p class="text-xs text-slate-600 leading-relaxed">
-                    Pesanan dikemas aman menggunakan pelindung standar farmasi dan dikirim ke alamat Anda melalui kurir JNE, POS Indonesia, atau TIKI dengan perhitungan tarif otomatis.
+                    Pesanan dikemas aman menggunakan pelindung kemasan standar medis dan dikirim ke alamat Anda melalui kurir JNE, POS Indonesia, atau TIKI dengan perhitungan tarif otomatis.
                 </p>
             </div>
             <div class="bg-[#eef6fb] p-6 border border-[#cbe4f5]">

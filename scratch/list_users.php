@@ -1,7 +1,6 @@
 <?php
-require __DIR__ . '/../config/koneksi.php';
-$stmt = $pdo->query('SELECT id, username, nama_lengkap, role FROM users');
-while($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    echo "ID: {$r['id']} | User: {$r['username']} | Role: {$r['role']} | Nama: {$r['nama_lengkap']}\n";
+require_once __DIR__ . '/../config/koneksi.php';
+$stmt = $pdo->query('SELECT id, username, role, is_active FROM users');
+foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $u) {
+    echo "{$u['id']} | {$u['username']} | {$u['role']} | {$u['is_active']}\n";
 }
-
