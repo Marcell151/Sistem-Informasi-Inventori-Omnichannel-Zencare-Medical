@@ -26,7 +26,7 @@ require_once __DIR__ . '/header.php';
         <!-- Editorial Intro -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
             <div class="md:col-span-7 space-y-4">
-                <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#1a75d2] block">DISTRIBUTOR RESMI ALAT KESEHATAN &amp; OBAT</span>
+                <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#1a75d2] block">ZENCARE MEDICAL ALAT KESEHATAN &amp; OBAT</span>
                 <h2 class="text-2xl sm:text-3xl font-extrabold text-[#0f2d5a] leading-tight">
                     Komitmen Mutu &amp; Keaslian Produk untuk Kesehatan Masyarakat
                 </h2>

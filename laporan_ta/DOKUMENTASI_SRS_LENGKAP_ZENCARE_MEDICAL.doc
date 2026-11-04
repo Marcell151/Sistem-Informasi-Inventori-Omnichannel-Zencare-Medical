@@ -1,0 +1,144 @@
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset="utf-8">
+<title>Dokumen SRS - ZenCare Medical</title>
+<style>
+body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; color: #000; }
+h1 { font-size: 18pt; text-align: center; color: #0f2d5a; margin-bottom: 4px; }
+h2 { font-size: 14pt; text-align: center; color: #1a75d2; margin-top: 0; }
+h3 { font-size: 13pt; color: #0f2d5a; border-bottom: 1.5pt solid #0f2d5a; padding-bottom: 4px; margin-top: 18pt; }
+h4 { font-size: 12pt; color: #1e293b; margin-top: 12pt; }
+p, li { font-size: 11pt; text-align: justify; }
+table { border-collapse: collapse; width: 100%; margin: 12pt 0; font-size: 10pt; }
+th, td { border: 1pt solid #333; padding: 6pt; text-align: left; }
+th { background-color: #f1f5f9; font-weight: bold; }
+.text-center { text-align: center; }
+.kop { border-bottom: 2pt solid #000; padding-bottom: 10pt; margin-bottom: 16pt; text-align: center; }
+.kop h1 { margin: 0; font-size: 18pt; font-weight: bold; color: #0f2d5a; }
+.kop p { margin: 2pt 0; font-size: 10pt; text-align: center; color: #444; }
+.page-break { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<div class="kop">
+    <h1>ZENCARE MEDICAL</h1>
+    <p><strong>Distributor Resmi Farmasi &amp; Alat Kesehatan Medis Terstandarisasi</strong></p>
+    <p>Jl. Muharto No. 55D, Jodipan, Kec. Blimbing, Kota Malang, Jawa Timur 65127</p>
+    <p>Kontak: 0895-3434-36025 | Email: zencare.id@gmail.com</p>
+</div>
+
+<h1>SPESIFIKASI KEBUTUHAN PERANGKAT LUNAK (SRS)</h1>
+<h2>SISTEM INFORMASI INVENTORI &amp; POS OMNICHANNEL ZENCARE MEDICAL</h2>
+<p class="text-center"><em>Dokumen Rujukan Teknis Laporan Tugas Akhir (TA) &amp; Penyesuaian Sistem</em></p>
+<hr>
+
+<h3>1. PENDAHULUAN &amp; RUANG LINGKUP SISTEM</h3>
+<p>
+<strong>ZenCare Medical</strong> adalah sistem informasi inventori dan POS (Point-of-Sale) yang dirancang untuk distributor obat-obatan dan alat kesehatan. Sistem ini mengadopsi model <em>omnichannel</em>, yang menggabungkan transaksi kasir luring (offline walk-in) di toko fisik dan platform toko daring (e-commerce). Seluruh transaksi memotong stok dari inventori fisik tunggal terpusat di Cabang Muharto.
+</p>
+
+<h3>2. ATURAN BISNIS &amp; KLASIFIKASI KOMODITAS MEDIS</h3>
+<p>Sistem mengelola dua kategori komoditas dengan aturan yang sangat spesifik:</p>
+<ol>
+    <li><strong>Komoditas Obat (Farmasi):</strong>
+        <ul>
+            <li>Dikelola berdasarkan <strong>Nomor Batch Pabrik</strong> dan tanggal kedaluwarsa fisik (Expired Date).</li>
+            <li>Wajib mematuhi kaidah <strong>FEFO (First Expired, First Out)</strong>: batch yang paling cepat kedaluwarsa dikeluarkan lebih dulu.</li>
+            <li>Struktur UOM Ganda: <strong>Satuan Besar</strong> (Dus/Box/Karton) dan <strong>Satuan Kecil</strong> (Strip/Botol/Pcs) dengan rasio konversi.</li>
+            <li>Pembongkaran kemasan dus melahirkan <strong>Sub-Batch</strong> resmi (notasi: <code>Batch.A</code>, <code>Batch.B</code>).</li>
+            <li>Pencatatan <strong>Anomali FEFO</strong> secara otomatis jika kasir mengeluarkan batch yang melewati batch terdekat.</li>
+        </ul>
+    </li>
+    <li><strong>Komoditas Alat Kesehatan (Alkes):</strong>
+        <ul>
+            <li>Dikelola per unit fisik menggunakan <strong>Nomor Seri Unik (Serial Number / SN)</strong> pabrikan.</li>
+            <li>Satu barcode SN mewakili tepat satu unit fisik utuh.</li>
+            <li>Dilacak status unitnya: <code>Tersedia</code>, <code>Terjual</code>, <code>Retur/Rusak</code>, atau <code>Hilang</code>.</li>
+            <li>Memiliki masa garansi resmi pabrik (Expired Date Garansi).</li>
+        </ul>
+    </li>
+    <li><strong>Mekanisme Pembekuan Sistem (Stok Opname Lockout):</strong>
+        Saat sesi stok opname berstatus <code>Aktif</code>, seluruh transaksi kasir POS, checkout e-commerce, penerimaan barang, dan mutasi manual dibekukan sementara untuk menghindari <em>race condition</em>.
+    </li>
+    <li><strong>Reservasi Stok E-Commerce (Batas Waktu 2 Jam):</strong>
+        Pesanan e-commerce dengan status <code>Menunggu Pembayaran</code> langsung mengunci alokasi batch/SN selama maksimal 2 jam. Jika tidak dibayar dalam 2 jam, pesanan dibatalkan otomatis dan stok dikembalikan.
+    </li>
+</ol>
+
+<h3>3. STRUKTUR BASIS DATA RELASIONAL (DATABASE SCHEMA)</h3>
+<p>Basis data menggunakan MySQL/MariaDB InnoDB Engine dengan integritas transaksi ACID. Berikut daftar tabel utama beserta peranannya:</p>
+
+<table>
+    <thead>
+        <tr><th>Nama Tabel</th><th>Fungsi Utama</th><th>Primary Key</th><th>Foreign Keys / Relasi</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>users</code></td><td>Menyimpan data akun superadmin, admin, kasir, dan pelanggan e-commerce</td><td>id</td><td>-</td></tr>
+        <tr><td><code>produk_induk</code></td><td>Katalog induk nama dagang produk medis dan kategori (Obat / Alkes)</td><td>id</td><td>-</td></tr>
+        <tr><td><code>produk_variasi</code></td><td>Varian kemasan, SKU barcode, UOM (satuan besar/kecil), harga, dan rasio</td><td>id</td><td>id_produk_induk</td></tr>
+        <tr><td><code>stok_batch</code></td><td>Penyimpanan lot batch farmasi, tanggal kedaluwarsa, dan sisa stok fisik</td><td>id</td><td>id_variasi</td></tr>
+        <tr><td><code>unit_serial</code></td><td>Penyimpanan nomor seri unik (SN) fisik unit alat kesehatan dan garansi</td><td>id</td><td>id_variasi, id_penjualan</td></tr>
+        <tr><td><code>stok_toko</code></td><td>Agregasi total saldo fisik toko untuk kecepatan query kasir dan e-commerce</td><td>id</td><td>id_variasi</td></tr>
+        <tr><td><code>penjualan</code></td><td>Header transaksi omnichannel (POS, E-Commerce, Shopee), kurir, dan pembayaran</td><td>id</td><td>id_user</td></tr>
+        <tr><td><code>detail_penjualan</code></td><td>Rincian produk yang dibeli beserta catatan alokasi batch FEFO dan SN</td><td>id</td><td>id_penjualan, id_variasi</td></tr>
+        <tr><td><code>kartu_stok</code></td><td>Buku besar mutasi fisik resmi (Satuan Besar &amp; Satuan Kecil)</td><td>id</td><td>id_variasi, id_batch, dibuat_oleh</td></tr>
+        <tr><td><code>sesi_opname</code></td><td>Header sesi audit fisik dan kendali pembekuan transaksi sistem</td><td>id</td><td>dibekukan_oleh, dibuka_oleh</td></tr>
+        <tr><td><code>detail_opname_batch</code></td><td>Pencacahan fisik stok teoritis vs fisik lapangan per lot batch / alkes</td><td>id</td><td>id_sesi, id_batch, id_variasi</td></tr>
+        <tr><td><code>detail_opname_sn</code></td><td>Checklist fisik verifikasi Serial Number Alkes saat stok opname</td><td>id</td><td>id_detail_opname, id_unit_serial</td></tr>
+        <tr><td><code>log_anomali_fefo</code></td><td>Audit deviasi urutan pengeluaran obat yang melanggar FEFO di kasir</td><td>id</td><td>id_penjualan, id_user, id_variasi</td></tr>
+        <tr><td><code>histori_konversi</code></td><td>Log audit pemecahan kemasan besar menjadi kemasan kecil dan sub-batch</td><td>id</td><td>id_variasi, dibuat_oleh</td></tr>
+        <tr><td><code>penerimaan</code></td><td>Header faktur inbound logistik barang masuk dari PBF/Supplier</td><td>id</td><td>id_supplier, diterima_oleh</td></tr>
+        <tr><td><code>pengaturan_web</code></td><td>Informasi instansi profil toko, alamat Jl. Muharto 55D, kontak, dan email</td><td>id</td><td>-</td></tr>
+    </tbody>
+</table>
+
+<h3>4. ALUR PROSES BISNIS &amp; TRANSAKSI (FLOW OF EVENTS)</h3>
+<h4>4.1 Alur Transaksi Kasir POS (Offline)</h4>
+<ol>
+    <li>Kasir memilih produk (atau memindai barcode SKU).</li>
+    <li>Jika produk Obat: sistem otomatis menyajikan alokasi batch dengan <code>tgl_exp</code> terdekat (FEFO). Jika kasir mengganti batch ke lot yang lebih baru, sistem otomatis mencatat deviasi ke <code>log_anomali_fefo</code>.</li>
+    <li>Jika produk Alkes: kasir wajib memindai nomor seri (SN) fisik yang berstatus <code>Tersedia</code>.</li>
+    <li>Kasir memilih metode pembayaran (Tunai/QRIS) dan klik Bayar.</li>
+    <li>Sistem mengeksekusi transaksi atomik (potong <code>stok_batch</code>/update SN <code>Terjual</code>, potong <code>stok_toko</code>, catat <code>penjualan</code>, catat mutasi keluar di <code>kartu_stok</code>).</li>
+    <li>Struk kasir thermal tercetak.</li>
+</ol>
+
+<h4>4.2 Alur Pemesanan Daring (E-Commerce) &amp; Pemenuhan Logistik</h4>
+<ol>
+    <li>Pelanggan memilih produk di web dan melakukan checkout (memilih kurir JNE/POS/TIKI atau opsi Ambil di Toko / Pick-up).</li>
+    <li>Sistem membuat pesanan berstatus <code>Menunggu Pembayaran</code> dan langsung mengunci stok (*Reserved Stock*) selama 2 jam.</li>
+    <li>Pelanggan membayar via Midtrans Snap (Virtual Account/QRIS). Setelah lunas, status otomatis berubah menjadi <code>Diproses</code>.</li>
+    <li>Staf logistik membuka pesanan di modul Transaksi, melihat instruksi ambil fisik (picking list nomor batch &amp; SN), mencetak faktur invoice A4 dan label stiker thermal 100x150mm.</li>
+    <li>Staf menginput resi kurir (status berubah <code>Dikirim</code>) atau menyiapkan barang di meja toko (status <code>Siap Diambil</code>).</li>
+    <li>Pesanan selesai saat barang diterima pelanggan.</li>
+</ol>
+
+<h4>4.3 Alur Stok Opname &amp; Rekonsiliasi Berita Acara</h4>
+<ol>
+    <li>SuperAdmin membuka sesi opname: seluruh transaksi sistem dibekukan (*freeze lock*).</li>
+    <li>Staf mencatat jumlah fisik riil di rak penyimpanan.</li>
+    <li>Sistem menghitung selisih secara otomatis (Fisik - Sistem).</li>
+    <li>Jika terdapat selisih, staf memilih alasan audit (Barang Rusak, Hilang, Expired, atau Koreksi Salah Catat).</li>
+    <li>SuperAdmin menyetujui hasil opname: sistem secara otomatis menyesuaikan saldo stok fisik, mencatat rekonsiliasi ke kartu stok resmi, dan mencetak Dokumen Berita Acara Opname A4 bertandatangan.</li>
+    <li>Pembekuan dicabut dan transaksi kembali berjalan normal.</li>
+</ol>
+
+<br><br>
+<table style="border:none;">
+    <tr style="border:none;">
+        <td style="border:none; text-align:center; width:50%;">
+            Disusun Oleh:<br><br><br><br>
+            <strong><u>Marcell (Pengembang Sistem)</u></strong><br>
+            Staf Pengembang Sistem Informasi TA
+        </td>
+        <td style="border:none; text-align:center; width:50%;">
+            Disetujui Oleh:<br><br><br><br>
+            <strong><u>SuperAdmin (Pemilik ZenCare)</u></strong><br>
+            Pimpinan Usaha ZenCare Medical
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

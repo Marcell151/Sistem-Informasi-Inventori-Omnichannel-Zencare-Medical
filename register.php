@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Top Announcement Bar -->
     <div class="bg-[#0b2545] text-white text-[11px] font-medium py-2 px-4">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1 text-center sm:text-left">
-            <span>ZenCare Medical Store &mdash; Distributor Resmi Obat &amp; Alat Kesehatan</span>
+            <span>ZenCare Medical Store &mdash; ZenCare Medical Obat &amp; Alat Kesehatan</span>
             <a href="ecommerce/index.php" class="text-sky-200 hover:text-white transition font-semibold">&larr; Kembali ke Katalog Toko</a>
         </div>
     </div>

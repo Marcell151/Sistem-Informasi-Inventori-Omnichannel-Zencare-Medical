@@ -63,7 +63,7 @@ foreach ($products as $p) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($namaToko) ?> - Distributor Resmi Alkes &amp; Medis</title>
+    <title><?= htmlspecialchars($namaToko) ?> - ZenCare Medical Alkes &amp; Medis</title>
     <meta name="description" content="Toko online alat kesehatan dan obat-obatan terpercaya. Pembelian grosir dengan pengiriman cepat ke seluruh Indonesia.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -119,7 +119,7 @@ foreach ($products as $p) {
                 <?php endif; ?>
                 <div class="hidden sm:block">
                     <a href="zencare_store.php" class="text-[15px] font-bold text-zcTxt leading-tight block"><?= htmlspecialchars($namaToko) ?></a>
-                    <span class="text-[10px] text-zcMut font-medium uppercase tracking-wide">Distributor Resmi Alkes &amp; Medis</span>
+                    <span class="text-[10px] text-zcMut font-medium uppercase tracking-wide">ZenCare Medical Alkes &amp; Medis</span>
                 </div>
             </div>
 
@@ -199,7 +199,7 @@ foreach ($products as $p) {
     <section class="max-w-7xl mx-auto px-4 lg:px-8 pt-8 pb-4">
         <div class="bg-gradient-to-r from-slate-50 to-white border border-zcBrd rounded-2xl p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8 shadow-sm">
             <div class="max-w-lg">
-                <span class="inline-block px-3 py-1 bg-zc/10 text-zc text-[10px] font-bold uppercase tracking-widest rounded-md mb-4 border border-zc/20">Distributor Resmi</span>
+                <span class="inline-block px-3 py-1 bg-zc/10 text-zc text-[10px] font-bold uppercase tracking-widest rounded-md mb-4 border border-zc/20">ZenCare Medical</span>
                 <h1 class="text-3xl sm:text-4xl font-extrabold text-zcTxt tracking-tight leading-[1.15] mb-4">Solusi Pengadaan<br>Alkes &amp; Obat Medis.</h1>
                 <p class="text-zcMut text-sm leading-relaxed mb-6">Penyedia alat kesehatan dan obat dengan jaminan keaslian produk dan kemudahan pemesanan.</p>
                 <div class="flex gap-3">
@@ -460,7 +460,7 @@ foreach ($products as $p) {
                 </div>
                 <span class="text-white font-semibold text-sm"><?= htmlspecialchars($namaToko) ?></span>
             </div>
-            <p class="text-xs">&copy; <?= date('Y') ?> <?= htmlspecialchars($namaToko) ?>. Distributor Resmi Alkes &amp; Medis.</p>
+            <p class="text-xs">&copy; <?= date('Y') ?> <?= htmlspecialchars($namaToko) ?>. ZenCare Medical Alkes &amp; Medis.</p>
             <div class="flex gap-4 text-xs">
                 <a href="login_customer.php" class="hover:text-white transition">Login Pelanggan</a>
                 <a href="register.php" class="hover:text-white transition">Daftar Akun</a>

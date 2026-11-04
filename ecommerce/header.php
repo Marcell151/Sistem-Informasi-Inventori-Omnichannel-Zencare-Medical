@@ -154,7 +154,7 @@ $currentScript = basename($_SERVER['PHP_SELF']);
                 </a>
             </div>
             <span class="w-px h-3.5 bg-white/20 mx-1"></span>
-            <span class="text-[11px] text-blue-100 font-medium">Distributor Resmi Obat &amp; Alat Kesehatan</span>
+            <span class="text-[11px] text-blue-100 font-medium">ZenCare Medical Obat &amp; Alat Kesehatan</span>
         </div>
 
         <!-- Right: Address, Email & Staff Login -->
