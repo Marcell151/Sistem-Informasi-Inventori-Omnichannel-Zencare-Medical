@@ -329,7 +329,7 @@ foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
             <div class="header-title-text">
                 <h1>ZENCARE MEDICAL</h1>
                 <p>Distributor Alat Kesehatan dan Obat Omnichannel</p>
-                <div class="address">Jl. Muharto No. 1, Kota Malang, Jawa Timur &bull; Telp: 0812-3456-7890</div>
+                <div class="address">Jl. Muharto No. 55D, Jodipan, Kec. Blimbing, Kota Malang 65127 &bull; Telp: 0895-3434-36025</div>
             </div>
         </div>
         <div class="header-meta-doc">

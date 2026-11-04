@@ -103,11 +103,11 @@ if ($id_variasi > 0) {
         if (empty($cleanBatches)) return '-';
         if (count($cleanBatches) > 1) {
             $htmlParts = array_map(function($p) {
-                return '<div class="whitespace-nowrap font-mono text-xs font-bold text-slate-800">' . htmlspecialchars($p) . '</div>';
+                return '<div class="whitespace-nowrap font-mono text-xs font-bold text-black">' . htmlspecialchars($p) . '</div>';
             }, $cleanBatches);
             return '<div class="space-y-0.5">' . implode('', $htmlParts) . '</div>';
         } else {
-            return '<span class="font-mono text-xs font-bold text-slate-800">' . htmlspecialchars($cleanBatches[0]) . '</span>';
+            return '<span class="font-mono text-xs font-bold text-black">' . htmlspecialchars($cleanBatches[0]) . '</span>';
         }
     }
 
@@ -405,10 +405,10 @@ layoutHeader('Kartu Stok Barang', 'Log mutasi fisik keluar/masuk (Pusat - Muhart
 <!-- TAB NAVIGATION -->
 <div class="flex border-b border-slate-200 mb-6 print:hidden">
     <?php if ($produkData['kategori'] === 'Alat Kesehatan'): ?>
-    <button class="px-6 py-3 font-bold text-sm border-b-4 border-emerald-600 text-emerald-800 transition">Kartu Stok Alat Kesehatan (Kemasan Utuh Pabrik - Serial Number)</button>
+    <button class="px-6 py-3 font-bold text-sm border-b-4 border-slate-700 text-slate-800 transition">Kartu Stok Alat Kesehatan (Kemasan Utuh Pabrik - Serial Number)</button>
     <?php else: ?>
-    <button onclick="switchTab('besar')" id="tab_btn_besar" class="px-6 py-3 font-bold text-sm border-b-4 border-amber-600 text-amber-700 transition">Kartu Stok Gudang (Satuan Besar)</button>
-    <button onclick="switchTab('kecil')" id="tab_btn_kecil" class="px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition">Kartu Stok Etalase (Satuan Kecil)</button>
+    <button onclick="switchTab('besar')" id="tab_btn_besar" class="px-6 py-3 font-bold text-sm border-b-4 border-slate-700 text-slate-900 transition">Kartu Stok (Satuan Besar)</button>
+    <button onclick="switchTab('kecil')" id="tab_btn_kecil" class="px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300 transition">Kartu Stok (Satuan Kecil)</button>
     <?php endif; ?>
 </div>
 <div id="print-container" class="space-y-8 print:space-y-0 w-full">
@@ -425,13 +425,13 @@ layoutHeader('Kartu Stok Barang', 'Log mutasi fisik keluar/masuk (Pusat - Muhart
                 </div>
             </div>
             <div style="text-align: right; font-size: 8pt; color: #475569; line-height: 1.4;">
-                <div style="font-weight: bold; color: #0f2d5a;">Dokumen Resmi Kartu Stok Gudang</div>
+                <div style="font-weight: bold; color: #0f2d5a;">Dokumen Resmi Kartu Stok (Satuan Besar)</div>
                 <div>Dicetak: <?= date('d/m/Y H:i') ?> WIB</div>
                 <div>Oleh: <?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Superadmin') ?></div>
             </div>
         </div>
 
-        <h1 class="text-center text-xl md:text-2xl font-black mb-6 tracking-wide text-black uppercase">Kartu Stok Gudang (Satuan Besar)</h1>
+        <h1 class="text-center text-xl md:text-2xl font-black mb-6 tracking-wide text-black uppercase">Kartu Stok (Satuan Besar)</h1>
         
         <!-- Informasi Header Kartu -->
         <div class="grid grid-cols-2 gap-x-12 mb-6 text-sm font-semibold text-black">
@@ -449,37 +449,37 @@ layoutHeader('Kartu Stok Barang', 'Log mutasi fisik keluar/masuk (Pusat - Muhart
 
         <!-- Tabel Kartu Stok Besar -->
         <table class="w-full border-collapse border border-slate-900 text-sm print:text-xs">
-            <thead class="bg-amber-600 text-white border-b-2 border-slate-900">
+            <thead class="bg-slate-200 text-slate-900 font-extrabold border-b-2 border-slate-900">
                 <tr>
-                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-24">Tanggal</th>
-                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-36">No. Batch</th>
-                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle">Jenis Mutasi & Aktivitas</th>
-                    <th colspan="3" class="border border-slate-900 px-3 py-1.5 text-center">Kuantitas</th>
-                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-32">Penanggung Jawab</th>
-                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-32">Keterangan</th>
+                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-24 text-slate-900 font-extrabold">Tanggal</th>
+                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-36 text-slate-900 font-extrabold">No. Batch</th>
+                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle text-slate-900 font-extrabold">Jenis Mutasi &amp; Aktivitas</th>
+                    <th colspan="3" class="border border-slate-900 px-3 py-1.5 text-center text-slate-900 font-extrabold">Kuantitas</th>
+                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-32 text-slate-900 font-extrabold">Penanggung Jawab</th>
+                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-32 text-slate-900 font-extrabold">Keterangan</th>
                 </tr>
                 <tr>
-                    <th class="border border-slate-900 px-2 py-1.5 text-center w-16">Masuk</th>
-                    <th class="border border-slate-900 px-2 py-1.5 text-center w-16">Keluar</th>
-                    <th class="border border-slate-900 px-2 py-1.5 text-center w-16">Sisa</th>
+                    <th class="border border-slate-900 px-2 py-1.5 text-center w-16 text-slate-900 font-extrabold">Masuk</th>
+                    <th class="border border-slate-900 px-2 py-1.5 text-center w-16 text-slate-900 font-extrabold">Keluar</th>
+                    <th class="border border-slate-900 px-2 py-1.5 text-center w-16 text-slate-900 font-extrabold">Sisa</th>
                 </tr>
             </thead>
             <tbody class="text-black bg-white">
                 <?php if (empty($logDataBesar)): ?>
                     <tr>
-                        <td colspan="7" class="border border-slate-900 px-3 py-8 text-center italic text-slate-500">Tidak ada mutasi kardus utuh / barang grosir.</td>
+                        <td colspan="7" class="border border-slate-900 px-3 py-8 text-center italic text-black">Tidak ada mutasi kardus utuh / barang grosir.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($logDataBesar as $log): ?>
-                    <tr class="hover:bg-slate-50 print:hover:bg-transparent">
-                        <td class="border border-slate-900 px-2 py-1.5 text-center whitespace-nowrap"><?= date('d/m/Y H:i', strtotime($log['tanggal'])) ?></td>
-                        <td class="border border-slate-900 px-2 py-1.5 text-center"><?= formatKartuStokBatch($log['no_batch'] ?? '-') ?></td>
-                        <td class="border border-slate-900 px-3 py-1.5"><?= formatKanalBadge($log['kanal']) ?><b><?= htmlspecialchars($log['jenis_mutasi']) ?></b> - <?= htmlspecialchars($log['deskripsi_tampil'] ?? $log['deskripsi'] ?? '-') ?></td>
+                    <tr class="hover:bg-slate-50 print:hover:bg-transparent text-black">
+                        <td class="border border-slate-900 px-2 py-1.5 text-center whitespace-nowrap text-black font-medium"><?= date('d/m/Y H:i', strtotime($log['tanggal'])) ?></td>
+                        <td class="border border-slate-900 px-2 py-1.5 text-center text-black"><?= formatKartuStokBatch($log['no_batch'] ?? '-') ?></td>
+                        <td class="border border-slate-900 px-3 py-1.5 text-black"><?= formatKanalBadge($log['kanal']) ?><b><?= htmlspecialchars($log['jenis_mutasi']) ?></b> - <?= htmlspecialchars($log['deskripsi_tampil'] ?? $log['deskripsi'] ?? '-') ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-bold <?= $log['jenis_mutasi']=='Masuk'?'text-emerald-700':'' ?>"><?= $log['jenis_mutasi']=='Masuk' ? number_format($log['qty_calc']) : '' ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-bold <?= $log['jenis_mutasi']=='Keluar'?'text-rose-700':'' ?>"><?= $log['jenis_mutasi']=='Keluar' ? number_format($log['qty_calc']) : '' ?></td>
-                        <td class="border border-slate-900 px-2 py-1.5 text-center font-black bg-slate-50"><?= number_format($log['sisa_stok_calc']) ?></td>
-                        <td class="border border-slate-900 px-2 py-1.5 text-center text-xs"><?= htmlspecialchars($log['nama_lengkap'] ?? 'Sistem') ?></td>
-                        <td class="border border-slate-900 px-2 py-1.5 text-xs text-center text-slate-500">
+                        <td class="border border-slate-900 px-2 py-1.5 text-center font-black bg-slate-50 text-black"><?= number_format($log['sisa_stok_calc']) ?></td>
+                        <td class="border border-slate-900 px-2 py-1.5 text-center text-xs text-black font-medium"><?= htmlspecialchars($log['nama_lengkap'] ?? 'Sistem') ?></td>
+                        <td class="border border-slate-900 px-2 py-1.5 text-xs text-center text-black">
                             <?= ($log['no_batch'] ? 'Batch Terdata' : '-') ?>
                         </td>
                     </tr>
@@ -502,13 +502,13 @@ layoutHeader('Kartu Stok Barang', 'Log mutasi fisik keluar/masuk (Pusat - Muhart
                 </div>
             </div>
             <div style="text-align: right; font-size: 8pt; color: #475569; line-height: 1.4;">
-                <div style="font-weight: bold; color: #0f2d5a;">Dokumen Resmi Kartu Stok Etalase</div>
+                <div style="font-weight: bold; color: #0f2d5a;">Dokumen Resmi Kartu Stok (Satuan Kecil)</div>
                 <div>Dicetak: <?= date('d/m/Y H:i') ?> WIB</div>
                 <div>Oleh: <?= htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Superadmin') ?></div>
             </div>
         </div>
 
-        <h1 class="text-center text-xl md:text-2xl font-black mb-6 tracking-wide text-black uppercase"><?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Kartu Stok Alat Kesehatan (Unit Fisik)' : 'Kartu Stok Etalase (Satuan Kecil)' ?></h1>
+        <h1 class="text-center text-xl md:text-2xl font-black mb-6 tracking-wide text-black uppercase"><?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Kartu Stok Alat Kesehatan (Unit Fisik)' : 'Kartu Stok (Satuan Kecil)' ?></h1>
         
         <!-- Informasi Header Kartu -->
         <div class="grid grid-cols-2 gap-x-12 mb-6 text-sm font-semibold text-black">
@@ -526,37 +526,37 @@ layoutHeader('Kartu Stok Barang', 'Log mutasi fisik keluar/masuk (Pusat - Muhart
 
         <!-- Tabel Kartu Stok Kecil -->
         <table class="w-full border-collapse border border-slate-900 text-sm print:text-xs">
-            <thead class="bg-emerald-600 text-white border-b-2 border-slate-900">
+            <thead class="bg-slate-100 text-slate-900 font-extrabold border-b-2 border-slate-900">
                 <tr>
-                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-24">Tanggal</th>
-                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-36"><?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Serial Number' : 'No. Batch' ?></th>
-                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle">Jenis Mutasi & Aktivitas</th>
-                    <th colspan="3" class="border border-slate-900 px-3 py-1.5 text-center">Kuantitas</th>
-                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-32">Penanggung Jawab</th>
-                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-32">Keterangan</th>
+                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-24 text-slate-900 font-extrabold">Tanggal</th>
+                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-36 text-slate-900 font-extrabold"><?= ($produkData['kategori'] === 'Alat Kesehatan') ? 'Serial Number' : 'No. Batch' ?></th>
+                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle text-slate-900 font-extrabold">Jenis Mutasi &amp; Aktivitas</th>
+                    <th colspan="3" class="border border-slate-900 px-3 py-1.5 text-center text-slate-900 font-extrabold">Kuantitas</th>
+                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-32 text-slate-900 font-extrabold">Penanggung Jawab</th>
+                    <th rowspan="2" class="border border-slate-900 px-3 py-2 text-center align-middle w-32 text-slate-900 font-extrabold">Keterangan</th>
                 </tr>
                 <tr>
-                    <th class="border border-slate-900 px-2 py-1.5 text-center w-16">Masuk</th>
-                    <th class="border border-slate-900 px-2 py-1.5 text-center w-16">Keluar</th>
-                    <th class="border border-slate-900 px-2 py-1.5 text-center w-16">Sisa</th>
+                    <th class="border border-slate-900 px-2 py-1.5 text-center w-16 text-slate-900 font-extrabold">Masuk</th>
+                    <th class="border border-slate-900 px-2 py-1.5 text-center w-16 text-slate-900 font-extrabold">Keluar</th>
+                    <th class="border border-slate-900 px-2 py-1.5 text-center w-16 text-slate-900 font-extrabold">Sisa</th>
                 </tr>
             </thead>
             <tbody class="text-black bg-white">
                 <?php if (empty($logDataKecil)): ?>
                     <tr>
-                        <td colspan="7" class="border border-slate-900 px-3 py-8 text-center italic text-slate-500">Tidak ada mutasi eceran.</td>
+                        <td colspan="7" class="border border-slate-900 px-3 py-8 text-center italic text-black">Tidak ada mutasi eceran.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($logDataKecil as $log): ?>
-                    <tr class="hover:bg-slate-50 print:hover:bg-transparent">
-                        <td class="border border-slate-900 px-2 py-1.5 text-center whitespace-nowrap"><?= date('d/m/Y H:i', strtotime($log['tanggal'])) ?></td>
-                        <td class="border border-slate-900 px-2 py-1.5 text-center"><?= formatKartuStokBatch($log['no_batch'] ?? '-') ?></td>
-                        <td class="border border-slate-900 px-3 py-1.5"><?= formatKanalBadge($log['kanal']) ?><b><?= htmlspecialchars($log['jenis_mutasi']) ?></b> - <?= htmlspecialchars($log['deskripsi_tampil'] ?? $log['deskripsi'] ?? '-') ?></td>
+                    <tr class="hover:bg-slate-50 print:hover:bg-transparent text-black">
+                        <td class="border border-slate-900 px-2 py-1.5 text-center whitespace-nowrap text-black font-medium"><?= date('d/m/Y H:i', strtotime($log['tanggal'])) ?></td>
+                        <td class="border border-slate-900 px-2 py-1.5 text-center text-black"><?= formatKartuStokBatch($log['no_batch'] ?? '-') ?></td>
+                        <td class="border border-slate-900 px-3 py-1.5 text-black"><?= formatKanalBadge($log['kanal']) ?><b><?= htmlspecialchars($log['jenis_mutasi']) ?></b> - <?= htmlspecialchars($log['deskripsi_tampil'] ?? $log['deskripsi'] ?? '-') ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-bold <?= $log['jenis_mutasi']=='Masuk'?'text-emerald-700':'' ?>"><?= $log['jenis_mutasi']=='Masuk' ? number_format($log['qty_calc']) : '' ?></td>
                         <td class="border border-slate-900 px-2 py-1.5 text-center font-bold <?= $log['jenis_mutasi']=='Keluar'?'text-rose-700':'' ?>"><?= $log['jenis_mutasi']=='Keluar' ? number_format($log['qty_calc']) : '' ?></td>
-                        <td class="border border-slate-900 px-2 py-1.5 text-center font-black bg-slate-50"><?= number_format($log['sisa_stok_calc']) ?></td>
-                        <td class="border border-slate-900 px-2 py-1.5 text-center text-xs"><?= htmlspecialchars($log['nama_lengkap'] ?? 'Sistem') ?></td>
-                        <td class="border border-slate-900 px-2 py-1.5 text-xs text-center text-slate-500">
+                        <td class="border border-slate-900 px-2 py-1.5 text-center font-black bg-slate-50 text-black"><?= number_format($log['sisa_stok_calc']) ?></td>
+                        <td class="border border-slate-900 px-2 py-1.5 text-center text-xs text-black font-medium"><?= htmlspecialchars($log['nama_lengkap'] ?? 'Sistem') ?></td>
+                        <td class="border border-slate-900 px-2 py-1.5 text-xs text-center text-black">
                             <?= ($log['no_batch'] ? ($produkData['kategori'] === 'Alat Kesehatan' ? 'SN Terdata' : 'Batch Terdata') : '-') ?>
                         </td>
                     </tr>
@@ -653,13 +653,13 @@ function switchTab(tab) {
     if (tab === 'besar') {
         cBesar.classList.remove('hidden');
         cKecil.classList.add('hidden');
-        if (bBesar) bBesar.className = 'px-6 py-3 font-bold text-sm border-b-4 border-amber-600 text-amber-700 transition';
-        if (bKecil) bKecil.className = 'px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition';
+        if (bBesar) bBesar.className = 'px-6 py-3 font-bold text-sm border-b-4 border-slate-700 text-slate-900 transition';
+        if (bKecil) bKecil.className = 'px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300 transition';
     } else {
         cKecil.classList.remove('hidden');
         cBesar.classList.add('hidden');
-        if (bKecil) bKecil.className = 'px-6 py-3 font-bold text-sm border-b-4 border-emerald-600 text-emerald-700 transition';
-        if (bBesar) bBesar.className = 'px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition';
+        if (bKecil) bKecil.className = 'px-6 py-3 font-bold text-sm border-b-4 border-slate-700 text-slate-900 transition';
+        if (bBesar) bBesar.className = 'px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300 transition';
     }
 }
 

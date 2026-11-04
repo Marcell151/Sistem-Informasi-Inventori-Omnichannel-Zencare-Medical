@@ -1510,8 +1510,8 @@ if (typeof Swal !== 'undefined') {
         title: 'Unit Masuk Karantina!',
         html: `<?= addslashes($_SESSION['flash_msg']) ?><br><br>` +
               `<div class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 text-left font-medium">` +
-              `📌 <b>Langkah Selanjutnya:</b><br>` +
-              `Ambil unit baru yang sehat dari etalase, lalu buka menu <b>Logistik & Inventori ➡️ Mutasi Stok Manual</b> (Pengurangan & Alasan: <i>Klaim Garansi Pelanggan</i>) untuk menyerahkan unit pengganti ke pelanggan.</div>`,
+              `<b>Langkah Selanjutnya:</b><br>` +
+              `Ambil unit baru yang sehat dari etalase, lalu buka menu <b>Logistik &amp; Inventori &rarr; Mutasi Stok Manual</b> (Pengurangan &amp; Alasan: <i>Klaim Garansi Pelanggan</i>) untuk menyerahkan unit pengganti ke pelanggan.</div>`,
         confirmButtonColor: '#1a75d2',
         confirmButtonText: 'Saya Mengerti'
     });

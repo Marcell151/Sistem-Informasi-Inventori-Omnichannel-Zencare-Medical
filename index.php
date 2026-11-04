@@ -283,7 +283,7 @@ layoutHeader(
 <!-- ============================================================ -->
 <!-- ACTIONABLE ORDERS (Prioritas Utama) -->
 <!-- ============================================================ -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(340px, 1fr));gap:14px;margin-bottom:18px;">
     <!-- Pesanan Menunggu Proses -->
     <div style="background:#fff;border:1px solid <?= !empty($pesananProses)?'#bfdbfe':'#e4e9f0' ?>;border-radius:10px;overflow:hidden;<?= !empty($pesananProses)?'box-shadow:0 4px 6px -1px rgba(59,130,246,0.1);':'' ?>">
         <div style="padding:13px 16px;border-bottom:1px solid <?= !empty($pesananProses)?'#bfdbfe':'#f1f5f9' ?>;background:<?= !empty($pesananProses)?'#eff6ff':'#fff' ?>;display:flex;justify-content:space-between;align-items:center;">
@@ -500,19 +500,19 @@ layoutHeader(
 </div>
 
 <!-- Quick Actions -->
-<div style="display:flex;gap:10px;margin-bottom:20px;">
-    <a href="admin/pesanan.php" style="background:#1a75d2;color:#fff;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;display:flex;align-items:center;gap:6px;">
+<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
+    <a href="admin/pesanan.php" style="background:#0f2d5a;color:#fff;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:6px;display:flex;align-items:center;gap:6px;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/></svg>
         Kelola Pesanan
     </a>
-    <a href="laporan/ketersediaan_stok.php" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Laporan Stok</a>
-    <a href="laporan/logistik_medis.php" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Logistik Medis</a>
-    <a href="laporan/kartu_stok.php" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Kartu Stok</a>
-    <a href="ecommerce/index.php" target="_blank" style="background:#fff;color:#1e293b;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:7px;border:1px solid #e4e9f0;">Buka Store</a>
+    <a href="laporan/ketersediaan_stok.php" style="background:#fff;color:#0f2d5a;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:6px;border:1px solid #e2e8f0;">Laporan Stok</a>
+    <a href="laporan/logistik_medis.php" style="background:#fff;color:#0f2d5a;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:6px;border:1px solid #e2e8f0;">Logistik Medis</a>
+    <a href="laporan/kartu_stok.php" style="background:#fff;color:#0f2d5a;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:6px;border:1px solid #e2e8f0;">Kartu Stok</a>
+    <a href="ecommerce/index.php" target="_blank" style="background:#fff;color:#0f2d5a;text-decoration:none;font-size:12px;font-weight:700;padding:9px 18px;border-radius:6px;border:1px solid #e2e8f0;">Buka Store</a>
 </div>
 
 <!-- ROW 3: Stok Menipis + Log Kartu Stok -->
-<div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;margin-bottom:14px;">
+<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(290px, 1fr));gap:14px;margin-bottom:14px;">
 
     <!-- Panel: Stok Menipis -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
@@ -802,7 +802,7 @@ layoutHeader(
                     <?php if ($rp['no_batch']): ?>
                         <span style="background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:4px;font-weight:600;white-space:nowrap;">Batch: <?= htmlspecialchars($rp['no_batch']) ?></span>
                     <?php elseif ($rp['kategori'] === 'Alat Kesehatan'): ?>
-                        <span style="background:#e0e7ff;color:#4338ca;padding:2px 6px;border-radius:4px;font-weight:600;display:inline-block;white-space:nowrap;">Ber-SN</span>
+                        <span style="background:#eef6fb;color:#0f2d5a;padding:2px 6px;border-radius:4px;font-weight:600;display:inline-block;white-space:nowrap;">Ber-SN</span>
                     <?php else: ?>
                         -
                     <?php endif; ?>
@@ -897,7 +897,7 @@ layoutHeader(
 </div>
 
 <!-- Row 2: Stok Menipis + Obat Kedaluwarsa + Log Kartu Stok -->
-<div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;">
+<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(290px, 1fr));gap:14px;">
     <!-- Stok Menipis (Admin) -->
     <div style="background:#fff;border:1px solid #e4e9f0;border-radius:10px;overflow:hidden;">
         <div style="padding:13px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
@@ -1303,8 +1303,8 @@ function renderAnomaliModalPage(page) {
         const isBesar = (an.satuan_tipe === 'besar');
         const satLabel = isBesar ? (an.satuan_besar || 'Box') : (an.satuan_kecil || 'Pcs');
         const satBadge = isBesar
-            ? '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:#eef2ff;color:#4338ca;font-weight:600;display:inline-block;margin-top:2px;">Satuan Besar (Grosir)</span>'
-            : '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:#f1f5f9;color:#475569;font-weight:600;display:inline-block;margin-top:2px;">Satuan Kecil (Eceran)</span>';
+            ? '<span style="font-size:11px;padding:2px 6px;border-radius:4px;background:#eef6fb;color:#0f2d5a;font-weight:600;display:inline-block;margin-top:2px;">Satuan Besar (Grosir)</span>'
+            : '<span style="font-size:11px;padding:2px 6px;border-radius:4px;background:#f1f5f9;color:#475569;font-weight:600;display:inline-block;margin-top:2px;">Satuan Kecil (Eceran)</span>';
         
         const qtyTotal = Number(an.qty) || 0;
         const qtyDis = Number(an.qty_disesuaikan) || 0;

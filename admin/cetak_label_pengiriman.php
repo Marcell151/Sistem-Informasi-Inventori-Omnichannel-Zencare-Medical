@@ -78,7 +78,7 @@ if ($isPos) {
 } elseif ($isPickup) {
     $namaPenerima = !empty($order['nama_penerima']) ? $order['nama_penerima'] : ($order['nama_user'] ?? 'Pelanggan ZenCare');
     $telpPenerima = !empty($order['telepon_penerima']) ? $order['telepon_penerima'] : ($order['telp_user'] ?? '-');
-    $alamatLengkap = 'Pengambilan Mandiri di Toko ZenCare Medical (Jl. Muharto No. 1, Kota Malang)';
+    $alamatLengkap = 'Pengambilan Mandiri di Toko ZenCare Medical (Jl. Muharto No. 55D, Jodipan, Kota Malang)';
     $kotaTujuan = 'KOTA MALANG';
     $kurirDisplay = 'AMBIL DI TOKO';
     $layananDisplay = 'PICK-UP';
@@ -540,7 +540,7 @@ $printFormat = (isset($_GET['format']) && $_GET['format'] === 'a4') ? 'a4' : 'th
                     <div class="brand-text">
                         <div class="brand-title">ZENCARE MEDICAL</div>
                         <div class="brand-sub">Toko Alat Kesehatan dan Obat Omnichannel</div>
-                        <div class="brand-address">Jl. Muharto No. 1, Kota Malang &bull; Telp: 0812-3456-7890</div>
+                        <div class="brand-address">Jl. Muharto No. 55D, Jodipan, Kota Malang &bull; Telp: 0895-3434-36025</div>
                     </div>
                 </div>
                 <div class="courier-box">
@@ -575,10 +575,10 @@ $printFormat = (isset($_GET['format']) && $_GET['format'] === 'a4') ? 'a4' : 'th
             <div class="info-box">
                 <div class="info-title">Pengirim (Dari):</div>
                 <div class="info-name">ZenCare Medical Store</div>
-                <div class="info-phone">Telp: 0812-3456-7890</div>
+                <div class="info-phone">Telp: 0895-3434-36025</div>
                 <div class="info-address">
-                    Jl. Muharto No. 1, Kota Malang<br>
-                    Jawa Timur - Indonesia 65136<br>
+                    Jl. Muharto No. 55D, Jodipan, Kec. Blimbing<br>
+                    Kota Malang, Jawa Timur 65127<br>
                     <em>Toko Alat Kesehatan dan Obat Resmi</em>
                 </div>
                 <div style="margin-top: 6px; border: 1px solid #000; padding: 3px; border-radius: 2px; text-align: center;">

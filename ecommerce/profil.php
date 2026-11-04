@@ -480,7 +480,7 @@ if (!empty($orderIds)) {
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-1.5 self-start sm:self-auto shrink-0">
-                                    <a href="https://wa.me/6281234567890?text=<?= urlencode('Halo Admin ZenCare, saya ingin konfirmasi permohonan pembatalan pesanan #' . $ord['no_invoice'] . ' karena: ' . $ord['request_batal_alasan']) ?>" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1">
+                                    <a href="https://wa.me/62895343436025?text=<?= urlencode('Halo Admin ZenCare, saya ingin konfirmasi permohonan pembatalan pesanan #' . $ord['no_invoice'] . ' karena: ' . $ord['request_batal_alasan']) ?>" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1">
                                         WhatsApp Admin
                                     </a>
                                 </div>

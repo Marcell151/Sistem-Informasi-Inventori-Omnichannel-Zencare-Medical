@@ -143,7 +143,7 @@ $currentScript = basename($_SERVER['PHP_SELF']);
         <!-- Left: Social & Store Hours -->
         <div class="flex items-center gap-3">
             <div class="flex items-center gap-2">
-                <a href="https://wa.me/6281234567890" target="_blank" title="WhatsApp Resmi" class="w-5 h-5 rounded-full bg-white text-[#0f2d5a] flex items-center justify-center hover:bg-blue-100 transition">
+                <a href="https://wa.me/62895343436025" target="_blank" title="WhatsApp Resmi" class="w-5 h-5 rounded-full bg-white text-[#0f2d5a] flex items-center justify-center hover:bg-blue-100 transition">
                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a5.225 5.225 0 00-.571-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 2C6.477 2 2 6.477 2 12c0 1.755.454 3.412 1.254 4.856L2 22l5.293-1.189A9.96 9.96 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
                 </a>
                 <a href="tentang_kami.php" title="Informasi Apotek" class="w-5 h-5 rounded-full bg-white text-[#0f2d5a] flex items-center justify-center hover:bg-blue-100 transition">
@@ -161,12 +161,12 @@ $currentScript = basename($_SERVER['PHP_SELF']);
         <div class="flex items-center gap-3 lg:gap-5 text-[11px]">
             <span class="hidden lg:flex items-center gap-1.5 text-blue-100">
                 <svg class="w-3.5 h-3.5 text-sky-300 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
-                Jl. Muharto No. 1, Kota Malang, Jawa Timur
+                Jl. Muharto No. 55D, Jodipan, Kec. Blimbing, Kota Malang 65127
             </span>
             <span class="w-px h-3.5 bg-white/20 hidden lg:block"></span>
-            <a href="mailto:cs@zencare.id" class=" flex items-center gap-1.5 text-blue-100 hover:text-white transition">
+            <a href="mailto:zencare.id@gmail.com" class=" flex items-center gap-1.5 text-blue-100 hover:text-white transition">
                 <svg class="w-3.5 h-3.5 text-sky-300 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
-                cs@zencare.id
+                zencare.id@gmail.com
             </a>
             <span class="w-px h-3.5 bg-white/20"></span>
             <a href="../login.php" class="text-blue-200 hover:text-white font-semibold transition whitespace-nowrap">Portal Staf</a>

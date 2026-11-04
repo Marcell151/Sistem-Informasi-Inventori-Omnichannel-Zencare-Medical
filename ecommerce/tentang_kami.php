@@ -98,7 +98,7 @@ require_once __DIR__ . '/header.php';
                 <a href="kategori.php" class="text-center px-6 py-3 bg-white text-[#0f2d5a] font-bold text-xs uppercase tracking-widest hover:bg-sky-50 transition">
                     LIHAT KATALOG
                 </a>
-                <a href="https://wa.me/6281234567890?text=Halo%20CS%20ZenCare%20Medical,%20saya%20ingin%20bertanya%20mengenai%20produk%20kesehatan" target="_blank" class="text-center px-6 py-3 bg-[#1a75d2] hover:bg-[#1562b3] text-white font-bold text-xs uppercase tracking-widest transition">
+                <a href="https://wa.me/62895343436025?text=Halo%20CS%20ZenCare%20Medical,%20saya%20ingin%20bertanya%20mengenai%20produk%20kesehatan" target="_blank" class="text-center px-6 py-3 bg-[#1a75d2] hover:bg-[#1562b3] text-white font-bold text-xs uppercase tracking-widest transition">
                     HUBUNGI WHATSAPP
                 </a>
             </div>

@@ -423,7 +423,7 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
 <?php if ($msg): ?>
     <div class="mb-5 p-4 rounded-xl border text-xs font-semibold flex items-center gap-2
         <?= $msgType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800' ?>">
-        <span><?= $msgType === 'success' ? '✅' : '⛔' ?></span>
+        <span><?= $msgType === 'success' ? '✓' : '✕' ?></span>
         <?= htmlspecialchars($msg) ?>
     </div>
 <?php endif; ?>
@@ -443,16 +443,16 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
 
 <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
-        <table class="w-full text-xs min-w-[1020px]">
+        <table class="w-full text-xs min-w-[920px]">
             <thead class="bg-slate-50 border-b border-zcBrd text-zcMut font-bold uppercase tracking-wider text-[11px]">
                 <tr>
-                    <th class="px-3.5 py-3 text-left w-[16%]">Invoice</th>
-                    <th class="px-2.5 py-3 text-center w-[8%]">Tipe</th>
-                    <th class="px-3.5 py-3 text-left w-[24%]">Penerima &amp; Alamat</th>
-                    <th class="px-3 py-3 text-left w-[13%]">Kurir</th>
-                    <th class="px-3.5 py-3 text-right w-[11%]">Total</th>
-                    <th class="px-3 py-3 text-center w-[13%]">Status</th>
-                    <th class="px-3.5 py-3 text-center w-[15%]">Aksi</th>
+                    <th class="px-3 py-3 text-left w-[15%]">Invoice</th>
+                    <th class="px-2 py-3 text-center w-[8%]">Tipe</th>
+                    <th class="px-3 py-3 text-left w-[19%]">Penerima &amp; Alamat</th>
+                    <th class="px-2.5 py-3 text-left w-[12%]">Kurir</th>
+                    <th class="px-3 py-3 text-right w-[11%]">Total</th>
+                    <th class="px-2.5 py-3 text-center w-[13%]">Status</th>
+                    <th class="px-3 py-3 text-center w-[22%]">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-zcBrd/60">
@@ -492,11 +492,11 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                         
                         $isFinalStatus = in_array($o['status_pesanan'], ['Selesai', 'Dibatalkan']);
                         $selectCls = $isFinalStatus
-                            ? 'w-[125px] text-[11px] border border-slate-200 rounded-lg px-2 py-1 bg-slate-50 text-slate-400 font-semibold cursor-not-allowed text-center'
-                            : 'w-[125px] text-[11px] border border-zcBrd rounded-lg px-2 py-1 bg-white font-semibold text-slate-700 hover:border-zc focus:outline-none focus:ring-1 focus:ring-zc cursor-pointer transition text-center';
+                            ? 'h-8 w-[152px] text-[11px] border border-slate-200 rounded-lg px-2 bg-slate-50 text-slate-400 font-semibold cursor-not-allowed text-center'
+                            : 'h-8 w-[152px] text-[11px] border border-zcBrd rounded-lg px-2 bg-white font-semibold text-slate-700 hover:border-zc focus:outline-none focus:ring-1 focus:ring-zc cursor-pointer transition text-center';
                         ?>
                         <tr class="order-row hover:bg-slate-50/60 transition cursor-pointer" data-tipe="<?= htmlspecialchars($o['tipe_transaksi']) ?>" onclick="toggleDetail(<?= $o['id'] ?>)">
-                            <td class="px-3.5 py-3.5">
+                            <td class="px-3 py-3.5 whitespace-nowrap">
                                 <div class="flex items-center gap-2">
                                     <svg id="icon-<?= $o['id'] ?>" class="w-4 h-4 text-zcMut transition-transform shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
                                     <div>
@@ -505,38 +505,38 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-2.5 py-3.5 text-center">
-                                <span class="inline-flex items-center justify-center w-[82px] py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider <?= $typeCls ?>">
+                            <td class="px-2 py-3.5 text-center whitespace-nowrap">
+                                <span class="inline-flex items-center justify-center min-w-[76px] px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider whitespace-nowrap <?= $typeCls ?>">
                                     <?= htmlspecialchars($o['tipe_transaksi']) ?>
                                 </span>
                             </td>
-                            <td class="px-3.5 py-3.5">
-                                <span class="font-bold text-zcTxt block leading-snug"><?= htmlspecialchars($o['nama_penerima'] ?? $o['nama_kasir'] ?? 'Pelanggan') ?></span>
-                                <span class="text-[11px] text-zcMut truncate block max-w-xs mt-0.5" title="<?= htmlspecialchars($o['alamat_lengkap'] ?? 'Di Tempat') ?>"><?= htmlspecialchars($o['alamat_lengkap'] ?? 'Di Tempat') ?></span>
-                            </td>
                             <td class="px-3 py-3.5">
+                                <span class="font-bold text-zcTxt block leading-snug"><?= htmlspecialchars($o['nama_penerima'] ?? $o['nama_kasir'] ?? 'Pelanggan') ?></span>
+                                <span class="text-[11px] text-zcMut truncate block max-w-[180px] xl:max-w-[240px] mt-0.5" title="<?= htmlspecialchars($o['alamat_lengkap'] ?? 'Di Tempat') ?>"><?= htmlspecialchars($o['alamat_lengkap'] ?? 'Di Tempat') ?></span>
+                            </td>
+                            <td class="px-2.5 py-3.5 whitespace-nowrap">
                                 <span class="font-semibold text-zcTxt block leading-snug"><?= $kName ?></span>
                                 <span class="text-[10px] text-zcMut block leading-none mt-0.5"><?= $lName ?></span>
                             </td>
-                            <td class="px-3.5 py-3.5 text-right whitespace-nowrap">
+                            <td class="px-3 py-3.5 text-right whitespace-nowrap">
                                 <span class="font-bold text-zcTxt block leading-snug">Rp <?= number_format($o['total_harga'], 0, ',', '.') ?></span>
                                 <?php if ($o['ongkir'] > 0): ?>
                                     <span class="text-[10px] text-zcMut block leading-none mt-0.5">+Ongkir <?= number_format($o['ongkir'], 0, ',', '.') ?></span>
                                 <?php endif; ?>
                             </td>
-                            <td class="px-3 py-3.5 text-center">
+                            <td class="px-2.5 py-3.5 text-center whitespace-nowrap">
                                 <div class="flex flex-col items-center justify-center gap-1">
-                                    <span class="inline-flex items-center justify-center w-[138px] py-1 rounded-full text-[11px] font-bold border shadow-2xs text-center <?= $statusCls ?>">
+                                    <span class="inline-flex items-center justify-center min-w-[104px] px-3 py-1 rounded-full text-[11px] font-bold border shadow-2xs text-center whitespace-nowrap <?= $statusCls ?>">
                                         <?= htmlspecialchars($o['status_pesanan']) ?>
                                     </span>
                                     <?php if (!empty($o['request_batal']) && $o['status_pesanan'] === 'Diproses'): ?>
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-extrabold bg-amber-500 text-white shadow-2xs animate-pulse" title="Pelanggan mengajukan pembatalan">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-extrabold bg-amber-500 text-white shadow-2xs animate-pulse whitespace-nowrap" title="Pelanggan mengajukan pembatalan">
                                             Minta Batal
                                         </span>
                                     <?php endif; ?>
                                 </div>
                             </td>
-                            <td class="px-3.5 py-3.5 text-center">
+                            <td class="px-3 py-3.5 text-center whitespace-nowrap">
                                 <div class="flex items-center justify-center gap-1.5">
                                     <form method="POST" class="inline m-0 shrink-0">
                                         <input type="hidden" name="aksi" value="update_status">
@@ -558,16 +558,16 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                             <?php endif; ?>
                                         </select>
                                     </form>
-                                    <div class="inline-flex items-center gap-1 shrink-0" onclick="event.stopPropagation()">
+                                    <div class="inline-flex items-center gap-1.5 shrink-0" onclick="event.stopPropagation()">
                                         <a href="../pos/cetak_invoice.php?no_invoice=<?= $o['no_invoice'] ?>" target="_blank"
                                             title="Cetak Dokumen Invoice Kertas (A4)"
-                                            class="inline-flex items-center justify-center gap-1 w-[68px] py-1 text-[11px] font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg shadow-2xs hover:border-slate-400 transition">
+                                            class="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 text-[11px] font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg shadow-2xs hover:border-slate-400 transition whitespace-nowrap">
                                             <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                             <span>Invoice</span>
                                         </a>
                                         <a href="cetak_label_pengiriman.php?no_invoice=<?= $o['no_invoice'] ?>" target="_blank"
                                             title="Cetak Stiker Label Pengiriman Thermal (100x150mm / A6)"
-                                            class="inline-flex items-center justify-center gap-1 w-[84px] py-1 text-[11px] font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg shadow-2xs hover:border-slate-400 transition">
+                                            class="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 text-[11px] font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg shadow-2xs hover:border-slate-400 transition whitespace-nowrap">
                                             <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
                                             <span>Label Kirim</span>
                                         </a>
@@ -752,43 +752,43 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                     </ul>
 
                                     <!-- Tombol Aksi Lanjutkan Status Langsung di Detail Pesanan -->
-                                    <div class="mt-4 pt-3 border-t border-zcBrd flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <div class="mt-4 pt-3 border-t border-zcBrd flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
                                         <div class="text-[11px] text-zcMut">
                                             Metode Pengambilan: <strong class="text-slate-800"><?= htmlspecialchars($o['metode_pengambilan']) ?></strong> • 
                                             Layanan: <strong class="text-slate-800"><?= htmlspecialchars($o['kurir'] ?? 'Direct') ?> (<?= htmlspecialchars($o['layanan'] ?? 'Standard') ?>)</strong>
                                         </div>
-                                        <div class="flex items-center gap-2">
+                                        <div class="flex flex-wrap items-center gap-2">
                                             <!-- Tombol Cetak Dokumen -->
                                             <a href="../pos/cetak_invoice.php?no_invoice=<?= $o['no_invoice'] ?>" target="_blank"
-                                                class="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
-                                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap">
+                                                <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                                 Cetak Invoice (Kertas)
                                             </a>
                                             <a href="cetak_label_pengiriman.php?no_invoice=<?= $o['no_invoice'] ?>" target="_blank"
-                                                class="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                                                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                                                class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap">
+                                                <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
                                                 Cetak Label Kirim (Stiker Thermal)
                                             </a>
                                             <?php if ($o['status_pesanan'] === 'Diproses'): ?>
                                                 <?php if ($o['metode_pengambilan'] === 'Pick-up'): ?>
                                                     <button type="button" onclick="triggerStatusFromDetail(<?= $o['id'] ?>, 'Siap Diambil')" 
-                                                        class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                                        class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap cursor-pointer">
                                                         Lanjutkan: Siapkan Pesanan untuk Ambil di Toko
                                                     </button>
                                                 <?php else: ?>
                                                     <button type="button" onclick="triggerStatusFromDetail(<?= $o['id'] ?>, 'Dikirim')" 
-                                                        class="px-3.5 py-2 bg-zc hover:bg-zcHv text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                                        class="px-3.5 py-1.5 bg-zc hover:bg-zcHv text-white rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap cursor-pointer">
                                                         Lanjutkan: Siapkan Pengiriman Pesanan (Kirim)
                                                     </button>
                                                 <?php endif; ?>
                                             <?php elseif (in_array($o['status_pesanan'], ['Dikirim', 'Siap Diambil'])): ?>
                                                 <button type="button" onclick="triggerStatusFromDetail(<?= $o['id'] ?>, 'Selesai')" 
-                                                    class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                                    class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap cursor-pointer">
                                                     Selesaikan Pesanan
                                                 </button>
                                             <?php elseif ($o['status_pesanan'] === 'Menunggu Pembayaran'): ?>
                                                 <button type="button" onclick="triggerStatusFromDetail(<?= $o['id'] ?>, 'Dibatalkan')" 
-                                                    class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                                    class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap cursor-pointer">
                                                     Batalkan Pesanan
                                                 </button>
                                             <?php endif; ?>
@@ -1262,7 +1262,7 @@ function updatePackCameraItemsList() {
     let html = '';
     pendingItems.forEach((it) => {
         if (it.verified) verifiedCount++;
-        let icon = it.verified ? '✅' : '⏳';
+        let icon = it.verified ? '✓' : '•';
         let cls = it.verified ? 'text-emerald-800 font-bold bg-emerald-50 border-emerald-300' : 'text-slate-700 bg-white border-slate-200';
         let targetLabel = it.cleanBatch ? (it.cleanBatch + (it.qtyText ? ' [' + it.qtyText + ']' : '')) : (it.instruksi || 'Batch/SN');
         let detail = it.verified ? `[Selesai: ${it.scannedBatch}]` : `[Target: ${targetLabel}]`;
@@ -1457,11 +1457,11 @@ function handlePackScan(val, targetStatus, fromCamera = false) {
 
     if (expiredMatch) {
         Swal.fire({
-            title: "⛔ OBAT KADALUARSA TERDETEKSI!",
+            title: "OBAT KADALUARSA TERDETEKSI",
             html: `Fisik batch yang Anda scan: <b>${expiredMatch.batch}</b> (${expiredMatch.name})<br><br>
                    Status: <span class="text-rose-600 font-extrabold text-sm">SUDAH KADALUARSA</span> (Exp: <b>${expiredMatch.exp}</b>).<br><br>
                    <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 text-left font-medium">
-                   ⚠️ <b>SISTEM SAFETY GUARD E-COMMERCE:</b><br>
+                   <b>SISTEM SAFETY GUARD E-COMMERCE:</b><br>
                    Dilarang keras mem-packing atau mengirimkan obat yang telah melewati masa kadaluarsa kepada pelanggan online demi keselamatan pasien dan regulasi BPOM.<br><br>
                    Sistem secara otomatis <b>MEMBLOKIR</b> batch ini. Silakan pisahkan kardus obat ini ke karantina dan ambil batch yang masih aktif/valid!</div>`,
             icon: "error",
@@ -1479,11 +1479,11 @@ function handlePackScan(val, targetStatus, fromCamera = false) {
         .then(res => {
             if (res.found && res.is_expired) {
                 Swal.fire({
-                    title: "⛔ OBAT KADALUARSA TERDETEKSI!",
+                    title: "OBAT KADALUARSA TERDETEKSI",
                     html: `Fisik batch yang Anda scan: <b>${res.no_batch}</b> (${res.nama})<br><br>
                            Status: <span class="text-rose-600 font-extrabold text-sm">SUDAH KADALUARSA</span> (Exp: <b>${res.tgl_exp}</b>).<br><br>
                            <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 text-left font-medium">
-                           ⚠️ <b>SISTEM SAFETY GUARD E-COMMERCE:</b><br>
+                           <b>SISTEM SAFETY GUARD E-COMMERCE:</b><br>
                            Dilarang keras mem-packing atau mengirimkan obat yang telah melewati masa kadaluarsa kepada pelanggan online demi keselamatan konsumen dan standar kendali mutu ZenCare Medical.<br><br>
                            Sistem secara otomatis <b>MEMBLOKIR</b> batch ini. Silakan pisahkan kardus obat ini ke karantina dan ambil batch yang masih aktif/valid!</div>`,
                     icon: "error",
@@ -1584,7 +1584,7 @@ function proceedPackingMatch(val, targetStatus, fromCamera = false) {
                 });
                 Toast.fire({
                     icon: 'success',
-                    title: `✅ Terverifikasi: ${val.toUpperCase()} (${pendingItems[matchIdx].nama})`
+                    title: `Terverifikasi: ${val.toUpperCase()} (${pendingItems[matchIdx].nama})`
                 });
             }
         } else {

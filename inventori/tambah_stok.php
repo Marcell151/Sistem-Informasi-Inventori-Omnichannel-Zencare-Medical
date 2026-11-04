@@ -1183,7 +1183,7 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
                             <option value="">Deteksi kamera...</option>
                         </select>
                         <span id="bpom_scan_badge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                            🟢 Scanner Siap
+                            Scanner Siap
                         </span>
                     </div>
                 </div>
@@ -1916,13 +1916,13 @@ async function startBpomScanner(cameraId = null) {
         isBpomScannerRunning = true;
         if (loading) loading.classList.add('hidden');
         if (badge) {
-            badge.innerText = '🟢 Scanner Aktif';
+            badge.innerText = 'Scanner Aktif';
             badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
         }
     } catch(err) {
         if (loading) loading.classList.add('hidden');
         if (badge) {
-            badge.innerText = '❌ Gagal Kamera';
+            badge.innerText = 'Gagal Kamera';
             badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30';
         }
         console.warn('Scanner camera error:', err);
@@ -1968,7 +1968,7 @@ async function scanBarcodeFromFile(input) {
         alert('Gagal mendeteksi barcode dari foto: ' + (err.message || err || 'Barcode tidak terbaca'));
     } finally {
         input.value = '';
-        if (badge) badge.innerText = '🟢 Scanner Siap';
+        if (badge) badge.innerText = 'Scanner Siap';
     }
 }
 

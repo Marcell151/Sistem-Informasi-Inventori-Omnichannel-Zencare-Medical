@@ -130,7 +130,7 @@ require_once __DIR__ . '/header.php';
                     <a href="kategori.php" class="flex-1 sm:flex-initial text-center px-6 py-3 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white font-bold text-xs uppercase tracking-widest transition">
                         LIHAT KATALOG
                     </a>
-                    <a href="https://wa.me/6281234567890?text=Halo%20ZenCare%20Medical,%20saya%20ingin%20bertanya%20mengenai%20cara%20pembelian" target="_blank" class="flex-1 sm:flex-initial text-center px-6 py-3 border border-[#0f2d5a] text-[#0f2d5a] hover:bg-[#eef6fb] font-bold text-xs uppercase tracking-wider transition">
+                    <a href="https://wa.me/62895343436025?text=Halo%20ZenCare%20Medical,%20saya%20ingin%20bertanya%20mengenai%20cara%20pembelian" target="_blank" class="flex-1 sm:flex-initial text-center px-6 py-3 border border-[#0f2d5a] text-[#0f2d5a] hover:bg-[#eef6fb] font-bold text-xs uppercase tracking-wider transition">
                         HUBUNGI KAMI
                     </a>
                 </div>

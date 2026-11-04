@@ -49,7 +49,7 @@ layoutHeader('Master Supplier', 'Kelola data distributor & supplier alat kesehat
 
 <?php if ($msg): ?>
     <div class="mb-5 p-4 rounded-xl border text-xs font-semibold flex items-center gap-2 <?= $msgType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : ($msgType === 'error' ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-sky-50 border-sky-200 text-sky-800') ?>">
-        <?= $msgType === 'success' ? '✅' : ($msgType === 'error' ? '⛔' : 'ℹ️') ?> <?= htmlspecialchars($msg) ?>
+        <?= $msgType === 'success' ? '✓' : ($msgType === 'error' ? '✕' : '•') ?> <?= htmlspecialchars($msg) ?>
     </div>
 <?php endif; ?>
 

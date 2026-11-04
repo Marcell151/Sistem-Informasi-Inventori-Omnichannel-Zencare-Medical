@@ -440,6 +440,8 @@ if ($userRole === "superadmin") {
         }
         #camera_scanner_view canvas { border-radius: 0.375rem !important; }
         #camera_scanner_view #qr-shaded-region { border-radius: 0.375rem !important; }
+        .text-\[9px\], .text-\[10px\] { font-size: 11.5px !important; line-height: 1.4 !important; }
+        .text-\[11px\] { font-size: 12px !important; line-height: 1.45 !important; }
     </style>
 </head>
 <body class="bg-[#f4f7fa] font-sans antialiased text-zcTxt min-h-screen flex flex-col">
@@ -467,7 +469,7 @@ if ($userRole === "superadmin") {
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h1 class="text-lg font-extrabold text-[#0f2d5a] tracking-tight leading-none">POS ZenCare Medical</h1>
+                        <h1 class="text-lg font-extrabold tracking-tight leading-none"><span class="text-[#0f2d5a]">POS ZenCare</span> <span class="text-[#c0392b]">Medical</span></h1>
                     </div>
                     <div class="flex flex-wrap items-center gap-2.5 mt-1.5 text-xs text-slate-600 font-medium">
                         <span class="flex items-center gap-1.5 text-[#0f2d5a] font-semibold">
@@ -1237,7 +1239,7 @@ if ($userRole === "superadmin") {
                                 var allBatchesRaw = rawBatch ? rawBatch.split(',').map(b => b.split('|')[0].trim().toLowerCase()) : [];
                                 if (allBatchesRaw.includes(scannedCode.toLowerCase())) {
                                     Swal.fire({
-                                        title: '❌ Salah Ambil Fisik!', 
+                                        title: 'Salah Ambil Fisik', 
                                         html: 'Di keranjang pesanan adalah <b>ECERAN (Kecil)</b>, tetapi fisik yang Anda scan adalah <b>GROSIR / DUS (Besar)</b>.<br><br><span class="text-xs text-slate-500">Silakan ambil kemasan eceran (sub-batch bertitik) atau tambahkan kardus ke keranjang terlebih dahulu.</span>', 
                                         icon: 'error'
                                     });
@@ -1245,7 +1247,7 @@ if ($userRole === "superadmin") {
                                 }
                             } else if (oppositeUom === 'besar' && scannedUom === 'kecil') {
                                 Swal.fire({
-                                    title: '❌ Salah Ambil Fisik!', 
+                                    title: 'Salah Ambil Fisik', 
                                     html: 'Di keranjang pesanan adalah <b>GROSIR / DUS (Besar)</b>, tetapi fisik yang Anda scan adalah <b>ECERAN (Kecil)</b>.<br><br><span class="text-xs text-slate-500">Silakan ambil kemasan kardus utuh atau tambahkan eceran ke keranjang terlebih dahulu.</span>', 
                                     icon: 'error'
                                 });
@@ -1276,7 +1278,7 @@ if ($userRole === "superadmin") {
                 if (eceranBatchesManual.length === 0 && dusBatchesManual.length > 0) {
                     Swal.fire({
                         title: 'Stok Eceran Kosong!',
-                        html: '<div class="text-left text-sm mb-3">Sistem mendeteksi stok etalase (eceran) kosong, tetapi masih ada stok <b>Dus/Karton utuh</b> di gudang.<br><br>Apakah Anda ingin membuka 1 Dus untuk dijual eceran sekarang?</div><div class="bg-rose-50 text-rose-700 p-3 rounded text-xs font-bold border border-rose-200">⚠ KONFIRMASI: Pastikan Anda benar-benar akan merobek/membuka fisik kardus utuh! Aksi ini akan mencatat histori log secara permanen.</div>',
+                        html: '<div class="text-left text-sm mb-3">Sistem mendeteksi stok etalase (eceran) kosong, tetapi masih ada stok <b>Dus/Karton utuh</b> di gudang.<br><br>Apakah Anda ingin membuka 1 Dus untuk dijual eceran sekarang?</div><div class="bg-rose-50 text-rose-700 p-3 rounded text-xs font-bold border border-rose-200">KONFIRMASI: Pastikan Anda benar-benar akan merobek/membuka fisik kardus utuh! Aksi ini akan mencatat histori log secara permanen.</div>',
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonText: 'Ya, Robek 1 Dus',
@@ -1344,7 +1346,7 @@ if ($userRole === "superadmin") {
                             toast: true,
                             position: 'top',
                             icon: 'success',
-                            title: '✅ Fisik Tervalidasi (' + matchAlloc.qty + ' ' + existingItem.satuan_label + '): ' + scannedCodeUpper,
+                            title: 'Fisik Tervalidasi (' + matchAlloc.qty + ' ' + existingItem.satuan_label + '): ' + scannedCodeUpper,
                             showConfirmButton: false,
                             timer: 1800,
                             timerProgressBar: true
@@ -1360,7 +1362,7 @@ if ($userRole === "superadmin") {
                         var remainingUnverified = existingItem.allocations.find(al => !al.verified);
                         if (remainingUnverified) {
                             Swal.fire({
-                                title: '⚠ ANOMALI FEFO TERDETEKSI!',
+                                title: 'ANOMALI FEFO TERDETEKSI',
                                 html: `Anda men-scan kembali Batch <b>${scannedCodeUpper}</b>.<br><br>` +
                                       `Terdapat alokasi batch lain yang belum diverifikasi: <b>${remainingUnverified.batch.toUpperCase()}</b> (${remainingUnverified.qty} ${existingItem.satuan_label}).<br><br>` +
                                       `Apakah Anda ingin menukar sisa fisik tersebut menggunakan Batch <b>${scannedCodeUpper}</b>?`,
@@ -1380,7 +1382,7 @@ if ($userRole === "superadmin") {
                                         toast: true,
                                         position: 'top',
                                         icon: 'success',
-                                        title: '✅ Fisik Ditukar: ' + scannedCodeUpper,
+                                        title: 'Fisik Ditukar: ' + scannedCodeUpper,
                                         showConfirmButton: false,
                                         timer: 1800
                                     });
@@ -1406,7 +1408,7 @@ if ($userRole === "superadmin") {
                                 toast: true,
                                 position: 'top',
                                 icon: 'success',
-                                title: '✅ Tambah Qty: ' + name + ' [' + scannedCodeUpper + ']',
+                                title: 'Tambah Qty: ' + name + ' [' + scannedCodeUpper + ']',
                                 showConfirmButton: false,
                                 timer: 1500
                             });
@@ -1420,7 +1422,7 @@ if ($userRole === "superadmin") {
                     var firstUnverified = existingItem.allocations.find(al => !al.verified);
                     if (firstUnverified) {
                         Swal.fire({
-                            title: '⚠ ANOMALI FEFO TERDETEKSI!',
+                            title: 'ANOMALI FEFO TERDETEKSI',
                             html: `Anda men-scan Batch <b>${scannedCodeUpper}</b>.<br><br>` +
                                   `Batch yang dialokasikan sesuai FEFO adalah <b>${firstUnverified.batch.toUpperCase()}</b> (${firstUnverified.qty} ${existingItem.satuan_label}).<br><br>` +
                                   `Apakah Anda yakin ingin menukar fisik batch ini?`,
@@ -1441,7 +1443,7 @@ if ($userRole === "superadmin") {
                                     toast: true,
                                     position: 'top',
                                     icon: 'success',
-                                    title: '✅ Fisik Ditukar: ' + scannedCodeUpper,
+                                    title: 'Fisik Ditukar: ' + scannedCodeUpper,
                                     showConfirmButton: false,
                                     timer: 1800
                                 });
@@ -1476,7 +1478,7 @@ if ($userRole === "superadmin") {
                             toast: true,
                             position: 'top',
                             icon: 'success',
-                            title: '✅ SN Tervalidasi: ' + scannedCodeUpper,
+                            title: 'SN Tervalidasi: ' + scannedCodeUpper,
                             showConfirmButton: false,
                             timer: 1800
                         });
@@ -1546,7 +1548,7 @@ if ($userRole === "superadmin") {
                         toast: true,
                         position: 'top',
                         icon: 'success',
-                        title: '✅ Masuk Keranjang: ' + name + ' [' + scannedCodeUpper + ']',
+                        title: 'Masuk Keranjang: ' + name + ' [' + scannedCodeUpper + ']',
                         showConfirmButton: false,
                         timer: 1800
                     });
@@ -1556,7 +1558,7 @@ if ($userRole === "superadmin") {
 
                 if (expectedFefoBatch && expectedFefoBatch.toLowerCase() !== scannedCode.toLowerCase()) {
                     Swal.fire({
-                        title: '⚠ ANOMALI FEFO TERDETEKSI!',
+                        title: 'ANOMALI FEFO TERDETEKSI',
                         html: `Anda men-scan Batch <b>${scannedCodeUpper}</b>.<br><br>` +
                               `Terdapat Batch lain <b>(${expectedFefoBatch.toUpperCase()})</b> yang akan kedaluwarsa lebih cepat.<br>` +
                               `Sesuai sistem FEFO, Anda seharusnya mengeluarkan batch yang lebih cepat expired terlebih dahulu.`,
@@ -1829,14 +1831,14 @@ if ($userRole === "superadmin") {
                             var displayBatch = (al.scanned_batch || al.batch).toUpperCase();
                             var swappedTag = al.is_anomaly ? '<span class="ml-1 px-1.5 py-0.2 bg-amber-200 text-amber-900 rounded text-[8px] font-extrabold uppercase">DITUKAR</span>' : '';
                             badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-[#eef6fb] border border-[#cde3f5] text-[#0f2d5a] text-[10px] font-bold">' +
-                                '<span class="text-[#1a75d2] font-extrabold">✔</span>' +
+                                '<span class="text-[#1a75d2] font-extrabold">✓</span>' +
                                 '<span>Fisik Tervalidasi: <b class="font-mono text-[#0f2d5a]">' + displayBatch + '</b> (' + al.qty + ' ' + i.satuan_label + ')</span>' +
                                 swappedTag +
                             '</div>';
                         } else {
                             var expectedBatch = (al.batch || '').toUpperCase();
                             badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold animate-pulse">' +
-                                '<span class="text-rose-600 font-extrabold">⚠</span>' +
+                                '<span class="text-rose-600 font-extrabold">•</span>' +
                                 '<span>Ambil Fisik: <b class="font-mono text-rose-900">' + expectedBatch + '</b> (' + al.qty + ' ' + i.satuan_label + ')</span>' +
                             '</div>';
                         }
@@ -1847,12 +1849,12 @@ if ($userRole === "superadmin") {
                     i.alkes_allocations.forEach(function(u, idx) {
                         if (u.verified) {
                             badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-[#eef6fb] border border-[#cde3f5] text-[#0f2d5a] text-[10px] font-bold">' +
-                                '<span class="text-[#1a75d2] font-extrabold">✔</span>' +
+                                '<span class="text-[#1a75d2] font-extrabold">✓</span>' +
                                 '<span>SN Tervalidasi: <b class="font-mono text-[#0f2d5a]">' + u.sn.toUpperCase() + '</b> (Unit ' + (idx + 1) + ')</span>' +
                             '</div>';
                         } else {
                             badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold animate-pulse">' +
-                                '<span class="text-rose-600 font-extrabold">⚠</span>' +
+                                '<span class="text-rose-600 font-extrabold">•</span>' +
                                 '<span>Ambil Unit ' + (idx + 1) + ': <b class="font-mono text-rose-900">Scan SN Fisik</b></span>' +
                             '</div>';
                         }
@@ -1861,7 +1863,7 @@ if ($userRole === "superadmin") {
                 } else if (i.kategori === 'Obat') {
                     badgesHtml += '<div class="mt-1.5 space-y-1">' +
                         '<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold">' +
-                            '<span class="text-amber-600 font-extrabold">⚠</span>' +
+                            '<span class="text-amber-600 font-extrabold">•</span>' +
                             '<span>Perlu Robek Kardus (Sub-batch Belum Ada)</span>' +
                         '</div>' +
                     '</div>';
@@ -2244,9 +2246,9 @@ if ($userRole === "superadmin") {
         if (totalEl) totalEl.innerText = 'Rp ' + totalPrice.toLocaleString('id-ID');
         
         if (lastProductName && prodEl) {
-            prodEl.innerHTML = `<span class="text-emerald-700 font-extrabold truncate block">✅ ${lastProductName}</span>`;
+            prodEl.innerHTML = `<span class="text-emerald-700 font-extrabold truncate block">✓ ${lastProductName}</span>`;
             if (cdEl) {
-                cdEl.innerText = '✅ Berhasil Masuk!';
+                cdEl.innerText = '✓ Berhasil Masuk';
                 cdEl.className = 'text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2 py-1 rounded-lg border border-emerald-300 shrink-0';
                 setTimeout(() => {
                     if (cdEl) {
@@ -2517,11 +2519,11 @@ if ($userRole === "superadmin") {
                 if (expiredMatch) {
                     Swal.fire({
                         icon: 'error',
-                        title: '⛔ OBAT KADALUARSA!',
+                        title: 'OBAT KADALUARSA',
                         html: `Fisik batch yang Anda scan: <b>${expiredMatch.batch}</b> (${expiredMatch.name})<br><br>` +
                               `Status: <span class="text-rose-600 font-extrabold text-sm">SUDAH KADALUARSA</span> (Exp: <b>${expiredMatch.exp}</b>).<br><br>` +
                               `<div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 text-left font-medium">` +
-                              `⚠️ <b>PERINGATAN KELAYAKAN OBAT:</b><br>` +
+                              `<b>PERINGATAN KELAYAKAN OBAT:</b><br>` +
                               `Sistem secara otomatis <b>MEMBLOKIR</b> penjualan obat yang telah melewati tanggal kadaluarsa demi keselamatan konsumen dan standar mutu ZenCare Medical.<br><br>` +
                               `Silakan pisahkan fisik obat ini ke karantina dan lakukan <b>Mutasi Keluar (Barang Rusak/Kadaluarsa)</b>.</div>`,
                         confirmButtonColor: '#e11d48',
@@ -2537,11 +2539,11 @@ if ($userRole === "superadmin") {
                         if (res.found && res.is_expired) {
                             Swal.fire({
                                 icon: 'error',
-                                title: '⛔ OBAT KADALUARSA!',
+                                title: 'OBAT KADALUARSA',
                                 html: `Fisik batch yang Anda scan: <b>${res.no_batch}</b> (${res.nama})<br><br>` +
                                       `Status: <span class="text-rose-600 font-extrabold text-sm">SUDAH KADALUARSA</span> (Exp: <b>${res.tgl_exp}</b>).<br><br>` +
                                       `<div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 text-left font-medium">` +
-                                      `⚠️ <b>PERINGATAN KELAYAKAN OBAT:</b><br>` +
+                                      `<b>PERINGATAN KELAYAKAN OBAT:</b><br>` +
                                       `Sistem secara otomatis <b>MEMBLOKIR</b> penjualan obat yang telah melewati tanggal kadaluarsa demi keselamatan konsumen dan standar mutu ZenCare Medical.<br><br>` +
                                       `Silakan pisahkan fisik obat ini ke karantina dan lakukan <b>Mutasi Keluar (Barang Rusak/Kadaluarsa)</b>.</div>`,
                                 confirmButtonColor: '#e11d48',
@@ -2558,27 +2560,27 @@ if ($userRole === "superadmin") {
                             let camLabel = document.getElementById('cam_last_product_label');
                             let camCooldown = document.getElementById('cam_cooldown_indicator');
                             if (res.status === 'Retur/Rusak') {
-                                if (camLabel) camLabel.innerHTML = `<span class="text-rose-600 font-bold">⛔ DITOLAK: UNIT RUSAK (${res.serial_number})</span>`;
+                                if (camLabel) camLabel.innerHTML = `<span class="text-rose-600 font-bold">DITOLAK: UNIT RUSAK (${res.serial_number})</span>`;
                                 if (camCooldown) {
                                     camCooldown.innerText = 'Unit Rusak';
                                     camCooldown.className = 'text-[10px] font-extrabold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200 shrink-0';
                                 }
                                 Swal.fire({
                                     icon: 'error',
-                                    title: '⛔ ALAT KESEHATAN RUSAK / AFKIR!',
+                                    title: 'ALAT KESEHATAN RUSAK / AFKIR',
                                     html: `Fisik unit yang Anda scan: <b>${res.serial_number}</b><br>` +
                                           `Produk: <b>${res.nama}</b><br><br>` +
                                           `Status Sistem: <span class="text-rose-600 font-extrabold text-sm uppercase">RUSAK / DIKARANTINA</span><br>` +
                                           (res.catatan ? `<div class="mt-2 p-2.5 bg-slate-100 rounded-lg text-slate-700 text-xs border border-slate-200 text-left"><b>Catatan:</b> ${res.catatan}</div><br>` : `<br>`) +
                                           `<div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 text-left font-medium">` +
-                                          `⚠️ <b>PERINGATAN OPERASIONAL KASIR:</b><br>` +
+                                          `<b>PERINGATAN OPERASIONAL KASIR:</b><br>` +
                                           `Unit ini telah dicatat sebagai <b>Barang Rusak / Cacat</b> dan dilarang keras untuk dijual ke pelanggan!<br><br>` +
                                           `Silakan pisahkan fisik alat ini ke area karantina atau kembalikan (retur) ke supplier untuk diganti unit baru.</div>`,
                                     confirmButtonColor: '#e11d48',
                                     confirmButtonText: 'Saya Mengerti'
                                 });
                             } else if (res.status === 'Terjual') {
-                                if (camLabel) camLabel.innerHTML = `<span class="text-amber-600 font-bold">⚠️ SUDAH TERJUAL: ${res.serial_number}</span>`;
+                                if (camLabel) camLabel.innerHTML = `<span class="text-amber-600 font-bold">SUDAH TERJUAL: ${res.serial_number}</span>`;
                                 let garansiHtml = '';
                                 if (res.sisa_garansi !== null && res.sisa_garansi !== undefined) {
                                     if (res.sisa_garansi >= 0) {
@@ -2595,11 +2597,11 @@ if ($userRole === "superadmin") {
                                 }
                                 Swal.fire({
                                     icon: 'warning',
-                                    title: '⚠️ UNIT ALKES SUDAH TERJUAL!',
+                                    title: 'UNIT ALKES SUDAH TERJUAL',
                                     html: `Serial Number <b>${res.serial_number}</b> (${res.nama}) tercatat sudah <b>TERJUAL</b> pada transaksi sebelumnya.<br>` +
                                           garansiHtml + `<br>` +
                                           `<div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 text-left font-medium">` +
-                                          `ℹ️ <b>Petunjuk Layanan Kasir:</b><br>` +
+                                          `<b>Petunjuk Layanan Kasir:</b><br>` +
                                           `Jika pelanggan datang untuk klaim garansi kerusakan, silakan arahkan ke <b>Laporan Logistik Medis (Jejak SN)</b> untuk memproses isolasi Karantina.</div>`,
                                     confirmButtonColor: '#d97706',
                                     confirmButtonText: 'Saya Mengerti'

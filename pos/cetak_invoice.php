@@ -18,8 +18,8 @@ $stmt = $pdo->prepare("
            u.nama_lengkap AS nama_user_trx, 
            u.role AS role_user_trx,
            'ZenCare Medical - Pusat' AS nama_cabang, 
-           'Jl. Muharto No. 1, Kota Malang, Jawa Timur' AS alamat_cabang,
-           '0812-3456-7890' AS telp_cabang
+           'Jl. Muharto No. 55D, Jodipan, Kec. Blimbing, Kota Malang 65127' AS alamat_cabang,
+           '0895-3434-36025' AS telp_cabang
     FROM penjualan p
     LEFT JOIN users u ON p.id_user = u.id
     WHERE p.no_invoice = ?

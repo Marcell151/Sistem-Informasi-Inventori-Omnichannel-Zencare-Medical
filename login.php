@@ -68,9 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .quick-btn { background:#f0f4fa; border:1px solid #dde4ef; border-radius:6px; padding:7px 12px; font-size:12px; font-weight:600; color:#334155; cursor:pointer; transition:all .15s; width:100%; text-align:center; }
         .quick-btn:hover { background:#e0e8f5; border-color:#a0b4d4; }
         .field { width:100%; border:1px solid #dde4ef; border-radius:6px; padding:9px 12px; font-size:13px; color:#1e293b; outline:none; transition:border .15s; background:#fafbfd; }
-        .field:focus { border-color:#1a75d2; background:#fff; }
-        .btn-submit { width:100%; background:#1a75d2; color:#fff; font-weight:700; font-size:13px; padding:10px; border-radius:6px; border:none; cursor:pointer; transition:background .15s; }
-        .btn-submit:hover { background:#1562b3; }
+        .field:focus { border-color:#0f2d5a; background:#fff; }
+        .btn-submit { width:100%; background:#0f2d5a; color:#fff; font-weight:700; font-size:13px; padding:10px; border-radius:6px; border:none; cursor:pointer; transition:background .15s; }
+        .btn-submit:hover { background:#1a75d2; }
         .logo-box { width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
     </style>
 </head>
@@ -83,8 +83,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="logo-box" style="background:transparent; border:none; overflow:hidden; padding:0;">
                 <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" style="width:100%;height:100%;object-fit:contain;border-radius:50%;">
             </div>
-            <h1 style="font-size:17px;font-weight:800;color:#1e293b;margin-bottom:3px;">ZenCare Medical Admin</h1>
-            <p style="font-size:12px;color:#64748b;">Portal Internal Operasional ZenCare Medical</p>
+            <h1 style="font-size:18px;font-weight:800;color:#0f2d5a;margin-bottom:3px;">ZenCare <span style="color:#c0392b;">Medical</span></h1>
+            <p style="font-size:12px;color:#64748b;">Portal Internal Operasional &amp; Inventori</p>
         </div>
 
         <div class="card" style="padding:24px;">

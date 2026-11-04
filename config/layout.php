@@ -10,6 +10,8 @@ function layoutHead(string $title = 'Dashboard') {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>' . htmlspecialchars($title) . ' – ZenCare Medical</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- jQuery & Select2 for Searchable Dropdowns (Offline Local Assets + CDN Fallback) -->
@@ -27,13 +29,14 @@ function layoutHead(string $title = 'Dashboard') {
         fontFamily: { sans: ["Inter", "sans-serif"] },
         colors: {
           zc:      "#1a75d2",
-          zcHv:    "#1562b3",
-          zcLt:    "#e8f2ff",
+          zcNavy:  "#0f2d5a",
+          zcHv:    "#0f2d5a",
+          zcLt:    "#eef6fb",
           zcRed:   "#c0392b",
-          zcBg:    "#f5f7fa",
+          zcBg:    "#f8fafc",
           zcCard:  "#ffffff",
-          zcBrd:   "#e4e9f0",
-          zcTxt:   "#1e293b",
+          zcBrd:   "#e2e8f0",
+          zcTxt:   "#0f2d5a",
           zcMut:   "#64748b",
           zcEm:    "#059669",
         }
@@ -42,19 +45,76 @@ function layoutHead(string $title = 'Dashboard') {
   }
 </script>
 <style>
-  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar{width:5px;height:5px}
   ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px}
-  body{animation:fadeIn .15s ease-out}
-  @keyframes fadeIn{from{opacity:.8;transform:translateY(3px)}to{opacity:1;transform:none}}
-  .sidebar-link{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;font-size:12.5px;font-weight:500;color:#475569;transition:all .15s}
-  .sidebar-link:hover{background:#f1f5f9;color:#1e293b}
-  .sidebar-link.active{background:#eff6ff;color:#1a75d2;font-weight:600}
-  .sidebar-link.active svg{color:#1a75d2}
-  .sidebar-link svg{flex-shrink:0;opacity:.65}
-  .sidebar-link.active svg{opacity:1}
-  .sidebar-link.active{border-left:3px solid #1a75d2;padding-left:9px}
-  .sidebar-section{font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;padding:14px 12px 6px}
+  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px}
+  body{color:#1e293b;background-color:#f8fafc}
+  .sidebar-link{display:flex;align-items:center;gap:10px;padding:8.5px 12px;border-radius:6px;font-size:13px;font-weight:500;color:#475569;transition:all .15s}
+  .sidebar-link:hover{background:#f1f5f9;color:#0f2d5a}
+  .sidebar-link.active{background:#eef6fb;color:#0f2d5a;font-weight:700;border-left:3px solid #1a75d2;padding-left:9px}
+  .sidebar-link.active svg{color:#1a75d2;opacity:1}
+  .sidebar-link svg{flex-shrink:0;color:#64748b;opacity:.85}
+  .sidebar-section{font-size:10.5px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.07em;padding:16px 12px 6px}
+
+  /* ── Global Readability Upgrade (No Microscopic 9px/10px Text) ────────── */
+  .text-\[9px\], .text-\[10px\] {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+  .text-\[11px\] {
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+  }
+  [style*="font-size:9px"], [style*="font-size: 9px"],
+  [style*="font-size:10px"], [style*="font-size: 10px"] {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+  [style*="font-size:11px"], [style*="font-size: 11px"] {
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* ── Responsive Adaptation for Laptop vs PC Resolutions (1280px–1536px) ─ */
+  @media (max-width: 1536px) {
+    table.min-w-\[900px\], table.min-w-\[920px\], table.min-w-\[950px\],
+    table.min-w-\[1000px\], table.min-w-\[1020px\], table.min-w-\[1050px\],
+    table.min-w-\[1100px\] {
+      min-width: 100% !important;
+    }
+    table th, table td {
+      padding-left: 0.625rem !important;
+      padding-right: 0.625rem !important;
+    }
+  }
+
+  /* ── Harmonize Off-Brand Purple/Indigo AI Accents to ZenCare Logo Palette ── */
+  .bg-indigo-50, .bg-purple-50, .bg-violet-50, .bg-indigo-50\/50, .bg-purple-50\/50 {
+    background-color: #eef6fb !important;
+  }
+  .bg-indigo-100, .bg-purple-100, .bg-violet-100 {
+    background-color: #dbeafe !important;
+  }
+  .text-indigo-600, .text-indigo-700, .text-indigo-800,
+  .text-purple-600, .text-purple-700, .text-purple-800,
+  .text-violet-600, .text-violet-700 {
+    color: #0f2d5a !important;
+  }
+  .border-indigo-100, .border-indigo-200, .border-purple-100, .border-purple-200, .border-violet-200 {
+    border-color: #cbe4f5 !important;
+  }
+  .bg-indigo-600, .bg-purple-600, .bg-violet-600 {
+    background-color: #0f2d5a !important;
+  }
+  .hover\:bg-indigo-700:hover, .hover\:bg-purple-700:hover {
+    background-color: #1a75d2 !important;
+  }
+
+  /* ── Clean Enterprise Table & Card Refinement ─────────────────────────── */
+  table th:not(.text-white):not([class*="text-"]) {
+    letter-spacing: 0.04em;
+    color: #475569;
+  }
 
   /* ── Modern Minimalist Select2 Theme (Ecommerce-Grade) ────────────────── */
   .select2-container--default .select2-selection--single {
@@ -238,16 +298,18 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
         echo '<span>' . $label . '</span></a>';
     };
 
-    echo '<aside id="app-sidebar" class="w-[230px] bg-white border-r border-zcBrd flex flex-col shrink-0 min-h-screen sticky top-0 hidden md:flex transition-all duration-200 z-40">';
+    echo '<aside id="app-sidebar" class="w-[216px] xl:w-[236px] bg-white border-r border-zcBrd flex flex-col shrink-0 min-h-screen sticky top-0 hidden md:flex transition-all duration-200 z-40">';
 
-    // Brand logo
-    echo '<div class="h-16 flex items-center px-4 border-b border-zcBrd gap-2.5">
-      <div class="w-11 h-11 rounded-full bg-white border border-zcBrd flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
+    // Brand logo (Harmonized with ZenCare Logo colors: Navy #0f2d5a + Medical Crimson #c0392b)
+    echo '<div class="h-16 flex items-center px-4 border-b border-zcBrd gap-3">
+      <div class="w-10 h-10 rounded-full bg-white border border-zcBrd flex items-center justify-center shrink-0 overflow-hidden">
         <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
       </div>
       <div>
-        <span class="text-[13px] font-black text-zcTxt leading-tight block">ZenCare Medical</span>
-        <span class="text-[9px] text-zcMut font-medium block tracking-wide uppercase">Inventory System v3</span>
+        <div class="text-[14px] font-extrabold leading-tight tracking-tight">
+          <span class="text-[#0f2d5a]">ZenCare</span> <span class="text-[#c0392b]">Medical</span>
+        </div>
+        <span class="text-[11px] text-slate-500 font-medium block">Sistem Inventori &amp; POS</span>
       </div>
     </div>';
 
@@ -313,15 +375,15 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
 
     // User card
     echo '<div class="px-3 py-3 border-t border-zcBrd">
-      <div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-zcBrd mb-2">
-        <div class="w-8 h-8 rounded-full bg-zc text-white font-bold text-xs flex items-center justify-center shrink-0">' . $initial . '</div>
+      <div class="flex items-center gap-2.5 p-2.5 rounded-lg bg-[#f8fafc] border border-zcBrd mb-2">
+        <div class="w-8 h-8 rounded-full bg-[#0f2d5a] text-white font-bold text-xs flex items-center justify-center shrink-0">' . $initial . '</div>
         <div class="min-w-0 flex-1">
-          <span class="text-xs font-semibold text-zcTxt truncate block leading-snug">' . $nama . '</span>
-          <span class="text-[9px] text-zcMut uppercase tracking-wide">' . $roleLabel . '</span>
+          <span class="text-xs font-bold text-[#0f2d5a] truncate block leading-snug">' . $nama . '</span>
+          <span class="text-[11px] text-slate-500 font-medium block">' . $roleLabel . '</span>
         </div>
       </div>
-      <a href="/inventory_zencare/logout.php" class="sidebar-link text-rose-500 hover:!bg-rose-50 hover:!text-rose-600 justify-center gap-2 py-2 text-xs font-semibold">'
-      . icon('logout', 'w-3.5 h-3.5') . ' <span>Keluar Sistem</span></a>
+      <a href="/inventory_zencare/logout.php" class="sidebar-link text-[#c0392b] hover:!bg-rose-50 hover:!text-rose-700 justify-center gap-2 py-2 text-xs font-semibold">'
+      . icon('logout', 'w-4 h-4') . ' <span>Keluar Sistem</span></a>
     </div></aside>';
 }
 
@@ -340,10 +402,10 @@ function layoutHeader(string $title, string $subtitle = '', bool $showBranchSele
     };
 
     echo '<div class="flex-1 flex flex-col min-w-0">
-    <header class="h-14 bg-white border-b border-zcBrd px-5 flex items-center justify-between sticky top-0 z-30 shrink-0">
+    <header class="h-16 bg-white border-b border-zcBrd px-5 flex items-center justify-between sticky top-0 z-30 shrink-0">
       <div>
-        <h1 class="text-[15px] font-semibold text-zcTxt leading-tight">' . htmlspecialchars($title) . '</h1>';
-    if ($subtitle) echo '<p class="text-[11px] text-zcMut mt-0.5">' . htmlspecialchars($subtitle) . '</p>';
+        <h1 class="text-base font-bold text-[#0f2d5a] leading-tight">' . htmlspecialchars($title) . '</h1>';
+    if ($subtitle) echo '<p class="text-xs text-slate-500 mt-0.5">' . htmlspecialchars($subtitle) . '</p>';
     echo '  </div>
       <div class="flex items-center gap-3 shrink-0">';
 
@@ -356,16 +418,16 @@ function layoutHeader(string $title, string $subtitle = '', bool $showBranchSele
 
     // Tampilkan hanya info cabang statis (tanpa dropdown ganti cabang)
     $cabangNama = 'Pusat (Muharto)';
-    echo '<div class="hidden sm:flex items-center gap-1.5 text-[10px] bg-blue-50 border border-blue-100 text-[#1a75d2] rounded-lg px-2.5 py-1.5 font-semibold">
-        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+    echo '<div class="hidden sm:flex items-center gap-1.5 text-xs bg-[#eef6fb] border border-[#cbe4f5] text-[#0f2d5a] rounded-md px-3 py-1.5 font-semibold">
+        <svg class="w-3.5 h-3.5 text-[#1a75d2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
         ' . htmlspecialchars($cabangNama) . '
       </div>';
 
-    echo '<div class="flex items-center gap-2 border border-zcBrd px-3 py-1.5 rounded-full bg-white">
-          <div class="w-6 h-6 rounded-full bg-zc text-white font-semibold text-[11px] flex items-center justify-center">' . $initial . '</div>
+    echo '<div class="flex items-center gap-2.5 border border-zcBrd px-3 py-1.5 rounded-md bg-white">
+          <div class="w-7 h-7 rounded-full bg-[#0f2d5a] text-white font-bold text-xs flex items-center justify-center">' . $initial . '</div>
           <div>
-            <span class="text-[11px] font-semibold text-zcTxt block leading-tight">' . $nama . '</span>
-            <span class="text-[9px] text-zcMut uppercase tracking-wide">' . $roleLabel . '</span>
+            <span class="text-xs font-bold text-[#0f2d5a] block leading-tight">' . $nama . '</span>
+            <span class="text-[11px] text-slate-500 block leading-tight">' . $roleLabel . '</span>
           </div>
         </div>
       </div>
@@ -390,7 +452,7 @@ function layoutHeader(string $title, string $subtitle = '', bool $showBranchSele
         </div>';
     }
 
-    echo '<main class="p-3 sm:p-5 lg:p-6 flex-1 min-w-0 overflow-x-hidden">';
+    echo '<main class="p-3 sm:p-4 xl:p-6 flex-1 min-w-0 overflow-x-hidden">';
 }
 
 function layoutEnd() {
