@@ -1,0 +1,133 @@
+<svg viewBox="0 0 980 1200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="font-family: Arial, sans-serif; background: #ffffff;">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0f172a" />
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#dc2626" />
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#16a34a" />
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#2563eb" />
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+  <!-- Outer Border & Header -->
+  <rect x="10" y="10" width="960" height="1180" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+  <rect x="10" y="10" width="960" height="35" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="490" y="33" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">Kelola Penerimaan Barang &amp; Validasi Identitas Medis (Batch/SN)</text>
+
+  <!-- Swimlane Headers -->
+  <rect x="10" y="45" width="410" height="32" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>
+  <text x="215" y="66" text-anchor="middle" font-size="12" font-weight="bold" fill="#0f172a">Admin (Staff Logistik)</text>
+
+  <rect x="420" y="45" width="550" height="32" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>
+  <text x="695" y="66" text-anchor="middle" font-size="12" font-weight="bold" fill="#0f172a">Sistem Back-Office</text>
+
+  <!-- Divider -->
+  <line x1="420" y1="45" x2="420" y2="1190" stroke="#0f172a" stroke-width="1.5"/>
+
+  <!-- ================= ADMIN: INPUT PENGADAAN ================= -->
+  <circle cx="215" cy="100" r="10" fill="#0f172a"/>
+  <line x1="215" y1="110" x2="215" y2="135" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="105" y="135" width="220" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="215" y="153" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#0f172a">Membuka Menu Penerimaan</text>
+  <text x="215" y="167" text-anchor="middle" font-size="10.5" fill="#0f172a">Barang dari Supplier</text>
+  <line x1="215" y1="177" x2="215" y2="205" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="105" y="205" width="220" height="44" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="215" y="223" text-anchor="middle" font-size="10" font-weight="bold" fill="#0f172a">Input Data Dokumen: No Faktur,</text>
+  <text x="215" y="237" text-anchor="middle" font-size="10" fill="#0f172a">Tgl Terima, Supplier, Qty &amp; Harga</text>
+  <line x1="215" y1="249" x2="215" y2="275" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Decision: Kategori? -->
+  <polygon points="215,275 255,295 215,315 175,295" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="215" y="299" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Kategori?</text>
+
+  <!-- Obat Branch (Orthogonal: left to x=135, down to y=345) -->
+  <text x="145" y="288" font-size="9" font-weight="bold" fill="#0f172a">[Obat]</text>
+  <path d="M 175 295 L 135 295 L 135 345" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="65" y="345" width="140" height="42" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="135" y="363" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0f172a">Input Nomor Batch &amp;</text>
+  <text x="135" y="376" text-anchor="middle" font-size="8.5" fill="#0f172a">Tanggal Kedaluwarsa (ED)</text>
+  <!-- To Merge (Orthogonal) -->
+  <path d="M 135 387 L 135 420 L 200 420" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+
+  <!-- Alkes Branch (Orthogonal: right to x=295, down to y=345) -->
+  <text x="260" y="288" font-size="9" font-weight="bold" fill="#0f172a">[Alkes]</text>
+  <path d="M 255 295 L 295 295 L 295 345" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="225" y="345" width="140" height="42" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="295" y="363" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0f172a">Input Serial Number</text>
+  <text x="295" y="376" text-anchor="middle" font-size="8.5" fill="#0f172a">(SN) Fisik Unik</text>
+  <!-- To Merge (Orthogonal) -->
+  <path d="M 295 387 L 295 420 L 230 420" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+
+  <!-- Merge Kategori -->
+  <polygon points="215,410 230,420 215,430 200,420" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <line x1="215" y1="430" x2="215" y2="455" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Admin presses save -->
+  <rect x="105" y="455" width="220" height="40" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="215" y="479" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#0f172a">Tekan Tombol "Simpan"</text>
+  <!-- To Sistem (Orthogonal: right to x=560) -->
+  <path d="M 325 475 L 560 475" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ================= SISTEM: VALIDASI MUTU & RECORDING ================= -->
+  <rect x="560" y="455" width="270" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="472" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Validasi Identitas Medis:</text>
+  <text x="695" y="485" text-anchor="middle" font-size="9" fill="#0f172a">Cek Kelengkapan Batch/SN &amp; ED &gt;= 180 Hari</text>
+  <line x1="695" y1="497" x2="695" y2="525" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Decision: Lolos Validasi Mutu? -->
+  <polygon points="695,525 745,545 695,565 645,545" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="695" y="549" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Lolos Valid?</text>
+
+  <!-- [Tidak / ED Lampau] (Orthogonal: right to x=850, up to y=430) -->
+  <text x="750" y="538" font-size="8.5" font-weight="bold" fill="#dc2626">[Tidak/ED Lampau]</text>
+  <path d="M 745 545 L 850 545 L 850 430" fill="none" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+  <rect x="770" y="390" width="160" height="40" rx="6" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="850" y="407" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#dc2626">Tolak Simpan &amp; Tampilkan</text>
+  <text x="850" y="420" text-anchor="middle" font-size="8.5" fill="#dc2626">Pesan Kesalahan Medis</text>
+  <!-- Loop back to Admin input (Orthogonal) -->
+  <path d="M 850 390 L 850 225 L 325 225" fill="none" stroke="#dc2626" stroke-width="1.2" stroke-dasharray="4" marker-end="url(#arrow-red)"/>
+
+  <!-- [Lolos] (Orthogonal straight down) -->
+  <text x="705" y="585" font-size="9" font-weight="bold" fill="#16a34a">[Lolos]</text>
+  <line x1="695" y1="565" x2="695" y2="600" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="560" y="600" width="270" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="618" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Merekam Identitas Batch / SN</text>
+  <text x="695" y="632" text-anchor="middle" font-size="9" fill="#0f172a">ke Basis Data Persediaan</text>
+  <line x1="695" y1="642" x2="695" y2="670" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="560" y="670" width="270" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="688" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Menambahkan Kuantitas</text>
+  <text x="695" y="702" text-anchor="middle" font-size="9" fill="#0f172a">ke Saldo Stok Utama Gudang</text>
+  <line x1="695" y1="712" x2="695" y2="740" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="560" y="740" width="270" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="758" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Mencatat Mutasi Masuk Logistik</text>
+  <text x="695" y="772" text-anchor="middle" font-size="9" fill="#0f172a">ke Buku Besar Kartu Stok</text>
+  <line x1="695" y1="782" x2="695" y2="810" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="560" y="810" width="270" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="828" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Menerbitkan Instruksi Cetak</text>
+  <text x="695" y="842" text-anchor="middle" font-size="9" fill="#0f172a">Stiker Barcode / Batch Logistik</text>
+  <!-- To Admin (Orthogonal: left to x=325) -->
+  <path d="M 560 831 L 325 831" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Admin prints & sticks label -->
+  <rect x="105" y="810" width="220" height="44" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="215" y="828" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Cetak Stiker Label &amp; Tempelkan</text>
+  <text x="215" y="842" text-anchor="middle" font-size="9" fill="#0f172a">ke Fisik Dus Kemasan Sebelum ke Rak</text>
+
+  <!-- Final Node -->
+  <line x1="215" y1="854" x2="215" y2="890" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <circle cx="215" cy="903" r="14" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <circle cx="215" cy="903" r="8" fill="#0f172a"/>
+</svg>

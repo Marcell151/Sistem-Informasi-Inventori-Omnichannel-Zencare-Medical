@@ -1,7 +1,9 @@
 <?php
 // File: admin/master_produk.php
 // Master Data Produk Induk & Variasi
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/koneksi.php';
 require_once __DIR__ . '/../config/auth.php';
@@ -502,7 +504,7 @@ layoutHeader('Master Produk & Variasi', 'Kelola data produk induk dan variasi al
                                         <td class="py-2.5 px-3">
                                             <div class="flex items-center gap-2.5">
                                                 <div class="relative w-9 h-9 rounded-lg bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 p-0.5 group shadow-2xs">
-                                                    <img src="<?= htmlspecialchars($firstSrc) ?>" class="w-full h-full object-contain mix-blend-multiply" onerror="this.src='../assets/img/no-image.png'">
+                                                    <img src="<?= htmlspecialchars($firstSrc) ?>" class="w-full h-full object-contain mix-blend-multiply" onerror="this.onerror=null; this.src='/inventory_zencare/assets/img/no-image.png'">
                                                     <?php if ($totalGbr > 1): ?>
                                                         <span class="absolute bottom-0 right-0 bg-slate-900/80 text-[8px] text-white font-bold px-1 rounded-tl leading-tight" title="<?= $totalGbr ?> Foto">
                                                             <?= $totalGbr ?>
@@ -1104,7 +1106,7 @@ function renderEditImageThumbnails(gambarStr) {
         let src = img.startsWith('http') ? img : (img.includes('/') ? ('../' + img) : ('../assets/img/produk/' + img));
         html += `
             <div class="relative group/thumb w-14 h-14 rounded-xl border border-slate-200 bg-white p-1 shadow-2xs flex items-center justify-center overflow-hidden">
-                <img src="${src}" class="w-full h-full object-contain mix-blend-multiply" onerror="this.src='../assets/img/no-image.png'">
+                <img src="${src}" class="w-full h-full object-contain mix-blend-multiply" onerror="this.onerror=null; this.src='/inventory_zencare/assets/img/no-image.png'">
                 ${idx === 0 ? '<span class="absolute bottom-0 inset-x-0 bg-blue-600/90 text-[8px] font-bold text-white text-center py-0.5 leading-none">Utama</span>' : ''}
                 <button type="button" onclick="removeEditImage(${idx})" class="absolute top-1 right-1 w-4 h-4 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center text-[10px] font-bold shadow opacity-80 group-hover/thumb:opacity-100 transition" title="Hapus foto ini">×</button>
             </div>

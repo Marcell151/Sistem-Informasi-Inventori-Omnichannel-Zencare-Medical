@@ -1,0 +1,58 @@
+4.7 Modul Mutasi Stok Manual & Klaim Garansi
+   - 4.8 Modul Kartu Stok & Audit Mutasi Fisik
+5. [MATRIKS HAK AKSES PENGGUNA (ROLE-BASED ACCESS CONTROL)](#5-matriks-hak-akses-pengguna-role-based-access-control)
+6. [PERSYARATAN NON-FUNGSIONAL & ARSITEKTUR TEKNOLOGI](#6-persyaratan-non-fungsional--arsitektur-teknologi)
+
+---
+
+## 1. PENDAHULUAN & RUANG LINGKUP SISTEM
+
+### 1.1 Tujuan Dokumen
+Dokumen Software Requirements Specification (SRS) ini disusun secara komprehensif untuk mendokumentasikan seluruh arsitektur perangkat lunak, aturan bisnis farmasi/alkes, model data relasional, dan logika alur kerja transaksi pada sistem **ZenCare Medical**. Dokumen ini menjadi rujukan teknis utama dalam penyusunan laporan Tugas Akhir (TA) serta integrasi dengan LLM (Gemini / Claude).
+
+### 1.2 Identitas Entitas Bisnis
+- **Nama Usaha**: ZenCare Medical
+- **Bidang**: Distributor Resmi Obat-obatan Kemasan Grosir & Alat Kesehatan
+- **Alamat Resmi**: Jl. Muharto No. 55D, Jodipan, Kec. Blimbing, Kota Malang, Jawa Timur 65127
+- **Kontak Resmi**: WhatsApp/Telp 0895-3434-36025 | Email: `zencare.id@gmail.com`
+- **Model Bisnis**: Omnichannel (Toko Fisik / POS Kasir + Platform E-Commerce Daring)
+
+---
+
+## 2. DESKRIPSI UMUM SISTEM & ATURAN BISNIS KHUSUS
+
+ZenCare Medical mengelola dua jenis komoditas medis yang memiliki regulasi dan karakteristik fisik berbeda:
+
+```
+                          ┌───────────────────────────┐
+                          │   PRODUK ZENCARE MEDICAL  │
+                          └─────────────┬─────────────┘
+                                        │
+                ┌───────────────────────┴───────────────────────┐
+                ▼                                               ▼
+       ┌──────────────────┐                           ┌───────────────────┐
+       │     KATEGORI     │                           │     KATEGORI      │
+       │       OBAT       │                           │  ALAT KESEHATAN   │
+       └────────┬─────────┘                           └─────────┬─────────┘
+                │                                               │
+   ┌────────────┴────────────┐                     ┌────────────┴────────────┐
+   │ • Tracking: Batch & Exp │                     │ • Tracking: Serial No   │
+   │ • Metode: FEFO          │                     │ • Garansi: Exp Date SN  │
+   │ • Satuan: Besar & Kecil │                     │ • Satuan: Unit Tunggal  │
+   │ • Sub-Batch: .A, .B...  │                     │ • Fisik: Barcode SN     │
+   └─────────────────────────┘                     └─────────────────────────┘
+```
+
+### 2.1 Pembedaan Komoditas Medis (Obat vs Alat Kesehatan)
+1. **Komoditas Obat**:
+   - Memiliki **Nomor Batch Pabrik** dan **Tanggal Kedaluwarsa (Expired Date)**.
+   - Mengikuti kaidah **FEFO (First Expired, First Out)** secara ketat.
+   - Memiliki struktur satuan ganda: **Satuan Besar** (Karton / Dus / Box) dan **Satuan Kecil** (Strip / Botol / Tablet).
+2. **Komoditas Alat Kesehatan (Alkes)**:
+   - Tidak mengenal nomor batch, melainkan dilacak secara individual menggunakan **Nomor Seri Unik (Serial Number / SN)** per unit fisik.
+   - Status setiap unit SN dilacak: `Tersedia`, `Terjual`, `Retur/Rusak`, atau `Hilang`.
+   - Menggunakan tanggal kedaluwarsa garansi pabrik (*tgl_habis_garansi*).
+
+### 2.2 Hierarki Produk & Konversi Satuan Bertingkat (UOM)
+Sistem memisahkan entitas katalog menjadi dua tingkat:
+- **Produk Induk (`produk_induk`)**: Menyimpan metadata umum seperti nama produk (`Amoxicillin 500mg`), kategori (`Obat` / `Alat Kesehatan`)

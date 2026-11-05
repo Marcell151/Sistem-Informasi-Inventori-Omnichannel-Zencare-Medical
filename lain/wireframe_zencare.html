@@ -1,996 +1,855 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wireframe Murni – ZenCare Medical Omnichannel</title>
+    <title>Wireframe Arsitektur Sistem - ZenCare Medical (Bab 3.6)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=DM+Mono:wght@400;500;600&family=Times+New+Roman&display=swap" rel="stylesheet">
     <style>
-        /* ── FONT & PALET WIREFRAME STRICT ── */
-        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&display=swap');
-
-        :root {
-            --bg: #ffffff;
-            --bg2: #ffffff;
-            --bg3: #ffffff;
-            --border: #000000;
-            --border2: #000000;
-            --text: #000000;
-            --text2: #000000;
-            --text3: #000000;
-            --accent: #000000;
-        }
-
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            border-radius: 0 !important;
-            /* Paksa sudut tajam */
-            color: #000 !important;
-            /* Paksa teks hitam */
         }
 
         body {
-            font-family: 'DM Mono', monospace !important;
-            background: #f4f4f4 !important;
-            min-height: 100vh;
-            filter: grayscale(100%) contrast(120%);
-        }
-
-        /* ── SHELL & LAYOUT NAVIGASI ── */
-        .shell {
-            display: flex;
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
             height: 100vh;
             overflow: hidden;
-        }
-
-        .nav-panel {
-            width: 240px;
-            flex-shrink: 0;
-            background: #fff !important;
-            border-right: 2px solid #000 !important;
             display: flex;
             flex-direction: column;
         }
 
-        .nav-header {
-            padding: 16px 14px 10px;
-            border-bottom: 2px solid #000 !important;
+        /* Top Header Bar */
+        .top-navbar {
+            background: #ffffff;
+            border-bottom: 1px solid #cbd5e1;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            z-index: 10;
         }
 
-        .nav-header-title {
-            font-size: 11px;
+        .top-title h1 {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .top-title p {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            font-size: 11.5px;
             font-weight: 600;
-            letter-spacing: .04em;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: 1px solid transparent;
         }
 
-        .nav-header-sub {
-            font-size: 9px;
-            margin-top: 2px;
+        .btn-outline {
+            background: #f8fafc;
+            color: #334155;
+            border-color: #cbd5e1;
         }
 
-        .nav-list {
+        .btn-outline:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        /* Main Workspace Split */
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 320px;
+            background: #ffffff;
+            border-right: 1px solid #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 7px 10px;
+            font-size: 11.5px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .search-box:focus {
+            border-color: #2563eb;
+        }
+
+        .sidebar-list {
             flex: 1;
             overflow-y: auto;
             padding: 8px 0;
         }
 
-        .nav-section-label {
-            font-size: 8px;
-            font-weight: 600;
+        .cat-header {
+            font-size: 10px;
+            font-weight: 800;
+            color: #475569;
             text-transform: uppercase;
-            letter-spacing: .08em;
-            padding: 10px 14px 4px;
+            letter-spacing: 0.05em;
+            padding: 12px 16px 4px 16px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 2;
         }
 
         .nav-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
+            gap: 10px;
+            padding: 8px 16px;
             cursor: pointer;
-            font-size: 10px;
-            border: 1px solid transparent;
+            border-left: 3px solid transparent;
+            transition: all 0.15s;
+        }
+
+        .nav-item:hover {
+            background: #f1f5f9;
         }
 
         .nav-item.active {
-            background: #000 !important;
-            color: #fff !important;
+            background: #eff6ff;
+            border-left-color: #2563eb;
         }
 
-        .nav-num {
-            width: 16px;
-            height: 16px;
-            border: 1px solid #000 !important;
-            font-size: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .nav-badge-fig {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #f1f5f9;
+            color: #475569;
+            font-family: monospace;
             flex-shrink: 0;
-            background: #fff !important;
         }
 
-        .nav-item.active .nav-num {
-            background: #fff !important;
-            color: #000 !important;
-            font-weight: 600;
-            border-color: #fff !important;
+        .nav-item.active .nav-badge-fig {
+            background: #dbeafe;
+            color: #1e40af;
         }
 
-        /* ── MAIN AREA ── */
-        .main {
-            flex: 1;
-            overflow: hidden;
+        .nav-text-col {
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
-        .main-topbar {
-            height: 44px;
-            background: #fff !important;
-            border-bottom: 2px solid #000 !important;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            gap: 10px;
-            flex-shrink: 0;
-        }
-
-        .main-topbar-title {
-            font-size: 12px;
+        .nav-item-title {
+            font-size: 11.5px;
             font-weight: 600;
+            color: #1e293b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .main-topbar-sub {
+        .nav-item.active .nav-item-title {
+            color: #1d4ed8;
+            font-weight: 700;
+        }
+
+        .nav-item-role {
             font-size: 10px;
+            color: #64748b;
         }
 
-        .page-badge,
-        .role-badge {
-            font-size: 9px;
-            background: #fff !important;
-            border: 1px solid #000 !important;
-            padding: 3px 10px;
-            font-weight: 600;
-        }
-
-        .page-badge {
-            margin-left: auto;
-        }
-
-        .main-content {
+        /* Content Area */
+        .viewport {
             flex: 1;
-            overflow-y: auto;
-            padding: 24px;
-            background: #f4f4f4 !important;
-        }
-
-        /* ── WIREFRAME CONTAINERS (Brutalist style) ── */
-        .wf,
-        .card,
-        .sc,
-        .hero,
-        .login-bg {
-            background: #fff !important;
-            border: 1px solid #000 !important;
-            box-shadow: 3px 3px 0px #000 !important;
+            display: flex;
+            flex-direction: column;
+            background: #f8fafc;
             overflow: hidden;
         }
 
-        .card {
-            padding: 12px;
-        }
-
-        .sc {
-            padding: 10px 12px;
-        }
-
-        .hero {
-            padding: 14px 18px;
-            margin-bottom: 12px;
-        }
-
-        /* ── UTILITIES ── */
-        .row {
+        .viewport-topbar {
+            background: #ffffff;
+            border-bottom: 1px solid #cbd5e1;
+            padding: 12px 24px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
-        }
-
-        .col {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .flex1 {
-            flex: 1;
-        }
-
-        .g2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .g3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-        }
-
-        .g4 {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-        }
-
-        /* ── CUSTOM APP LAYOUT (Sidebar dalam konten) ── */
-        .wf-topbar {
-            height: 36px;
-            background: #fff !important;
-            border-bottom: 1px solid #000 !important;
-            display: flex;
-            align-items: center;
-            padding: 0 14px;
-            gap: 8px;
-        }
-
-        .wf-sidebar {
-            width: 140px;
             flex-shrink: 0;
-            padding: 10px 0;
-            border-right: 1px solid #000 !important;
-            background: #fff !important;
-            display: flex;
-            flex-direction: column;
         }
 
-        .wf-si {
-            height: 18px;
-            margin: 2px 8px;
-            border: 1px solid #000 !important;
-            background: #fff !important;
+        .vp-title-col h2 {
+            font-size: 15px;
+            font-weight: 800;
+            color: #0f172a;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             display: flex;
             align-items: center;
-            padding: 0 5px;
-            font-size: 8px;
-            font-weight: bold;
+            gap: 8px;
         }
 
-        .wf-si.on {
-            background: #000 !important;
-            color: #fff !important;
-        }
-
-        .wf-sl {
-            font-size: 7px;
-            text-transform: uppercase;
-            letter-spacing: .07em;
-            padding: 8px 10px 2px;
-            border-top: 1px dashed #000;
-            margin-top: 5px;
-        }
-
-        .wf-sl:first-child {
-            border-top: none;
-            margin-top: 0;
-        }
-
-        .content {
-            flex: 1;
-            padding: 14px;
-        }
-
-        .ph {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .psub {
-            font-size: 9px;
+        .vp-title-col p {
+            font-size: 12px;
+            color: #64748b;
             margin-top: 2px;
         }
 
-        /* ── UI ELEMENTS ── */
-        .btn,
-        .btnp,
-        .badge {
-            border: 1px solid #000 !important;
-            background: #fff !important;
-            font-weight: 600 !important;
+        .vp-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .role-tag {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+
+        .viewport-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Image Display Frame */
+        .image-frame {
+            background: #ffffff;
+            border: 2px solid #0f172a;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            max-width: 1100px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+        }
+
+        .image-frame img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border: 1px solid #000;
+        }
+
+        /* Narrative Metadata Card */
+        .meta-card {
+            max-width: 1100px;
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 18px 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        .meta-header {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            color: #334155;
             text-transform: uppercase;
-        }
-
-        .btn {
-            height: 24px;
-            padding: 0 10px;
-            display: inline-flex;
-            align-items: center;
-            font-size: 9px;
-            cursor: pointer;
-        }
-
-        .btnp {
-            background: #000 !important;
-            color: #fff !important;
-        }
-
-        .badge {
-            height: 18px;
-            display: inline-flex;
-            align-items: center;
-            padding: 0 8px;
-            font-size: 8px;
-        }
-
-        .inp,
-        .sel,
-        .textarea {
-            height: 28px;
-            border: 1px solid #000 !important;
-            background: #fff !important;
-            padding: 0 8px;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 5px;
-            font-size: 9px;
         }
 
-        .textarea {
-            height: 60px;
-        }
-
-        .tri {
-            width: 0;
-            height: 0;
-            border-left: 4px solid transparent;
-            border-right: 4px solid transparent;
-            border-top: 5px solid #000 !important;
-        }
-
-        /* ── PLACEHOLDERS ── */
-        .blk,
-        .blk2,
-        .tc,
-        .tc.dk {
-            background: #e0e0e0 !important;
-            border: 1px solid #999 !important;
-        }
-
-        /* Image Cross Boxes */
-        .img-box,
-        .av,
-        .wf-logo,
-        .wf-user {
-            background: #fff !important;
-            border: 1px solid #000 !important;
-            position: relative;
-            color: transparent !important;
-        }
-
-        .img-box::before,
-        .av::before,
-        .wf-logo::before,
-        .wf-user::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(to bottom right, transparent calc(50% - 1px), #000 calc(50%), transparent calc(50% + 1px));
-        }
-
-        .img-box::after,
-        .av::after,
-        .wf-logo::after,
-        .wf-user::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(to top right, transparent calc(50% - 1px), #000 calc(50%), transparent calc(50% + 1px));
-        }
-
-        .wf-logo {
-            width: 26px;
-            height: 26px;
-            flex-shrink: 0;
-        }
-
-        .av {
-            width: 26px;
-            height: 26px;
-            flex-shrink: 0;
-        }
-
-        /* ── TABLES ── */
-        .tbl {
-            border: 1px solid #000 !important;
-            background: #fff !important;
-            box-shadow: 2px 2px 0px #000 !important;
-            margin-bottom: 10px;
-        }
-
-        .tbl-h {
-            background: #fff !important;
-            border-bottom: 2px solid #000 !important;
-            padding: 7px 10px;
-            display: grid;
-            gap: 8px;
-            align-items: center;
-            font-size: 8px;
+        .meta-caption {
+            font-size: 14px;
             font-weight: bold;
+            color: #0f172a;
+            margin-bottom: 8px;
         }
 
-        .tbl-r {
-            padding: 8px 10px;
-            display: grid;
-            gap: 8px;
-            align-items: center;
-            border-bottom: 1px solid #000 !important;
-            font-size: 9px;
-        }
-
-        .tbl-r:last-child {
-            border-bottom: none;
-        }
-
-        /* ── OTHERS ── */
-        .chk {
-            width: 12px;
-            height: 12px;
-            border: 1px solid #000 !important;
-            background: #fff !important;
-            flex-shrink: 0;
-        }
-
-        .login-bg {
-            min-height: 480px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .tabs {
-            display: flex;
-            border-bottom: 1px solid #000 !important;
+        .meta-desc {
+            font-size: 13px;
+            line-height: 1.6;
+            text-align: justify;
+            color: #1e293b;
             margin-bottom: 12px;
         }
 
-        .tab {
-            padding: 7px 14px;
-            font-size: 9px;
-            border-bottom: 2px solid transparent;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-weight: bold;
+        .meta-table-ref {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 11px;
+            color: #475569;
+            background: #f1f5f9;
+            padding: 6px 12px;
+            border-radius: 4px;
+            display: inline-block;
         }
 
-        .tab.on {
-            border-bottom: 3px solid #000 !important;
+        .copy-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.2s;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .copy-toast.show {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
-
 <body>
-    <div class="shell">
-        <!-- LEFT NAV -->
-        <div class="nav-panel">
-            <div class="nav-header">
-                <div class="nav-header-title">ZENCARE MEDICAL</div>
-                <div class="nav-header-sub">Wireframe — 18 Halaman</div>
-            </div>
-            <div class="nav-list" id="navList"></div>
-        </div>
 
-        <!-- MAIN -->
-        <div class="main">
-            <div class="main-topbar">
-                <div class="col" style="gap:2px">
-                    <div class="main-topbar-title" id="topTitle">—</div>
-                    <div class="main-topbar-sub" id="topSub">—</div>
-                </div>
-                <div class="page-badge" id="topBadge">01 / 18</div>
-                <div class="role-badge" id="topRole"></div>
-            </div>
-            <div class="main-content" id="mainContent"></div>
+    <!-- Top Navbar -->
+    <header class="top-navbar">
+        <div class="top-title">
+            <h1>Wireframe Arsitektur Sistem &mdash; ZenCare Medical</h1>
+            <p>Subbab 3.6 Laporan Tugas Akhir &bull; Katalog 25 Wireframe Omnichannel Lengkap</p>
         </div>
+        <div class="nav-links">
+            <a href="katalog_ui_ux_asli_zencare.html" class="btn-link" style="background:#059669; color:#ffffff; font-weight:700;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Komparasi UI Asli vs Wireframe (27 Halaman)
+            </a>
+            <a href="../laporan_ta/BAB_III_ZENCARE_MEDICAL.html#sec_3_6_wrapper" class="btn-link btn-outline">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                Kembali ke Laporan Bab 3
+            </a>
+            <a href="kamus_data_zencare.html" target="_blank" class="btn-link btn-outline">
+                Kamus Data (Subbab 3.5)
+            </a>
+            <a href="logical_database_zencare.html" target="_blank" class="btn-link btn-outline">
+                Logical Database (Subbab 3.4)
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <input type="text" id="search_input" oninput="filterWireframes()" placeholder="Cari nama halaman / role..." class="search-box">
+            </div>
+            <div class="sidebar-list" id="sidebar_list">
+                <!-- Injected via JavaScript -->
+            </div>
+        </aside>
+
+        <!-- Viewport Display -->
+        <main class="viewport">
+            <div class="viewport-topbar">
+                <div class="vp-title-col">
+                    <h2 id="vp_title">
+                        <span id="vp_fig" class="nav-badge-fig">Gambar 3.19</span>
+                        <span id="vp_name">Wireframe Antarmuka Login Staf</span>
+                    </h2>
+                    <p id="vp_sub">Pintu gerbang autentikasi back-end internal</p>
+                </div>
+                <div class="vp-actions">
+                    <span id="vp_role" class="role-tag">Role: Staf</span>
+                    <button onclick="copyCaption()" class="btn-link btn-primary">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Salin Keterangan Gambar
+                    </button>
+                    <a id="vp_download" href="#" download class="btn-link btn-outline">
+                        Unduh PNG
+                    </a>
+                </div>
+            </div>
+
+            <div class="viewport-body">
+                <!-- Image Display Box -->
+                <div class="image-frame">
+                    <img id="vp_img" src="" alt="Wireframe Preview">
+                </div>
+
+                <!-- Academic Metadata Card -->
+                <div class="meta-card">
+                    <div class="meta-header">
+                        <span>Deskripsi Fungsional &amp; Tata Letak Antarmuka</span>
+                        <span id="vp_index_indicator" style="font-family: monospace;">01 / 25</span>
+                    </div>
+                    <div class="meta-caption" id="meta_caption">
+                        Gambar 3.19 Wireframe Antarmuka Login Staf
+                    </div>
+                    <p class="meta-desc" id="meta_desc">
+                        Deskripsi wireframe...
+                    </p>
+                    <div class="meta-table-ref">
+                        <b>Entitas Basis Data Terkait:</b> <code id="meta_tables">users</code>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
+    <div class="copy-toast" id="toast">Keterangan Gambar berhasil disalin ke clipboard!</div>
+
     <script>
-        // ─── HELPERS ─────────────────────────────────────────────
-        function sysTopbar(title = 'ZenCare') {
-            return `<div class="wf-topbar"><div class="wf-logo"></div><div class="col" style="gap:2px"><div class="wf-title" style="font-weight:bold;font-size:10px;">${title}</div></div><div class="flex1"></div><div class="av" style="width:18px;height:18px;border-radius:50%;"></div></div>`;
-        }
+        const wireframes = [
+  {
+    "id": "login_staf",
+    "category": "A. Autentikasi Staf",
+    "fig": "Gambar 3.19",
+    "title": "Wireframe Antarmuka Login Staf",
+    "sub": "Pintu gerbang autentikasi back-end internal",
+    "role": "Staf (Multi-Aktor)",
+    "png": "File PPT/Wireframe/Login (Staf).png",
+    "tabel": "users",
+    "desc": "Antarmuka gerbang masuk tunggal bagi pengguna internal sistem (Superadmin, Admin, dan Kasir). Tata letak dirancang terpusat dengan bidang masukan nama pengguna (username) dan kata sandi (password), serta tombol akses utama menuju panel kerja. Sistem secara otomatis membaca peran pengguna yang berhasil masuk dan mengarahkannya ke halaman kerja sesuai dengan batas wewenangnya."
+  },
+  {
+    "id": "dashboard_admin",
+    "category": "B. Antarmuka Admin & Kasir",
+    "fig": "Gambar 3.20",
+    "title": "Wireframe Antarmuka Dashboard Admin",
+    "sub": "Panel kendali pemantauan operasional harian toko",
+    "role": "Admin",
+    "png": "File PPT/Wireframe/Dashboard (Admin).png",
+    "tabel": "penjualan, stok_toko, stok_batch",
+    "desc": "Panel kendali operasional harian bagi staf admin toko. Bagian atas memuat kartu ringkasan untuk memantau status pesanan yang harus diproses dan pesanan yang menunggu diambil langsung di toko. Di bawahnya terdapat indikator ketersediaan stok fisik, peringatan dini sisa persediaan yang menipis, peringatan obat yang mendekati masa kedaluwarsa, grafik volume penjualan harian, serta tombol akses cepat menuju terminal kasir."
+  },
+  {
+    "id": "pos",
+    "category": "B. Antarmuka Admin & Kasir",
+    "fig": "Gambar 3.21",
+    "title": "Wireframe Antarmuka Terminal Kasir (Point of Sale / POS)",
+    "sub": "Terminal transaksi luring kasir toko fisik",
+    "role": "Kasir / Admin",
+    "png": "File PPT/Wireframe/POS.png",
+    "tabel": "produk_variasi, penjualan, detail_penjualan, stok_batch",
+    "desc": "Terminal transaksi penjualan luring di toko fisik yang menggunakan tata letak dua kolom. Kolom kiri memuat katalog produk interaktif dengan bilah pencarian nama barang atau pemindaian kode batang (barcode), informasi persediaan siap jual, rekomendasi nomor angkatan (batch) obat terdekat kedaluwarsa sesuai aturan FEFO, serta input nomor seri untuk alat kesehatan. Kolom kanan memuat rincian keranjang belanja, pilihan satuan transaksi (eceran atau dus), pilihan metode pembayaran (tunai, debit, atau QRIS), perhitungan uang bayar dan kembalian, serta tombol penyelesaian transaksi sekaligus cetak struk."
+  },
+  {
+    "id": "transaksi",
+    "category": "B. Antarmuka Admin & Kasir",
+    "fig": "Gambar 3.22",
+    "title": "Wireframe Antarmuka Transaksi Omnichannel",
+    "sub": "Pusat manajemen pesanan lintas saluran (POS & Daring)",
+    "role": "Admin",
+    "png": "File PPT/Wireframe/Transaksi.png",
+    "tabel": "penjualan, detail_penjualan, pesanan_batch_alokasi",
+    "desc": "Pusat pengelolaan faktur penjualan dari dua saluran (toko fisik dan pesanan daring). Antarmuka dilengkapi tab filter saluran (E-Commerce atau Kasir POS), filter tanggal transaksi, pemantauan tahapan pesanan (Menunggu Bayar, Diproses, Dikirim, Selesai, atau Batal), serta tombol tindakan untuk memverifikasi pesanan, mencetak faktur penjualan, dan mencetak label resi pengiriman kurir."
+  },
+  {
+    "id": "produk",
+    "category": "B. Antarmuka Admin & Kasir",
+    "fig": "Gambar 3.23",
+    "title": "Wireframe Antarmuka Master Produk",
+    "sub": "Direktori katalog dasar komoditas obat & alat kesehatan",
+    "role": "Admin",
+    "png": "File PPT/Wireframe/Produk.png",
+    "tabel": "produk_induk, produk_variasi",
+    "desc": "Antarmuka direktori katalog dasar untuk mengelola informasi utama komoditas obat dan alat kesehatan. Halaman ini memuat tabel daftar barang (kode produk, nama produk, kategori, spesifikasi medis, aturan penyimpanan, dan batas hari peringatan kedaluwarsa), bilah pencarian cepat, filter kategori, serta tombol untuk membuka formulir penambahan dan pengubahan data produk."
+  },
+  {
+    "id": "satuan_uom",
+    "category": "B. Antarmuka Admin & Kasir",
+    "fig": "Gambar 3.24",
+    "title": "Wireframe Antarmuka Satuan & Multi-UOM",
+    "sub": "Konfigurasi rasio kemasan besar dus vs eceran",
+    "role": "Admin",
+    "png": "File PPT/Wireframe/Satuan & UOM.png",
+    "tabel": "produk_variasi",
+    "desc": "Panel pengaturan logika multi-satuan (Multi-UOM) yang memetakan hubungan antara kemasan besar dari pabrik (dus atau box) dengan satuan eceran (strip atau botol). Tabel menyajikan angka pengali rasio konversi, penetapan harga jual untuk masing-masing ukuran kemasan, batas stok aman minimum, serta berat barang dalam satuan gram untuk keperluan perhitungan ongkos kirim."
+  },
+  {
+    "id": "supplier",
+    "category": "B. Antarmuka Admin & Kasir",
+    "fig": "Gambar 3.25",
+    "title": "Wireframe Antarmuka Direktori Supplier",
+    "sub": "Basis data rekanan distributor & penyedia barang medis",
+    "role": "Admin",
+    "png": "File PPT/Wireframe/Supplier.png",
+    "tabel": "supplier",
+    "desc": "Rancangan tata letak direktori mitra logistik dan distributor penyedia obat dan alat kesehatan. Menampilkan daftar instansi distributor rekanan, narahubung resmi, nomor telepon, alamat surel korespondensi, alamat fisik kantor atau gudang, serta status keaktifan hubungan kerja sama."
+  },
+  {
+    "id": "penerimaan",
+    "category": "B. Antarmuka Admin & Kasir",
+    "fig": "Gambar 3.26",
+    "title": "Wireframe Antarmuka Penerimaan Barang (Inbound)",
+    "sub": "Gerbang pencatatan stok masuk, nomor batch, & expired date",
+    "role": "Admin / Gudang",
+    "png": "File PPT/Wireframe/Penerimaan Barang.png",
+    "tabel": "penerimaan_stok, penerimaan_detail, stok_batch, unit_serial",
+    "desc": "Formulir pencatatan pasokan fisik barang yang tiba di gudang. Memfasilitasi staf dalam memasukkan nomor faktur pengiriman distributor, memilih variasi produk, menginput nomor batch resmi pabrikan, menetapkan tanggal kedaluwarsa, jumlah kuantitas fisik yang diterima, harga beli, serta pendaftaran nomor seri unik jika barang merupakan komoditas alat kesehatan."
+  },
+  {
+    "id": "mutasi",
+    "category": "B. Antarmuka Admin & Kasir",
+    "fig": "Gambar 3.27",
+    "title": "Wireframe Antarmuka Mutasi Stok Manual",
+    "sub": "Penyesuaian stok non-transaksi (rusak, hilang, koreksi)",
+    "role": "Admin / Gudang",
+    "png": "File PPT/Wireframe/Mutasi Stok.png",
+    "tabel": "kartu_stok, stok_batch",
+    "desc": "Antarmuka formulir penyesuaian persediaan fisik di luar transaksi penjualan reguler. Memfasilitasi staf dalam mencatat mutasi masuk atau keluar persediaan, memilih nomor batch yang disesuaikan, serta mendokumentasikan alasan operasional (seperti barang rusak, kemasan cacat, atau koreksi selisih hitung fisik), lengkap dengan tabel riwayat mutasi terkini pada sisi kanan."
+  },
+  {
+    "id": "kartu_stok",
+    "category": "B. Antarmuka Admin & Kasir",
+    "fig": "Gambar 3.28",
+    "title": "Wireframe Antarmuka Kartu Stok Audit",
+    "sub": "Buku besar kronologis mutasi & transparansi riwayat fisik",
+    "role": "Admin / Superadmin",
+    "png": "File PPT/Wireframe/Kartu Stok.png",
+    "tabel": "kartu_stok",
+    "desc": "Buku besar kronologis persediaan yang mencatat jejak setiap mutasi masuk, keluar, dan sisa stok fisik. Antarmuka dilengkapi bilah filter rentang tanggal, filter produk, filter jenis mutasi, serta kolom penanggung jawab operasional guna menjamin keterlacakan audit persediaan barang secara transparan."
+  },
+  {
+    "id": "stok_opname",
+    "category": "B. Antarmuka Admin & Kasir",
+    "fig": "Gambar 3.29",
+    "title": "Wireframe Antarmuka Stok Opname & Audit Fisik Persediaan",
+    "sub": "Pencacahan fisik berkala & pembekuan transaksi (Freeze Lock)",
+    "role": "Admin / Gudang",
+    "png": "File PPT/Wireframe/Stok Opname.png",
+    "tabel": "sesi_opname, detail_opname_batch, detail_opname_sn, riwayat_hitung_opname",
+    "desc": "Panel pelaksanaan pemeriksaan persediaan fisik berkala guna menyinkronkan catatan sistem dengan kondisi nyata di rak toko. Dilengkapi indikator penguncian transaksi operasional sementara (freeze lock) pada kasir POS dan toko daring, kartu ringkasan status sesi, lembar kerja pencacahan fisik obat tanpa melihat saldo buku sistem (metode blind count) untuk menghindari bias perhitungan, pencacahan nomor seri fisik alat kesehatan, tombol eksekusi penyesuaian selisih ke buku besar, serta tombol cetak Berita Acara Opname resmi."
+  },
+  {
+    "id": "konversi_satuan",
+    "category": "B. Antarmuka Admin & Kasir",
+    "fig": "Gambar 3.30",
+    "title": "Wireframe Antarmuka Konversi Satuan & Riwayat Pecah Dus",
+    "sub": "Operasional pembongkaran kemasan dus besar ke eceran",
+    "role": "Admin / Kasir",
+    "png": "File PPT/Wireframe/Konversi Satuan.png",
+    "tabel": "histori_konversi, produk_variasi, stok_toko, stok_batch",
+    "desc": "Panel operasional untuk memecah kemasan besar (dus atau box) menjadi satuan eceran (strip atau botol) secara langsung saat stok eceran di rak toko habis. Formulir memuat pilihan nama obat, kotak informasi rasio konversi, pilihan batch dus yang dibongkar, jumlah dus yang dibuka, hasil eceran otomatis, pembentukan nomor batch pecahan baru yang terhubung ke batch induk, pemutakhiran saldo rak secara langsung, serta tabel catatan riwayat pembongkaran kemasan."
+  },
+  {
+    "id": "dashboard_superadmin",
+    "category": "C. Antarmuka Superadmin (Pemilik)",
+    "fig": "Gambar 3.31",
+    "title": "Wireframe Antarmuka Dashboard Superadmin",
+    "sub": "Pusat pengawasan makro bisnis dan komparasi saluran",
+    "role": "Superadmin",
+    "png": "File PPT/Wireframe/Dashboard (Superadmin).png",
+    "tabel": "penjualan, kartu_stok",
+    "desc": "Pusat pengawasan menyeluruh yang dirancang khusus untuk pemilik usaha. Menampilkan grafik perbandingan volume penjualan antara transaksi toko fisik (luring) dan pesanan toko daring (e-commerce), ringkasan nilai perputaran persediaan barang, serta pemberitahuan kritis logistik tanpa menampilkan detail teknis harian yang rumit."
+  },
+  {
+    "id": "lap_penjualan",
+    "category": "C. Antarmuka Superadmin (Pemilik)",
+    "fig": "Gambar 3.32",
+    "title": "Wireframe Antarmuka Laporan Penjualan Barang",
+    "sub": "Rekapitulasi volume arus barang keluar lintas saluran",
+    "role": "Superadmin",
+    "png": "File PPT/Wireframe/Laporan Penjualan Barang.png",
+    "tabel": "penjualan, detail_penjualan",
+    "desc": "Laporan rekapitulasi jumlah barang keluar dari seluruh saluran penjualan. Dilengkapi filter tanggal dan pilihan saluran penjualan, serta tabel rincian transaksi untuk menganalisis produk yang paling banyak terjual dan melihat kontribusi masing-masing saluran penjualan terhadap omset bisnis."
+  },
+  {
+    "id": "lap_persediaan",
+    "category": "C. Antarmuka Superadmin (Pemilik)",
+    "fig": "Gambar 3.33",
+    "title": "Wireframe Antarmuka Laporan Persediaan",
+    "sub": "Pemantauan aset gudang dengan kalkulasi multi-satuan terpadu",
+    "role": "Superadmin",
+    "png": "File PPT/Wireframe/Laporan Persediaan.png",
+    "tabel": "stok_toko, stok_batch, produk_variasi",
+    "desc": "Laporan pemantauan ketersediaan barang di gudang secara menyeluruh. Menampilkan perhitungan kuantitas dalam format multi-satuan terpadu (menjabarkan sisa kemasan besar dus dan satuan eceran pada satu baris data yang sama), indikator status kecukupan stok, serta perkiraan total aset persediaan fisik."
+  },
+  {
+    "id": "lap_logistik_medis",
+    "category": "C. Antarmuka Superadmin (Pemilik)",
+    "fig": "Gambar 3.34",
+    "title": "Wireframe Antarmuka Laporan Logistik Medis",
+    "sub": "Audit masa simpan batch FEFO dan pelacakan serial alkes",
+    "role": "Superadmin",
+    "png": "File PPT/Wireframe/Laporan Logistik Medis.png",
+    "tabel": "stok_batch, unit_serial",
+    "desc": "Laporan pengawasan khusus komoditas medis yang memisahkan dua fokus utama. Tab Sediaan Obat memantau masa simpan per nomor batch dengan urutan kedaluwarsa terdekat (metode FEFO) beserta peringatan batas aman edar, sedangkan Tab Alat Kesehatan melacak status keberadaan alat berdasarkan nomor seri fisik tunggal (tersedia, terjual, atau dalam klaim garansi)."
+  },
+  {
+    "id": "lap_penerimaan_barang",
+    "category": "C. Antarmuka Superadmin (Pemilik)",
+    "fig": "Gambar 3.35",
+    "title": "Wireframe Antarmuka Laporan Penerimaan Barang",
+    "sub": "Audit inbound pasokan obat & alat kesehatan dari distributor",
+    "role": "Superadmin",
+    "png": "File PPT/Wireframe/Laporan Penerimaan Barang.png",
+    "tabel": "penerimaan_stok, penerimaan_detail, supplier, stok_batch",
+    "desc": "Laporan eksekutif yang merekapitulasi seluruh pengiriman barang medis dari distributor resmi (PBF / rekanan). Antarmuka memuat bilah filter rentang tanggal terima, pilihan distributor, dan status penerimaan (sempurna atau retur parsial). Bagian ringkasan menyajikan kartu metrik total faktur inbound, nominal belanja persediaan, total dus diterima, serta kuantitas barang rusak atau diretur. Tabel data memuat nomor referensi surat jalan, tanggal terima, nama distributor, variasi produk, nomor batch pabrikan, tanggal kedaluwarsa, kuantitas pesan dan terima, harga beli, status penerimaan, dan identitas staf penerima guna memastikan transparansi pengadaan sebelum pembayaran disetujui."
+  },
+  {
+    "id": "lap_mutasi_konversi",
+    "category": "C. Antarmuka Superadmin (Pemilik)",
+    "fig": "Gambar 3.36",
+    "title": "Wireframe Antarmuka Laporan Mutasi & Konversi Satuan",
+    "sub": "Audit pemecahan dus (UOM) & penyesuaian non-transaksional",
+    "role": "Superadmin",
+    "png": "File PPT/Wireframe/Laporan Mutasi & Konversi.png",
+    "tabel": "kartu_stok, histori_konversi, produk_variasi, stok_batch",
+    "desc": "Pusat audit manajerial yang menyatukan dua modul pergerakan persediaan non-transaksional melalui navigasi tab interaktif. Tab Konversi Satuan memantau pembongkaran kemasan dus besar menjadi satuan eceran (strip atau pcs), menyajikan nomor batch asal, nomor sub-batch eceran baru yang terbentuk, rasio pengali, jumlah dus yang dibongkar, kuantitas eceran yang dihasilkan, dan sisa dus di rak gudang. Tab Mutasi Stok memantau penyesuaian fisik persediaan di luar transaksi (seperti barang rusak, kedaluwarsa, atau selisih opname fisik) lengkap dengan nomor referensi dokumen, jenis mutasi, kuantitas penyesuaian, dan alasan operasional staf."
+  },
+  {
+    "id": "lap_anomali_fefo",
+    "category": "C. Antarmuka Superadmin (Pemilik)",
+    "fig": "Gambar 3.37",
+    "title": "Wireframe Antarmuka Laporan Audit Anomali FEFO",
+    "sub": "Audit kepatuhan kasir & deviasi pengambilan batch obat",
+    "role": "Superadmin",
+    "png": "File PPT/Wireframe/Laporan Anomali FEFO.png",
+    "tabel": "log_anomali_fefo",
+    "desc": "Laporan audit kepatuhan kasir yang mencatat setiap kejadian ketika petugas kasir mengambil nomor batch obat yang berbeda dari anjuran kedaluwarsa terdekat pada sistem. Menampilkan filter rentang tanggal, tabel daftar kejadian (tanggal, nomor faktur, nama kasir, nomor batch yang diambil, nomor batch anjuran sistem, selisih hari kedaluwarsa, alasan kasir, dan status verifikasi) guna memastikan mutu obat tetap terjaga dan mencegah obat kedaluwarsa tertinggal di rak."
+  },
+  {
+    "id": "manajemen_user",
+    "category": "C. Antarmuka Superadmin (Pemilik)",
+    "fig": "Gambar 3.38",
+    "title": "Wireframe Antarmuka Manajemen Pengguna",
+    "sub": "Administrasi akun dan pembagian wewenang hak akses",
+    "role": "Superadmin",
+    "png": "File PPT/Wireframe/Manajemen Pengguna.png",
+    "tabel": "users",
+    "desc": "Pusat pengelolaan akun pengguna dan hak akses operasional sistem. Menampilkan daftar pengguna internal (Superadmin, Admin, Kasir) dan pelanggan e-commerce, indikator keaktifan akun, formulir pendaftaran staf baru, serta pengaturan kata sandi untuk menegakkan keamanan dan batasan tugas masing-masing pihak."
+  },
+  {
+    "id": "pengaturan_web",
+    "category": "C. Antarmuka Superadmin (Pemilik)",
+    "fig": "Gambar 3.39",
+    "title": "Wireframe Antarmuka Pengaturan Web & Konten Toko",
+    "sub": "Panel CMS konfigurasi identitas dan media visual toko",
+    "role": "Superadmin",
+    "png": "File PPT/Wireframe/Pengaturan Web.png",
+    "tabel": "pengaturan_web",
+    "desc": "Panel mandiri untuk memperbarui identitas dan tampilan portal toko daring. Memfasilitasi Superadmin dalam mengubah nama toko, nomor telepon layanan pelanggan, nomor WhatsApp, alamat fisik toko kesehatan ZenCare Medical, tautan gambar logo, serta berkas spanduk promosi beranda tanpa memengaruhi data logistik persediaan."
+  },
+  {
+    "id": "login_pelanggan",
+    "category": "D. Antarmuka Pelanggan (E-Commerce)",
+    "fig": "Gambar 3.40",
+    "title": "Wireframe Antarmuka Login Pelanggan",
+    "sub": "Pintu masuk autentikasi pengguna toko daring",
+    "role": "Pelanggan",
+    "png": "File PPT/Wireframe/Login (Pelanggan).png",
+    "tabel": "users",
+    "desc": "Pintu masuk bagi pembeli daring untuk memasukkan nama akun dan kata sandi sebelum melanjutkan keranjang belanja ke proses pembayaran. Halaman ini juga menyediakan tautan menuju formulir pendaftaran akun baru bagi pembeli yang belum terdaftar."
+  },
+  {
+    "id": "profil_pelanggan",
+    "category": "D. Antarmuka Pelanggan (E-Commerce)",
+    "fig": "Gambar 3.41",
+    "title": "Wireframe Antarmuka Akun & Profil Pelanggan",
+    "sub": "Pengelolaan data diri, alamat, & pelacakan pesanan",
+    "role": "Pelanggan",
+    "png": "File PPT/Wireframe/Profil.png",
+    "tabel": "users, penjualan",
+    "desc": "Panel akun pribadi pelanggan yang memuat formulir pengelolaan data diri dan daftar alamat pengiriman, serta tabel riwayat pesanan belanja daring untuk memantau status pengiriman paket pesanan, mengecek nomor resi kurir, dan melihat bukti transaksi."
+  },
+  {
+    "id": "ecommerce_home",
+    "category": "D. Antarmuka Pelanggan (E-Commerce)",
+    "fig": "Gambar 3.42",
+    "title": "Wireframe Antarmuka Beranda E-Commerce",
+    "sub": "Katalog publik etalase produk obat & alat kesehatan",
+    "role": "Pelanggan / Pengunjung",
+    "png": "File PPT/Wireframe/E-Commerce.png",
+    "tabel": "produk_induk, produk_variasi, stok_toko",
+    "desc": "Halaman utama toko daring yang dirancang untuk mempermudah pencarian produk kesehatan. Memuat bilah pencarian obat dan alkes, spanduk promosi utama, daftar kategori produk medis, serta susunan katalog produk unggulan dalam format kotak (grid) interaktif."
+  },
+  {
+    "id": "detail_produk",
+    "category": "D. Antarmuka Pelanggan (E-Commerce)",
+    "fig": "Gambar 3.43",
+    "title": "Wireframe Antarmuka Detail Produk",
+    "sub": "Spesifikasi medis, pemilihan variasi kemasan, & stok",
+    "role": "Pelanggan",
+    "png": "File PPT/Wireframe/Detail Produk.png",
+    "tabel": "produk_induk, produk_variasi, stok_batch",
+    "desc": "Halaman rincian barang medis yang menampilkan foto produk, penjelasan manfaat obat, spesifikasi teknis alat kesehatan, harga jual eceran maupun harga grosir dus, status ketersediaan stok fisik terkini, tombol pengatur jumlah beli, serta tombol untuk memasukkan produk ke keranjang belanja."
+  },
+  {
+    "id": "cart",
+    "category": "D. Antarmuka Pelanggan (E-Commerce)",
+    "fig": "Gambar 3.44",
+    "title": "Wireframe Antarmuka Keranjang Belanja",
+    "sub": "Panel samping (drawer) ringkasan belanja interaktif",
+    "role": "Pelanggan",
+    "png": "File PPT/Wireframe/Keranjang Belanja.png",
+    "tabel": "produk_variasi, stok_toko",
+    "desc": "Panel keranjang belanja melayang (slide-out drawer) yang menampilkan ringkasan daftar barang yang dipilih, pengaturan jumlah pesanan, penghapusan item, dan perhitungan subtotal belanja tanpa membuat pelanggan berpindah dari halaman katalog produk."
+  },
+  {
+    "id": "checkout",
+    "category": "D. Antarmuka Pelanggan (E-Commerce)",
+    "fig": "Gambar 3.45",
+    "title": "Wireframe Antarmuka Checkout Pembayaran",
+    "sub": "Konfirmasi pesanan, integrasi kurir, & pembayaran QRIS",
+    "role": "Pelanggan",
+    "png": "File PPT/Wireframe/Checkout Pembayaran.png",
+    "tabel": "penjualan, detail_penjualan",
+    "desc": "Halaman akhir pemesanan daring yang memfasilitasi pengisian data penerima, integrasi pemilihan kurir ekspedisi berbasis kota tujuan, penentuan titik lokasi pengantaran dengan pin peta digital, pilihan metode pengambilan (diantar kurir atau diambil di toko), kalkulasi otomatis subtotal dan biaya ongkos kirim, serta tombol pembayaran yang terhubung langsung ke gerbang pembayaran digital."
+  }
+];
 
-        function sysSidebar(active) {
-            const menu = [
-                ['UTAMA', ['Dashboard']],
-                ['TRANSAKSI', ['Kasir (POS)', 'Transaksi']],
-                ['MASTER DATA', ['Produk', 'Satuan & UOM', 'Supplier']],
-                ['LOGISTIK', ['Penerimaan Barang', 'Mutasi Stok', 'Kartu Stok']],
-                ['LAPORAN', ['Lap. Penjualan', 'Lap. Persediaan', 'Lap. Logistik Medis']],
-                ['SISTEM', ['Manajemen Pengguna']]
-            ];
-            let h = '<div class="wf-sidebar">';
-            for (const [sec, items] of menu) {
-                h += `<div class="wf-sl">${sec}</div>`;
-                for (const item of items) {
-                    h += `<div class="wf-si${item === active ? ' on' : ''}">${item}</div>`;
+        let currentIndex = 0;
+
+        function initSidebar() {
+            const list = document.getElementById('sidebar_list');
+            list.innerHTML = '';
+
+            let currentCat = '';
+            wireframes.forEach((wf, idx) => {
+                if (wf.category !== currentCat) {
+                    currentCat = wf.category;
+                    const catEl = document.createElement('div');
+                    catEl.className = 'cat-header';
+                    catEl.textContent = currentCat;
+                    list.appendChild(catEl);
                 }
+
+                const item = document.createElement('div');
+                item.className = 'nav-item' + (idx === 0 ? ' active' : '');
+                item.id = `nav_item_${idx}`;
+                item.onclick = () => selectWireframe(idx);
+                item.innerHTML = `
+                    <span class="nav-badge-fig">${wf.fig.replace('Gambar ', 'G.')}</span>
+                    <div class="nav-text-col">
+                        <span class="nav-item-title">${wf.title.replace('Wireframe Antarmuka ', '')}</span>
+                        <span class="nav-item-role">${wf.role}</span>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function selectWireframe(idx) {
+            currentIndex = idx;
+            const wf = wireframes[idx];
+
+            // Update Sidebar active state
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const activeEl = document.getElementById(`nav_item_${idx}`);
+            if (activeEl) activeEl.classList.add('active');
+
+            // Update Viewport Topbar
+            document.getElementById('vp_fig').textContent = wf.fig;
+            document.getElementById('vp_name').textContent = wf.title;
+            document.getElementById('vp_sub').textContent = wf.sub;
+            document.getElementById('vp_role').textContent = 'Role: ' + wf.role;
+
+            // Update Image
+            const imgEl = document.getElementById('vp_img');
+            imgEl.src = wf.png;
+            imgEl.alt = wf.title;
+
+            // Update Download link
+            const dlBtn = document.getElementById('vp_download');
+            dlBtn.href = wf.png;
+            dlBtn.download = `${wf.fig}_${wf.title.replace(/[^a-zA-Z0-9_-]/g, '_')}.png`;
+
+            // Update Academic Metadata
+            document.getElementById('vp_index_indicator').textContent = `${String(idx + 1).padStart(2, '0')} / ${String(wireframes.length).padStart(2, '0')}`;
+            document.getElementById('meta_caption').textContent = `${wf.fig} ${wf.title}`;
+            document.getElementById('meta_desc').textContent = wf.desc;
+            document.getElementById('meta_tables').textContent = wf.tabel;
+        }
+
+        function filterWireframes() {
+            const q = document.getElementById('search_input').value.toLowerCase();
+            document.querySelectorAll('.nav-item').forEach((el, idx) => {
+                const wf = wireframes[idx];
+                const match = wf.title.toLowerCase().includes(q) || wf.sub.toLowerCase().includes(q) || wf.role.toLowerCase().includes(q) || wf.fig.toLowerCase().includes(q);
+                el.style.display = match ? 'flex' : 'none';
+            });
+        }
+
+        function copyCaption() {
+            const wf = wireframes[currentIndex];
+            const textToCopy = `${wf.fig} ${wf.title}\n${wf.desc}\n(Entitas Terkait: ${wf.tabel})`;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast('Keterangan ' + wf.fig + ' berhasil disalin!');
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // Keyboard arrow navigation
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                if (currentIndex < wireframes.length - 1) selectWireframe(currentIndex + 1);
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                if (currentIndex > 0) selectWireframe(currentIndex - 1);
             }
-            h += '</div>';
-            return h;
-        }
-
-        function sc4(ls) {
-            return `<div class="g4" style="margin-bottom:12px">${ls.map(l => `<div class="sc"><div class="blk" style="height:14px;width:30px;margin-bottom:5px;"></div><div style="font-size:14px;font-weight:bold;margin-bottom:2px;">999</div><div style="font-size:8px;">${l}</div></div>`).join('')}</div>`;
-        }
-
-        const pages = [
-            // ─── E-COMMERCE & LOGIN (PUBLIK/STAF) ───
-            {
-                title: 'Beranda & Katalog', sub: 'Tampilan depan E-Commerce untuk pelanggan', role: 'Pelanggan', html: () => `
-        <div class="wf" style="min-height:500px; display:flex; flex-direction:column;">
-            <div class="wf-topbar" style="height:50px;">
-                <div class="wf-logo"></div><div style="font-weight:bold;font-size:12px;">ZenCare Store</div>
-                <div class="inp" style="width:300px;margin-left:20px;"><div class="blk" style="height:8px;flex:1;"></div><div class="av" style="width:14px;height:14px;border:none;"></div></div>
-                <div class="flex1"></div>
-                <div class="btn">Masuk / Daftar</div><div class="btn btnp">🛒 (0)</div>
-            </div>
-            <div class="hero img-box" style="height:180px; display:flex; align-items:center; justify-content:center; flex-direction:column; background:#e0e0e0 !important; color:#000 !important;">
-                <div style="background:#fff; padding:10px; border:2px solid #000; font-weight:bold; z-index:10;">BANNER PROMOSI / HERO</div>
-            </div>
-            <div class="content">
-                <div class="g4">
-                    ${Array(4).fill().map((_, i) => `<div class="card" style="text-align:center;"><div style="font-size:10px;font-weight:bold;">Kategori ${i + 1}</div></div>`).join('')}
-                </div>
-                <div style="font-weight:bold; font-size:12px; margin:15px 0 10px;">Produk Unggulan</div>
-                <div class="g4">
-                    ${Array(4).fill().map(() => `
-                    <div class="card">
-                        <div class="img-box" style="height:100px; width:100%; margin-bottom:10px;"></div>
-                        <div class="tc dk" style="width:80%; height:10px; margin-bottom:5px;"></div>
-                        <div class="tc" style="width:50%; height:8px; margin-bottom:10px;"></div>
-                        <div style="font-weight:bold; font-size:12px; margin-bottom:10px;">Rp XX.XXX</div>
-                        <div class="btn btnp" style="width:100%; justify-content:center;">+ Keranjang</div>
-                    </div>`).join('')}
-                </div>
-            </div>
-        </div>`},
-
-            {
-                title: 'Login Pelanggan', sub: 'Autentikasi pelanggan daring', role: 'Pelanggan', html: () => `
-        <div class="login-bg">
-          <div class="card" style="width:320px;padding:30px 25px;">
-            <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:20px;">
-              <div class="wf-logo" style="margin-bottom:10px;"></div>
-              <div style="font-weight:bold; font-size:12px;">Selamat Datang</div>
-            </div>
-            <div style="font-size:8px;font-weight:bold;margin-bottom:5px;">USERNAME / EMAIL</div>
-            <div class="inp" style="margin-bottom:12px;"><div class="blk" style="height:8px;width:60%;"></div></div>
-            <div style="font-size:8px;font-weight:bold;margin-bottom:5px;">KATA SANDI</div>
-            <div class="inp" style="margin-bottom:15px;"><div class="blk" style="height:8px;width:40%;"></div></div>
-            <div class="btn btnp" style="width:100%; justify-content:center; height:30px; margin-bottom:15px;">MASUK</div>
-            <div style="text-align:center; font-size:9px;">Belum punya akun? <b>Daftar sekarang</b></div>
-          </div>
-        </div>`},
-
-            {
-                title: 'Checkout Pembayaran', sub: 'Proses pengisian alamat dan kurir E-Commerce', role: 'Pelanggan', html: () => `
-        <div class="wf" style="min-height:500px; display:flex; flex-direction:column;">
-            <div class="wf-topbar"><div class="wf-logo"></div><div style="font-weight:bold;font-size:12px;">Checkout Pesanan</div><div class="flex1"></div><div class="btn">Kembali</div></div>
-            <div class="content g2" style="grid-template-columns: 1.5fr 1fr;">
-                <div class="col" style="gap:15px;">
-                    <div class="card">
-                        <div style="font-weight:bold; font-size:10px; border-bottom:1px solid #000; padding-bottom:5px; margin-bottom:10px;">1. Identitas Penerima</div>
-                        <div class="g2">
-                            <div><div style="font-size:8px;margin-bottom:3px;">Nama Lengkap</div><div class="inp"></div></div>
-                            <div><div style="font-size:8px;margin-bottom:3px;">No HP / WA</div><div class="inp"></div></div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div style="font-weight:bold; font-size:10px; border-bottom:1px solid #000; padding-bottom:5px; margin-bottom:10px;">2. Alamat & Kurir</div>
-                        <div class="g2" style="margin-bottom:10px;">
-                            <div><div style="font-size:8px;margin-bottom:3px;">Provinsi</div><div class="sel"><div class="flex1"></div><div class="tri"></div></div></div>
-                            <div><div style="font-size:8px;margin-bottom:3px;">Kota/Kabupaten</div><div class="sel"><div class="flex1"></div><div class="tri"></div></div></div>
-                        </div>
-                        <div style="font-size:8px;margin-bottom:3px;">Alamat Lengkap</div>
-                        <div class="textarea" style="margin-bottom:10px;"></div>
-                        <div style="font-size:8px;margin-bottom:3px;">Pilihan Ekspedisi</div>
-                        <div class="sel" style="margin-bottom:10px;"><div class="flex1"></div><div class="tri"></div></div>
-                        <div class="img-box" style="height:100px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; background:#e0e0e0 !important; color:#000 !important; z-index:1;"><span style="background:#fff; border:1px solid #000; padding:2px 5px; z-index:10;">PETA LOKASI (LEAFLET PIN)</span></div>
-                    </div>
-                </div>
-                <div class="card" style="align-self:start;">
-                    <div style="font-weight:bold; font-size:10px; border-bottom:1px solid #000; padding-bottom:5px; margin-bottom:10px;">3. Ringkasan Belanja</div>
-                    <div class="row" style="justify-content:space-between; margin-bottom:5px; font-size:9px;"><div>Obat Amoxicillin</div><div>1 x Rp 70.000</div></div>
-                    <div style="border-top:1px dashed #000; margin:10px 0;"></div>
-                    <div class="row" style="justify-content:space-between; margin-bottom:5px; font-size:9px;"><div>Subtotal Barang</div><div>Rp 70.000</div></div>
-                    <div class="row" style="justify-content:space-between; margin-bottom:10px; font-size:9px;"><div>Ongkos Kirim</div><div>Rp 10.000</div></div>
-                    <div class="row" style="justify-content:space-between; margin-bottom:15px; font-size:12px; font-weight:bold;"><div>Grand Total</div><div>Rp 80.000</div></div>
-                    <div class="btn btnp" style="width:100%; justify-content:center; height:30px;">BAYAR SEKARANG</div>
-                </div>
-            </div>
-        </div>`},
-
-            {
-                title: 'Login Staf', sub: 'Portal internal operasional', role: 'Admin', html: () => `
-        <div class="login-bg">
-          <div class="card" style="width:300px;padding:30px 25px;">
-            <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:20px;">
-              <div class="wf-logo" style="margin-bottom:10px;"></div>
-              <div style="font-weight:bold; font-size:14px;">ZenCare Admin</div>
-            </div>
-            <div style="font-size:8px;font-weight:bold;margin-bottom:5px;">USERNAME STAF</div>
-            <div class="inp" style="margin-bottom:12px;"><div class="blk" style="height:8px;width:60%;"></div></div>
-            <div style="font-size:8px;font-weight:bold;margin-bottom:5px;">PASSWORD</div>
-            <div class="inp" style="margin-bottom:15px;"><div class="blk" style="height:8px;width:40%;"></div></div>
-            <div class="btn btnp" style="width:100%; justify-content:center; height:30px;">MASUK KE DASHBOARD</div>
-          </div>
-        </div>`},
-
-            // ─── SUPERADMIN ───
-            {
-                title: 'Dashboard Superadmin', sub: 'Monitoring makro operasional (Pemilik)', role: 'Superadmin', html: () => `
-        <div class="wf">${sysTopbar('Dashboard Manajerial')}
-        <div style="display:flex;min-height:500px;">${sysSidebar('Dashboard')}
-        <div class="content">
-            <div class="g2" style="margin-bottom:12px;">
-                <div class="card row" style="justify-content:space-between;"><span style="font-size:9px;font-weight:bold;">Pesanan Menunggu</span> <span class="btn">Lihat</span></div>
-                <div class="card row" style="justify-content:space-between;"><span style="font-size:9px;font-weight:bold;">Menunggu Pick-up</span> <span class="btn">Lihat</span></div>
-            </div>
-            ${sc4(['Total Stok Fisik', 'Stok Menipis (<5)', 'Batch Hampir Exp', 'Pesanan Daring'])}
-            <div class="g2">
-                <div class="card" style="min-height:150px; display:flex; flex-direction:column;">
-                    <div style="font-size:10px;font-weight:bold;border-bottom:1px solid #000;padding-bottom:5px;margin-bottom:10px;">Kuantitas Penjualan (Luring vs Daring)</div>
-                    <div style="flex:1; border-bottom:2px solid #000; border-left:2px solid #000; display:flex; align-items:flex-end; justify-content:space-around; padding:10px;">
-                        <div class="img-box" style="width:20px; height:80px; background:#e0e0e0 !important;"></div>
-                        <div class="img-box" style="width:20px; height:40px; background:#e0e0e0 !important;"></div>
-                        <div class="img-box" style="width:20px; height:60px; background:#e0e0e0 !important;"></div>
-                    </div>
-                </div>
-                <div class="col" style="gap:10px;">
-                    <div class="card"><div style="font-size:8px;">VOLUME JUAL POS</div><div style="font-size:16px;font-weight:bold;">15 Unit</div></div>
-                    <div class="card"><div style="font-size:8px;">VOLUME JUAL E-COMMERCE</div><div style="font-size:16px;font-weight:bold;">42 Unit</div></div>
-                </div>
-            </div>
-        </div></div></div>`},
-
-            {
-                title: 'Laporan Penjualan Barang', sub: 'Rekapitulasi volume transaksi omnichannel', role: 'Superadmin', html: () => `
-        <div class="wf">${sysTopbar('Laporan Penjualan')}
-        <div style="display:flex;min-height:500px;">${sysSidebar('Lap. Penjualan')}
-        <div class="content">
-            <div class="card row" style="margin-bottom:15px; padding:10px;">
-                <div class="col"><div style="font-size:8px;">Dari Tanggal</div><div class="inp"></div></div>
-                <div class="col"><div style="font-size:8px;">Sampai Tanggal</div><div class="inp"></div></div>
-                <div class="col flex1"><div style="font-size:8px;">Kanal Penjualan</div><div class="sel"><div class="flex1"></div><div class="tri"></div></div></div>
-                <div class="btn btnp" style="margin-top:12px;">Tampilkan Data</div>
-                <div class="btn" style="margin-top:12px;">Cetak Laporan</div>
-            </div>
-            ${sc4(['Total Transaksi', 'Total Item Terjual', 'Item Terjual POS', 'Item Terjual Online'])}
-            <div class="card">
-                <div style="font-weight:bold;font-size:10px;margin-bottom:10px;">Rincian Volume per Produk</div>
-                <div class="tbl">
-                    <div class="tbl-h" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr;"><div>Produk</div><div>Kategori</div><div>Total Qty</div><div>Qty Luring</div><div>Qty Daring</div></div>
-                    ${Array(4).fill().map(() => `<div class="tbl-r" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr;"><div><div class="tc dk" style="width:80%;height:10px;margin-bottom:3px;"></div><div class="tc" style="width:50%;height:8px;"></div></div><div>Obat</div><div style="font-weight:bold;">15</div><div>5</div><div>10</div></div>`).join('')}
-                </div>
-            </div>
-        </div></div></div>`},
-
-            {
-                title: 'Laporan Persediaan', sub: 'Pemantauan kuantitas aset gudang', role: 'Superadmin', html: () => `
-        <div class="wf">${sysTopbar('Laporan Persediaan')}
-        <div style="display:flex;min-height:500px;">${sysSidebar('Lap. Persediaan')}
-        <div class="content">
-            <div class="row" style="margin-bottom:15px;">
-                <div class="sel" style="width:150px;"><div style="flex:1;">Semua Cabang</div><div class="tri"></div></div>
-                <div class="sel" style="width:150px;"><div style="flex:1;">Semua Status</div><div class="tri"></div></div>
-                <div class="btn btnp">Tampilkan</div><div class="btn">Cetak</div>
-            </div>
-            ${sc4(['Total Unit Fisik', 'Total Kemasan Grosir', 'Variasi Terdaftar', 'Item Kritis / Habis'])}
-            <div class="tbl">
-                <div class="tbl-h" style="grid-template-columns: 0.3fr 0.8fr 2fr 1fr 1.5fr 1fr 1fr 0.8fr;"><div>No</div><div>Kategori</div><div>Produk</div><div>SKU</div><div>Rasio Kemasan</div><div>Stok (Pcs)</div><div>Tersedia Grosir</div><div>Status</div></div>
-                ${Array(5).fill().map((_, i) => `<div class="tbl-r" style="grid-template-columns: 0.3fr 0.8fr 2fr 1fr 1.5fr 1fr 1fr 0.8fr;"><div>${i + 1}</div><div><div class="badge">Obat</div></div><div><div class="tc dk" style="height:10px;width:90%;"></div></div><div>OBT-00${i}</div><div>1 Box = 10 Strip</div><div style="font-weight:bold;">78 Strip</div><div>7 Box</div><div><div class="badge ${i % 3 == 0 ? '' : 'dk'}">${i % 3 == 0 ? 'Kritis' : 'Aman'}</div></div></div>`).join('')}
-            </div>
-        </div></div></div>`},
-
-            {
-                title: 'Laporan Logistik Medis', sub: 'Pemantauan Batch dan Serial Number', role: 'Superadmin', html: () => `
-        <div class="wf">${sysTopbar('Lap. Logistik Medis')}
-        <div style="display:flex;min-height:500px;">${sysSidebar('Lap. Logistik Medis')}
-        <div class="content">
-            <div class="row" style="margin-bottom:15px; border-bottom:1px solid #000;">
-                <div class="btn btnp" style="border-bottom:none; margin-bottom:-1px;">💊 Batch Obat Aktif</div>
-                <div class="btn" style="border-bottom:none; margin-bottom:-1px;">🏷️ Jejak Serial Number</div>
-                <div class="flex1"></div>
-                <div class="btn" style="margin-bottom:5px;">Cetak Laporan</div>
-            </div>
-            <div class="g2" style="margin-bottom:15px;">
-                <div class="card row"><div class="tc dk" style="width:20px;height:20px;"></div><div class="col"><div style="font-size:16px;font-weight:bold;">7</div><div style="font-size:8px;">Total Batch Aktif</div></div></div>
-                <div class="card row" style="border:2px solid #000;"><div class="tc dk" style="width:20px;height:20px;"></div><div class="col"><div style="font-size:16px;font-weight:bold;">3</div><div style="font-size:8px;">Batch Kritis/Exp</div></div></div>
-            </div>
-            <div class="tbl">
-                <div class="tbl-h" style="grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr 1fr;"><div>Produk Obat</div><div>No. Batch</div><div>Tgl Exp</div><div>Stok Sisa</div><div>Status</div><div>Aksi</div></div>
-                ${Array(4).fill().map((_, i) => `<div class="tbl-r" style="grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr 1fr;"><div><div class="tc dk" style="height:10px;width:90%;margin-bottom:3px;"></div><div class="tc" style="height:8px;width:50%;"></div></div><div style="font-weight:bold;">BATCH-A-EXP</div><div>18 Sep 2026<br><small>2 hari lagi</small></div><div style="font-weight:bold;">10 Strip</div><div><div class="badge ${i < 2 ? 'dk' : ''}">${i < 2 ? 'Kritis' : 'Normal'}</div></div><div><div class="btn">🖨️ Cetak</div></div></div>`).join('')}
-            </div>
-        </div></div></div>`},
-
-            {
-                title: 'Manajemen Pengguna', sub: 'Kelola akun kasir, admin, dan pelanggan', role: 'Superadmin', html: () => `
-        <div class="wf">${sysTopbar('Manajemen Pengguna')}
-        <div style="display:flex;min-height:500px;">${sysSidebar('Manajemen Pengguna')}
-        <div class="content">
-            <div class="row" style="justify-content:space-between; margin-bottom:15px;">
-                <div class="col"><div style="font-size:12px;font-weight:bold;">Daftar Akun User</div><div style="font-size:9px;">Total: 3 akun terdaftar</div></div>
-                <div class="btn btnp">+ Tambah User Baru</div>
-            </div>
-            <div class="tbl">
-                <div class="tbl-h" style="grid-template-columns: 0.5fr 1fr 2fr 1fr 1fr 1.5fr;"><div>#</div><div>Username</div><div>Nama & Kontak</div><div>Role</div><div>Status</div><div>Aksi</div></div>
-                <div class="tbl-r" style="grid-template-columns: 0.5fr 1fr 2fr 1fr 1fr 1.5fr;"><div>1</div><div style="font-weight:bold;">superadmin</div><div>SuperAdmin (Pemilik)<br><small>admin@zencare.id</small></div><div><div class="badge dk">Superadmin</div></div><div><div class="badge">Aktif</div></div><div><div class="btn">Edit</div></div></div>
-                <div class="tbl-r" style="grid-template-columns: 0.5fr 1fr 2fr 1fr 1fr 1.5fr;"><div>2</div><div style="font-weight:bold;">admin_toko</div><div>Admin (Staff Toko)<br><small>staff@zencare.id</small></div><div><div class="badge">Admin</div></div><div><div class="badge">Aktif</div></div><div><div class="row"><div class="btn">Edit</div><div class="btn" style="border:1px dashed #000;">Reset</div></div></div></div>
-                <div class="tbl-r" style="grid-template-columns: 0.5fr 1fr 2fr 1fr 1fr 1.5fr;"><div>3</div><div style="font-weight:bold;">pelanggan1</div><div>Budi Santoso<br><small>083333333</small></div><div><div class="badge">Pelanggan</div></div><div><div class="badge">Aktif</div></div><div><div class="row"><div class="btn">Edit</div><div class="btn" style="border:1px dashed #000;">Reset</div></div></div></div>
-            </div>
-        </div></div></div>`},
-
-            // ─── ADMIN ───
-            {
-                title: 'Dashboard Admin', sub: 'Ringkasan operasional kasir & inventori harian', role: 'Admin', html: () => `
-        <div class="wf">${sysTopbar('Dashboard Operasional')}
-        <div style="display:flex;min-height:500px;">${sysSidebar('Dashboard')}
-        <div class="content">
-            <div class="g2" style="margin-bottom:12px;">
-                <div class="card row" style="justify-content:space-between;"><span style="font-size:9px;font-weight:bold;">Pesanan Menunggu Proses</span> <span class="btn">Kelola</span></div>
-                <div class="card row" style="justify-content:space-between;"><span style="font-size:9px;font-weight:bold;">Menunggu Pengambilan</span> <span class="btn">Kelola</span></div>
-            </div>
-            ${sc4(['Total Stok Fisik', 'Stok Menipis (<5)', 'Hampir Kedaluwarsa', 'Pesanan Baru'])}
-            <div class="row" style="margin-bottom:15px;">
-                <div class="btn btnp">Buka Terminal POS</div><div class="btn">Terima Stok Baru</div><div class="btn">Kelola Pesanan</div>
-            </div>
-            <div class="g3">
-                <div class="card"><div style="font-weight:bold;font-size:10px;border-bottom:1px solid #000;padding-bottom:5px;margin-bottom:10px;">Stok Menipis</div>${Array(3).fill().map(() => `<div class="row" style="margin-bottom:8px;justify-content:space-between;font-size:8px;"><div><div class="tc dk" style="width:80px;height:8px;margin-bottom:2px;"></div><div class="tc" style="width:50px;height:6px;"></div></div><div style="font-weight:bold;">2 Unit</div></div>`).join('')}</div>
-                <div class="card"><div style="font-weight:bold;font-size:10px;border-bottom:1px solid #000;padding-bottom:5px;margin-bottom:10px;">Obat Hampir Exp</div>${Array(3).fill().map(() => `<div class="row" style="margin-bottom:8px;justify-content:space-between;font-size:8px;"><div><div class="tc dk" style="width:80px;height:8px;margin-bottom:2px;"></div><div class="tc" style="width:60px;height:6px;"></div></div><div style="font-weight:bold;">10 Strip</div></div>`).join('')}</div>
-                <div class="card"><div style="font-weight:bold;font-size:10px;border-bottom:1px solid #000;padding-bottom:5px;margin-bottom:10px;">Audit Kartu Stok</div>${Array(4).fill().map((_, i) => `<div class="row" style="margin-bottom:8px;justify-content:space-between;font-size:8px;"><div><div class="tc dk" style="width:80px;height:8px;margin-bottom:2px;"></div><div class="tc" style="width:40px;height:6px;"></div></div><div style="font-weight:bold;">${i % 2 == 0 ? '+15' : '-1'}</div></div>`).join('')}</div>
-            </div>
-        </div></div></div>`},
-
-            {
-                title: 'Kasir (POS)', sub: 'Sistem point of sale luring', role: 'Admin', html: () => `
-        <div class="wf" style="min-height:500px; display:flex; flex-direction:column;">
-            <div class="wf-topbar" style="background:#000 !important; color:#fff !important;"><div class="wf-logo" style="border-color:#fff !important; filter:invert(1);"></div><div style="font-weight:bold;font-size:12px;color:#fff !important;">POS ZenCare Medical</div><div class="flex1"></div><div class="btn">Dashboard Utama</div></div>
-            <div class="content g2" style="grid-template-columns: 1.5fr 1fr;">
-                <div class="card" style="display:flex; flex-direction:column;">
-                    <div class="row" style="margin-bottom:10px; justify-content:space-between;">
-                        <div style="font-weight:bold; font-size:10px;">Katalog Stok Cabang</div>
-                        <div class="inp" style="width:150px;"><div class="blk" style="height:8px;width:100%;"></div></div>
-                    </div>
-                    <div class="g2">
-                        ${Array(4).fill().map((_, i) => `
-                        <div class="card row" style="align-items:flex-start;">
-                            <div class="img-box" style="width:40px; height:40px;"></div>
-                            <div class="col flex1">
-                                <div style="font-size:8px;">OBT-00${i}</div>
-                                <div style="font-size:10px;font-weight:bold;">Nama Obat ${i}</div>
-                                <div class="badge" style="width:fit-content; margin:5px 0;">BATCH-XYZ</div>
-                                <div class="row" style="justify-content:space-between; margin-top:5px;">
-                                    <div class="col"><span style="font-weight:bold;font-size:10px;">Rp 7.500</span><span style="font-size:7px;">Stok: 78</span></div>
-                                    <div class="btn btnp">+ Pilih</div>
-                                </div>
-                            </div>
-                        </div>`).join('')}
-                    </div>
-                </div>
-                <div class="card" style="display:flex; flex-direction:column;">
-                    <div style="font-weight:bold; font-size:10px; border-bottom:1px solid #000; padding-bottom:5px; margin-bottom:10px;">Billing Transaksi</div>
-                    <div class="tbl" style="flex:1;">
-                        <div class="tbl-h" style="grid-template-columns: 2fr 0.5fr 1fr;"><div>Item</div><div>Qty</div><div>Subtotal</div></div>
-                        <div class="tbl-r" style="grid-template-columns: 2fr 0.5fr 1fr;"><div style="font-weight:bold;">Obat Amoxicillin</div><div>1</div><div>Rp 7.500</div></div>
-                    </div>
-                    <div class="row" style="justify-content:space-between; margin:10px 0; font-size:14px; font-weight:bold;">
-                        <div>TOTAL</div><div>Rp 7.500</div>
-                    </div>
-                    <div class="btn btnp" style="width:100%; justify-content:center; height:35px; margin-bottom:10px;">Proses Pembayaran</div>
-                    <div class="btn" style="width:100%; justify-content:center; height:25px; border-style:dashed !important;">Kosongkan Keranjang</div>
-                </div>
-            </div>
-        </div>`},
-
-            {
-                title: 'Transaksi Omnichannel', sub: 'Kelola pesanan daring dan riwayat POS', role: 'Admin', html: () => `
-        <div class="wf">${sysTopbar('Manajemen Pesanan')}
-        <div style="display:flex;min-height:500px;">${sysSidebar('Transaksi')}
-        <div class="content">
-            <div class="row" style="justify-content:space-between; margin-bottom:15px;">
-                <div style="font-weight:bold; font-size:12px;">Daftar Transaksi Pesanan</div>
-                <div class="row" style="border:1px solid #000;"><div class="btn btnp" style="border:none;">Semua</div><div class="btn" style="border:none;border-left:1px solid #000;border-right:1px solid #000;">E-Commerce</div><div class="btn" style="border:none;">POS</div></div>
-            </div>
-            <div class="tbl">
-                <div class="tbl-h" style="grid-template-columns: 1.5fr 1fr 2fr 1.5fr 1fr 1fr 1.5fr;"><div>Invoice</div><div>Tipe</div><div>Penerima</div><div>Kurir</div><div>Total</div><div>Status</div><div>Aksi</div></div>
-                ${Array(5).fill().map((_, i) => `<div class="tbl-r" style="grid-template-columns: 1.5fr 1fr 2fr 1.5fr 1fr 1fr 1.5fr;"><div style="font-weight:bold;">${i % 2 == 0 ? 'POS' : 'WEB'}-2026...</div><div><div class="badge ${i % 2 == 0 ? 'dk' : ''}">${i % 2 == 0 ? 'POS' : 'E-COMMERCE'}</div></div><div><div class="tc dk" style="height:10px;width:80%;margin-bottom:2px;"></div><div class="tc" style="height:8px;width:60%;"></div></div><div>${i % 2 == 0 ? 'Direct' : 'JNE / Pick-up'}</div><div style="font-weight:bold;">Rp 18.500</div><div><div class="badge ${i % 2 == 0 ? '' : 'dk'}">${i % 2 == 0 ? 'Selesai' : 'Diproses'}</div></div><div><div class="row"><div class="sel" style="width:60px;height:20px;"></div><div class="btn">Cetak</div></div></div></div>`).join('')}
-            </div>
-        </div></div></div>`},
-
-            {
-                title: 'Produk Induk', sub: 'Master katalog barang', role: 'Admin', html: () => `
-        <div class="wf">${sysTopbar('Master Produk')}
-        <div style="display:flex;min-height:500px;">${sysSidebar('Produk')}
-        <div class="content">
-            <div class="row" style="justify-content:space-between; margin-bottom:15px;">
-                <div style="font-weight:bold; font-size:12px;">Daftar Produk Induk</div>
-                <div class="row"><div class="btn">Import CSV</div><div class="btn btnp">+ Tambah Produk</div></div>
-            </div>
-            <div class="col" style="gap:10px;">
-                ${Array(4).fill().map((_, i) => `
-                <div class="card row" style="justify-content:space-between;">
-                    <div class="row">
-                        <div class="img-box" style="width:30px;height:30px;"></div>
-                        <div class="col">
-                            <div class="row"><div style="font-weight:bold;font-size:11px;">Nama Produk ${i + 1}</div><div class="badge">Kategori</div></div>
-                            <div style="font-size:8px;">SKU: PRD-00${i} • Supplier: PT Distributor • 1 Variasi</div>
-                        </div>
-                    </div>
-                    <div class="row"><div class="btn">Edit</div><div class="btn" style="border-style:dashed !important;">Nonaktifkan</div></div>
-                </div>`).join('')}
-            </div>
-        </div></div></div>`},
-
-            {
-                title: 'Satuan & UOM', sub: 'Master konversi satuan dan harga variasi', role: 'Admin', html: () => `
-        <div class="wf">${sysTopbar('Master UOM')}
-        <div style="display:flex;min-height:500px;">${sysSidebar('Satuan & UOM')}
-        <div class="content">
-            <div class="card" style="margin-bottom:15px; border-style:dashed !important;">
-                <div style="font-weight:bold; font-size:10px; margin-bottom:5px;">ℹ️ Aturan UOM:</div>
-                <ul style="font-size:9px; margin-left:15px;">
-                    <li><b>Obat:</b> Rasio konversi > 1 (misal 1 Box = 10 Strip). POS gunakan sat kecil, Web sat besar.</li>
-                    <li><b>Alkes:</b> Rasio konversi = 1 (Single-UOM). Harga kecil = Harga besar.</li>
-                </ul>
-            </div>
-            <div style="font-weight:bold; font-size:12px; margin-bottom:10px;">Kategori Obat</div>
-            <div class="tbl" style="margin-bottom:20px;">
-                <div class="tbl-h" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;"><div>Produk</div><div>SKU Var</div><div>Sat Kecil</div><div>Sat Besar</div><div>Rasio</div><div>Harga (POS)</div><div>Harga (Web)</div><div>Aksi</div></div>
-                <div class="tbl-r" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;"><div><div style="font-weight:bold;">Amoxicillin</div><small>Kapsul per Strip</small></div><div>OBT-002</div><div style="font-weight:bold;">Strip</div><div style="font-weight:bold;">Box</div><div>1:10</div><div>Rp 7.500</div><div>Rp 70.000</div><div><div class="btn">Edit</div></div></div>
-            </div>
-            <div style="font-weight:bold; font-size:12px; margin-bottom:10px;">Kategori Alat Kesehatan</div>
-            <div class="tbl">
-                <div class="tbl-h" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;"><div>Produk</div><div>SKU Var</div><div>Sat Kecil</div><div>Sat Besar</div><div>Rasio</div><div>Harga (POS)</div><div>Harga (Web)</div><div>Aksi</div></div>
-                <div class="tbl-r" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;"><div><div style="font-weight:bold;">Tensimeter</div><small>Set Lengkap</small></div><div>ALK-001</div><div style="font-weight:bold;">Unit</div><div style="font-weight:bold;">Unit</div><div>1:1</div><div>Rp 495.000</div><div>Rp 495.000</div><div><div class="btn">Edit</div></div></div>
-            </div>
-        </div></div></div>`},
-
-            {
-                title: 'Supplier', sub: 'Direktori distributor', role: 'Admin', html: () => `
-        <div class="wf">${sysTopbar('Master Supplier')}
-        <div style="display:flex;min-height:500px;">${sysSidebar('Supplier')}
-        <div class="content">
-            <div class="row" style="justify-content:space-between; margin-bottom:15px;">
-                <div style="font-weight:bold; font-size:12px;">Daftar Supplier</div>
-                <div class="btn btnp">+ Tambah Supplier</div>
-            </div>
-            <div class="tbl">
-                <div class="tbl-h" style="grid-template-columns: 0.5fr 2fr 1fr 2fr 1fr 1fr;"><div>#</div><div>Nama Supplier</div><div>Kontak</div><div>Alamat</div><div>Status</div><div>Aksi</div></div>
-                ${Array(3).fill().map((_, i) => `<div class="tbl-r" style="grid-template-columns: 0.5fr 2fr 1fr 2fr 1fr 1fr;"><div>${i + 1}</div><div style="font-weight:bold;">PT Distributor Medis ${i + 1}</div><div>0812345678</div><div><div class="tc dk" style="width:80%;height:10px;"></div></div><div><div class="badge">Aktif</div></div><div><div class="row"><div class="btn">Edit</div></div></div></div>`).join('')}
-            </div>
-        </div></div></div>`},
-
-            {
-                title: 'Penerimaan Barang', sub: 'Form input stok fisik inbound', role: 'Admin', html: () => `
-        <div class="wf">${sysTopbar('Penerimaan Logistik')}
-        <div style="display:flex;min-height:500px;">${sysSidebar('Penerimaan Barang')}
-        <div class="content">
-            <div class="card">
-                <div style="font-weight:bold; font-size:10px; margin-bottom:10px;">Informasi Dokumen Penerimaan</div>
-                <div class="g4" style="margin-bottom:15px;">
-                    <div><div style="font-size:8px;margin-bottom:3px;">Sumber *</div><div class="sel"><div class="flex1">PO</div><div class="tri"></div></div></div>
-                    <div><div style="font-size:8px;margin-bottom:3px;">No. Referensi *</div><div class="inp">INV/PO/...</div></div>
-                    <div><div style="font-size:8px;margin-bottom:3px;">Supplier</div><div class="sel"><div class="flex1">Pilih...</div><div class="tri"></div></div></div>
-                    <div><div style="font-size:8px;margin-bottom:3px;">Tanggal Terima *</div><div class="inp">dd/mm/yyyy</div></div>
-                </div>
-                <div style="font-weight:bold; font-size:10px; border-bottom:1px solid #000; padding-bottom:5px; margin-bottom:10px; display:flex; justify-content:space-between;"><span>Daftar Barang Masuk Fisik</span> <span class="btn">+ Tambah Baris</span></div>
-                <div class="tbl" style="margin-bottom:15px;">
-                    <div class="tbl-h" style="grid-template-columns: 2fr 1fr 1fr 1fr 2fr 0.5fr;"><div>Produk *</div><div>Qty Fisik *</div><div>No. Batch (Obat)</div><div>Tgl Exp (Obat)</div><div>Serial Number (Alkes)</div><div></div></div>
-                    <div class="tbl-r" style="grid-template-columns: 2fr 1fr 1fr 1fr 2fr 0.5fr;"><div><div class="sel"><div class="flex1">Pilih...</div><div class="tri"></div></div></div><div><div class="inp"></div></div><div><div class="inp"></div></div><div><div class="inp"></div></div><div><div class="inp"></div></div><div><div class="btn" style="border:none;">✖</div></div></div>
-                </div>
-                <div class="row" style="justify-content:space-between;">
-                    <div style="font-size:8px;">ℹ️ Pilih produk terlebih dahulu untuk mengaktifkan kolom Batch/Exp (khusus obat).</div>
-                    <div class="btn btnp" style="height:30px;">💾 Simpan & Update Stok</div>
-                </div>
-            </div>
-        </div></div></div>`},
-
-            {
-                title: 'Mutasi Stok Manual', sub: 'Penyesuaian (adjustment) stok gudang', role: 'Admin', html: () => `
-        <div class="wf">${sysTopbar('Mutasi Manual')}
-        <div style="display:flex;min-height:500px;">${sysSidebar('Mutasi Stok')}
-        <div class="content g2">
-            <div class="card">
-                <div style="font-weight:bold; font-size:12px; margin-bottom:15px;">Form Penyesuaian Stok</div>
-                <div style="font-size:8px;margin-bottom:3px;">Pilih Produk *</div>
-                <div class="sel" style="margin-bottom:10px;"><div class="flex1">-- Pilih Barang --</div><div class="tri"></div></div>
-                <div class="g2" style="margin-bottom:10px;">
-                    <div><div style="font-size:8px;margin-bottom:3px;">Arah Mutasi *</div><div class="sel"><div class="flex1">-- Arah --</div><div class="tri"></div></div></div>
-                    <div><div style="font-size:8px;margin-bottom:3px;">Qty Fisik *</div><div class="inp">Contoh: 5</div></div>
-                </div>
-                <div style="font-size:8px;margin-bottom:3px;">Alasan *</div>
-                <div class="sel" style="margin-bottom:10px;"><div class="flex1">-- Pilih Alasan --</div><div class="tri"></div></div>
-                <div style="font-size:8px;margin-bottom:3px;">Keterangan Opsional</div>
-                <div class="textarea" style="margin-bottom:20px;"></div>
-                <div class="btn btnp" style="width:100%; justify-content:center; height:35px;">Simpan Penyesuaian Stok</div>
-            </div>
-            <div class="card">
-                <div class="row" style="margin-bottom:15px;"><div class="tc dk" style="width:15px;height:15px;"></div><div class="col"><div style="font-weight:bold; font-size:10px;">Riwayat Penyesuaian</div><div style="font-size:8px;">20 aktivitas terakhir</div></div></div>
-                ${Array(4).fill().map((_, i) => `
-                <div class="row" style="border-bottom:1px solid #000; padding-bottom:10px; margin-bottom:10px; align-items:flex-start;">
-                    <div style="font-size:8px;width:50px;">15/09/26<br>14:38</div>
-                    <div class="col flex1"><div style="font-weight:bold;font-size:10px;">Produk Obat ${i}</div><div style="font-size:8px;">Penjualan POS-1234</div></div>
-                    <div class="badge ${i % 2 == 0 ? 'dk' : ''}">-1</div>
-                </div>`).join('')}
-            </div>
-        </div></div></div>`},
-
-            {
-                title: 'Kartu Stok', sub: 'Buku besar audit logistik', role: 'Admin', html: () => `
-        <div class="wf">${sysTopbar('Audit Kartu Stok')}
-        <div style="display:flex;min-height:500px;">${sysSidebar('Kartu Stok')}
-        <div class="content">
-            <div class="card row" style="margin-bottom:15px; padding:10px;">
-                <div class="col flex1"><div style="font-size:8px;">Pilih Barang *</div><div class="sel"><div class="flex1">Amoxicillin Kapsul 500mg...</div><div class="tri"></div></div></div>
-                <div class="col"><div style="font-size:8px;">Dari Tanggal</div><div class="inp"></div></div>
-                <div class="col"><div style="font-size:8px;">Sampai Tanggal</div><div class="inp"></div></div>
-                <div class="btn btnp" style="margin-top:12px;">Tampilkan</div>
-                <div class="btn" style="margin-top:12px;">Cetak Format Fisik</div>
-            </div>
-            <div class="card" style="padding:20px;">
-                <h2 style="text-align:center; margin-bottom:20px; font-size:18px;">Kartu Stok Barang</h2>
-                <div class="g2" style="font-size:10px; margin-bottom:15px;">
-                    <div class="col"><div><b>Nama Barang:</b> Amoxicillin</div><div><b>Kode:</b> OBT-002</div><div><b>Satuan:</b> Strip</div></div>
-                    <div class="col"><div><b>Min Stok:</b> 20</div><div><b>Stok Riil:</b> 78</div><div><b>Lokasi:</b> Pusat</div></div>
-                </div>
-                <div class="tbl">
-                    <div class="tbl-h" style="grid-template-columns: 1.5fr 3fr 1fr 1fr 1fr 1.5fr;" style="text-align:center;">
-                        <div style="grid-row: 1 / 3;">Tanggal</div><div style="grid-row: 1 / 3;">Deskripsi</div><div style="grid-column: 3 / 6; text-align:center; border-bottom:1px solid #000; padding-bottom:5px; margin-bottom:-5px;">Mutasi</div><div style="grid-row: 1 / 3;">Penanggung Jawab</div>
-                        <!-- Fake row for visual split -->
-                        <div style="display:none;"></div><div style="display:none;"></div>
-                        <div>Masuk</div><div>Keluar</div><div>Sisa</div>
-                        <div style="display:none;"></div>
-                    </div>
-                    ${Array(4).fill().map((_, i) => `<div class="tbl-r" style="grid-template-columns: 1.5fr 3fr 1fr 1fr 1fr 1.5fr;"><div>12/09/2026<br>18:45</div><div>${i % 2 == 0 ? 'Penjualan Checkout Web' : 'Penerimaan Barang PO'}</div><div style="font-weight:bold;">${i % 2 != 0 ? '20' : ''}</div><div style="font-weight:bold;">${i % 2 == 0 ? '10' : ''}</div><div style="font-weight:bold;">70</div><div>Budi / Admin</div></div>`).join('')}
-                </div>
-            </div>
-        </div></div></div>`}
-        ];
-
-        const navList = document.getElementById('navList');
-        const mainContent = document.getElementById('mainContent');
-
-        pages.forEach((page, i) => {
-            const item = document.createElement('div');
-            item.className = 'nav-item' + (i === 0 ? ' active' : '');
-            item.innerHTML = `<div class="nav-num">${String(i + 1).padStart(2, '0')}</div><span>${page.title}</span>`;
-            item.onclick = () => goPage(i);
-            item.id = `nav-${i}`;
-            navList.appendChild(item);
         });
 
-        function goPage(i) {
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`nav-${i}`).classList.add('active');
-            document.getElementById('topTitle').textContent = pages[i].title;
-            document.getElementById('topSub').textContent = pages[i].sub;
-            document.getElementById('topBadge').textContent = `${String(i + 1).padStart(2, '0')} / 18`;
-            const rb = document.getElementById('topRole');
-            rb.textContent = 'Role: ' + pages[i].role;
-            mainContent.innerHTML = pages[i].html();
-        }
-
-        goPage(0);
+        // Initialize
+        initSidebar();
+        selectWireframe(0);
     </script>
 </body>
-
 </html>

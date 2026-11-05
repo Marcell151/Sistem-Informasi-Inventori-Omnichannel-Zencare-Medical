@@ -1,0 +1,87 @@
+## 2. DESKRIPSI UMUM SISTEM & ATURAN BISNIS KHUSUS
+
+ZenCare Medical mengelola dua jenis komoditas medis yang memiliki regulasi dan karakteristik fisik berbeda:
+
+```
+                          ┌───────────────────────────┐
+                          │   PRODUK ZENCARE MEDICAL  │
+                          └─────────────┬─────────────┘
+                                        │
+                ┌───────────────────────┴───────────────────────┐
+                ▼                                               ▼
+       ┌──────────────────┐                           ┌───────────────────┐
+       │     KATEGORI     │                           │     KATEGORI      │
+       │       OBAT       │                           │  ALAT KESEHATAN   │
+       └────────┬─────────┘                           └─────────┬─────────┘
+                │                                               │
+   ┌────────────┴────────────┐                     ┌────────────┴────────────┐
+   │ • Tracking: Batch & Exp │                     │ • Tracking: Serial No   │
+   │ • Metode: FEFO          │                     │ • Garansi: Exp Date SN  │
+   │ • Satuan: Besar & Kecil │                     │ • Satuan: Unit Tunggal  │
+   │ • Sub-Batch: .A, .B...  │                     │ • Fisik: Barcode SN     │
+   └─────────────────────────┘                     └─────────────────────────┘
+```
+
+### 2.1 Pembedaan Komoditas Medis (Obat vs Alat Kesehatan)
+1. **Komoditas Obat**:
+   - Memiliki **Nomor Batch Pabrik** dan **Tanggal Kedaluwarsa (Expired Date)**.
+   - Mengikuti kaidah **FEFO (First Expired, First Out)** secara ketat.
+   - Memiliki struktur satuan ganda: **Satuan Besar** (Karton / Dus / Box) dan **Satuan Kecil** (Strip / Botol / Tablet).
+2. **Komoditas Alat Kesehatan (Alkes)**:
+   - Tidak mengenal nomor batch, melainkan dilacak secara individual menggunakan **Nomor Seri Unik (Serial Number / SN)** per unit fisik.
+   - Status setiap unit SN dilacak: `Tersedia`, `Terjual`, `Retur/Rusak`, atau `Hilang`.
+   - Menggunakan tanggal kedaluwarsa garansi pabrik (*tgl_habis_garansi*).
+
+### 2.2 Hierarki Produk & Konversi Satuan Bertingkat (UOM)
+Sistem memisahkan entitas katalog menjadi dua tingkat:
+- **Produk Induk (`produk_induk`)**: Menyimpan metadata umum seperti nama produk (`Amoxicillin 500mg`), kategori (`Obat` / `Alat Kesehatan`), gambar, dan deskripsi umum.
+- **Produk Variasi (`produk_variasi`)**: Menyimpan varian fisik dan aturan konversi satuan:
+  - `satuan_besar`: Satuan grosir/distribusi (misal: Karton, Dus, Box).
+  - `satuan_kecil`: Satuan eceran/konsumsi (misal: Strip, Botol, Pcs).
+  - `rasio_konversi`: Jumlah satuan kecil di dalam 1 satuan besar (misal: 1 Box = 10 Strip, maka `rasio_konversi = 10`).
+  - `harga_jual_besar` & `harga_jual_kecil`: Harga jual masing-masing satuan.
+  - `stok_minimum_besar` & `stok_minimum_kecil`: Batas Reorder Point (ROP).
+
+#### Aturan Pemisahan Stok Fisik:
+- **Tabel `stok_toko`**: Menyimpan total stok dalam **satuan terkecil (base unit / pcs)** untuk agregasi cepat e-commerce & kasir.
+- **Tabel `stok_batch`**: Menyimpan persediaan fisik obat per nomor batch:
+  - **Batch Induk (Satuan Besar)**: Nomor batch asli dari pabrik (misal `AMX-2026-01`), stok disimpan dalam ekuivalen pcs utuh.
+  - **Sub-Batch (Satuan Kecil)**: Hasil pembongkaran kemasan besar menggunakan notasi titik (misal `AMX-2026-01.A`, `AMX-2026-01.B`).
+
+### 2.3 Mekanisme FEFO (First Expired, First Out) & Audit Anomali
+1. Setiap kali terjadi penjualan obat (baik di POS Kasir maupun E-Commerce), sistem secara otomatis mengurutkan batch yang tersedia dengan kriteria:
+   $$\text{ORDER BY } tgl\_exp \text{ ASC, } id \text{ ASC}$$
+2. Batch yang tanggal kedaluwarsanya paling dekat **wajib dikeluarkan terlebih dahulu**.
+3. **Pencatatan Anomali FEFO (`log_anomali_fefo`)**:
+   Jika kasir di POS memilih batch yang kedaluwarsanya lebih lama daripada batch terdekat yang masih ada stoknya (misal karena permintaan khusus pelanggan atau ketidaktelitian staf):
+   - Transaksi **tetap diizinkan selesai** agar operasional kasir tidak terhenti di depan pelanggan.
+   - Sistem secara otomatis mencatat deviasi ini ke tabel `log_anomali_fefo` dengan status `terlewat`, mencatat `batch_diambil` vs `batch_seharusnya`.
+   - Modul manajerial akan menampilkan indikator peringatan deviasi FEFO hingga disesuaikan (*reconciliation*).
+
+### 2.4 Mekanisme Serial Number (SN) Unit Alkes
+1. Pada saat penerimaan barang Alkes, operator memasukkan/memindai Serial Number satu per satu.
+2. Setiap Serial Number dicatat dalam tabel `unit_serial` dengan status `Tersedia`.
+3. Pada saat checkout POS Kasir atau pengemasan pesanan E-Commerce, operator memindai barcode SN unit yang diambil.
+4. Sistem memvalidasi keunikan dan status SN:
+   - Jika SN valid & `Tersedia`: status berubah menjadi `Terjual` dan mengaitkan `id_penjualan`.
+   - Jika Alkes rusak atau retur garansi: status berubah menjadi `Retur/Rusak`.
+
+### 2.5 Arsitektur Omnichannel (Sinkronisasi POS Kasir & E-Commerce)
+1. **Single Source of Truth**: Seluruh transaksi online dan offline memotong stok dari inventori terpusat di Cabang Muharto.
+2. **Kanal Transaksi**:
+   - `POS`: Transaksi kasir offline langsung di toko. Pelanggan walk-in, pembayaran tunai/QRIS/kartu, langsung memotong fisik saat kasir klik bayar.
+   - `E-Commerce`: Transaksi pelanggan via website. Menggunakan metode pengiriman kurir ekspedisi (JNE, POS, TIKI) atau opsi Pick-up (Ambil Sendiri di Toko).
+3. **Mekanisme Reservasi Stok Otomatis (Cooldown 2 Jam)**:
+   - Ketika pelanggan melakukan checkout daring, pesanan berstatus `Menunggu Pembayaran`.
+   - Stok sistem dan alokasi batch/SN langsung **dikunci (Reserved)** agar tidak terjual ke kasir POS atau pelanggan online lain.
+   - Diberikan batas waktu pembayaran **2 jam**. Jika dalam 2 jam belum dibayar (status Midtrans expired/batal), sistem secara otomatis memulihkan stok yang di-reserved kembali menjadi tersedia.
+
+### 2.6 Mekanisme Stok Opname Terisolasi (Freezing Session)
+Untuk mencegah *race condition* (selisih stok akibat transaksi berjalan saat penghitungan fisik dilakukan):
+1. Saat SuperAdmin/Admin mengaktifkan sesi opname (`sesi_opname.status = 'Aktif'`), seluruh aktivitas transaksi kasir POS, checkout e-commerce, penerimaan barang, dan mutasi manual **DIBEKUKAN SEMENTARA (SYSTEM LOCKOUT)**.
+2. Setiap fungsi transaksi memeriksa `cekSesiOpnameAktif($pdo)`:
+   - Jika sesi aktif terdeteksi, transaksi langsung ditolak dengan pesan error resmi dan banner peringatan di seluruh sistem.
+3. Setelah seluruh fisik selesai dihitung dan disetujui, sesi opname ditutup (`Selesai`), rekonsiliasi kartu stok dicatat otomatis, dan sistem kembali dibuka untuk transaksi.
+
+---
+

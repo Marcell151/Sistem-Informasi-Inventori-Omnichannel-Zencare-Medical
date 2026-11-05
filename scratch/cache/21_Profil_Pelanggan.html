@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head><base href="http://localhost/inventory_zencare/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Profil Akun &amp; Riwayat Pesanan - ZenCare Medical</title>
+    <!-- Tailwind CSS (via CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'] },
+            colors: {
+              zc:    '#1a75d2',
+              zcHv:  '#0f2d5a',
+              zcNavy:'#0f2d5a',
+              zcLt:  '#eef6fb',
+              zcEm:  '#059669',
+              zcBrd: '#e4e9f0',
+              zcTxt: '#1e293b',
+              zcMut: '#64748b',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+        body { 
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; 
+            background-color: #ffffff; 
+            color: #1e293b; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Prevent horizontal overflow on all devices including foldables */
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        
+        /* Prevent iOS Safari auto-zoom on input focus */
+        @media screen and (max-width: 640px) {
+            input[type="text"], input[type="number"], input[type="email"], input[type="tel"], select, textarea {
+                font-size: 16px !important;
+            }
+        }
+        
+        /* Hide scrollbar for smooth cart drawer & mobile horizontal tabs */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Mega Menu Transition */
+        .mega-menu {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(8px);
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .mega-menu-trigger:hover .mega-menu, .mega-menu:hover {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        /* Header Scroll Shadow */
+        #main-header.scrolled {
+            box-shadow: 0 4px 20px -2px rgba(15, 45, 90, 0.08);
+        }
+
+        /* Safe area bottom padding for iPhone with home indicator */
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 16px);
+        }
+
+        /* Molecular Medical Pattern Banner */
+        .pharmify-banner {
+            background-color: #0b2948;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(26, 117, 210, 0.28) 0%, transparent 50%),
+                radial-gradient(circle at 80% 30%, rgba(14, 165, 233, 0.2) 0%, transparent 45%),
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg stroke='%2338bdf8' stroke-width='0.6' stroke-opacity='0.18' fill='none'%3E%3Cpolygon points='50,8 85,28 85,68 50,88 15,68 15,28'/%3E%3Cline x1='50' y1='8' x2='50' y2='0'/%3E%3Cline x1='85' y1='28' x2='100' y2='20'/%3E%3Cline x1='85' y1='68' x2='100' y2='76'/%3E%3Ccircle cx='50' cy='8' r='2' fill='%2338bdf8' fill-opacity='0.25'/%3E%3Ccircle cx='85' cy='28' r='2' fill='%2338bdf8' fill-opacity='0.25'/%3E%3Ccircle cx='15' cy='68' r='2' fill='%2338bdf8' fill-opacity='0.25'/%3E%3C/g%3E%3C/svg%3E");
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen relative bg-white">
+
+<!-- ============================================================ -->
+<!-- TOP UTILITY BAR (Deep Navy - Pharmify Style)                 -->
+<!-- ============================================================ -->
+<div class="bg-[#0f2d5a] text-white text-xs py-2.5 px-4 sm:px-8 z-50 relative hidden sm:block">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <!-- Left: Social & Store Hours -->
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+                <a href="https://wa.me/62895343436025" target="_blank" title="WhatsApp Resmi" class="w-5 h-5 rounded-full bg-white text-[#0f2d5a] flex items-center justify-center hover:bg-blue-100 transition">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a5.225 5.225 0 00-.571-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 2C6.477 2 2 6.477 2 12c0 1.755.454 3.412 1.254 4.856L2 22l5.293-1.189A9.96 9.96 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
+                </a>
+                <a href="tentang_kami.php" title="Informasi Apotek" class="w-5 h-5 rounded-full bg-white text-[#0f2d5a] flex items-center justify-center hover:bg-blue-100 transition">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                </a>
+                <a href="cara_pembelian.php" title="Panduan Belanja" class="w-5 h-5 rounded-full bg-white text-[#0f2d5a] flex items-center justify-center hover:bg-blue-100 transition">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                </a>
+            </div>
+            <span class="w-px h-3.5 bg-white/20 mx-1"></span>
+            <span class="text-[11px] text-blue-100 font-medium">ZenCare Medical Obat &amp; Alat Kesehatan</span>
+        </div>
+
+        <!-- Right: Address, Email & Staff Login -->
+        <div class="flex items-center gap-3 lg:gap-5 text-[11px]">
+            <span class="hidden lg:flex items-center gap-1.5 text-blue-100">
+                <svg class="w-3.5 h-3.5 text-sky-300 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+                Jl. Muharto No. 55D, Jodipan, Kec. Blimbing, Kota Malang 65127
+            </span>
+            <span class="w-px h-3.5 bg-white/20 hidden lg:block"></span>
+            <a href="mailto:zencare.id@gmail.com" class=" flex items-center gap-1.5 text-blue-100 hover:text-white transition">
+                <svg class="w-3.5 h-3.5 text-sky-300 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+                zencare.id@gmail.com
+            </a>
+            <span class="w-px h-3.5 bg-white/20"></span>
+            <a href="../login.php" class="text-blue-200 hover:text-white font-semibold transition whitespace-nowrap">Portal Staf</a>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MAIN NAVBAR (Single-Row Pharmify Layout)                     -->
+<!-- ============================================================ -->
+<header id="main-header" class="bg-white sticky top-0 z-40 border-b border-slate-100 transition-shadow duration-300">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
+            
+            <!-- Left: Mobile Menu Button + Desktop Navigation Links -->
+            <div class="flex items-center gap-1.5 sm:gap-5 lg:gap-6">
+                <button type="button" aria-label="Buka Menu" class="lg:hidden p-1.5 sm:p-2 -ml-1 text-slate-700 hover:text-[#0f2d5a] rounded-md transition" onclick="toggleMobileMenu()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+
+                <nav class="hidden lg:flex items-center gap-5 xl:gap-7 text-[13px] font-semibold whitespace-nowrap">
+                    <a href="index.php" class="text-slate-800 hover:text-[#1a75d2] transition py-7">
+                        Beranda
+                    </a>
+
+                    <!-- Mega Menu Trigger: Katalog -->
+                    <div class="mega-menu-trigger static py-7">
+                        <a href="kategori.php" class="text-slate-800 hover:text-[#1a75d2] flex items-center gap-1 transition">
+                            Katalog
+                            <svg class="w-3.5 h-3.5 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </a>
+
+                        <!-- Full-Width Pharmify Mega Menu Panel -->
+                        <div class="mega-menu absolute left-0 right-0 top-full bg-white border-t border-b border-slate-200 shadow-2xl z-50">
+                            <div class="max-w-7xl mx-auto px-8 py-7">
+                                <div class="grid grid-cols-12 gap-8">
+                                    <!-- Column 1: Left Category Selector Box (Pharmify Style) -->
+                                    <div class="col-span-3 bg-[#eef6fb] rounded-md overflow-hidden flex flex-col">
+                                        <a href="kategori.php?kategori=Obat" class="flex items-center justify-between px-4 py-3 bg-[#0f2d5a] text-white text-xs font-bold tracking-wide">
+                                            <span>Obat &amp; Farmasi</span>
+                                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                                        </a>
+                                        <a href="kategori.php?kategori=Alat+Kesehatan" class="flex items-center justify-between px-4 py-3 text-slate-700 hover:bg-[#dcecf8] hover:text-[#0f2d5a] text-xs font-medium border-b border-slate-200/60 transition">
+                                            <span>Alat Kesehatan Resmi</span>
+                                            <svg class="w-3.5 h-3.5 opacity-40" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                                        </a>
+                                        <a href="kategori.php?q=Vitamin" class="flex items-center justify-between px-4 py-3 text-slate-700 hover:bg-[#dcecf8] hover:text-[#0f2d5a] text-xs font-medium border-b border-slate-200/60 transition">
+                                            <span>Vitamin &amp; Suplemen</span>
+                                            <svg class="w-3.5 h-3.5 opacity-40" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                                        </a>
+                                        <a href="kategori.php?q=Sirup" class="flex items-center justify-between px-4 py-3 text-slate-700 hover:bg-[#dcecf8] hover:text-[#0f2d5a] text-xs font-medium border-b border-slate-200/60 transition">
+                                            <span>Sirup &amp; Obat Anak</span>
+                                            <svg class="w-3.5 h-3.5 opacity-40" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                                        </a>
+                                        <a href="kategori.php" class="flex items-center justify-between px-4 py-3 text-[#1a75d2] hover:bg-[#dcecf8] text-xs font-bold transition mt-auto">
+                                            <span>Lihat Seluruh Koleksi</span>
+                                            <span>&rarr;</span>
+                                        </a>
+                                    </div>
+
+                                    <!-- Column 2: Obat Umum & Tablet -->
+                                    <div class="col-span-2">
+                                        <h4 class="text-xs font-bold text-slate-900 mb-3 pb-1.5 border-b border-slate-100">Obat Tablet &amp; Kaplet</h4>
+                                        <ul class="space-y-2 text-xs text-slate-600">
+                                                                                            <li><a href="produk.php?id=1" class="hover:text-[#1a75d2] transition block truncate">Amoxicillin 500mg</a></li>
+                                                                                            <li><a href="produk.php?id=26" class="hover:text-[#1a75d2] transition block truncate">Antangin JRG</a></li>
+                                                                                            <li><a href="produk.php?id=18" class="hover:text-[#1a75d2] transition block truncate">Betadine Solution 15ml</a></li>
+                                                                                            <li><a href="produk.php?id=31" class="hover:text-[#1a75d2] transition block truncate">Bodrex Migra</a></li>
+                                                                                            <li><a href="produk.php?id=27" class="hover:text-[#1a75d2] transition block truncate">CDR Effervescent</a></li>
+                                                                                            <li><a href="produk.php?id=41" class="hover:text-[#1a75d2] transition block truncate">Cefadroxil 500mg</a></li>
+                                                                                    </ul>
+                                    </div>
+
+                                    <!-- Column 3: Sirup & Perawatan -->
+                                    <div class="col-span-2">
+                                        <h4 class="text-xs font-bold text-slate-900 mb-3 pb-1.5 border-b border-slate-100">Sirup &amp; Perawatan</h4>
+                                        <ul class="space-y-2 text-xs text-slate-600">
+                                                                                            <li><a href="produk.php?id=43" class="hover:text-[#1a75d2] transition block truncate">Cetirizine 10mg</a></li>
+                                                                                            <li><a href="produk.php?id=40" class="hover:text-[#1a75d2] transition block truncate">Combantrin Jeruk 10ml</a></li>
+                                                                                            <li><a href="produk.php?id=19" class="hover:text-[#1a75d2] transition block truncate">Counterpain Krim 30g</a></li>
+                                                                                            <li><a href="produk.php?id=42" class="hover:text-[#1a75d2] transition block truncate">CTM</a></li>
+                                                                                            <li><a href="produk.php?id=38" class="hover:text-[#1a75d2] transition block truncate">Decadryl Expectorant</a></li>
+                                                                                            <li><a href="produk.php?id=33" class="hover:text-[#1a75d2] transition block truncate">Decolgen</a></li>
+                                                                                    </ul>
+                                    </div>
+
+                                    <!-- Column 4: Vitamin & Herbal -->
+                                    <div class="col-span-2">
+                                        <h4 class="text-xs font-bold text-slate-900 mb-3 pb-1.5 border-b border-slate-100">Suplemen &amp; Lainnya</h4>
+                                        <ul class="space-y-2 text-xs text-slate-600">
+                                                                                            <li><a href="produk.php?id=22" class="hover:text-[#1a75d2] transition block truncate">Diapet Kapsul</a></li>
+                                                                                            <li><a href="produk.php?id=29" class="hover:text-[#1a75d2] transition block truncate">Enervon-C Multivitamin</a></li>
+                                                                                            <li><a href="produk.php?id=23" class="hover:text-[#1a75d2] transition block truncate">Entrostop</a></li>
+                                                                                            <li><a href="produk.php?id=6" class="hover:text-[#1a75d2] transition block truncate">Hufagrip</a></li>
+                                                                                            <li><a href="produk.php?id=30" class="hover:text-[#1a75d2] transition block truncate">Imboost Force</a></li>
+                                                                                            <li><a href="produk.php?id=17" class="hover:text-[#1a75d2] transition block truncate">Insto Reguler 7.5ml</a></li>
+                                                                                    </ul>
+                                    </div>
+
+                                    <!-- Column 5: Alat Kesehatan -->
+                                    <div class="col-span-3">
+                                        <h4 class="text-xs font-bold text-slate-900 mb-3 pb-1.5 border-b border-slate-100">Alat Kesehatan &amp; BMHP</h4>
+                                        <ul class="space-y-2 text-xs text-slate-600">
+                                                                                            <li><a href="produk.php?id=51" class="hover:text-[#1a75d2] transition block truncate">Alat Cek Asam Urat EasyTouch</a></li>
+                                                                                            <li><a href="produk.php?id=52" class="hover:text-[#1a75d2] transition block truncate">Alat Cek Kolesterol Nesco</a></li>
+                                                                                            <li><a href="produk.php?id=48" class="hover:text-[#1a75d2] transition block truncate">Alkohol Onemed 70% 100ml</a></li>
+                                                                                            <li><a href="produk.php?id=45" class="hover:text-[#1a75d2] transition block truncate">Hansaplast Kain Elastis</a></li>
+                                                                                            <li><a href="produk.php?id=47" class="hover:text-[#1a75d2] transition block truncate">Kasa Steril Onemed</a></li>
+                                                                                            <li><a href="produk.php?id=53" class="hover:text-[#1a75d2] transition block truncate">Kursi Roda Standard Sella</a></li>
+                                                                                    </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="tentang_kami.php" class="text-slate-800 hover:text-[#1a75d2] transition py-7">
+                        Tentang Kami
+                    </a>
+
+                    <a href="cara_pembelian.php" class="text-slate-800 hover:text-[#1a75d2] transition py-7">
+                        Cara Belanja
+                    </a>
+
+                    <a href="profil.php" class="text-[#1a75d2] font-bold transition py-7">
+                        Pesanan
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Center: Brand Logo (Pharmify Centered Style) -->
+            <a href="index.php" class="flex items-center gap-2 sm:gap-2.5 shrink-0 group">
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-2xs">
+                    <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-lg sm:text-xl font-extrabold tracking-tight text-[#0f2d5a] leading-none">ZenCare</span>
+                    <span class="text-[8px] sm:text-[9px] font-bold text-[#1a75d2] uppercase tracking-widest mt-0.5">Medical Store</span>
+                </div>
+            </a>
+
+            <!-- Right: Pill Search Input & Action Icons -->
+            <div class="flex items-center gap-1 sm:gap-3 lg:gap-4">
+                <!-- Pill Search Bar (Desktop) -->
+                <form action="kategori.php" method="GET" class="hidden md:flex items-center relative w-40 lg:w-48 xl:w-64">
+                    <input type="text" name="q" placeholder="Cari obat atau alkes..." value=""
+                           class="w-full bg-white border border-slate-300 rounded-full pl-3.5 pr-8 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#0f2d5a] transition">
+                    <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-[#0f2d5a] transition" title="Cari">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </button>
+                </form>
+
+                <!-- Mobile Quick Search Trigger Button -->
+                <button type="button" onclick="toggleMobileSearch()" class="md:hidden p-1.5 text-slate-700 hover:text-[#0f2d5a] transition" title="Cari Produk">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </button>
+
+                <!-- Action Icons (Orders, Cart Drawer, Account) -->
+                <div class="flex items-center gap-1 sm:gap-2.5 text-slate-800">
+                    <!-- Order Tracking Icon -->
+                    <a href="profil.php" title="Riwayat Pesanan Saya" class="hidden min-[360px]:inline-flex relative p-1.5 hover:text-[#1a75d2] transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                    </a>
+
+                    <!-- Cart Bag Icon -->
+                    <button type="button" onclick="toggleCart()" title="Keranjang Belanja" class="relative p-1.5 hover:text-[#1a75d2] transition cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                        <span id="cart-count-badge" class="absolute -top-1 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#0f2d5a] text-white text-[10px] font-bold flex items-center justify-center">0</span>
+                    </button>
+
+                    <!-- User Account Icon / Dropdown -->
+                                            <div class="relative group">
+                            <a href="profil.php" class="flex items-center gap-1.5 p-1.5 hover:text-[#1a75d2] transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span class="hidden xl:inline text-xs font-bold text-[#0f2d5a] max-w-[100px] truncate">Budi Santoso</span>
+                            </a>
+                            <div class="absolute right-0 top-full pt-2 w-48 hidden group-hover:block z-50">
+                                <div class="bg-white border border-slate-200 shadow-xl rounded-lg py-1.5 text-xs">
+                                    <div class="px-4 py-2 border-b border-slate-100">
+                                        <span class="block text-[10px] text-slate-400">Akun Pelanggan</span>
+                                        <strong class="text-slate-800 truncate block">Budi Santoso</strong>
+                                    </div>
+                                    <a href="profil.php" class="block px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-[#1a75d2] font-medium">Profil &amp; Pesanan</a>
+                                    <a href="cart.php" class="block px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-[#1a75d2] font-medium">Keranjang Penuh</a>
+                                    <a href="../logout.php" class="block px-4 py-2 text-rose-600 hover:bg-rose-50 font-semibold border-t border-slate-100">Keluar</a>
+                                </div>
+                            </div>
+                        </div>
+                                    </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Mobile Quick Search Bar (Collapsible) -->
+    <div id="mobile-search-bar" class="hidden md:hidden px-4 pb-3 pt-1 border-t border-slate-100 bg-white">
+        <form action="kategori.php" method="GET" class="relative">
+            <input type="text" name="q" id="mobile-search-input" placeholder="Cari obat, variasi, atau alkes..." value=""
+                   class="w-full bg-[#f8fafc] border border-slate-300 rounded-full pl-4 pr-10 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#0f2d5a]">
+            <button type="submit" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </button>
+        </form>
+    </div>
+</header>
+
+<!-- Mobile Menu Overlay & Drawer -->
+<div id="mobile-menu-overlay" class="hidden fixed inset-0 bg-[#0f2d5a]/40 z-50 backdrop-blur-xs transition-opacity duration-300 opacity-0" onclick="toggleMobileMenu()"></div>
+<div id="mobile-menu" class="fixed top-0 left-0 bottom-0 w-[82%] max-w-xs bg-white shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+    <!-- Drawer Header -->
+    <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-[#f8fafc]">
+        <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center overflow-hidden">
+                <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain">
+            </div>
+            <span class="text-sm font-extrabold text-[#0f2d5a]">Menu ZenCare</span>
+        </div>
+        <button type="button" onclick="toggleMobileMenu()" class="p-1.5 text-slate-400 hover:text-[#0f2d5a] transition cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
+
+    <!-- Drawer Navigation Links -->
+    <div class="flex-1 overflow-y-auto px-4 py-4 space-y-1 text-xs font-semibold text-slate-700 divide-y divide-slate-100">
+        <div class="space-y-1 pb-3">
+            <a href="index.php" class="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition ">
+                <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Beranda
+            </a>
+            <a href="kategori.php" class="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition ">
+                <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                Semua Katalog Produk
+            </a>
+            <a href="kategori.php?kategori=Obat" class="flex items-center gap-3 px-3 py-2 rounded-md pl-9 text-slate-500 hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition">
+                &bull; Kategori Obat &amp; Farmasi
+            </a>
+            <a href="kategori.php?kategori=Alat+Kesehatan" class="flex items-center gap-3 px-3 py-2 rounded-md pl-9 text-slate-500 hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition">
+                &bull; Alat Kesehatan &amp; BMHP
+            </a>
+        </div>
+
+        <div class="space-y-1 py-3">
+            <a href="profil.php" class="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition bg-[#eef6fb] text-[#1a75d2] font-bold">
+                <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                Riwayat Pesanan Saya
+            </a>
+            <a href="cart.php" class="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition ">
+                <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                Keranjang Belanja
+            </a>
+        </div>
+
+        <div class="space-y-1 py-3">
+            <a href="tentang_kami.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition">
+                Tentang ZenCare
+            </a>
+            <a href="cara_pembelian.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition">
+                Cara Belanja &amp; Pengiriman
+            </a>
+            <a href="../login.php" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-[#eef6fb] hover:text-[#0f2d5a] transition text-slate-500">
+                Portal Staf &amp; Gudang
+            </a>
+        </div>
+
+        <div class="pt-3">
+                            <div class="p-3 bg-slate-50 rounded mb-2">
+                    <span class="block text-[10px] text-slate-400">Masuk sebagai</span>
+                    <strong class="text-[#0f2d5a] block truncate">Budi Santoso</strong>
+                </div>
+                <a href="../logout.php" class="block text-center py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded transition">
+                    Keluar dari Akun
+                </a>
+                    </div>
+    </div>
+</div>
+
+<script>
+function toggleMobileMenu() {
+    const overlay = document.getElementById('mobile-menu-overlay');
+    const drawer = document.getElementById('mobile-menu');
+    const isOpen = !drawer.classList.contains('-translate-x-full');
+
+    if (isOpen) {
+        drawer.classList.add('-translate-x-full');
+        overlay.classList.add('opacity-0');
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+        document.body.style.overflow = '';
+    } else {
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+        drawer.classList.remove('-translate-x-full');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function toggleMobileSearch() {
+    const s = document.getElementById('mobile-search-bar');
+    if (!s) return;
+    s.classList.toggle('hidden');
+    if (!s.classList.contains('hidden')) {
+        const inp = document.getElementById('mobile-search-input');
+        if (inp) inp.focus();
+    }
+}
+
+window.addEventListener('scroll', () => {
+    const hdr = document.getElementById('main-header');
+    if (!hdr) return;
+    if (window.scrollY > 10) {
+        hdr.classList.add('scrolled');
+    } else {
+        hdr.classList.remove('scrolled');
+    }
+});
+</script>
+
+<section class="pharmify-banner py-11 lg:py-14 text-center text-white">
+    <div class="max-w-7xl mx-auto px-4 lg:px-8 relative z-10">
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight mb-2.5">Akun &amp; Riwayat Pesanan</h1>
+        <nav class="flex items-center justify-center gap-2 text-xs font-medium text-sky-200/90">
+            <a href="index.php" class="hover:text-white transition">Beranda</a>
+            <span>&rsaquo;</span>
+            <span class="text-white font-semibold">Akun Pelanggan</span>
+        </nav>
+    </div>
+</section>
+
+<main class="max-w-7xl mx-auto px-4 lg:px-8 py-8 sm:py-10 pb-28 md:pb-12 flex-1 w-full">
+
+    <!-- ── Alerts ── -->
+        
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        
+        <!-- ── LEFT: Edit Profile Card (4 cols - Pharmify #eef6fb Account Container) ── -->
+        <div class="lg:col-span-4 bg-[#eef6fb] p-4 sm:p-6 sm:p-7">
+            
+            <div class="flex items-center gap-3.5 pb-5 border-b border-[#cbe4f5] mb-5">
+                <div class="w-11 h-11 sm:w-12 sm:h-12 bg-[#0f2d5a] text-white font-extrabold text-base sm:text-lg flex items-center justify-center">
+                    B                </div>
+                <div class="min-w-0">
+                    <h2 class="text-sm font-extrabold text-[#0f2d5a] leading-tight truncate">Budi Santoso</h2>
+                    <span class="text-xs text-slate-500 block truncate">@pelanggan1</span>
+                    <span class="inline-block mt-0.5 px-2 py-0.5 bg-white text-[#0f2d5a] border border-[#cbe4f5] font-bold text-[9px] uppercase tracking-wider">
+                        pelanggan                    </span>
+                </div>
+            </div>
+
+            <form method="POST" class="space-y-4 text-xs">
+                <input type="hidden" name="action" value="update_profil">
+
+                <div>
+                    <label class="block font-bold text-[#0f2d5a] mb-1.5">Nama Lengkap *</label>
+                    <input type="text" name="nama_lengkap" required value="Budi Santoso"
+                           class="w-full px-3.5 py-2.5 border border-slate-200 bg-white focus:outline-none focus:border-[#0f2d5a] transition">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-[#0f2d5a] mb-1.5">Alamat Email</label>
+                    <input type="email" name="email" value="budi.santoso@gmail.com" placeholder="nama@email.com"
+                           class="w-full px-3.5 py-2.5 border border-slate-200 bg-white focus:outline-none focus:border-[#0f2d5a] transition">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-[#0f2d5a] mb-1.5">Nomor Telepon / WhatsApp</label>
+                    <input type="text" name="telepon" value="083333444555" placeholder="08123456789"
+                           class="w-full px-3.5 py-2.5 border border-slate-200 bg-white focus:outline-none focus:border-[#0f2d5a] transition">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-[#0f2d5a] mb-1.5">Alamat Pengiriman Lengkap</label>
+                    <textarea name="alamat" rows="3" placeholder="Jl. Raya No. 123, RT/RW, Kelurahan, Kecamatan, Kota/Kabupaten, Provinsi, Kode Pos"
+                              class="w-full px-3.5 py-2.5 border border-slate-200 bg-white focus:outline-none focus:border-[#0f2d5a] transition text-xs">Jl. Soekarno Hatta No.12, Malang</textarea>
+                    <p class="text-[11px] text-slate-500 mt-1">Tulis alamat lengkap termasuk nama kota, kecamatan, dan kode pos agar pengiriman lebih akurat.</p>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full py-3 px-4 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white font-bold uppercase tracking-widest transition cursor-pointer text-xs">
+                        SIMPAN PERUBAHAN
+                    </button>
+                </div>
+            </form>
+
+        </div>
+
+        <!-- ── RIGHT: Order History (8 cols) ── -->
+        <div class="lg:col-span-8 bg-white border border-slate-200 p-4 sm:p-6 sm:p-7">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-200 mb-5">
+                <div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#1a75d2] block mb-0.5">TRANSAKSI ONLINE</span>
+                    <h2 class="text-base sm:text-lg font-extrabold text-[#0f2d5a] tracking-tight">Riwayat Pesanan Saya</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Lihat status dan rincian transaksi pesanan online Anda</p>
+                </div>
+                <span class="self-start sm:self-auto text-[11px] font-extrabold uppercase tracking-wider bg-[#eef6fb] text-[#0f2d5a] border border-[#dcebf7] px-3 py-1 sm:px-3.5 sm:py-1.5">
+                    11 Pesanan
+                </span>
+            </div>
+
+            <!-- Filter Status Tabs (Scrollable on Mobile) -->
+            <div class="flex items-center gap-1.5 mb-6 text-xs border-b border-slate-200 pb-4 overflow-x-auto no-scrollbar whitespace-nowrap">
+                <a href="?status=semua" class="px-3.5 py-2 font-bold whitespace-nowrap transition border bg-[#0f2d5a] text-white border-[#0f2d5a]">
+                    Semua (11)
+                </a>
+                <a href="?status=Menunggu+Pembayaran" class="px-3.5 py-2 font-bold whitespace-nowrap transition border bg-white text-slate-600 border-slate-200 hover:border-[#0f2d5a] hover:text-[#0f2d5a]">
+                    Menunggu Bayar (0)
+                </a>
+                <a href="?status=Diproses" class="px-3.5 py-2 font-bold whitespace-nowrap transition border bg-white text-slate-600 border-slate-200 hover:border-[#0f2d5a] hover:text-[#0f2d5a]">
+                    Diproses (1)
+                </a>
+                <a href="?status=Dikirim" class="px-3.5 py-2 font-bold whitespace-nowrap transition border bg-white text-slate-600 border-slate-200 hover:border-[#0f2d5a] hover:text-[#0f2d5a]">
+                    Dikirim (1)
+                </a>
+                <a href="?status=Siap+Diambil" class="px-3.5 py-2 font-bold whitespace-nowrap transition border bg-white text-slate-600 border-slate-200 hover:border-[#0f2d5a] hover:text-[#0f2d5a]">
+                    Siap Diambil (0)
+                </a>
+                <a href="?status=Selesai" class="px-3.5 py-2 font-bold whitespace-nowrap transition border bg-white text-slate-600 border-slate-200 hover:border-[#0f2d5a] hover:text-[#0f2d5a]">
+                    Selesai (3)
+                </a>
+                <a href="?status=Dibatalkan" class="px-3.5 py-2 font-bold whitespace-nowrap transition border bg-white text-slate-600 border-slate-200 hover:border-[#0f2d5a] hover:text-[#0f2d5a]">
+                    Dibatalkan (6)
+                </a>
+            </div>
+
+                            <div class="space-y-4">
+                                        <div class="border border-slate-200 bg-white hover:border-[#1a75d2]/50 transition-colors">
+                        
+                        <!-- Order Header Row -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 bg-[#f8fafc] border-b border-slate-200 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <span class="font-mono font-extrabold text-[#0f2d5a] text-[13px] tracking-tight">WEB-20261104-878</span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-slate-500 text-[11px] font-medium">04 Nov 2026, 09:44 WIB</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                                <span class="px-2.5 py-1 border text-[10px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-700 border-rose-200">
+                                    Dibatalkan                                </span>
+                                
+                                                                    <a href="../pos/cetak_invoice.php?no_invoice=WEB-20261104-878" target="_blank"
+                                       class="px-3 py-1 bg-white border border-slate-300 hover:border-[#0f2d5a] text-[#0f2d5a] text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1.5">
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                        Struk
+                                    </a>
+                                                            </div>
+                        </div>
+
+                        <div class="p-4">
+                            
+                            
+                                                        <div class="mb-3 p-3 bg-rose-50/80 border border-rose-200 text-rose-900 text-[11px] flex items-start gap-2">
+                                <svg class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                <div class="leading-snug">
+                                    <span class="font-bold">Pesanan Dibatalkan:</span> Waktu pembayaran habis (Expired)                                    <span class="text-rose-600 block text-[10px] mt-0.5">Dibatalkan oleh: <strong>Sistem (Timer)</strong> pada 05/11/2026 10:18 WIB</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Purchased Items List -->
+                            <div class="divide-y divide-slate-100 text-xs">
+                                                                <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
+                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                        <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate">Amoxicillin 500mg &mdash; Tablet 500mg</span>
+                                        <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x1 Box</span>
+                                    </div>
+                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
+                                        Rp 48.000                                    </span>
+                                </div>
+                                                            </div>
+
+                            <!-- Order Footer Summary -->
+                            <div class="mt-3 pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                <div class="text-[11px] text-slate-500">
+                                    <span>Kurir: <strong class="text-[#0f2d5a]">INTERNAL (REG)</strong></span>
+                                    <span class="mx-1.5 text-slate-300">|</span>
+                                    <span>Ongkir: <strong class="text-slate-700">Rp 48.000</strong></span>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Bayar:</span>
+                                    <span class="text-sm font-black text-[#0f2d5a]">
+                                        Rp 96.000                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                                        <div class="border border-slate-200 bg-white hover:border-[#1a75d2]/50 transition-colors">
+                        
+                        <!-- Order Header Row -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 bg-[#f8fafc] border-b border-slate-200 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <span class="font-mono font-extrabold text-[#0f2d5a] text-[13px] tracking-tight">WEB-20261103-677</span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-slate-500 text-[11px] font-medium">03 Nov 2026, 16:50 WIB</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                                <span class="px-2.5 py-1 border text-[10px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-700 border-rose-200">
+                                    Dibatalkan                                </span>
+                                
+                                                                    <a href="../pos/cetak_invoice.php?no_invoice=WEB-20261103-677" target="_blank"
+                                       class="px-3 py-1 bg-white border border-slate-300 hover:border-[#0f2d5a] text-[#0f2d5a] text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1.5">
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                        Struk
+                                    </a>
+                                                            </div>
+                        </div>
+
+                        <div class="p-4">
+                            
+                            
+                                                        <div class="mb-3 p-3 bg-rose-50/80 border border-rose-200 text-rose-900 text-[11px] flex items-start gap-2">
+                                <svg class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                <div class="leading-snug">
+                                    <span class="font-bold">Pesanan Dibatalkan:</span> Waktu pembayaran habis (Expired)                                    <span class="text-rose-600 block text-[10px] mt-0.5">Dibatalkan oleh: <strong>Sistem (Timer)</strong> pada 03/11/2026 19:24 WIB</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Purchased Items List -->
+                            <div class="divide-y divide-slate-100 text-xs">
+                                                                <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
+                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                        <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate">Amoxicillin 500mg &mdash; Tablet 500mg</span>
+                                        <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x1 Box</span>
+                                    </div>
+                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
+                                        Rp 48.000                                    </span>
+                                </div>
+                                                            </div>
+
+                            <!-- Order Footer Summary -->
+                            <div class="mt-3 pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                <div class="text-[11px] text-slate-500">
+                                    <span>Kurir: <strong class="text-[#0f2d5a]">INTERNAL (ZenCare Direct Delivery (1.1 km, 100g))</strong></span>
+                                    <span class="mx-1.5 text-slate-300">|</span>
+                                    <span>Ongkir: <strong class="text-slate-700">Rp 10.000</strong></span>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Bayar:</span>
+                                    <span class="text-sm font-black text-[#0f2d5a]">
+                                        Rp 58.000                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                                        <div class="border border-slate-200 bg-white hover:border-[#1a75d2]/50 transition-colors">
+                        
+                        <!-- Order Header Row -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 bg-[#f8fafc] border-b border-slate-200 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <span class="font-mono font-extrabold text-[#0f2d5a] text-[13px] tracking-tight">WEB-20261102-818</span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-slate-500 text-[11px] font-medium">02 Nov 2026, 14:53 WIB</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                                <span class="px-2.5 py-1 border text-[10px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-700 border-rose-200">
+                                    Dibatalkan                                </span>
+                                
+                                                                    <a href="../pos/cetak_invoice.php?no_invoice=WEB-20261102-818" target="_blank"
+                                       class="px-3 py-1 bg-white border border-slate-300 hover:border-[#0f2d5a] text-[#0f2d5a] text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1.5">
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                        Struk
+                                    </a>
+                                                            </div>
+                        </div>
+
+                        <div class="p-4">
+                            
+                            
+                                                        <div class="mb-3 p-3 bg-rose-50/80 border border-rose-200 text-rose-900 text-[11px] flex items-start gap-2">
+                                <svg class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                <div class="leading-snug">
+                                    <span class="font-bold">Pesanan Dibatalkan:</span> Admin Toko: Konfirmasi Pelanggan Salah Memasukkan Alamat Pengiriman                                    <span class="text-rose-600 block text-[10px] mt-0.5">Dibatalkan oleh: <strong>Admin Toko</strong> pada 02/11/2026 16:20 WIB</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Purchased Items List -->
+                            <div class="divide-y divide-slate-100 text-xs">
+                                                                <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
+                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                        <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate">Hufagrip &mdash; Hufagrip Biru (Pilek)</span>
+                                        <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x1 Karton</span>
+                                    </div>
+                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
+                                        Rp 850.000                                    </span>
+                                </div>
+                                                            </div>
+
+                            <!-- Order Footer Summary -->
+                            <div class="mt-3 pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                <div class="text-[11px] text-slate-500">
+                                    <span>Kurir: <strong class="text-[#0f2d5a]">INTERNAL (ZenCare Direct Delivery (0.0 km, 100g))</strong></span>
+                                    <span class="mx-1.5 text-slate-300">|</span>
+                                    <span>Ongkir: <strong class="text-slate-700">Rp 10.000</strong></span>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Bayar:</span>
+                                    <span class="text-sm font-black text-[#0f2d5a]">
+                                        Rp 860.000                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                                        <div class="border border-slate-200 bg-white hover:border-[#1a75d2]/50 transition-colors">
+                        
+                        <!-- Order Header Row -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 bg-[#f8fafc] border-b border-slate-200 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <span class="font-mono font-extrabold text-[#0f2d5a] text-[13px] tracking-tight">WEB-20261101-726</span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-slate-500 text-[11px] font-medium">01 Nov 2026, 13:39 WIB</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                                <span class="px-2.5 py-1 border text-[10px] font-extrabold uppercase tracking-wider bg-[#eef6fb] text-[#0f2d5a] border-[#cde3f5]">
+                                    Diproses                                </span>
+                                
+                                                                                                            <form method="POST" class="m-0 p-0" onsubmit="return confirm('Tarik kembali permohonan pembatalan?');">
+                                            <input type="hidden" name="action" value="batal_request_cancel">
+                                            <input type="hidden" name="no_invoice" value="WEB-20261101-726">
+                                            <button type="submit" title="Tarik pengajuan pembatalan" class="px-3 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1">
+                                                Tarik Batal
+                                            </button>
+                                        </form>
+                                                                        <a href="../pos/cetak_invoice.php?no_invoice=WEB-20261101-726" target="_blank"
+                                       class="px-3 py-1 bg-white border border-slate-300 hover:border-[#0f2d5a] text-[#0f2d5a] text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1">
+                                        Struk
+                                    </a>
+                                                            </div>
+                        </div>
+
+                        <div class="p-4">
+                            
+                                                        <div class="mb-3 p-3 bg-amber-50/80 border border-amber-300 text-amber-900 text-[11px] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div class="flex items-start gap-2">
+                                    <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    <div>
+                                        <span class="font-bold">Permohonan Pembatalan Sedang Ditinjau Admin:</span> "Ingin mengganti kurir pengiriman ke Grab Instant"
+                                        <span class="text-amber-700 block text-[10px] mt-0.5">Admin toko sedang memeriksa status fisik paket Anda di meja pengemasan.</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 self-start sm:self-auto shrink-0">
+                                    <a href="https://wa.me/62895343436025?text=Halo+Admin+ZenCare%2C+saya+ingin+konfirmasi+permohonan+pembatalan+pesanan+%23WEB-20261101-726+karena%3A+Ingin+mengganti+kurir+pengiriman+ke+Grab+Instant" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1">
+                                        WhatsApp Admin
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            
+                            <!-- Purchased Items List -->
+                            <div class="divide-y divide-slate-100 text-xs">
+                                                                <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
+                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                        <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate">Hufagrip &mdash; Hufagrip Merah (TMP)</span>
+                                        <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x2 Karton</span>
+                                    </div>
+                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
+                                        Rp 1.700.000                                    </span>
+                                </div>
+                                                                <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
+                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                        <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate">Hufagrip &mdash; Hufagrip Biru (Pilek)</span>
+                                        <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x1 Karton</span>
+                                    </div>
+                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
+                                        Rp 850.000                                    </span>
+                                </div>
+                                                                <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
+                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                        <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate">Paracetamol &mdash; Tablet 500mg</span>
+                                        <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x2 Box</span>
+                                    </div>
+                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
+                                        Rp 60.000                                    </span>
+                                </div>
+                                                            </div>
+
+                            <!-- Order Footer Summary -->
+                            <div class="mt-3 pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                <div class="text-[11px] text-slate-500">
+                                    <span>Kurir: <strong class="text-[#0f2d5a]">JNE (REG)</strong></span>
+                                    <span class="mx-1.5 text-slate-300">|</span>
+                                    <span>Ongkir: <strong class="text-slate-700">Rp 36.000</strong></span>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Bayar:</span>
+                                    <span class="text-sm font-black text-[#0f2d5a]">
+                                        Rp 2.646.000                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                                        <div class="border border-slate-200 bg-white hover:border-[#1a75d2]/50 transition-colors">
+                        
+                        <!-- Order Header Row -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 bg-[#f8fafc] border-b border-slate-200 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <span class="font-mono font-extrabold text-[#0f2d5a] text-[13px] tracking-tight">WEB-20261101-670</span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-slate-500 text-[11px] font-medium">01 Nov 2026, 13:37 WIB</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                                <span class="px-2.5 py-1 border text-[10px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-700 border-rose-200">
+                                    Dibatalkan                                </span>
+                                
+                                                                    <a href="../pos/cetak_invoice.php?no_invoice=WEB-20261101-670" target="_blank"
+                                       class="px-3 py-1 bg-white border border-slate-300 hover:border-[#0f2d5a] text-[#0f2d5a] text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1.5">
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                        Struk
+                                    </a>
+                                                            </div>
+                        </div>
+
+                        <div class="p-4">
+                            
+                            
+                                                        <div class="mb-3 p-3 bg-rose-50/80 border border-rose-200 text-rose-900 text-[11px] flex items-start gap-2">
+                                <svg class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                <div class="leading-snug">
+                                    <span class="font-bold">Pesanan Dibatalkan:</span> Permohonan Pelanggan Disetujui Admin: Salah memilih variasi kemasan obat                                    <span class="text-rose-600 block text-[10px] mt-0.5">Dibatalkan oleh: <strong>Admin Toko</strong> pada 01/11/2026 10:45 WIB</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Purchased Items List -->
+                            <div class="divide-y divide-slate-100 text-xs">
+                                                                <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
+                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                        <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate">Amoxicillin 500mg &mdash; Tablet 500mg</span>
+                                        <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x1 Box</span>
+                                    </div>
+                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
+                                        Rp 48.000                                    </span>
+                                </div>
+                                                                <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
+                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                        <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate">Hufagrip &mdash; Hufagrip Merah (TMP)</span>
+                                        <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x1 Karton</span>
+                                    </div>
+                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
+                                        Rp 850.000                                    </span>
+                                </div>
+                                                            </div>
+
+                            <!-- Order Footer Summary -->
+                            <div class="mt-3 pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                <div class="text-[11px] text-slate-500">
+                                    <span>Kurir: <strong class="text-[#0f2d5a]">JNE (REG)</strong></span>
+                                    <span class="mx-1.5 text-slate-300">|</span>
+                                    <span>Ongkir: <strong class="text-slate-700">Rp 36.000</strong></span>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Bayar:</span>
+                                    <span class="text-sm font-black text-[#0f2d5a]">
+                                        Rp 934.000                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                                        <div class="border border-slate-200 bg-white hover:border-[#1a75d2]/50 transition-colors">
+                        
+                        <!-- Order Header Row -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 bg-[#f8fafc] border-b border-slate-200 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <span class="font-mono font-extrabold text-[#0f2d5a] text-[13px] tracking-tight">WEB-20261029-308</span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-slate-500 text-[11px] font-medium">29 Oct 2026, 17:17 WIB</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                                <span class="px-2.5 py-1 border text-[10px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-700 border-rose-200">
+                                    Dibatalkan                                </span>
+                                
+                                                                    <a href="../pos/cetak_invoice.php?no_invoice=WEB-20261029-308" target="_blank"
+                                       class="px-3 py-1 bg-white border border-slate-300 hover:border-[#0f2d5a] text-[#0f2d5a] text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1.5">
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                        Struk
+                                    </a>
+                                                            </div>
+                        </div>
+
+                        <div class="p-4">
+                            
+                            
+                                                        <div class="mb-3 p-3 bg-rose-50/80 border border-rose-200 text-rose-900 text-[11px] flex items-start gap-2">
+                                <svg class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                <div class="leading-snug">
+                                    <span class="font-bold">Pesanan Dibatalkan:</span> Pelanggan: Ingin Mengubah Alamat Pengiriman                                    <span class="text-rose-600 block text-[10px] mt-0.5">Dibatalkan oleh: <strong>Pelanggan</strong> pada 29/10/2026 11:30 WIB</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Purchased Items List -->
+                            <div class="divide-y divide-slate-100 text-xs">
+                                                                <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
+                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                        <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate">Amoxicillin 500mg &mdash; Tablet 500mg</span>
+                                        <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x1 Box</span>
+                                    </div>
+                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
+                                        Rp 48.000                                    </span>
+                                </div>
+                                                            </div>
+
+                            <!-- Order Footer Summary -->
+                            <div class="mt-3 pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                <div class="text-[11px] text-slate-500">
+                                    <span>Kurir: <strong class="text-[#0f2d5a]">JNE (REG)</strong></span>
+                                    <span class="mx-1.5 text-slate-300">|</span>
+                                    <span>Ongkir: <strong class="text-slate-700">Rp 12.000</strong></span>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Bayar:</span>
+                                    <span class="text-sm font-black text-[#0f2d5a]">
+                                        Rp 60.000                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                                        <div class="border border-slate-200 bg-white hover:border-[#1a75d2]/50 transition-colors">
+                        
+                        <!-- Order Header Row -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 bg-[#f8fafc] border-b border-slate-200 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <span class="font-mono font-extrabold text-[#0f2d5a] text-[13px] tracking-tight">WEB-20261029-294</span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-slate-500 text-[11px] font-medium">29 Oct 2026, 11:32 WIB</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                                <span class="px-2.5 py-1 border text-[10px] font-extrabold uppercase tracking-wider bg-[#eef6fb] text-[#0f2d5a] border-[#cde3f5]">
+                                    Dikirim                                </span>
+                                
+                                                                    <form method="POST" class="m-0 p-0" onsubmit="return confirm('Apakah Anda yakin telah menerima pesanan ini dengan baik?');">
+                                        <input type="hidden" name="action" value="selesai_order">
+                                        <input type="hidden" name="no_invoice" value="WEB-20261029-294">
+                                        <button type="submit" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 border border-emerald-600 text-white text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1">
+                                            Pesanan Diterima
+                                        </button>
+                                    </form>
+                                    <a href="../pos/cetak_invoice.php?no_invoice=WEB-20261029-294" target="_blank"
+                                       class="px-3 py-1 bg-white border border-slate-300 hover:border-[#0f2d5a] text-[#0f2d5a] text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1">
+                                        Struk
+                                    </a>
+                                                            </div>
+                        </div>
+
+                        <div class="p-4">
+                            
+                            
+                            
+                            <!-- Purchased Items List -->
+                            <div class="divide-y divide-slate-100 text-xs">
+                                                                <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
+                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                        <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate">Hufagrip &mdash; Hufagrip Hijau (BP)</span>
+                                        <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x2 Karton</span>
+                                    </div>
+                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
+                                        Rp 1.700.000                                    </span>
+                                </div>
+                                                            </div>
+
+                            <!-- Order Footer Summary -->
+                            <div class="mt-3 pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                <div class="text-[11px] text-slate-500">
+                                    <span>Kurir: <strong class="text-[#0f2d5a]">JNE (REG)</strong></span>
+                                    <span class="mx-1.5 text-slate-300">|</span>
+                                    <span>Ongkir: <strong class="text-slate-700">Rp 14.000</strong></span>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Bayar:</span>
+                                    <span class="text-sm font-black text-[#0f2d5a]">
+                                        Rp 1.714.000                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                                        <div class="border border-slate-200 bg-white hover:border-[#1a75d2]/50 transition-colors">
+                        
+                        <!-- Order Header Row -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 bg-[#f8fafc] border-b border-slate-200 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <span class="font-mono font-extrabold text-[#0f2d5a] text-[13px] tracking-tight">WEB-20261029-191</span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-slate-500 text-[11px] font-medium">29 Oct 2026, 11:29 WIB</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                                <span class="px-2.5 py-1 border text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-700 border-emerald-200">
+                                    Selesai                                </span>
+                                
+                                                                    <a href="../pos/cetak_invoice.php?no_invoice=WEB-20261029-191" target="_blank"
+                                       class="px-3 py-1 bg-white border border-slate-300 hover:border-[#0f2d5a] text-[#0f2d5a] text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1.5">
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                        Struk
+                                    </a>
+                                                            </div>
+                        </div>
+
+                        <div class="p-4">
+                            
+                            
+                            
+                            <!-- Purchased Items List -->
+                            <div class="divide-y divide-slate-100 text-xs">
+                                                                <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
+                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                        <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate">Amoxicillin 500mg &mdash; Tablet 500mg</span>
+                                        <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x1 Box</span>
+                                    </div>
+                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
+                                        Rp 48.000                                    </span>
+                                </div>
+                                                            </div>
+
+                            <!-- Order Footer Summary -->
+                            <div class="mt-3 pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                <div class="text-[11px] text-slate-500">
+                                    <span>Kurir: <strong class="text-[#0f2d5a]">JNE (JTR)</strong></span>
+                                    <span class="mx-1.5 text-slate-300">|</span>
+                                    <span>Ongkir: <strong class="text-slate-700">Rp 95.000</strong></span>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Bayar:</span>
+                                    <span class="text-sm font-black text-[#0f2d5a]">
+                                        Rp 143.000                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                                        <div class="border border-slate-200 bg-white hover:border-[#1a75d2]/50 transition-colors">
+                        
+                        <!-- Order Header Row -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 bg-[#f8fafc] border-b border-slate-200 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <span class="font-mono font-extrabold text-[#0f2d5a] text-[13px] tracking-tight">WEB-20261028-544</span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-slate-500 text-[11px] font-medium">28 Oct 2026, 18:38 WIB</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                                <span class="px-2.5 py-1 border text-[10px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-700 border-rose-200">
+                                    Dibatalkan                                </span>
+                                
+                                                                    <a href="../pos/cetak_invoice.php?no_invoice=WEB-20261028-544" target="_blank"
+                                       class="px-3 py-1 bg-white border border-slate-300 hover:border-[#0f2d5a] text-[#0f2d5a] text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1.5">
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                        Struk
+                                    </a>
+                                                            </div>
+                        </div>
+
+                        <div class="p-4">
+                            
+                            
+                                                        <div class="mb-3 p-3 bg-rose-50/80 border border-rose-200 text-rose-900 text-[11px] flex items-start gap-2">
+                                <svg class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                <div class="leading-snug">
+                                    <span class="font-bold">Pesanan Dibatalkan:</span> Auto-Cancel: Batas waktu pembayaran 2 jam telah habis                                    <span class="text-rose-600 block text-[10px] mt-0.5">Dibatalkan oleh: <strong>Sistem</strong> pada 28/10/2026 14:00 WIB</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Purchased Items List -->
+                            <div class="divide-y divide-slate-100 text-xs">
+                                                                <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
+                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                        <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate">Amoxicillin 500mg &mdash; Tablet 500mg</span>
+                                        <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x1 Box</span>
+                                    </div>
+                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
+                                        Rp 48.000                                    </span>
+                                </div>
+                                                            </div>
+
+                            <!-- Order Footer Summary -->
+                            <div class="mt-3 pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                <div class="text-[11px] text-slate-500">
+                                    <span>Kurir: <strong class="text-[#0f2d5a]">JNE (JTR)</strong></span>
+                                    <span class="mx-1.5 text-slate-300">|</span>
+                                    <span>Ongkir: <strong class="text-slate-700">Rp 95.000</strong></span>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Bayar:</span>
+                                    <span class="text-sm font-black text-[#0f2d5a]">
+                                        Rp 143.000                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                                        <div class="border border-slate-200 bg-white hover:border-[#1a75d2]/50 transition-colors">
+                        
+                        <!-- Order Header Row -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 bg-[#f8fafc] border-b border-slate-200 text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <span class="font-mono font-extrabold text-[#0f2d5a] text-[13px] tracking-tight">INV-20261019-052</span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-slate-500 text-[11px] font-medium">19 Oct 2026, 20:20 WIB</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                                <span class="px-2.5 py-1 border text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-700 border-emerald-200">
+                                    Selesai                                </span>
+                                
+                                                                    <a href="../pos/cetak_invoice.php?no_invoice=INV-20261019-052" target="_blank"
+                                       class="px-3 py-1 bg-white border border-slate-300 hover:border-[#0f2d5a] text-[#0f2d5a] text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1.5">
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                        Struk
+                                    </a>
+                                                            </div>
+                        </div>
+
+                        <div class="p-4">
+                            
+                            
+                            
+                            <!-- Purchased Items List -->
+                            <div class="divide-y divide-slate-100 text-xs">
+                                                                <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
+                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                        <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate">Sanmol Sirup Anak 60ml &mdash; Botol 60ml</span>
+                                        <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x1 Karton</span>
+                                    </div>
+                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
+                                        Rp 350.000                                    </span>
+                                </div>
+                                                                <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
+                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                        <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate">Tensimeter Digital Omron &mdash; Unit HEM-7120</span>
+                                        <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x1 Unit</span>
+                                    </div>
+                                    <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
+                                        Rp 550.000                                    </span>
+                                </div>
+                                                            </div>
+
+                            <!-- Order Footer Summary -->
+                            <div class="mt-3 pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                <div class="text-[11px] text-slate-500">
+                                    <span>Kurir: <strong class="text-[#0f2d5a]">SICEPAT (REG)</strong></span>
+                                    <span class="mx-1.5 text-slate-300">|</span>
+                                    <span>Ongkir: <strong class="text-slate-700">Rp 45.000</strong></span>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Bayar:</span>
+                                    <span class="text-sm font-black text-[#0f2d5a]">
+                                        Rp 945.000                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                                    </div>
+
+                <!-- Pagination Controls -->
+                                <div class="mt-6 pt-5 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                    <span class="text-slate-500 font-medium">
+                        Menampilkan <strong class="text-[#0f2d5a]">1 – 10</strong> dari <strong class="text-[#0f2d5a]">11</strong> pesanan
+                    </span>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <span class="px-3.5 py-2 border border-slate-200 bg-slate-50 text-slate-400 font-bold cursor-not-allowed">&larr; Sebelumnya</span>
+                        
+                                                                                    <a href="?page=1" class="w-9 h-9 flex items-center justify-center border text-xs font-extrabold transition bg-[#0f2d5a] border-[#0f2d5a] text-white">1</a>
+                                                                                                                <a href="?page=2" class="w-9 h-9 flex items-center justify-center border text-xs font-extrabold transition border-slate-200 bg-white text-[#0f2d5a] hover:border-[#0f2d5a]">2</a>
+                                                    
+                                                    <a href="?page=2" class="px-3.5 py-2 border border-slate-200 bg-white text-[#0f2d5a] hover:border-[#0f2d5a] font-bold transition">Selanjutnya &rarr;</a>
+                                            </div>
+                </div>
+                            
+        </div>
+
+    </div>
+
+</main>
+
+<!-- Midtrans Snap Sandbox JS -->
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="Mid-client-nrLN094lIzl36ekM"></script>
+<script>
+    function lanjutkanPembayaran(token, orderId) {
+        if (!token) {
+            alert("Token pembayaran tidak ditemukan. Silakan batalkan pesanan dan buat ulang.");
+            return;
+        }
+        snap.pay(token, {
+            onSuccess: function(result) {
+                let pType = result && result.payment_type ? result.payment_type : '';
+                // Sinkronisasi paksa dari frontend (karena localhost tidak bisa terima webhook)
+                fetch('../api/sync_payment.php?order_id=' + encodeURIComponent(orderId) + '&payment_type=' + encodeURIComponent(pType))
+                    .then(res => res.json())
+                    .then(data => {
+                        alert('Pembayaran Berhasil! Pesanan akan segera diproses.');
+                        window.location.reload();
+                    }).catch(err => {
+                        alert('Pembayaran Berhasil, namun gagal sinkronisasi ke server lokal. Harap hubungi admin.');
+                        window.location.reload();
+                    });
+            },
+            onPending: function(result) {
+                let pType = result && result.payment_type ? result.payment_type : '';
+                fetch('../api/sync_payment.php?order_id=' + encodeURIComponent(orderId) + '&payment_type=' + encodeURIComponent(pType))
+                    .finally(() => {
+                        alert('Menunggu Pembayaran' + (pType ? ' (' + pType.toUpperCase() + ')' : '') + '.');
+                        window.location.reload();
+                    });
+            },
+            onError: function(result) {
+                alert('Transaksi Dibatalkan / Gagal.');
+            }
+        });
+    }
+
+    function startOrderCountdowns() {
+        const timers = document.querySelectorAll('.countdown-timer');
+        if (!timers.length) return;
+        
+        function update() {
+            let hasActive = false;
+            timers.forEach(t => {
+                let sec = parseInt(t.getAttribute('data-seconds'), 10);
+                if (isNaN(sec)) return;
+                const txt = t.querySelector('.countdown-text') || t;
+                if (sec <= 0) {
+                    txt.innerHTML = '<span class="text-rose-600 font-bold">Waktu Habis (Otomatis Batal)</span>';
+                    if (!t.dataset.expiredTriggered) {
+                        t.dataset.expiredTriggered = '1';
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                } else {
+                    hasActive = true;
+                    sec--;
+                    t.setAttribute('data-seconds', sec);
+                    const h = Math.floor(sec / 3600).toString().padStart(2, '0');
+                    const m = Math.floor((sec % 3600) / 60).toString().padStart(2, '0');
+                    const s = (sec % 60).toString().padStart(2, '0');
+                    txt.textContent = `${h}:${m}:${s}`;
+                }
+            });
+            if (hasActive) {
+                setTimeout(update, 1000);
+            }
+        }
+        update();
+    }
+    document.addEventListener('DOMContentLoaded', startOrderCountdowns);
+
+    function bukaModalBatalCustomer(invoice) {
+        Swal.fire({
+            title: 'Batalkan Pesanan #' + invoice + '?',
+            html: `
+                <div class="text-left text-xs text-slate-700">
+                    <p class="mb-3 text-slate-500 font-medium">Pilih alasan mengapa Anda ingin membatalkan pesanan ini:</p>
+                    <div class="space-y-2 mb-3">
+                        <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
+                            <input type="radio" name="swal_alasan" value="Ingin mengubah rincian pesanan" class="text-[#0f2d5a] focus:ring-[#0f2d5a]" checked onchange="toggleSwalLainnya(false)">
+                            <span class="font-medium text-slate-700">Ingin mengubah rincian pesanan (varian/jumlah/alamat)</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
+                            <input type="radio" name="swal_alasan" value="Berubah pikiran / Salah pesan" class="text-[#0f2d5a] focus:ring-[#0f2d5a]" onchange="toggleSwalLainnya(false)">
+                            <span class="font-medium text-slate-700">Berubah pikiran / Salah pesan produk</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
+                            <input type="radio" name="swal_alasan" value="Waktu pengiriman atau ongkos kirim tidak sesuai" class="text-[#0f2d5a] focus:ring-[#0f2d5a]" onchange="toggleSwalLainnya(false)">
+                            <span class="font-medium text-slate-700">Waktu pengiriman atau ongkos kirim tidak sesuai</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
+                            <input type="radio" name="swal_alasan" value="Lainnya" class="text-[#0f2d5a] focus:ring-[#0f2d5a]" onchange="toggleSwalLainnya(true)">
+                            <span class="font-medium text-slate-700">Alasan lainnya...</span>
+                        </label>
+                    </div>
+                    <div id="swal_lainnya_box" class="hidden">
+                        <label class="block text-[11px] font-bold text-[#0f2d5a] mb-1">Tuliskan alasan pembatalan: *</label>
+                        <textarea id="swal_alasan_detail" rows="2" placeholder="Tuliskan keterangan singkat..." class="w-full text-xs border border-slate-300 p-2.5 focus:outline-none focus:border-[#0f2d5a]"></textarea>
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e11d48',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Batalkan Pesanan',
+            cancelButtonText: 'Kembali',
+            customClass: {
+                popup: 'rounded-none border border-slate-200',
+                confirmButton: 'rounded-none font-bold text-xs px-4 py-2.5 uppercase tracking-wider',
+                cancelButton: 'rounded-none font-bold text-xs px-4 py-2.5 uppercase tracking-wider'
+            },
+            preConfirm: () => {
+                const selected = document.querySelector('input[name="swal_alasan"]:checked');
+                if (!selected) {
+                    Swal.showValidationMessage('Harap pilih salah satu alasan pembatalan.');
+                    return false;
+                }
+                const kategori = selected.value;
+                const detail = (document.getElementById('swal_alasan_detail')?.value || '').trim();
+                if (kategori === 'Lainnya' && !detail) {
+                    Swal.showValidationMessage('Harap tuliskan alasan pembatalan pada kolom teks.');
+                    return false;
+                }
+                return { kategori, detail };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('cancel_invoice_inp').value = invoice;
+                document.getElementById('cancel_kategori_inp').value = result.value.kategori;
+                document.getElementById('cancel_detail_inp').value = result.value.detail;
+                document.getElementById('form-cancel-customer').submit();
+            }
+        });
+    }
+
+    function toggleSwalLainnya(show) {
+        const box = document.getElementById('swal_lainnya_box');
+        if (box) {
+            if (show) box.classList.remove('hidden');
+            else box.classList.add('hidden');
+        }
+    }
+
+    function bukaModalRequestBatal(invoice) {
+        Swal.fire({
+            title: 'Ajukan Pembatalan #' + invoice + '?',
+            html: `
+                <div class="text-left text-xs text-slate-700">
+                    <p class="mb-2 text-slate-500 font-medium">Pesanan ini sedang disiapkan oleh tim gudang. Pengajuan pembatalan memerlukan persetujuan Admin Toko:</p>
+                    <div class="space-y-2 mb-3">
+                        <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
+                            <input type="radio" name="swal_req_alasan" value="Ingin mengubah rincian pesanan" class="text-[#0f2d5a] focus:ring-[#0f2d5a]" checked onchange="toggleSwalReqLainnya(false)">
+                            <span class="font-medium text-slate-700">Ingin mengubah pesanan (varian/jumlah/alamat kirim)</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
+                            <input type="radio" name="swal_req_alasan" value="Berubah pikiran / Tidak sengaja pesan" class="text-[#0f2d5a] focus:ring-[#0f2d5a]" onchange="toggleSwalReqLainnya(false)">
+                            <span class="font-medium text-slate-700">Berubah pikiran / Tidak sengaja memesan</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
+                            <input type="radio" name="swal_req_alasan" value="Waktu pengiriman terlalu lama" class="text-[#0f2d5a] focus:ring-[#0f2d5a]" onchange="toggleSwalReqLainnya(false)">
+                            <span class="font-medium text-slate-700">Waktu pengemasan atau pengiriman diperkirakan terlalu lama</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
+                            <input type="radio" name="swal_req_alasan" value="Lainnya" class="text-[#0f2d5a] focus:ring-[#0f2d5a]" onchange="toggleSwalReqLainnya(true)">
+                            <span class="font-medium text-slate-700">Alasan lainnya...</span>
+                        </label>
+                    </div>
+                    <div id="swal_req_lainnya_box" class="hidden">
+                        <label class="block text-[11px] font-bold text-[#0f2d5a] mb-1">Tuliskan alasan pengajuan batal: *</label>
+                        <textarea id="swal_req_alasan_detail" rows="2" placeholder="Tuliskan keterangan detail untuk admin..." class="w-full text-xs border border-slate-300 p-2.5 focus:outline-none focus:border-[#0f2d5a]"></textarea>
+                    </div>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0f2d5a',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Kirim Pengajuan Batal',
+            cancelButtonText: 'Kembali',
+            customClass: {
+                popup: 'rounded-none border border-slate-200',
+                confirmButton: 'rounded-none font-bold text-xs px-4 py-2.5 uppercase tracking-wider',
+                cancelButton: 'rounded-none font-bold text-xs px-4 py-2.5 uppercase tracking-wider'
+            },
+            preConfirm: () => {
+                const selected = document.querySelector('input[name="swal_req_alasan"]:checked');
+                if (!selected) {
+                    Swal.showValidationMessage('Harap pilih salah satu alasan pengajuan.');
+                    return false;
+                }
+                const kategori = selected.value;
+                const detail = (document.getElementById('swal_req_alasan_detail')?.value || '').trim();
+                if (kategori === 'Lainnya' && !detail) {
+                    Swal.showValidationMessage('Harap tuliskan alasan pada kolom teks.');
+                    return false;
+                }
+                return { kategori, detail };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('req_cancel_invoice_inp').value = invoice;
+                document.getElementById('req_cancel_kategori_inp').value = result.value.kategori;
+                document.getElementById('req_cancel_detail_inp').value = result.value.detail;
+                document.getElementById('form-request-cancel-customer').submit();
+            }
+        });
+    }
+
+    function toggleSwalReqLainnya(show) {
+        const box = document.getElementById('swal_req_lainnya_box');
+        if (box) {
+            if (show) box.classList.remove('hidden');
+            else box.classList.add('hidden');
+        }
+    }
+</script>
+
+<!-- Hidden Form Pembatalan Pelanggan Langsung (Menunggu Pembayaran) -->
+<form id="form-cancel-customer" method="POST" class="hidden">
+    <input type="hidden" name="action" value="cancel_order">
+    <input type="hidden" name="no_invoice" id="cancel_invoice_inp">
+    <input type="hidden" name="alasan_kategori" id="cancel_kategori_inp">
+    <input type="hidden" name="alasan_detail" id="cancel_detail_inp">
+</form>
+
+<!-- Hidden Form Pengajuan Pembatalan Pelanggan (Diproses) -->
+<form id="form-request-cancel-customer" method="POST" class="hidden">
+    <input type="hidden" name="action" value="request_cancel">
+    <input type="hidden" name="no_invoice" id="req_cancel_invoice_inp">
+    <input type="hidden" name="alasan_kategori" id="req_cancel_kategori_inp">
+    <input type="hidden" name="alasan_detail" id="req_cancel_detail_inp">
+</form>
+<script src="../assets/js/sweetalert2.all.min.js"></script>
+<script>if (typeof Swal === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"><\/script>'); }</script>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER (Pharmify Editorial 4-Column Layout)                  -->
+    <!-- ============================================================ -->
+    <footer class="bg-white border-t border-slate-200 mt-auto pb-20 md:pb-0">
+        <div class="max-w-7xl mx-auto px-4 lg:px-8 py-12 md:py-16">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+                
+                <!-- Col 1: Brand Info -->
+                <div class="space-y-4">
+                    <a href="index.php" class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-full bg-[#eef6fb] border border-[#cde3f5] flex items-center justify-center overflow-hidden p-1">
+                            <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-extrabold tracking-tight text-[#0f2d5a] leading-none">ZenCare</h2>
+                            <span class="text-[10px] font-bold text-[#1a75d2] uppercase tracking-[0.18em]">Medical Store</span>
+                        </div>
+                    </a>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        Pusat distribusi resmi obat-obatan kemasan grosir dan alat kesehatan terpercaya. Berkomitmen menjaga keaslian produk dan kontrol kedaluwarsa berstandar klinis.
+                    </p>
+                </div>
+
+                <!-- Col 2: Koleksi Kategori -->
+                <div>
+                    <h4 class="text-xs font-extrabold text-[#0f2d5a] uppercase tracking-wider mb-4">Kategori Produk</h4>
+                    <ul class="space-y-2.5 text-xs">
+                        <li><a href="kategori.php?kategori=Obat" class="text-slate-500 hover:text-[#0f2d5a] transition">Obat-obatan &amp; Farmasi</a></li>
+                        <li><a href="kategori.php?kategori=Alat+Kesehatan" class="text-slate-500 hover:text-[#0f2d5a] transition">Alat Kesehatan Medis</a></li>
+                        <li><a href="kategori.php?q=Vitamin" class="text-slate-500 hover:text-[#0f2d5a] transition">Vitamin &amp; Suplemen</a></li>
+                        <li><a href="kategori.php?q=Sirup" class="text-slate-500 hover:text-[#0f2d5a] transition">Sirup &amp; Suspensi</a></li>
+                        <li><a href="kategori.php" class="text-slate-500 hover:text-[#0f2d5a] transition">Semua Koleksi Produk</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Panduan & Layanan -->
+                <div>
+                    <h4 class="text-xs font-extrabold text-[#0f2d5a] uppercase tracking-wider mb-4">Informasi &amp; Layanan</h4>
+                    <ul class="space-y-2.5 text-xs">
+                        <li><a href="tentang_kami.php" class="text-slate-500 hover:text-[#0f2d5a] transition">Tentang ZenCare Medical</a></li>
+                        <li><a href="cara_pembelian.php" class="text-slate-500 hover:text-[#0f2d5a] transition">Cara Pembelian &amp; Pembayaran</a></li>
+                        <li><a href="cara_pembelian.php" class="text-slate-500 hover:text-[#0f2d5a] transition">Ketentuan Pengiriman &amp; Pick-Up</a></li>
+                        <li><a href="profil.php" class="text-slate-500 hover:text-[#0f2d5a] transition">Lacak Status Pesanan</a></li>
+                        <li><a href="profil.php" class="text-slate-500 hover:text-[#0f2d5a] transition">Pengaturan Akun Pelanggan</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: Kontak & Lokasi -->
+                <div>
+                    <h4 class="text-xs font-extrabold text-[#0f2d5a] uppercase tracking-wider mb-4">Hubungi Kami</h4>
+                    <ul class="space-y-3 text-xs text-slate-500">
+                        <li class="flex gap-2.5 items-start">
+                            <svg class="w-4 h-4 text-[#0f2d5a] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span class="leading-relaxed">
+                                <strong class="text-[#0f2d5a] block mb-0.5">ZenCare Medical — Cabang Muharto</strong>
+                                Jl. Muharto No. 55D, Jodipan, Kec. Blimbing, Kota Malang, Jawa Timur 65127
+                            </span>
+                        </li>
+                        <li class="flex gap-2.5 items-center">
+                            <svg class="w-4 h-4 text-[#0f2d5a] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                            <span>+62 895-3434-36025</span>
+                        </li>
+                        <li class="flex gap-2.5 items-center">
+                            <svg class="w-4 h-4 text-[#0f2d5a] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            <span>zencare.id@gmail.com</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mt-10 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p class="text-xs text-slate-400">&copy; 2026 ZenCare Medical. Seluruh Hak Cipta Dilindungi.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ============================================================ -->
+    <!-- PHARMIFY SLIDE-OVER CART DRAWER (Reference 2)                -->
+    <!-- ============================================================ -->
+
+    <!-- Backdrop Overlay -->
+    <div id="cart-overlay" class="fixed inset-0 bg-[#0b2545]/50 z-50 hidden opacity-0 transition-opacity duration-300" onclick="toggleCart()"></div>
+
+    <!-- Right Slide-Over Drawer -->
+    <div id="cart-drawer" class="fixed top-0 right-0 bottom-0 w-full sm:w-[400px] bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+        
+        <!-- Drawer Header -->
+        <div class="px-4 sm:px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white z-10">
+            <div>
+                <h2 class="text-base font-bold text-[#0f2d5a]">Keranjang Belanja</h2>
+                <p class="text-[11px] text-slate-400 mt-0.5"><span id="cart-drawer-count">0</span> produk di keranjang</p>
+            </div>
+            <button type="button" onclick="toggleCart()" class="p-1.5 text-slate-400 hover:text-[#0f2d5a] transition cursor-pointer" title="Tutup">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <!-- Cart Items List (Scrollable) -->
+        <div class="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-6 bg-white">
+            <div id="cart-items" class="space-y-4">
+                <!-- Items injected via JS -->
+            </div>
+            
+            <!-- Pharmify Minimalist Empty State (Reference 2) -->
+            <div id="cart-empty" class="hidden h-full flex flex-col items-center justify-center text-center py-12">
+                <h3 class="text-lg font-extrabold text-[#0f2d5a] mb-2">Keranjang belanja Anda kosong</h3>
+                <p class="text-xs text-slate-500 mb-6 max-w-[240px]">Silakan pilih obat atau alat kesehatan yang Anda butuhkan dari katalog kami.</p>
+                <button type="button" onclick="toggleCart()" class="px-7 py-3 bg-[#0f2d5a] hover:bg-[#1a75d2] text-white text-xs font-bold uppercase tracking-widest transition cursor-pointer">
+                    LANJUTKAN BELANJA
+                </button>
+            </div>
+        </div>
+
+        <!-- Drawer Footer / Checkout Summary -->
+        <div class="p-4 sm:p-6 border-t border-slate-200 bg-[#f8fafc] pb-safe">
+            <div class="flex items-center justify-between mb-3 text-xs">
+                <label class="flex items-center gap-2 cursor-pointer font-semibold text-slate-700 select-none">
+                    <input type="checkbox" id="drawer-check-all" onchange="toggleSelectAllDrawer(this.checked)" class="w-3.5 h-3.5 accent-[#0f2d5a] cursor-pointer">
+                    <span>Pilih Semua (<span id="cart-drawer-selected-count">0</span> dipilih)</span>
+                </label>
+            </div>
+            <div class="flex justify-between items-baseline mb-4 pb-3 border-b border-slate-200">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Estimasi:</span>
+                <span class="text-xl font-extrabold text-[#0f2d5a]" id="cart-total">Rp 0</span>
+            </div>
+            <div class="space-y-2.5">
+                <button type="button" onclick="checkoutSelectedItems()" id="btn-drawer-checkout" class="block w-full py-3.5 text-center bg-[#0f2d5a] hover:bg-[#1a75d2] text-white font-bold text-xs uppercase tracking-widest transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                    Checkout Sekarang
+                </button>
+                <a href="cart.php" class="block w-full py-2.5 text-center border border-slate-300 hover:border-[#0f2d5a] text-[#0f2d5a] font-bold text-xs uppercase tracking-wider bg-white transition">
+                    Lihat Halaman Keranjang
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MOBILE BOTTOM APP NAVIGATION (iOS Safari / Android Chrome)   -->
+    <!-- ============================================================ -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-3px_12px_rgba(0,0,0,0.06)] pb-safe">
+        <div class="grid grid-cols-5 h-14">
+            <a href="index.php" class="flex flex-col items-center justify-center py-1 transition text-slate-500 hover:text-[#0f2d5a]">
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                <span class="text-[10px] leading-tight">Beranda</span>
+            </a>
+            <a href="kategori.php" class="flex flex-col items-center justify-center py-1 transition text-slate-500 hover:text-[#0f2d5a]">
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                <span class="text-[10px] leading-tight">Katalog</span>
+            </a>
+            <button type="button" onclick="toggleCart()" class="relative flex flex-col items-center justify-center py-1 text-slate-500 hover:text-[#0f2d5a] transition cursor-pointer">
+                <div class="relative">
+                    <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    <span id="mobile-bottom-cart-badge" class="absolute -top-1 -right-2.5 min-w-[16px] h-[16px] px-1 rounded-full bg-[#0f2d5a] text-white text-[9px] font-bold flex items-center justify-center hidden">0</span>
+                </div>
+                <span class="text-[10px] leading-tight">Keranjang</span>
+            </button>
+            <a href="profil.php" class="flex flex-col items-center justify-center py-1 transition text-[#0f2d5a] font-bold">
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                <span class="text-[10px] leading-tight">Pesanan</span>
+            </a>
+            <a href="profil.php" class="flex flex-col items-center justify-center py-1 text-slate-500 hover:text-[#0f2d5a] transition">
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="text-[10px] leading-tight">Akun</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-20 md:bottom-6 left-3 right-3 sm:left-auto sm:right-6 z-[60] flex flex-col gap-3 pointer-events-none"></div>
+
+    <script>
+    // --- Cart State Management (localStorage) ---
+    let cartData = JSON.parse(localStorage.getItem('zc_cart') || localStorage.getItem('zencare_cart') || '[]');
+
+    function saveCart() {
+        localStorage.setItem('zc_cart', JSON.stringify(cartData));
+        localStorage.setItem('zencare_cart', JSON.stringify(cartData));
+        renderCart();
+        if (typeof renderCartPage === 'function') {
+            renderCartPage();
+        }
+        if (typeof renderCartItems === 'function') {
+            renderCartItems();
+            if (typeof calculateShippingCost === 'function') calculateShippingCost();
+        }
+    }
+
+    function toggleCart() {
+        const overlay = document.getElementById('cart-overlay');
+        const drawer = document.getElementById('cart-drawer');
+        const isHidden = drawer.classList.contains('translate-x-full');
+
+        if (isHidden) {
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            drawer.classList.remove('translate-x-full');
+            document.body.style.overflow = 'hidden';
+            renderCart();
+            syncLiveStockWithServer();
+        } else {
+            overlay.classList.add('opacity-0');
+            drawer.classList.add('translate-x-full');
+            document.body.style.overflow = '';
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        }
+    }
+
+    function formatRupiah(num) {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+    }
+
+    function showToast(title, message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        
+        const icon = type === 'success' 
+            ? '<svg class="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+            : '<svg class="w-5 h-5 text-amber-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>';
+            
+        toast.className = `pointer-events-auto transform transition-all duration-300 translate-y-8 opacity-0 bg-white border border-slate-200 shadow-lg p-4 w-full sm:w-80 max-w-sm ml-auto flex gap-3`;
+        toast.innerHTML = `
+            ${icon}
+            <div>
+                <h4 class="text-xs font-extrabold uppercase tracking-wider text-[#0f2d5a]">${title}</h4>
+                <p class="text-xs text-slate-600 mt-0.5">${message}</p>
+            </div>
+        `;
+        
+        container.appendChild(toast);
+        requestAnimationFrame(() => {
+            toast.classList.remove('translate-y-8', 'opacity-0');
+        });
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    function addToCart(id, nama, harga, berat, gambar, satB, rasio, maxStokBox, qtyInput = 1) {
+        let qty = parseInt(qtyInput) || 1;
+        let itemIndex = cartData.findIndex(item => item.id == id);
+
+        if (itemIndex > -1) {
+            let newQty = cartData[itemIndex].qty + qty;
+            if (newQty > maxStokBox) {
+                showToast('Stok Tidak Cukup', `Maksimal pembelian untuk item ini adalah ${maxStokBox} ${satB}.`, 'warning');
+                cartData[itemIndex].qty = maxStokBox;
+            } else {
+                cartData[itemIndex].qty = newQty;
+                showToast('Berhasil', `${nama} ditambahkan ke keranjang.`);
+            }
+            cartData[itemIndex].max = maxStokBox;
+            cartData[itemIndex].selected = true;
+        } else {
+            if (qty > maxStokBox) {
+                showToast('Stok Tidak Cukup', `Maksimal pembelian untuk item ini adalah ${maxStokBox} ${satB}.`, 'warning');
+                qty = maxStokBox;
+            } else {
+                showToast('Berhasil', `${nama} ditambahkan ke keranjang.`);
+            }
+            cartData.push({ id, nama, harga, berat, gambar, satuan: satB, rasio, max: maxStokBox, qty, selected: true });
+        }
+        
+        saveCart();
+    }
+    
+    window.buyNow = function(id, nama, harga, berat, gambar, satB, rasio, maxStokBox) {
+        let qtyInput = 1;
+        let qtyEl = document.getElementById('qty_' + id);
+        if (qtyEl) {
+            qtyInput = parseInt(qtyEl.value) || 1;
+        }
+        addToCart(id, nama, harga, berat, gambar, satB, rasio, maxStokBox, qtyInput);
+        let targetUrl = window.location.pathname.includes('/ecommerce/') ? 'zencare_checkout.php' : 'ecommerce/zencare_checkout.php';
+        window.location.href = targetUrl;
+    };
+
+    function removeCartItem(id) {
+        cartData = cartData.filter(item => item.id != id);
+        saveCart();
+    }
+
+    function toggleItemSelect(id) {
+        let idx = cartData.findIndex(i => i.id == id);
+        if (idx > -1) {
+            cartData[idx].selected = !(cartData[idx].selected !== false);
+            saveCart();
+        }
+    }
+
+    function toggleSelectAllDrawer(checked) {
+        cartData.forEach(item => {
+            item.selected = checked;
+        });
+        saveCart();
+    }
+
+    function updateCartItemQty(id, delta) {
+        let itemIndex = cartData.findIndex(item => item.id == id);
+        if (itemIndex > -1) {
+            let item = cartData[itemIndex];
+            let maxLimit = parseInt(item.max) || parseInt(item.maxStokBox) || parseInt(item.stokBox) || 0;
+            let newQty = item.qty + delta;
+            
+            if (newQty <= 0) {
+                removeCartItem(id);
+            } else if (delta > 0 && newQty > maxLimit) {
+                showToast('Stok Maksimal', `Stok tersedia hanya ${maxLimit} ${item.satuan || 'Box'}.`, 'warning');
+                item.qty = maxLimit;
+                saveCart();
+            } else {
+                item.qty = newQty;
+                saveCart();
+            }
+        }
+    }
+
+    function adjustQty(id, delta, max) {
+        let input = document.getElementById('qty_' + id);
+        if(!input) return;
+        let v = parseInt(input.value) + delta;
+        if (v < 1) v = 1;
+        if (v > max) v = max;
+        input.value = v;
+    }
+
+    function checkoutSelectedItems() {
+        let selected = cartData.filter(i => i.selected !== false);
+        if (selected.length === 0) {
+            showToast('Pilih Produk', 'Centang minimal satu produk untuk melanjutkan checkout.', 'warning');
+            return;
+        }
+        let targetUrl = window.location.pathname.includes('/ecommerce/') ? 'zencare_checkout.php' : 'ecommerce/zencare_checkout.php';
+        window.location.href = targetUrl;
+    }
+
+    function resolveProductImg(gbr) {
+        let isEcommerce = window.location.pathname.includes('/ecommerce/');
+        let placeholder = isEcommerce ? '../assets/img/no-image.png' : 'assets/img/no-image.png';
+        if (!gbr) return placeholder;
+        if (typeof gbr === 'string' && gbr.includes(',')) {
+            gbr = gbr.split(',')[0].trim();
+        }
+        if (gbr.startsWith('http')) return gbr;
+        let clean = gbr.replace(/^\.\.\//, '');
+        if (!clean) return placeholder;
+        if (!clean.includes('/')) {
+            clean = 'assets/img/produk/' + clean;
+        }
+        return isEcommerce ? ('../' + clean) : clean;
+    }
+
+    function renderCart() {
+        const badge1 = document.getElementById('cart-count-badge');
+        const badge2 = document.getElementById('cart-drawer-count');
+        const badgeMobile = document.getElementById('mobile-bottom-cart-badge');
+        const itemsContainer = document.getElementById('cart-items');
+        const emptyState = document.getElementById('cart-empty');
+        const totalLabel = document.getElementById('cart-total');
+        const drawerCheckAll = document.getElementById('drawer-check-all');
+        const drawerSelectedCount = document.getElementById('cart-drawer-selected-count');
+        const btnCheckout = document.getElementById('btn-drawer-checkout');
+
+        const totalItems = cartData.reduce((sum, item) => sum + item.qty, 0);
+        if (badge1) {
+            badge1.textContent = totalItems;
+            if (totalItems > 0) {
+                badge1.classList.remove('hidden');
+            } else {
+                badge1.classList.add('hidden');
+            }
+        }
+        if (badge2) badge2.textContent = totalItems;
+        if (badgeMobile) {
+            badgeMobile.textContent = totalItems;
+            if (totalItems > 0) {
+                badgeMobile.classList.remove('hidden');
+            } else {
+                badgeMobile.classList.add('hidden');
+            }
+        }
+
+        if (cartData.length === 0) {
+            if (itemsContainer) {
+                itemsContainer.innerHTML = '';
+                itemsContainer.classList.add('hidden');
+            }
+            if (emptyState) emptyState.classList.remove('hidden');
+            if (totalLabel) totalLabel.textContent = 'Rp 0';
+            if (drawerCheckAll) drawerCheckAll.checked = false;
+            if (drawerSelectedCount) drawerSelectedCount.innerText = '0';
+            if (btnCheckout) btnCheckout.disabled = true;
+            return;
+        }
+
+        if (itemsContainer) itemsContainer.classList.remove('hidden');
+        if (emptyState) emptyState.classList.add('hidden');
+
+        let html = '';
+        let totalHarga = 0;
+        let selectedCount = 0;
+        let allSelected = true;
+
+        cartData.forEach(item => {
+            const isSelected = (item.selected !== false);
+            if (isSelected) {
+                totalHarga += (item.harga * item.qty);
+                selectedCount += item.qty;
+            } else {
+                allSelected = false;
+            }
+            
+            const maxStok = parseInt(item.max) || 0;
+            const sat = item.satuan || 'Box';
+            const imgPath = resolveProductImg(item.gambar);
+
+            html += `
+            <div class="pb-4 border-b border-slate-100 flex items-start gap-3 ${isSelected ? '' : 'opacity-60'}">
+                <div class="pt-1.5">
+                    <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleItemSelect(${item.id})" class="w-3.5 h-3.5 accent-[#0f2d5a] cursor-pointer">
+                </div>
+                <div class="w-16 h-16 bg-[#f6f8fa] border border-slate-200/70 flex items-center justify-center shrink-0 p-2 overflow-hidden">
+                    <img src="${imgPath}" class="w-full h-full object-contain mix-blend-multiply" alt="${item.nama}" onerror="this.src=resolveProductImg('')">
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start gap-2">
+                        <div>
+                            <h4 class="text-xs font-bold text-[#0f2d5a] leading-snug line-clamp-2">${item.nama}</h4>
+                            <span class="block text-[10px] text-slate-400 mt-0.5">Stok Tersedia: ${maxStok} ${sat}</span>
+                        </div>
+                        <button type="button" onclick="removeCartItem(${item.id})" class="text-slate-300 hover:text-rose-600 transition p-0.5 cursor-pointer" title="Hapus">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-between gap-1.5 mt-2.5">
+                        <div class="text-[#0f2d5a] font-extrabold text-xs">${formatRupiah(item.harga)}</div>
+                        <div class="flex items-center border border-slate-200 bg-[#f8fafc] h-7">
+                            <button type="button" onclick="updateCartItemQty(${item.id}, -1)" class="w-6 h-full flex items-center justify-center hover:bg-slate-200/60 text-slate-600 font-bold transition cursor-pointer">−</button>
+                            <span class="w-7 text-center text-xs font-bold text-[#0f2d5a]">${item.qty}</span>
+                            <button type="button" onclick="updateCartItemQty(${item.id}, 1)" ${item.qty >= maxStok ? 'disabled' : ''} class="w-6 h-full flex items-center justify-center font-bold transition ${item.qty >= maxStok ? 'opacity-30 cursor-not-allowed' : 'hover:bg-slate-200/60 text-slate-600 cursor-pointer'}">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        if (itemsContainer) itemsContainer.innerHTML = html;
+        if (totalLabel) totalLabel.textContent = formatRupiah(totalHarga);
+        if (drawerCheckAll) drawerCheckAll.checked = allSelected && cartData.length > 0;
+        if (drawerSelectedCount) drawerSelectedCount.innerText = selectedCount;
+        if (btnCheckout) {
+            btnCheckout.disabled = (selectedCount <= 0);
+            btnCheckout.innerText = `CHECKOUT (${selectedCount} PRODUK)`;
+        }
+    }
+
+    // --- Real-time Stock Sync with POS / Store Database ---
+    let isSyncingStock = false;
+    async function syncLiveStockWithServer() {
+        if (isSyncingStock || !cartData || cartData.length === 0) return;
+        isSyncingStock = true;
+        try {
+            const res = await fetch('/inventory_zencare/api/cek_stok_keranjang.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cart: cartData })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                if (data.stock_map) {
+                    cartData.forEach(item => {
+                        if (data.stock_map[item.id]) {
+                            let maxDus = data.stock_map[item.id].max_dus;
+                            item.max = maxDus;
+                            item.maxStokBox = maxDus;
+                            item.stokBox = maxDus;
+                            if (item.qty > maxDus) {
+                                item.qty = Math.max(1, maxDus);
+                            }
+                        }
+                    });
+                }
+                if (data.has_adjustments && data.adjusted_items.length > 0) {
+                    data.adjusted_items.forEach(adj => {
+                        const idx = cartData.findIndex(i => i.id == adj.id);
+                        if (idx > -1) {
+                            if (adj.new_qty <= 0) {
+                                cartData.splice(idx, 1);
+                                showToast('Stok Habis di Toko', `Produk ${adj.nama} dihapus dari keranjang karena habis di toko fisik.`, 'warning');
+                            } else {
+                                cartData[idx].qty = adj.new_qty;
+                                cartData[idx].max = adj.max_dus;
+                                cartData[idx].maxStokBox = adj.max_dus;
+                                cartData[idx].stokBox = adj.max_dus;
+                                showToast('Penyesuaian Stok', `Stok ${adj.nama} tersisa ${adj.max_dus} ${adj.satuan}. Jumlah otomatis disesuaikan.`, 'warning');
+                            }
+                        }
+                    });
+                }
+                saveCart();
+            }
+        } catch (e) {
+            console.warn('Gagal sinkronisasi stok:', e);
+        } finally {
+            isSyncingStock = false;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderCart();
+        syncLiveStockWithServer();
+    });
+    </script>
+</body>
+</html>

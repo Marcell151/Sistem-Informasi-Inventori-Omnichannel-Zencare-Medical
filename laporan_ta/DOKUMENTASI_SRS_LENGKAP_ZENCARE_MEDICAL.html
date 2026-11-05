@@ -126,7 +126,7 @@
                 <div>
                     <h1 class="text-2xl font-black text-[#0f2d5a] tracking-tight leading-none">ZENCARE MEDICAL</h1>
                     <span class="text-xs font-bold text-[#1a75d2] uppercase tracking-widest block mt-1">Sistem Informasi Inventori &amp; POS Omnichannel</span>
-                    <p class="text-[11px] text-slate-500 mt-0.5">Distributor Resmi Farmasi &amp; Alat Kesehatan Medis Terstandarisasi</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Distributor Resmi Obat dan Alkes &amp; Alat Kesehatan Medis Terstandarisasi</p>
                 </div>
             </div>
             <div class="text-left sm:text-right text-xs text-slate-600 leading-snug">
@@ -142,7 +142,7 @@
                 SPESIFIKASI KEBUTUHAN PERANGKAT LUNAK (SRS)
             </h2>
             <p class="text-xs sm:text-sm text-slate-600 font-medium mt-1">
-                Perancangan Sistem Inventori Farmasi, UOM Bertingkat, FEFO, Serial Number Alkes, Omnichannel POS, &amp; Stok Opname
+                Perancangan Sistem Inventori Obat dan Alkes, UOM Bertingkat, FEFO, Serial Number Alkes, Omnichannel POS, &amp; Stok Opname
             </p>
         </div>
 
@@ -183,7 +183,7 @@
             <!-- MERMAID DIAGRAM 1 -->
             <div class="mermaid">
 graph TD
-    A["Produk ZenCare Medical"] --> B["Kategori: OBAT (FARMASI)"]
+    A["Produk ZenCare Medical"] --> B["Kategori: OBAT & MEDIS"]
     A --> C["Kategori: ALAT KESEHATAN (ALKES)"]
 
     B --> B1["Pelacakan Lot / Batch Pabrik"]
@@ -539,7 +539,7 @@ erDiagram
                         <table>
                             <thead><tr><th>Tabel</th><th>Kolom Kunci</th><th>Fungsi Logistik</th></tr></thead>
                             <tbody>
-                                <tr><td><code>penerimaan</code></td><td><code>id</code>, <code>no_penerimaan</code>, <code>id_supplier</code>, <code>no_faktur_supplier</code>, <code>tgl_terima</code>, <code>total_nilai</code></td><td>Mencatat surat jalan &amp; faktur penerimaan resmi dari PBF/Supplier farmasi</td></tr>
+                                <tr><td><code>penerimaan</code></td><td><code>id</code>, <code>no_penerimaan</code>, <code>id_supplier</code>, <code>no_faktur_supplier</code>, <code>tgl_terima</code>, <code>total_nilai</code></td><td>Mencatat surat jalan &amp; faktur penerimaan resmi dari PBF/Supplier obat dan alkes</td></tr>
                                 <tr><td><code>penerimaan_detail</code></td><td><code>id</code>, <code>id_penerimaan</code>, <code>id_variasi</code>, <code>qty_terima</code>, <code>no_batch</code>, <code>tgl_exp</code>, <code>status_kondisi</code></td><td>Mencatat kuantitas barang fisik, validasi masa kedaluwarsa minimal, dan lot batch masuk</td></tr>
                             </tbody>
                         </table>
@@ -680,7 +680,7 @@ sequenceDiagram
             <div class="grid grid-cols-2 gap-8 text-center text-xs text-slate-700">
                 <div>
                     <span class="block text-slate-500 mb-1">Disusun &amp; Diperiksa Oleh:</span>
-                    <strong class="text-sm text-[#0f2d5a] block mb-16">Pengelola Sistem &amp; Logistik Farmasi</strong>
+                    <strong class="text-sm text-[#0f2d5a] block mb-16">Pengelola Sistem &amp; Logistik Obat dan Alkes</strong>
                     <span class="inline-block border-b border-slate-900 font-bold pb-0.5 min-w-[200px]">Marcell (Pengembang Sistem)</span>
                     <span class="block text-[11px] text-slate-500 mt-1">Staf Pengembang Sistem Informasi TA</span>
                 </div>

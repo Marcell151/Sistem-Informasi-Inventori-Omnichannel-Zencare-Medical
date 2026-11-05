@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; border-radius: 0 !important; color: #000 !important; }
+    body { font-family: 'DM Mono', monospace !important; background: #fff !important; min-height: 100vh; filter: grayscale(100%) contrast(120%); }
+    .shell { display: flex; height: 100vh; overflow: hidden; }
+    .nav-panel { width: 230px; flex-shrink: 0; background: #fff !important; border-right: 2px solid #000 !important; display: flex; flex-direction: column; }
+    .nav-header { padding: 14px 12px; border-bottom: 2px solid #000 !important; }
+    .nav-title { font-size: 11px; font-weight: 600; }
+    .nav-sub { font-size: 8px; margin-top: 2px; }
+    .nav-list { flex: 1; overflow-y: auto; padding: 6px 0; }
+    .nav-sec { font-size: 8px; font-weight: 600; text-transform: uppercase; padding: 8px 12px 3px; }
+    .nav-item { display: flex; align-items: center; gap: 8px; padding: 5px 12px; font-size: 9px; border: 1px solid transparent; }
+    .nav-item.active { background: #000 !important; color: #fff !important; }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #fdfdfd; }
+    .topbar { height: 42px; border-bottom: 2px solid #000 !important; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: #fff; }
+    .content { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .btn { border: 1.5px solid #000; padding: 5px 10px; font-size: 9px; font-weight: 600; background: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+    .btn-dark { background: #000 !important; color: #fff !important; }
+    .tab-bar { display: flex; gap: 2px; border-bottom: 2px solid #000; }
+    .tab-btn { padding: 6px 14px; font-size: 9px; font-weight: 600; border: 1.5px solid #000; border-bottom: none; background: #f0f0f0; cursor: pointer; }
+    .tab-btn.active { background: #000 !important; color: #fff !important; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .kpi-card { border: 1.5px solid #000; padding: 10px; background: #fff; }
+    .kpi-lbl { font-size: 8px; text-transform: uppercase; font-weight: 600; }
+    .kpi-val { font-size: 16px; font-weight: 600; margin-top: 4px; }
+    .kpi-sub { font-size: 7.5px; margin-top: 2px; }
+    .filter-box { border: 1.5px solid #000; padding: 10px; background: #fff; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+    .f-grp { display: flex; flex-direction: column; gap: 3px; }
+    .f-lbl { font-size: 8px; font-weight: 600; text-transform: uppercase; }
+    .f-inp { border: 1px solid #000; padding: 4px 8px; font-size: 9px; font-family: inherit; background: #fff; min-width: 110px; }
+    .tbl-box { border: 1.5px solid #000; background: #fff; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 8.5px; text-align: left; }
+    th { border-bottom: 2px solid #000; padding: 6px 8px; font-weight: 600; text-transform: uppercase; background: #f0f0f0; }
+    td { border-bottom: 1px solid #000; padding: 6px 8px; }
+</style>
+</head>
+<body>
+<div class="shell">
+    <div class="nav-panel">
+        <div class="nav-header">
+            <div class="nav-title">[+] ZENCARE MEDICAL</div>
+            <div class="nav-sub">PANEL SUPERADMIN &bull; AUDIT STOK</div>
+        </div>
+        <div class="nav-list">
+            <div class="nav-sec">UTAMA</div>
+            <div class="nav-item">Dashboard Eksekutif</div>
+            <div class="nav-sec">LAPORAN MANAJERIAL</div>
+            <div class="nav-item">Lap. Penjualan Omnichannel</div>
+            <div class="nav-item">Lap. Ketersediaan Stok</div>
+            <div class="nav-item">Lap. Logistik Medis &amp; Exp</div>
+            <div class="nav-item">Lap. Penerimaan Barang</div>
+            <div class="nav-item active">[v] Lap. Mutasi &amp; Konversi</div>
+            <div class="nav-item">Lap. Anomali FEFO Kasir</div>
+            <div class="nav-sec">PENGATURAN</div>
+            <div class="nav-item">Manajemen Pengguna</div>
+            <div class="nav-item">Pengaturan Web Toko</div>
+        </div>
+    </div>
+    <div class="main">
+        <div class="topbar">
+            <div style="font-size:11px; font-weight:600;">LAPORAN AUDIT MUTASI PENYESUAIAN &amp; KONVERSI SATUAN UOM</div>
+            <div style="font-size:9px;">USER: SUPERADMIN (PEMILIK)</div>
+        </div>
+        <div class="content">
+            <div class="tab-bar">
+                <button class="tab-btn active">[TAB 1] KONVERSI PECAH DUS (UOM)</button>
+                <button class="tab-btn">[TAB 2] MUTASI STOK PENYESUAIAN MANUAL</button>
+            </div>
+
+            <div class="filter-box">
+                <div class="f-grp">
+                    <span class="f-lbl">Rentang Tanggal</span>
+                    <div style="display:flex; gap:4px; align-items:center;">
+                        <input class="f-inp" type="text" value="01/10/2026">
+                        <span style="font-size:9px;">s/d</span>
+                        <input class="f-inp" type="text" value="05/11/2026">
+                    </div>
+                </div>
+                <div class="f-grp">
+                    <span class="f-lbl">Filter Produk</span>
+                    <select class="f-inp"><option>Semua Komoditas Medis</option><option>Amoxicillin 500mg</option><option>Paracetamol 500mg</option></select>
+                </div>
+                <div class="f-grp" style="flex:1;">
+                    <span class="f-lbl">Pencarian Batch / Aktor</span>
+                    <input class="f-inp" type="text" placeholder="Ketik No. Batch Asal, Batch Hasil, Nama Staf..." style="width:100%;">
+                </div>
+                <button class="btn btn-dark">FILTER DATA</button>
+                <button class="btn">[+] EKSPOR EXCEL</button>
+                <button class="btn">[v] CETAK AUDIT</button>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-lbl">Total Sesi Pemecahan Dus</div>
+                    <div class="kpi-val">35 Sesi</div>
+                    <div class="kpi-sub">Pemecahan Kemasan Grosir ke Eceran</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-lbl">Total Kemasan Induk Dibongkar</div>
+                    <div class="kpi-val">85 Dus / Box</div>
+                    <div class="kpi-sub">Stok Kemasan Besar Dikurangi</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-lbl">Total Eceran Terbentuk</div>
+                    <div class="kpi-val">850 Strip / Pcs</div>
+                    <div class="kpi-sub">100% Mewarisi Batch &amp; Exp Asal</div>
+                </div>
+            </div>
+
+            <div class="tbl-box">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:30px;">NO</th>
+                            <th>WAKTU KONVERSI</th>
+                            <th>PRODUK &amp; VARIASI</th>
+                            <th>BATCH ASAL (DUS)</th>
+                            <th>BATCH HASIL (ECERAN)</th>
+                            <th>QTY DUS DIBONGKAR</th>
+                            <th>HASIL ECERAN</th>
+                            <th>SISA DUS GUDANG</th>
+                            <th>PETUGAS OPERASIONAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>04/11/2026 14:15</td>
+                            <td>Amoxicillin 500mg (Box ke Strip)</td>
+                            <td>BATCH-AMX-2028</td>
+                            <td><b>BATCH-AMX-2028-CV1</b></td>
+                            <td>2 Box</td>
+                            <td><b>20 Strip</b> (Rasio 10)</td>
+                            <td>48 Box</td>
+                            <td>Admin Toko (Budi)</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>02/11/2026 10:30</td>
+                            <td>Paracetamol 500mg (Dus ke Strip)</td>
+                            <td>BATCH-PCT-441</td>
+                            <td><b>BATCH-PCT-441-CV1</b></td>
+                            <td>5 Dus</td>
+                            <td><b>50 Strip</b> (Rasio 10)</td>
+                            <td>75 Dus</td>
+                            <td>Kasir Toko (Siti)</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>29/10/2026 16:40</td>
+                            <td>Hufagrip Sirup Merah (Karton ke Btl)</td>
+                            <td>BATCH-HFG-091</td>
+                            <td><b>BATCH-HFG-091-CV1</b></td>
+                            <td>1 Karton</td>
+                            <td><b>50 Botol</b> (Rasio 50)</td>
+                            <td>17 Karton</td>
+                            <td>Admin Toko (Budi)</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>25/10/2026 09:20</td>
+                            <td>Promag Tablet Kunyah (Dus ke Strip)</td>
+                            <td>BATCH-PMG-772</td>
+                            <td><b>BATCH-PMG-772-CV1</b></td>
+                            <td>3 Dus</td>
+                            <td><b>30 Strip</b> (Rasio 10)</td>
+                            <td>97 Dus</td>
+                            <td>Admin Toko (Budi)</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>20/10/2026 11:50</td>
+                            <td>Ibuprofen 400mg (Box ke Strip)</td>
+                            <td>BATCH-IBP-512</td>
+                            <td><b>BATCH-IBP-512-CV1</b></td>
+                            <td>2 Box</td>
+                            <td><b>20 Strip</b> (Rasio 10)</td>
+                            <td>38 Box</td>
+                            <td>Kasir Toko (Siti)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

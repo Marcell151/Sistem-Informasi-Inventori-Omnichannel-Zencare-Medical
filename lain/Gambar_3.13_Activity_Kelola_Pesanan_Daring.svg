@@ -1,0 +1,174 @@
+<svg viewBox="0 0 980 1280" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="font-family: Arial, sans-serif; background: #ffffff;">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0f172a" />
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#dc2626" />
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#16a34a" />
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#2563eb" />
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+  <!-- Outer Border & Header -->
+  <rect x="10" y="10" width="960" height="1260" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+  <rect x="10" y="10" width="960" height="35" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="490" y="33" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">Kelola Pesanan Daring &amp; Pembatalan (Picking List &amp; Release Reserved)</text>
+
+  <!-- Swimlane Headers -->
+  <rect x="10" y="45" width="410" height="32" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>
+  <text x="215" y="66" text-anchor="middle" font-size="12" font-weight="bold" fill="#0f172a">Admin (Staff Logistik)</text>
+
+  <rect x="420" y="45" width="550" height="32" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>
+  <text x="695" y="66" text-anchor="middle" font-size="12" font-weight="bold" fill="#0f172a">Sistem Back-Office</text>
+
+  <!-- Divider -->
+  <line x1="420" y1="45" x2="420" y2="1270" stroke="#0f172a" stroke-width="1.5"/>
+
+  <!-- ================= INITIAL STEP ================= -->
+  <circle cx="215" cy="100" r="10" fill="#0f172a"/>
+  <line x1="215" y1="110" x2="215" y2="135" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="105" y="135" width="220" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="215" y="153" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#0f172a">Membuka Menu Transaksi &amp;</text>
+  <text x="215" y="167" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#0f172a">Pilih Tab "E-Commerce"</text>
+  <!-- To Sistem (Orthogonal) -->
+  <path d="M 325 156 L 560 156" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Sistem displays queue & picking instruction -->
+  <rect x="560" y="135" width="270" height="44" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="153" text-anchor="middle" font-size="10" font-weight="bold" fill="#0f172a">Menampilkan Antrean Pesanan "Diproses"</text>
+  <text x="695" y="167" text-anchor="middle" font-size="9.5" fill="#0f172a">&amp; Panduan Identitas Logistik (Batch/SN)</text>
+  <!-- Back to Admin (Orthogonal) -->
+  <path d="M 695 179 L 695 210 L 325 210" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Decision: Perlu Siapkan Fisik? -->
+  <rect x="105" y="190" width="220" height="40" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="215" y="214" text-anchor="middle" font-size="10" font-weight="bold" fill="#0f172a">Evaluasi Status Persiapan Fisik</text>
+  <line x1="215" y1="230" x2="215" y2="255" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <polygon points="215,255 265,275 215,295 165,275" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="215" y="279" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0f172a">Pesanan Baru?</text>
+
+  <!-- [Ya] Print Picking List & Prepare Goods (Orthogonal: left to x=115, down to y=325) -->
+  <text x="130" y="268" font-size="8.5" font-weight="bold" fill="#0f172a">[Ya]</text>
+  <path d="M 165 275 L 115 275 L 115 325" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="35" y="325" width="160" height="46" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="115" y="343" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0f172a">Cetak Picking List &amp; Siapkan</text>
+  <text x="115" y="356" text-anchor="middle" font-size="8.5" fill="#0f172a">Fisik Barang dari Rak</text>
+  <!-- To Merge (Orthogonal) -->
+  <path d="M 115 371 L 115 405 L 200 405" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+
+  <!-- [Tidak] Bypass (Orthogonal: right to x=285, down to y=405) -->
+  <text x="270" y="268" font-size="8.5" font-weight="bold" fill="#0f172a">[Tidak]</text>
+  <path d="M 265 275 L 285 275 L 285 405 L 230 405" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+
+  <!-- Merge Picking Decision -->
+  <polygon points="215,395 230,405 215,415 200,405" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <line x1="215" y1="415" x2="215" y2="445" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Decision: Tindakan Operasional? -->
+  <polygon points="215,445 275,470 215,495 155,470" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="215" y="474" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Tindakan?</text>
+
+  <!-- ================= BRANCH 1: BATALKAN PESANAN ================= -->
+  <text x="105" y="462" font-size="8.5" font-weight="bold" fill="#dc2626">[Batalkan Pesanan]</text>
+  <!-- Orthogonal: left along y=470 to x=80, down to y=525 -->
+  <path d="M 155 470 L 80 470 L 80 525" fill="none" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+
+  <rect x="20" y="525" width="125" height="46" rx="6" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="82" y="543" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#dc2626">Pilih Opsi "Batalkan"</text>
+  <text x="82" y="556" text-anchor="middle" font-size="8" fill="#dc2626">(Pick-up Kedaluwarsa)</text>
+  <!-- To Sistem (Orthogonal: right to x=560) -->
+  <path d="M 145 548 L 560 548" fill="none" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+
+  <!-- Sistem: Release Reserved Stock -->
+  <rect x="560" y="525" width="270" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="543" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Lepas Kuncian Stok "Reserved"</text>
+  <text x="695" y="557" text-anchor="middle" font-size="9" fill="#0f172a">Kembali Menjadi Stok Aktif Toko (Restore)</text>
+  <line x1="695" y1="571" x2="695" y2="600" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="560" y="600" width="270" height="44" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="618" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Perbarui Status Jadi "Dibatalkan"</text>
+  <text x="695" y="632" text-anchor="middle" font-size="9" fill="#0f172a">&amp; Kirim Notifikasi Pembatalan ke Pembeli</text>
+
+  <!-- Final Node for Cancel Branch -->
+  <line x1="695" y1="644" x2="695" y2="675" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <circle cx="695" cy="687" r="12" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <circle cx="695" cy="687" r="7" fill="#0f172a"/>
+
+  <!-- ================= BRANCH 2: LANJUT PEMENUHAN ================= -->
+  <text x="270" y="485" font-size="8.5" font-weight="bold" fill="#16a34a">[Lanjut Pemenuhan]</text>
+  <line x1="215" y1="495" x2="215" y2="535" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Decision: Metode Pengambilan? -->
+  <polygon points="215,535 265,555 215,575 165,555" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="215" y="559" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Metode?</text>
+
+  <!-- 1. Kurir Ekspedisi (Orthogonal: left to x=150, down to y=620) -->
+  <text x="145" y="590" font-size="9" font-weight="bold" fill="#0f172a">[Kurir]</text>
+  <path d="M 165 555 L 150 555 L 150 620" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="70" y="620" width="160" height="46" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="150" y="638" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0f172a">Kemas Paket, Input Resi &amp;</text>
+  <text x="150" y="651" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0f172a">Cetak Label Pengiriman</text>
+  <!-- To Sistem (Orthogonal: right to x=560) -->
+  <path d="M 230 643 L 560 643" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="560" y="620" width="270" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="638" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Perbarui Status Jadi "Dikirim"</text>
+  <text x="695" y="651" text-anchor="middle" font-size="9" fill="#0f172a">&amp; Rekam No Resi Pengiriman ke Database</text>
+  <line x1="695" y1="666" x2="695" y2="700" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="560" y="700" width="270" height="44" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="718" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Konversi Stok "Reserved" Menjadi</text>
+  <text x="695" y="731" text-anchor="middle" font-size="9" fill="#0f172a">Mutasi Keluar Penjualan di Kartu Stok</text>
+  <!-- To Final Merge (Orthogonal) -->
+  <path d="M 695 744 L 695 1060 L 695 1075" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+
+  <!-- 2. Pick-up in Store (Orthogonal: right to x=280, down to y=760) -->
+  <text x="260" y="590" font-size="9" font-weight="bold" fill="#0f172a">[Pick-up]</text>
+  <path d="M 265 555 L 280 555 L 280 760" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="200" y="760" width="160" height="44" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="280" y="778" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0f172a">Siapkan di Rak Pick-up &amp;</text>
+  <text x="280" y="791" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0f172a">Ubah Status "Siap Diambil"</text>
+  <line x1="280" y1="804" x2="280" y2="835" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="200" y="835" width="160" height="44" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="280" y="853" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0f172a">Pelanggan Tiba &amp; Tunjukkan</text>
+  <text x="280" y="866" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0f172a">Kode Unik Pengambilan</text>
+  <line x1="280" y1="879" x2="280" y2="910" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="200" y="910" width="160" height="46" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="280" y="928" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0f172a">Validasi Kode, Serahkan Barang,</text>
+  <text x="280" y="941" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0f172a">&amp; Ubah Status Jadi "Selesai"</text>
+  <!-- To Sistem (Orthogonal: right to x=560) -->
+  <path d="M 360 933 L 560 933" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="560" y="910" width="270" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="928" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Konversi Stok "Reserved" Menjadi</text>
+  <text x="695" y="941" text-anchor="middle" font-size="9" fill="#0f172a">Mutasi Keluar Penjualan di Kartu Stok</text>
+  <!-- To Final Merge (Orthogonal) -->
+  <path d="M 695 956 L 695 1075" fill="none" stroke="#0f172a" stroke-width="1.5"/>
+
+  <!-- Final Merge Diamond -->
+  <polygon points="695,1075 710,1085 695,1095 680,1085" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <line x1="695" y1="1095" x2="695" y2="1125" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Sistem displays success notification -->
+  <rect x="560" y="1125" width="270" height="44" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="1143" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Menampilkan Notifikasi Sukses:</text>
+  <text x="695" y="1157" text-anchor="middle" font-size="9" fill="#0f172a">Pembaruan Siklus Pesanan Selesai</text>
+
+  <!-- Final Node -->
+  <line x1="695" y1="1169" x2="695" y2="1205" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <circle cx="695" cy="1218" r="14" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <circle cx="695" cy="1218" r="8" fill="#0f172a"/>
+</svg>

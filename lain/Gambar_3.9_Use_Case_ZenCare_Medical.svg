@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg viewBox="0 0 1000 1600" width="1000" height="1600" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <!-- Open Arrowhead for <<include>> and <<extend>> -->
+        <marker id="open-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 1 2 L 8 5 L 1 8" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+    </defs>
+
+    <!-- Background -->
+    <rect width="100%" height="100%" fill="#ffffff"/>
+
+    <!-- ============================================================ -->
+    <!-- SYSTEM BOUNDARY BOX                                          -->
+    <!-- ============================================================ -->
+    <rect x="230" y="20" width="540" height="1550" rx="6" ry="6" fill="#ffffff" stroke="#000000" stroke-width="1.8"/>
+    <rect x="230" y="20" width="540" height="38" rx="6" ry="6" fill="#f8fafc" stroke="#000000" stroke-width="1.8"/>
+    <line x1="230" y1="58" x2="770" y2="58" stroke="#000000" stroke-width="1.8"/>
+    <text x="500" y="44" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold" fill="#0f172a">
+        Sistem Informasi Inventori Omnichannel ZenCare Medical
+    </text>
+
+    <!-- ============================================================ -->
+    <!-- ASSOCIATION LINES (ACTORS TO USE CASES)                      -->
+    <!-- ============================================================ -->
+    
+    <!-- 1. Pelanggan (Left-Top: x=110, y=240) -->
+    <line x1="110" y1="240" x2="435" y2="85" stroke="#000" stroke-width="1.2"/>  <!-- Autentikasi -->
+    <line x1="110" y1="240" x2="440" y2="155" stroke="#000" stroke-width="1.2"/> <!-- Eksplorasi -->
+    <line x1="110" y1="240" x2="445" y2="240" stroke="#000" stroke-width="1.2"/> <!-- Checkout -->
+    <line x1="110" y1="240" x2="440" y2="335" stroke="#000" stroke-width="1.2"/> <!-- Riwayat Pesanan -->
+
+    <!-- 2. Kasir (Right-Upper: x=890, y=415) -->
+    <line x1="890" y1="415" x2="560" y2="415" stroke="#000" stroke-width="1.2"/> <!-- POS -->
+
+    <!-- 3. Superadmin (Left-Bottom: x=110, y=1050) -->
+    <line x1="110" y1="1050" x2="440" y2="515" stroke="#000" stroke-width="1.2"/>  <!-- Master Data -->
+    <line x1="110" y1="1050" x2="440" y2="625" stroke="#000" stroke-width="1.2"/>  <!-- Dashboard -->
+    <line x1="110" y1="1050" x2="440" y2="735" stroke="#000" stroke-width="1.2"/>  <!-- Pesanan Online -->
+    <line x1="110" y1="1050" x2="440" y2="840" stroke="#000" stroke-width="1.2"/>  <!-- Penerimaan Barang -->
+    <line x1="110" y1="1050" x2="440" y2="945" stroke="#000" stroke-width="1.2"/>  <!-- Mutasi Stok -->
+    <line x1="110" y1="1050" x2="440" y2="1045" stroke="#000" stroke-width="1.2"/> <!-- Stok Opname (NEW) -->
+    <line x1="110" y1="1050" x2="445" y2="1145" stroke="#000" stroke-width="1.2"/> <!-- Kartu Stok -->
+    <line x1="110" y1="1050" x2="445" y2="1245" stroke="#000" stroke-width="1.2"/> <!-- Kelola User -->
+    <line x1="110" y1="1050" x2="435" y2="1345" stroke="#000" stroke-width="1.2"/> <!-- Laporan Kuantitas -->
+    <line x1="110" y1="1050" x2="435" y2="1445" stroke="#000" stroke-width="1.2"/> <!-- Pengaturan Sistem -->
+
+    <!-- 4. Admin Staff (Right-Lower: x=890, y=820) -->
+    <line x1="890" y1="820" x2="560" y2="515" stroke="#000" stroke-width="1.2"/>  <!-- Master Data -->
+    <line x1="890" y1="820" x2="560" y2="625" stroke="#000" stroke-width="1.2"/>  <!-- Dashboard -->
+    <line x1="890" y1="820" x2="560" y2="735" stroke="#000" stroke-width="1.2"/>  <!-- Pesanan Online -->
+    <line x1="890" y1="820" x2="560" y2="840" stroke="#000" stroke-width="1.2"/>  <!-- Penerimaan Barang -->
+    <line x1="890" y1="820" x2="560" y2="945" stroke="#000" stroke-width="1.2"/>  <!-- Mutasi Stok -->
+    <line x1="890" y1="820" x2="560" y2="1045" stroke="#000" stroke-width="1.2"/> <!-- Stok Opname (NEW) -->
+    <line x1="890" y1="820" x2="555" y2="1145" stroke="#000" stroke-width="1.2"/> <!-- Kartu Stok -->
+
+
+    <!-- ============================================================ -->
+    <!-- RELATIONSHIPS (<<include>> and <<extend>>)                    -->
+    <!-- ============================================================ -->
+
+    <!-- Checkout Pesanan -> Pembayaran Gateway (include) -->
+    <line x1="445" y1="230" x2="395" y2="215" stroke="#000" stroke-width="1.2" stroke-dasharray="4,4" marker-end="url(#open-arrow)"/>
+    <text x="415" y="210" text-anchor="middle" font-family="Arial" font-size="10" font-style="italic" fill="#000">&lt;&lt;Include&gt;&gt;</text>
+
+    <!-- Checkout Pesanan -> Pilih Metode Pengambilan / Pengiriman (include) -->
+    <line x1="550" y1="240" x2="610" y2="240" stroke="#000" stroke-width="1.2" stroke-dasharray="4,4" marker-end="url(#open-arrow)"/>
+    <text x="580" y="233" text-anchor="middle" font-family="Arial" font-size="10" font-style="italic" fill="#000">&lt;&lt;Include&gt;&gt;</text>
+
+    <!-- Riwayat Transaksi & Cetak Ulang Struk -> Kelola Transaksi Kasir (POS) (extend) -->
+    <line x1="620" y1="395" x2="545" y2="410" stroke="#000" stroke-width="1.2" stroke-dasharray="4,4" marker-end="url(#open-arrow)"/>
+    <text x="585" y="395" text-anchor="middle" font-family="Arial" font-size="10" font-style="italic" fill="#000">&lt;&lt;Extend&gt;&gt;</text>
+
+    <!-- Master Satuan -> Kelola Master Data (include) -->
+    <line x1="430" y1="475" x2="480" y2="500" stroke="#000" stroke-width="1.2" stroke-dasharray="4,4" marker-end="url(#open-arrow)"/>
+    <text x="445" y="500" text-anchor="middle" font-family="Arial" font-size="9.5" font-style="italic" fill="#000">&lt;&lt;Include&gt;&gt;</text>
+
+    <!-- Master Supplier -> Kelola Master Data (include) -->
+    <line x1="620" y1="520" x2="560" y2="520" stroke="#000" stroke-width="1.2" stroke-dasharray="4,4" marker-end="url(#open-arrow)"/>
+    <text x="590" y="512" text-anchor="middle" font-family="Arial" font-size="9.5" font-style="italic" fill="#000">&lt;&lt;Include&gt;&gt;</text>
+
+    <!-- Kelola Master Data -> Master Produk (include) -->
+    <line x1="525" y1="495" x2="550" y2="455" stroke="#000" stroke-width="1.2" stroke-dasharray="4,4" marker-end="url(#open-arrow)"/>
+    <text x="535" y="470" text-anchor="middle" font-family="Arial" font-size="9.5" font-style="italic" fill="#000">&lt;&lt;Include&gt;&gt;</text>
+
+    <!-- Import Data Barang (Excel) -> Master Produk (extend) -->
+    <line x1="685" y1="445" x2="635" y2="445" stroke="#000" stroke-width="1.2" stroke-dasharray="4,4" marker-end="url(#open-arrow)"/>
+    <text x="660" y="437" text-anchor="middle" font-family="Arial" font-size="9.5" font-style="italic" fill="#000">&lt;&lt;Extend&gt;&gt;</text>
+
+    <!-- Batalkan Pesanan -> Kelola Pesanan Online (extend) -->
+    <line x1="575" y1="715" x2="535" y2="725" stroke="#000" stroke-width="1.2" stroke-dasharray="4,4" marker-end="url(#open-arrow)"/>
+    <text x="555" y="710" text-anchor="middle" font-family="Arial" font-size="10" font-style="italic" fill="#000">&lt;&lt;Extend&gt;&gt;</text>
+
+    <!-- Cetak Label -> Kelola Penerimaan Barang (include) -->
+    <line x1="435" y1="820" x2="475" y2="830" stroke="#000" stroke-width="1.2" stroke-dasharray="4,4" marker-end="url(#open-arrow)"/>
+    <text x="445" y="840" text-anchor="middle" font-family="Arial" font-size="9.5" font-style="italic" fill="#000">&lt;&lt;Include&gt;&gt;</text>
+
+    <!-- Validasi Identitas Logistik (Batch/SN) -> Kelola Penerimaan Barang (extend) -->
+    <line x1="565" y1="825" x2="535" y2="832" stroke="#000" stroke-width="1.2" stroke-dasharray="4,4" marker-end="url(#open-arrow)"/>
+    <text x="550" y="818" text-anchor="middle" font-family="Arial" font-size="9.5" font-style="italic" fill="#000">&lt;&lt;Extend&gt;&gt;</text>
+
+
+    <!-- ============================================================ -->
+    <!-- USE CASE OVALS                                               -->
+    <!-- ============================================================ -->
+
+    <!-- 1. Autentikasi & Kelola Akun Profil -->
+    <g transform="translate(500, 85)">
+        <ellipse cx="0" cy="0" rx="65" ry="25" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+        <text x="0" y="-3" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Autentikasi &amp;</text>
+        <text x="0" y="11" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Kelola Akun Profil</text>
+    </g>
+
+    <!-- 2. Eksplorasi Katalog & Keranjang -->
+    <g transform="translate(500, 155)">
+        <ellipse cx="0" cy="0" rx="60" ry="25" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+        <text x="0" y="-3" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Eksplorasi</text>
+        <text x="0" y="11" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Katalog &amp; Keranjang</text>
+    </g>
+
+    <!-- 3. Checkout Pesanan -->
+    <g transform="translate(500, 240)">
+        <ellipse cx="0" cy="0" rx="55" ry="25" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+        <text x="0" y="-3" text-anchor="middle" font-family="Arial" font-size="11.5" fill="#000">Checkout</text>
+        <text x="0" y="11" text-anchor="middle" font-family="Arial" font-size="11.5" fill="#000">Pesanan</text>
+    </g>
+
+    <!-- 3a. Sub-Left: Pembayaran Gateway -->
+    <g transform="translate(345, 205)">
+        <ellipse cx="0" cy="0" rx="50" ry="22" fill="#ffffff" stroke="#000000" stroke-width="1.3"/>
+        <text x="0" y="-2" text-anchor="middle" font-family="Arial" font-size="10" fill="#000">Pembayaran</text>
+        <text x="0" y="10" text-anchor="middle" font-family="Arial" font-size="10" fill="#000">Gateway</text>
+    </g>
+
+    <!-- 3b. Sub-Right: Pilih Metode Pengambilan / Pengiriman -->
+    <g transform="translate(670, 240)">
+        <ellipse cx="0" cy="0" rx="60" ry="24" fill="#ffffff" stroke="#000000" stroke-width="1.3"/>
+        <text x="0" y="-4" text-anchor="middle" font-family="Arial" font-size="9.5" fill="#000">Pilih Metode</text>
+        <text x="0" y="8" text-anchor="middle" font-family="Arial" font-size="9.5" fill="#000">Pengambilan /</text>
+        <text x="0" y="20" text-anchor="middle" font-family="Arial" font-size="9.5" fill="#000">Pengiriman</text>
+    </g>
+
+    <!-- 4. Kelola Riwayat Pesanan -->
+    <g transform="translate(500, 335)">
+        <ellipse cx="0" cy="0" rx="60" ry="24" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+        <text x="0" y="-3" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Kelola Riwayat</text>
+        <text x="0" y="11" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Pesanan</text>
+    </g>
+
+    <!-- 5. Kelola Transaksi Kasir (POS) -->
+    <g transform="translate(500, 415)">
+        <ellipse cx="0" cy="0" rx="60" ry="25" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+        <text x="0" y="-3" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Kelola Transaksi</text>
+        <text x="0" y="11" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Kasir (POS)</text>
+    </g>
+
+    <!-- 5a. Sub-Right: Riwayat Transaksi & Cetak Ulang Struk -->
+    <g transform="translate(675, 380)">
+        <ellipse cx="0" cy="0" rx="55" ry="24" fill="#ffffff" stroke="#000000" stroke-width="1.3"/>
+        <text x="0" y="-3" text-anchor="middle" font-family="Arial" font-size="9" fill="#000">Riwayat Transaksi &amp;</text>
+        <text x="0" y="9" text-anchor="middle" font-family="Arial" font-size="9" fill="#000">Cetak Ulang Struk</text>
+    </g>
+
+    <!-- 6. Kelola Master Data -->
+    <g transform="translate(500, 515)">
+        <ellipse cx="0" cy="0" rx="60" ry="24" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+        <text x="0" y="-3" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Kelola Master</text>
+        <text x="0" y="11" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Data</text>
+    </g>
+
+    <!-- 6a. Sub-Left: Master Satuan -->
+    <g transform="translate(390, 460)">
+        <ellipse cx="0" cy="0" rx="40" ry="20" fill="#ffffff" stroke="#000000" stroke-width="1.3"/>
+        <text x="0" y="-2" text-anchor="middle" font-family="Arial" font-size="10" fill="#000">Master</text>
+        <text x="0" y="10" text-anchor="middle" font-family="Arial" font-size="10" fill="#000">Satuan</text>
+    </g>
+
+    <!-- 6b. Sub-Right: Master Supplier -->
+    <g transform="translate(665, 520)">
+        <ellipse cx="0" cy="0" rx="45" ry="20" fill="#ffffff" stroke="#000000" stroke-width="1.3"/>
+        <text x="0" y="4" text-anchor="middle" font-family="Arial" font-size="10" fill="#000">Master Supplier</text>
+    </g>
+
+    <!-- 6c. Sub-Right: Master Produk -->
+    <g transform="translate(590, 445)">
+        <ellipse cx="0" cy="0" rx="45" ry="20" fill="#ffffff" stroke="#000000" stroke-width="1.3"/>
+        <text x="0" y="4" text-anchor="middle" font-family="Arial" font-size="10" fill="#000">Master Produk</text>
+    </g>
+
+    <!-- 6d. Sub-FarRight: Import Data Barang (Excel) -->
+    <g transform="translate(725, 445)">
+        <ellipse cx="0" cy="0" rx="40" ry="20" fill="#ffffff" stroke="#000000" stroke-width="1.3"/>
+        <text x="0" y="-5" text-anchor="middle" font-family="Arial" font-size="8.5" fill="#000">Import Data</text>
+        <text x="0" y="5" text-anchor="middle" font-family="Arial" font-size="8.5" fill="#000">Barang</text>
+        <text x="0" y="15" text-anchor="middle" font-family="Arial" font-size="8.5" fill="#000">(Excel)</text>
+    </g>
+
+    <!-- 7. Dashboard Analitik & Operasional -->
+    <g transform="translate(500, 625)">
+        <ellipse cx="0" cy="0" rx="60" ry="26" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+        <text x="0" y="-6" text-anchor="middle" font-family="Arial" font-size="10.5" fill="#000">Dashboard</text>
+        <text x="0" y="6" text-anchor="middle" font-family="Arial" font-size="10.5" fill="#000">Analitik &amp;</text>
+        <text x="0" y="18" text-anchor="middle" font-family="Arial" font-size="10.5" fill="#000">Operasional</text>
+    </g>
+
+    <!-- 8. Kelola Pesanan Online -->
+    <g transform="translate(500, 735)">
+        <ellipse cx="0" cy="0" rx="60" ry="24" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+        <text x="0" y="-3" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Kelola Pesanan</text>
+        <text x="0" y="11" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Online</text>
+    </g>
+
+    <!-- 8a. Sub-Right: Batalkan Pesanan -->
+    <g transform="translate(615, 710)">
+        <ellipse cx="0" cy="0" rx="40" ry="20" fill="#ffffff" stroke="#000000" stroke-width="1.3"/>
+        <text x="0" y="-2" text-anchor="middle" font-family="Arial" font-size="9" fill="#000">Batalkan</text>
+        <text x="0" y="10" text-anchor="middle" font-family="Arial" font-size="9" fill="#000">Pesanan</text>
+    </g>
+
+    <!-- 9. Kelola Penerimaan Barang -->
+    <g transform="translate(500, 840)">
+        <ellipse cx="0" cy="0" rx="60" ry="25" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+        <text x="0" y="-3" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Kelola</text>
+        <text x="0" y="9" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Penerimaan</text>
+        <text x="0" y="21" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Barang</text>
+    </g>
+
+    <!-- 9a. Sub-Left: Cetak Label -->
+    <g transform="translate(395, 815)">
+        <ellipse cx="0" cy="0" rx="35" ry="18" fill="#ffffff" stroke="#000000" stroke-width="1.3"/>
+        <text x="0" y="4" text-anchor="middle" font-family="Arial" font-size="9.5" fill="#000">Cetak Label</text>
+    </g>
+
+    <!-- 9b. Sub-Right: Validasi Identitas Logistik (Batch/SN) -->
+    <g transform="translate(605, 825)">
+        <ellipse cx="0" cy="0" rx="50" ry="22" fill="#ffffff" stroke="#000000" stroke-width="1.3"/>
+        <text x="0" y="-4" text-anchor="middle" font-family="Arial" font-size="8.5" fill="#000">Validasi Identitas</text>
+        <text x="0" y="6" text-anchor="middle" font-family="Arial" font-size="8.5" fill="#000">Logistik</text>
+        <text x="0" y="16" text-anchor="middle" font-family="Arial" font-size="8.5" fill="#000">(Batch/SN)</text>
+    </g>
+
+    <!-- 10. Lakukan Mutasi Stok -->
+    <g transform="translate(500, 945)">
+        <ellipse cx="0" cy="0" rx="60" ry="24" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+        <text x="0" y="-3" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Lakukan Mutasi</text>
+        <text x="0" y="11" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Stok</text>
+    </g>
+
+    <!-- 11. Kelola Stok Opname (BARU SESUAI GAMBAR USER) -->
+    <g transform="translate(500, 1045)">
+        <ellipse cx="0" cy="0" rx="60" ry="25" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+        <text x="0" y="-3" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Kelola Stok</text>
+        <text x="0" y="11" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Opname</text>
+    </g>
+
+    <!-- 12. Akses Kartu Stok -->
+    <g transform="translate(500, 1145)">
+        <ellipse cx="0" cy="0" rx="55" ry="24" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+        <text x="0" y="4" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Akses Kartu Stok</text>
+    </g>
+
+    <!-- 13. Kelola User -->
+    <g transform="translate(500, 1245)">
+        <ellipse cx="0" cy="0" rx="55" ry="24" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+        <text x="0" y="4" text-anchor="middle" font-family="Arial" font-size="11" fill="#000">Kelola User</text>
+    </g>
+
+    <!-- 14. Akses Laporan Kuantitas & Logistik -->
+    <g transform="translate(500, 1345)">
+        <ellipse cx="0" cy="0" rx="65" ry="25" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+        <text x="0" y="-3" text-anchor="middle" font-family="Arial" font-size="10.5" fill="#000">Akses Laporan</text>
+        <text x="0" y="11" text-anchor="middle" font-family="Arial" font-size="10.5" fill="#000">Kuantitas &amp; Logistik</text>
+    </g>
+
+    <!-- 15. Pengaturan Sistem (API & Web) -->
+    <g transform="translate(500, 1445)">
+        <ellipse cx="0" cy="0" rx="65" ry="25" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+        <text x="0" y="-3" text-anchor="middle" font-family="Arial" font-size="10.5" fill="#000">Pengaturan</text>
+        <text x="0" y="11" text-anchor="middle" font-family="Arial" font-size="10.5" fill="#000">Sistem (API &amp; Web)</text>
+    </g>
+
+
+    <!-- ============================================================ -->
+    <!-- ACTOR STICK FIGURES                                          -->
+    <!-- ============================================================ -->
+
+    <!-- 1. Pelanggan (Left-Top: x=110, y=240) -->
+    <g transform="translate(110, 240)">
+        <circle cx="0" cy="-35" r="14" fill="#ffffff" stroke="#000000" stroke-width="2"/>
+        <line x1="0" y1="-21" x2="0" y2="18" stroke="#000000" stroke-width="2"/>
+        <line x1="-24" y1="-6" x2="24" y2="-6" stroke="#000000" stroke-width="2"/>
+        <line x1="0" y1="18" x2="-18" y2="52" stroke="#000000" stroke-width="2"/>
+        <line x1="0" y1="18" x2="18" y2="52" stroke="#000000" stroke-width="2"/>
+        <text x="0" y="74" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold" fill="#0f172a">Pelanggan</text>
+    </g>
+
+    <!-- 2. Kasir (Right-Upper: x=890, y=415) -->
+    <g transform="translate(890, 415)">
+        <circle cx="0" cy="-35" r="14" fill="#ffffff" stroke="#000000" stroke-width="2"/>
+        <line x1="0" y1="-21" x2="0" y2="18" stroke="#000000" stroke-width="2"/>
+        <line x1="-24" y1="-6" x2="24" y2="-6" stroke="#000000" stroke-width="2"/>
+        <line x1="0" y1="18" x2="-18" y2="52" stroke="#000000" stroke-width="2"/>
+        <line x1="0" y1="18" x2="18" y2="52" stroke="#000000" stroke-width="2"/>
+        <text x="0" y="74" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold" fill="#0f172a">Kasir</text>
+    </g>
+
+    <!-- 3. Superadmin (Left-Bottom: x=110, y=1050) -->
+    <g transform="translate(110, 1050)">
+        <circle cx="0" cy="-35" r="14" fill="#ffffff" stroke="#000000" stroke-width="2"/>
+        <line x1="0" y1="-21" x2="0" y2="18" stroke="#000000" stroke-width="2"/>
+        <line x1="-24" y1="-6" x2="24" y2="-6" stroke="#000000" stroke-width="2"/>
+        <line x1="0" y1="18" x2="-18" y2="52" stroke="#000000" stroke-width="2"/>
+        <line x1="0" y1="18" x2="18" y2="52" stroke="#000000" stroke-width="2"/>
+        <text x="0" y="72" text-anchor="middle" font-family="Arial" font-size="12.5" font-weight="bold" fill="#0f172a">Superadmin</text>
+        <text x="0" y="87" text-anchor="middle" font-family="Arial" font-size="11.5" font-weight="bold" fill="#475569">(Pemilik)</text>
+    </g>
+
+    <!-- 4. Admin Staff (Right-Lower: x=890, y=820) -->
+    <g transform="translate(890, 820)">
+        <circle cx="0" cy="-35" r="14" fill="#ffffff" stroke="#000000" stroke-width="2"/>
+        <line x1="0" y1="-21" x2="0" y2="18" stroke="#000000" stroke-width="2"/>
+        <line x1="-24" y1="-6" x2="24" y2="-6" stroke="#000000" stroke-width="2"/>
+        <line x1="0" y1="18" x2="-18" y2="52" stroke="#000000" stroke-width="2"/>
+        <line x1="0" y1="18" x2="18" y2="52" stroke="#000000" stroke-width="2"/>
+        <text x="0" y="72" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold" fill="#0f172a">Admin</text>
+        <text x="0" y="87" text-anchor="middle" font-family="Arial" font-size="11.5" font-weight="bold" fill="#475569">(Staff)</text>
+    </g>
+
+</svg>

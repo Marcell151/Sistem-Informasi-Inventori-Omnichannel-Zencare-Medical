@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kumpulan Activity Diagram Lengkap - ZenCare Medical (Bab 3.3.4)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Times+New+Roman&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            padding: 24px;
+        }
+
+        /* Top Header Control Bar */
+        .header-bar {
+            max-width: 1280px;
+            margin: 0 auto 20px auto;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-title h1 {
+            font-size: 18px;
+            font-weight: 800;
+            color: #0f172a;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .header-title p {
+            font-size: 12.5px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-outline {
+            background-color: #ffffff;
+            color: #334155;
+            border-color: #cbd5e1;
+        }
+
+        .btn-outline:hover {
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .main-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Tab Navigation Bar */
+        .tabs-nav {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            background: #ffffff;
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+
+        .tab-btn {
+            padding: 10px 16px;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #475569;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .tab-btn.active {
+            background: #0f172a;
+            color: #ffffff;
+        }
+
+        .badge-tab {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .tab-btn.active .badge-tab {
+            background: #334155;
+            color: #f8fafc;
+        }
+
+        /* Tab Content Panel */
+        .tab-panel {
+            display: none;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+        }
+
+        .tab-panel.active {
+            display: grid;
+        }
+
+        @media (max-width: 1024px) {
+            .tab-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Diagram Viewport Card */
+        .diagram-card {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .diagram-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 16px;
+        }
+
+        .diagram-toolbar .title h2 {
+            font-size: 15px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .diagram-toolbar .title p {
+            font-size: 11.5px;
+            color: #64748b;
+        }
+
+        .diagram-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-action {
+            padding: 6px 10px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #334155;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-action:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .diagram-viewport {
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            border-radius: 8px;
+            overflow: auto;
+            max-height: 820px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 10px;
+        }
+
+        .diagram-viewport img, .diagram-viewport svg {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Info Card */
+        .info-card {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info-card h3 {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 15px;
+            font-weight: 800;
+            color: #0f172a;
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 6px;
+        }
+
+        .info-card p {
+            text-align: justify;
+            text-indent: 20px;
+            color: #1e293b;
+        }
+
+        .info-card ol {
+            padding-left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            color: #334155;
+        }
+
+        .info-card ol li {
+            text-align: justify;
+        }
+
+        .box-highlight {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-left: 4px solid #16a34a;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            color: #166534;
+            line-height: 1.5;
+        }
+
+        .box-highlight strong {
+            color: #14532d;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .btn-copy {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #0f172a;
+            color: #ffffff;
+            border: none;
+            padding: 8px 12px;
+            font-size: 11.5px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            align-self: flex-start;
+            transition: background 0.2s;
+        }
+
+        .btn-copy:hover {
+            background: #1e293b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header Navigation -->
+    <div class="header-bar">
+        <div class="header-title">
+            <h1>Kumpulan Activity Diagram Lengkap - ZenCare Medical</h1>
+            <p>Subbab 3.3.4 &bull; Memetakan 8 Alur Operasional UML (Diagram A s/d H) Berbasis Sistem Riil &amp; SRS</p>
+        </div>
+        <div class="header-nav">
+            <a href="../laporan_ta/BAB_III_ZENCARE_MEDICAL.html#sec_3_3_4" class="btn-nav btn-primary">
+                &larr; Kembali ke Bab 3.3.4
+            </a>
+            <a href="semua_usecase_zencare.html" class="btn-nav btn-outline">
+                Lihat Use Case Diagram
+            </a>
+            <a href="semua_workflow_zencare.html" class="btn-nav btn-outline">
+                Lihat Workflow Clipart
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+
+        <!-- Tab Selector -->
+        <div class="tabs-nav">
+            <button class="tab-btn active" onclick="switchTab('tab_a', this)">
+                <span class="badge-tab">A</span>
+                Autentikasi (Login)
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab_b', this)">
+                <span class="badge-tab">B</span>
+                Pesanan Daring (E-Commerce)
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab_c', this)">
+                <span class="badge-tab">C</span>
+                Pesanan Luring (Kasir POS)
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab_d', this)">
+                <span class="badge-tab">D</span>
+                Kelola Pesanan Daring
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab_e', this)">
+                <span class="badge-tab">E</span>
+                Penerimaan Barang &amp; Batch
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab_f', this)">
+                <span class="badge-tab">F</span>
+                Mutasi Stok Manual
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab_g', this)">
+                <span class="badge-tab">G</span>
+                Laporan Manajerial (Output)
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab_h', this)">
+                <span class="badge-tab">H</span>
+                Kelola Stok Opname (Freeze Lock)
+            </button>
+        </div>
+
+        <!-- ================= TAB A: AUTENTIKASI ================= -->
+        <div id="tab_a" class="tab-panel active">
+            <div class="diagram-card">
+                <div class="diagram-toolbar">
+                    <div class="title">
+                        <h2>Gambar 3.10 Activity Diagram Autentikasi (Login)</h2>
+                        <p>Swimlane: Pengguna Internal (Kasir/Admin/Superadmin) &bull; Pelanggan &bull; Sistem</p>
+                    </div>
+                    <div class="diagram-actions">
+                        <a href="Gambar_3.10_Activity_Autentikasi.svg" download class="btn-action">Unduh SVG</a>
+                    </div>
+                </div>
+                <div class="diagram-viewport">
+                    <img src="Gambar_3.10_Activity_Autentikasi.svg" alt="Activity Diagram Autentikasi">
+                </div>
+            </div>
+                        <div class="info-card">
+                <h3>Uraian Naratif Akademik (Subbab 3.3.4.A)</h3>
+                <p>
+                    Diagram aktivitas Autentikasi memetakan mekanisme validasi identitas dan pembagian hak akses pengguna ke dalam sistem. Alur masuk dibedakan ke dalam dua titik antarmuka: pengguna internal (Kasir, Admin, dan Superadmin) masuk melalui formulir login internal sistem, sedangkan Pelanggan mengakses melalui halaman web belanja daring (<i>e-commerce</i>). Khusus bagi pelanggan baru yang belum terdaftar, sistem menyediakan formulir pendaftaran akun mandiri agar data profil dan alamat pengiriman tersimpan ke dalam basis data sebelum pengguna melanjutkan proses login.
+                </p>
+                <p>
+                    Saat nama pengguna dan kata sandi dikirimkan, sistem melakukan verifikasi keabsahan data terhadap catatan akun di basis data. Apabila data tidak cocok, sistem memunculkan pesan peringatan kesalahan dan meminta pengguna memasukkan kembali data kredensialnya. Sebaliknya, apabila data terverifikasi benar, sistem mengevaluasi peran dan hak akses pengguna untuk mengarahkan ke halaman kerja yang sesuai dengan wewenangnya: Kasir diarahkan langsung membuka terminal kasir fisik POS; Admin diarahkan ke dasbor operasional, data master, transaksi keluar, serta logistik pergudangan; Superadmin diarahkan ke kendali manajerial menyeluruh (mencakup seluruh modul operasional ditambah manajemen pengguna, laporan audit, dan pengaturan sistem); sementara Pelanggan diarahkan kembali ke beranda belanja, keranjang belanja, dan profil pengguna.
+                </p>
+                <div class="box-highlight">
+                    <strong>Penyelarasan Kode Sistem &amp; SRS:</strong>
+                    Sesuai dengan implementasi <code>auth/login.php</code>, pemisahan hak akses berbasis sesi peran (Role), dan registrasi mandiri pelanggan di modul e-commerce.
+                </div>
+                <button class="btn-copy" onclick="copyCardText(this)">Salin Teks Narasi</button>
+            </div>
+        </div>
+
+        <!-- ================= TAB B: PESANAN DARING ================= -->
+        <div id="tab_b" class="tab-panel">
+            <div class="diagram-card">
+                <div class="diagram-toolbar">
+                    <div class="title">
+                        <h2>Gambar 3.11 Activity Diagram Pesanan Daring (E-Commerce)</h2>
+                        <p>Swimlane: Pelanggan &bull; Sistem E-Commerce &bull; Payment Gateway (Midtrans)</p>
+                    </div>
+                    <div class="diagram-actions">
+                        <a href="Gambar_3.11_Activity_Pesanan_Daring.svg" download class="btn-action">Unduh SVG</a>
+                    </div>
+                </div>
+                <div class="diagram-viewport">
+                    <img src="Gambar_3.11_Activity_Pesanan_Daring.svg" alt="Activity Diagram Pesanan Daring">
+                </div>
+            </div>
+                        <div class="info-card">
+                <h3>Uraian Naratif Akademik (Subbab 3.3.4.B)</h3>
+                <p>
+                    Diagram aktivitas Pesanan Daring memetakan interaksi transaksi pemesanan produk antara Pelanggan, Sistem E-Commerce, dan gerbang pembayaran digital (<i>Payment Gateway</i>). Alur diawali ketika pelanggan menekan tombol pemesanan (<i>checkout</i>) dari keranjang belanja. Sistem kemudian menyajikan ringkasan pesanan dan meminta pelanggan memilih metode pengambilan barang. Apabila pelanggan memilih pengiriman melalui kurir ekspedisi, sistem mewajibkan pengisian alamat tujuan untuk menghitung biaya ongkos kirim secara otomatis. Namun, apabila pelanggan memilih opsi Ambil di Toko (<i>Pick-up in Store</i>), tahapan perhitungan ongkos kirim dilewati dan sistem langsung menetapkan biaya kirim sebesar nol rupiah.
+                </p>
+                <p>
+                    Setelah total tagihan akhir ditampilkan, sistem membuat transaksi pembayaran dan memberikan durasi batas waktu pelunasan kepada pelanggan. Pelanggan selanjutnya memilih metode pembayaran digital yang diinginkan. Pihak gerbang pembayaran kemudian memvalidasi status pembayaran tersebut. Apabila pembayaran gagal atau batas waktu pelunasan telah habis, sistem mengubah status pesanan menjadi dibatalkan dan mengirimkan notifikasi pemberitahuan kepada pelanggan. Sebaliknya, apabila pembayaran terverifikasi telah lunas, sistem secara otomatis menentukan alokasi persediaan barang berdasarkan kategori produk: untuk kategori Obat dialokasikan nomor batch terdekat dari tanggal kedaluwarsa (mengikuti kaidah FEFO), sedangkan untuk kategori Alat Kesehatan dialokasikan unit berdasarkan nomor seri unik (<i>Serial Number</i>). Sistem kemudian langsung mengunci stok barang tersebut (status terkunci sementara) agar kuantitas fisik tidak terjual secara bersamaan di meja kasir toko fisik, memperbarui status pesanan menjadi "Diproses", serta menyajikan faktur digital (<i>invoice</i>) yang dapat dipantau oleh pelanggan.
+                </p>
+                <div class="box-highlight">
+                    <strong>Penyelarasan Kode Sistem &amp; SRS:</strong>
+                    Sesuai dengan alur <code>api/checkout.php</code>, integrasi Midtrans Snap, batas waktu pelunasan otomatis, dan penguncian alokasi fisik obat berkaidah FEFO.
+                </div>
+                <button class="btn-copy" onclick="copyCardText(this)">Salin Teks Narasi</button>
+            </div>
+        </div>
+
+        <!-- ================= TAB C: PESANAN LURING (KASIR POS) ================= -->
+        <div id="tab_c" class="tab-panel">
+            <div class="diagram-card">
+                <div class="diagram-toolbar">
+                    <div class="title">
+                        <h2>Gambar 3.12 Activity Diagram Pesanan Luring (Transaksi Kasir POS)</h2>
+                        <p>Swimlane: Pelanggan Toko &bull; Kasir &bull; Sistem POS</p>
+                    </div>
+                    <div class="diagram-actions">
+                        <a href="Gambar_3.12_Activity_Pesanan_Kasir_POS.svg" download class="btn-action">Unduh SVG</a>
+                    </div>
+                </div>
+                <div class="diagram-viewport">
+                    <img src="Gambar_3.12_Activity_Pesanan_Kasir_POS.svg" alt="Activity Diagram Transaksi Kasir POS">
+                </div>
+            </div>
+                        <div class="info-card">
+                <h3>Uraian Naratif Akademik (Subbab 3.3.4.C)</h3>
+                <p>
+                    Diagram aktivitas Transaksi Kasir (POS) memetakan alur penjualan langsung secara tatap muka kepada pembeli di meja kasir toko fisik. Kasir membuka menu Transaksi Kasir (POS), lalu memindai kode batang (<i>barcode</i>) kemasan atau memasukkan kode SKU produk. Sistem merespons dengan menampilkan rincian produk, kemudahan pemilihan satuan penjualan (satuan kecil eceran maupun satuan dus/Box, termasuk tombol instan konversi kemasan apabila stok eceran di rak habis), serta memunculkan instruksi pengambilan barang fisik yang memandu kasir mengenai Nomor Batch obat (berdasarkan kaidah FEFO) atau Serial Number alat kesehatan yang harus diambil. Kasir kemudian mengambil fisik barang dari rak etalase sesuai instruksi tersebut. Pada tahapan ini, kasir dapat mengulang pemindaian apabila terdapat tambahan barang belanjaan lainnya.
+                </p>
+                <p>
+                    Saat kasir memindai kode barang fisik yang diambil, sistem mengevaluasi kesesuaian nomor batch obat terhadap rekomendasi awal. Apabila kasir mengambil batch yang berbeda dari saran sistem (misalnya akibat pembeli mengambil produk yang berbeda di rak pajangan), sistem secara otomatis mencatat kejadian tersebut ke dalam <b>Log Anomali FEFO</b> tanpa menghentikan transaksi, sehingga antrean kasir tetap berjalan lancar. Selanjutnya kasir menekan tombol proses pembayaran dan sistem menampilkan total tagihan belanja. Pada metode tunai, kasir memasukkan nominal uang yang diterima, sistem memvalidasi kecukupan uang, dan menghitung nominal kembalian (jika nominal kurang, sistem memunculkan pesan peringatan agar kasir mengoreksi input uang). Pada metode pembayaran non-tunai atau digital, tahapan perhitungan kembalian langsung dilewati. Setelah pembayaran terverifikasi berhasil, sistem memotong stok fisik secara permanen di basis data sesuai identitas Batch atau Serial Number yang diambil, mencatat mutasi keluar pada riwayat Kartu Stok, menyimpan catatan ke riwayat transaksi harian, serta mencetak struk belanja untuk diserahkan kepada pembeli.
+                </p>
+                <div class="box-highlight">
+                    <strong>Penyelarasan Kode Sistem &amp; SRS:</strong>
+                    Sesuai dengan <code>pos/pos.php</code>, fitur instan konversi kemasan (Bongkar Box), panduan FEFO/SN, pencatatan Log Anomali FEFO otomatis, dan pemotongan stok riil Kartu Stok.
+                </div>
+                <button class="btn-copy" onclick="copyCardText(this)">Salin Teks Narasi</button>
+            </div>
+        </div>
+
+        <!-- ================= TAB D: KELOLA PESANAN DARING ================= -->
+        <div id="tab_d" class="tab-panel">
+            <div class="diagram-card">
+                <div class="diagram-toolbar">
+                    <div class="title">
+                        <h2>Gambar 3.13 Activity Diagram Kelola Pesanan Daring &amp; Pembatalan</h2>
+                        <p>Swimlane: Admin (Staff Logistik) &bull; Sistem Back-Office</p>
+                    </div>
+                    <div class="diagram-actions">
+                        <a href="Gambar_3.13_Activity_Kelola_Pesanan_Daring.svg" download class="btn-action">Unduh SVG</a>
+                    </div>
+                </div>
+                <div class="diagram-viewport">
+                    <img src="Gambar_3.13_Activity_Kelola_Pesanan_Daring.svg" alt="Activity Diagram Kelola Pesanan Daring">
+                </div>
+            </div>
+                        <div class="info-card">
+                <h3>Uraian Naratif Akademik (Subbab 3.3.4.D)</h3>
+                <p>
+                    Diagram aktivitas ini memetakan alur pemenuhan dan pembaruan status pesanan belanja daring oleh Admin Toko. Proses diawali saat Admin membuka menu Transaksi dan menyaring daftar pesanan pada tab "E-Commerce". Sistem menampilkan antrean pesanan yang perlu ditindaklanjuti.
+                </p>
+                <p>
+                    Alur kemudian memeriksa kondisi pesanan: apabila pesanan berstatus baru dan belum disiapkan, Admin membuka rincian pesanan dan sistem menyajikan instruksi pengambilan fisik barang (Nomor Batch FEFO atau Serial Number). Admin menyiapkan fisik barang dari rak penyimpanan gudang dan memindai kode barang. Jika nomor batch obat yang diambil berbeda dengan rekomendasi sistem, kejadian tersebut otomatis dicatat ke dalam log anomali FEFO. Sebaliknya, apabila pesanan tidak memerlukan penyiapan barang fisik ulang, tahapan persiapan ini langsung dilewati.
+                </p>
+                <p>
+                    Selanjutnya, Admin menentukan perubahan status pesanan. Apabila pesanan dibatalkan, Admin memilih status batal sehingga sistem seketika melepaskan kuncian stok barang kembali menjadi persediaan aktif di toko dan memperbarui status pesanan menjadi "Dibatalkan". Apabila pesanan diteruskan, Admin memilih status lanjutan berdasarkan metode pengambilan barang. Untuk pesanan yang dikirim via kurir ekspedisi, Admin mencetak label pengiriman, memperbarui status menjadi "Dikirim", dan sistem mencatat mutasi keluar penjualan pada buku Kartu Stok. Untuk pesanan Ambil di Toko (<i>Pick-up in Store</i>), Admin memperbarui status menjadi "Siap Diambil", dan pencatatan mutasi keluar ke Kartu Stok baru dilakukan saat pembeli mengambil barang di toko dan status diubah menjadi "Selesai". Alur diakhiri dengan sistem menampilkan notifikasi keberhasilan pembaruan status kepada Admin.
+                </p>
+                <div class="box-highlight">
+                    <strong>Penyelarasan Kode Sistem &amp; SRS:</strong>
+                    Sesuai modul <code>admin/pesanan.php</code>, pembedaan pemenuhan kurir vs ambil di toko, pelepasan kuncian stok saat pembatalan, dan pencatatan mutasi penjualan Kartu Stok.
+                </div>
+                <button class="btn-copy" onclick="copyCardText(this)">Salin Teks Narasi</button>
+            </div>
+        </div>
+
+        <!-- ================= TAB E: PENERIMAAN BARANG ================= -->
+        <div id="tab_e" class="tab-panel">
+            <div class="diagram-card">
+                <div class="diagram-toolbar">
+                    <div class="title">
+                        <h2>Gambar 3.14 Activity Diagram Penerimaan Barang &amp; Validasi Logistik</h2>
+                        <p>Swimlane: Admin (Staff Logistik) &bull; Sistem Back-Office</p>
+                    </div>
+                    <div class="diagram-actions">
+                        <a href="Gambar_3.14_Activity_Penerimaan_Barang.svg" download class="btn-action">Unduh SVG</a>
+                    </div>
+                </div>
+                <div class="diagram-viewport">
+                    <img src="Gambar_3.14_Activity_Penerimaan_Barang.svg" alt="Activity Diagram Penerimaan Barang">
+                </div>
+            </div>
+                        <div class="info-card">
+                <h3>Uraian Naratif Akademik (Subbab 3.3.4.E)</h3>
+                <p>
+                    Diagram aktivitas ini memetakan alur pendataan pasokan barang baru yang diterima dari distributor rekanan guna menjaga kesesuaian mutu dan tertib administrasi barang masuk. Proses diawali ketika Admin membuka menu Penerimaan Barang, memilih nama produk dan distributor, serta memasukkan data dokumen faktur atau surat jalan, tanggal penerimaan barang, kuantitas yang diterima, dan harga beli per unit.
+                </p>
+                <p>
+                    Sistem kemudian memeriksa kategori produk untuk menentukan data wajib yang harus diisi: pada produk "Obat", staf wajib memasukkan Nomor Batch dan Tanggal Kedaluwarsa; sedangkan pada produk "Alat Kesehatan", staf wajib memasukkan Nomor Seri Unik (<i>Serial Number</i>). Saat formulir disimpan, sistem memeriksa kelengkapan data dan memastikan tanggal kedaluwarsa belum terlewat. Jika data belum lengkap atau tanggal kedaluwarsa tidak valid, sistem menolak penyimpanan dan menampilkan peringatan agar staf melengkapi data kembali. Apabila data valid, sistem langsung menyimpan rincian barang ke basis data, menambah saldo persediaan fisik di gudang, mencatat mutasi masuk pada riwayat Kartu Stok, serta menerbitkan perintah cetak stiker label kode batang untuk ditempelkan pada kemasan barang sebelum disimpan di rak penyimpanan.
+                </p>
+                <div class="box-highlight">
+                    <strong>Penyelarasan Kode Sistem &amp; SRS:</strong>
+                    Sesuai dengan modul <code>inventori/tambah_stok.php</code>, validasi data obat (Batch &amp; ED) serta alat kesehatan (Serial Number), penambahan stok gudang, dan pencatatan mutasi masuk.
+                </div>
+                <button class="btn-copy" onclick="copyCardText(this)">Salin Teks Narasi</button>
+            </div>
+        </div>
+
+        <!-- ================= TAB F: MUTASI STOK MANUAL ================= -->
+        <div id="tab_f" class="tab-panel">
+            <div class="diagram-card">
+                <div class="diagram-toolbar">
+                    <div class="title">
+                        <h2>Gambar 3.15 Activity Diagram Mutasi Stok Manual</h2>
+                        <p>Swimlane: Admin (Staff Logistik) &bull; Sistem Back-Office</p>
+                    </div>
+                    <div class="diagram-actions">
+                        <a href="Gambar_3.15_Activity_Mutasi_Stok.svg" download class="btn-action">Unduh SVG</a>
+                    </div>
+                </div>
+                <div class="diagram-viewport">
+                    <img src="Gambar_3.15_Activity_Mutasi_Stok.svg" alt="Activity Diagram Mutasi Stok Manual">
+                </div>
+            </div>
+                        <div class="info-card">
+                <h3>Uraian Naratif Akademik (Subbab 3.3.4.F)</h3>
+                <p>
+                    Diagram aktivitas Mutasi Stok Manual memetakan alur penyesuaian jumlah persediaan secara manual yang dilakukan oleh Admin guna mencatat kasus-kasus operasional di luar transaksi penjualan reguler, seperti barang rusak di etalase, obat kedaluwarsa, selisih hitung fisik, maupun pengembalian (retur) barang cacat ke pihak pemasok. Alur dimulai ketika Admin membuka menu Mutasi Stok, mencari nama produk yang ingin disesuaikan, serta menentukan jenis penyesuaian (penambahan atau pengurangan) beserta alasan operasionalnya.
+                </p>
+                <p>
+                    Sistem kemudian membedakan langkah penentuan identitas berdasarkan kategori produk: jika barang berupa Obat, Admin memilih target Nomor Batch tertentu (berdasarkan urutan kedaluwarsa terdekat); sedangkan jika berupa Alat Kesehatan, Admin memilih nomor seri (<i>Serial Number</i>) unit barang yang terdampak. Selanjutnya, Admin memasukkan jumlah kuantitas penyesuaian beserta keterangan alasan, lalu menekan tombol "Proses Mutasi". Sistem memvalidasi kelengkapan data serta kecukupan sisa fisik persediaan pada batch atau nomor seri yang dipilih. Apabila data tidak lengkap atau jumlah pengurangan melebihi sisa fisik yang tersedia, sistem memunculkan pesan peringatan kesalahan dan Admin diminta mengoreksi kembali jumlah kuantitas atau pilihan nomor batch/seri hingga sesuai sebelum diproses ulang. Apabila data valid dan stok mencukupi, sistem langsung memperbarui jumlah persediaan di basis data, mencatat penyesuaian ke dalam riwayat Kartu Stok lengkap dengan alasan keterangannya, serta menampilkan notifikasi bahwa penyesuaian persediaan berhasil dilakukan.
+                </p>
+                <div class="box-highlight">
+                    <strong>Penyelarasan Kode Sistem &amp; SRS:</strong>
+                    Sesuai modul <code>inventori/proses_mutasi.php</code> yang mengunci kuantitas agar integritas kartu stok tetap terjaga tanpa deviasi liar.
+                </div>
+                <button class="btn-copy" onclick="copyCardText(this)">Salin Teks Narasi</button>
+            </div>
+        </div>
+
+        <!-- ================= TAB G: OUTPUT LAPORAN MANAJERIAL ================= -->
+        <div id="tab_g" class="tab-panel">
+            <div class="diagram-card">
+                <div class="diagram-toolbar">
+                    <div class="title">
+                        <h2>Gambar 3.16 Activity Diagram Output Laporan Manajerial &amp; Logistik</h2>
+                        <p>Swimlane: Superadmin (Pemilik) &bull; Sistem Back-Office</p>
+                    </div>
+                    <div class="diagram-actions">
+                        <a href="Gambar_3.16_Activity_Laporan_Manajerial.svg" download class="btn-action">Unduh SVG</a>
+                    </div>
+                </div>
+                <div class="diagram-viewport">
+                    <img src="Gambar_3.16_Activity_Laporan_Manajerial.svg" alt="Activity Diagram Output Laporan Manajerial">
+                </div>
+            </div>
+                        <div class="info-card">
+                <h3>Uraian Naratif Akademik (Subbab 3.3.4.G)</h3>
+                <p>
+                    Diagram aktivitas ini memetakan tata kelola penarikan laporan manajerial yang hak aksesnya dibatasi secara khusus hanya untuk pimpinan, yaitu <b>Superadmin (Pemilik)</b>. Alur dimulai saat Superadmin membuka menu Laporan. Sistem secara otomatis memeriksa hak akses pengguna; apabila pengguna yang masuk bukan Superadmin, akses menuju menu laporan langsung ditutup dan dialihkan kembali ke halaman dasbor utama.
+                </p>
+                <p>
+                    Setelah hak akses dinyatakan sah, Superadmin dapat memilih salah satu dari <b>6 (enam) modul laporan manajerial dan audit persediaan</b> yang tersedia di dalam sistem, meliputi:
+                </p>
+                <ol>
+                    <li><b>Laporan Penjualan Lintas Saluran (Omnichannel):</b> Superadmin menentukan filter jangka waktu dan jalur penjualan (kasir toko fisik atau pesanan daring), lalu menekan tombol "Filter". Sistem menyajikan rekapitulasi data barang yang terjual dan pergerakan produk secara objektif.</li>
+                    <li><b>Laporan Persediaan Barang:</b> Superadmin memilih filter kategori produk, lalu menekan tombol "Filter". Sistem menampilkan sisa kuantitas fisik persediaan serta estimasi nilai persediaan di gudang dan etalase.</li>
+                    <li><b>Laporan Logistik Medis:</b> Superadmin menentukan filter pencarian nama Obat atau Alat Kesehatan, lalu menekan tombol "Filter". Sistem menyajikan keabsahan nomor batch aktif, tanggal kedaluwarsa obat, serta nomor seri alat kesehatan.</li>
+                    <li><b>Laporan Penerimaan Barang:</b> Superadmin memilih filter jenis pengadaan atau status retur barang, lalu menekan tombol "Filter". Sistem menampilkan riwayat pengiriman barang yang telah diterima dari distributor rekanan.</li>
+                    <li><b>Laporan Mutasi &amp; Konversi Satuan:</b> Superadmin memilih jenis laporan (penyesuaian mutasi atau konversi kemasan dus ke eceran), menentukan rentang tanggal atau nama produk, lalu menekan tombol "Filter". Sistem menyajikan riwayat penyesuaian persediaan dan riwayat pembongkaran kemasan.</li>
+                    <li><b>Laporan Log Anomali FEFO:</b> Superadmin menentukan filter kanal penjualan atau produk, lalu menekan tombol "Filter". Sistem menampilkan daftar kejadian ketidaksesuaian pengambilan nomor batch obat di kasir beserta catatan penjelasannya.</li>
+                </ol>
+                <p>
+                    Seluruh pilihan laporan tersebut bermuara pada tahapan pemeriksaan data oleh Superadmin di layar sistem. Selanjutnya alur mengevaluasi kebutuhan arsip fisik: apabila laporan hanya ingin dilihat di layar, alur langsung selesai. Namun, apabila diperlukan salinan dokumen resmi, Superadmin menekan tombol "Cetak Laporan", di mana sistem secara otomatis menerbitkan berkas laporan resmi dalam format PDF untuk disimpan sebagai arsip dokumen perusahaan.
+                </p>
+                <div class="box-highlight">
+                    <strong>Penyelarasan Kode Sistem &amp; SRS:</strong>
+                    Sesuai dengan 6 modul pelaporan di folder <code>laporan/</code>, otorisasi ketat khusus peran Superadmin, dan penerbitan dokumen PDF resmi.
+                </div>
+                <button class="btn-copy" onclick="copyCardText(this)">Salin Teks Narasi</button>
+            </div>
+        </div>
+
+        <!-- ================= TAB H: KELOLA STOK OPNAME ================= -->
+        <div id="tab_h" class="tab-panel">
+            <div class="diagram-card">
+                <div class="diagram-toolbar">
+                    <div class="title">
+                        <h2>Gambar 3.17 Activity Diagram Kelola Stok Opname (Audit Fisik &amp; Freeze Lock)</h2>
+                        <p>Swimlane: Superadmin (Pemilik) &bull; Admin (Staff Logistik) &bull; Sistem Back-Office</p>
+                    </div>
+                    <div class="diagram-actions">
+                        <a href="Gambar_3.17_Activity_Stok_Opname.svg" download class="btn-action">Unduh SVG</a>
+                    </div>
+                </div>
+                <div class="diagram-viewport">
+                    <img src="Gambar_3.17_Activity_Stok_Opname.svg" alt="Activity Diagram Kelola Stok Opname">
+                </div>
+            </div>
+                        <div class="info-card">
+                <h3>Uraian Naratif Akademik (Subbab 3.3.4.H)</h3>
+                <p>
+                    Diagram aktivitas Kelola Stok Opname memetakan prosedur pemeriksaan fisik persediaan secara berkala yang melibatkan kerja sama antara <b>Superadmin (Pemilik)</b>, <b>Admin (Staff)</b>, dan <b>Sistem</b> guna memastikan kesesuaian antara jumlah barang riil di rak toko dan gudang dengan catatan persediaan di sistem.
+                </p>
+                <p>
+                    Proses dimulai ketika Superadmin membuka menu Stok Opname dan menekan tombol <b>"Mulai Sesi Stok Opname"</b>. Sistem seketika mengaktifkan sesi pemeriksaan dan memberlakukan penguncian operasional sementara (<i>Freeze Lock</i>) pada terminal kasir toko dan fitur belanja daring, sehingga tidak ada transaksi masuk atau keluar yang dapat mengubah jumlah persediaan selama proses penghitungan berlangsung. Bersamaan dengan itu, sistem menyediakan lembar formulir penghitungan fisik yang sengaja tidak menampilkan angka stok sistem, agar staf dapat menghitung barang secara mandiri dan objektif.
+                </p>
+                <p>
+                    Selanjutnya, Admin melakukan penghitungan fisik barang secara langsung di area etalase dan gudang, memasukkan hasil hitungan ke dalam formulir di sistem, lalu menyimpan data hitungan setiap produk. Sistem secara otomatis menghitung selisih antara hasil hitungan fisik dengan catatan stok di sistem. Alur kemudian mengevaluasi kondisi apakah terdapat selisih kurang atau lebih: apabila ditemukan selisih, Admin memilih atau memasukkan identitas barang yang selisih (Nomor Batch obat atau Nomor Seri alkes) serta memberikan keterangan alasan terjadinya selisih, kemudian sistem mencatat penyesuaian tersebut ke dalam riwayat Kartu Stok sebelum sesi ditutup. Sebaliknya, apabila seluruh barang sudah sesuai dan tidak ada selisih, Admin langsung melakukan penutupan sesi opname.
+                </p>
+                <p>
+                    Setelah sesi ditutup, sistem mencabut status penguncian sementara sehingga layanan kasir toko fisik dan belanja daring dapat kembali melayani transaksi secara normal. Alur diakhiri dengan sistem menerbitkan dokumen resmi <b>Berita Acara Stok Opname</b> berformat PDF sebagai bukti pertanggungjawaban hasil pemeriksaan fisik persediaan.
+                </p>
+                <div class="box-highlight">
+                    <strong>Penyelarasan Kode Sistem &amp; SRS:</strong>
+                    Sesuai implementasi <code>inventori/stok_opname.php</code>, penguncian kasir &amp; checkout daring, form penghitungan fisik objektif, dan penerbitan Berita Acara Stok Opname (PDF).
+                </div>
+                <button class="btn-copy" onclick="copyCardText(this)">Salin Teks Narasi</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function switchTab(tabId, btn) {
+            // Hide all tab panels
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            // Remove active from all buttons
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            // Show target panel
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function copyCardText(btn) {
+            const card = btn.closest('.info-card');
+            const paragraphs = card.querySelectorAll('p, ol');
+            let textToCopy = '';
+            paragraphs.forEach(el => {
+                textToCopy += el.innerText + '\n\n';
+            });
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const orig = btn.innerText;
+                btn.innerText = 'Teks Disalin!';
+                btn.style.background = '#16a34a';
+                setTimeout(() => {
+                    btn.innerText = orig;
+                    btn.style.background = '#0f172a';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+
+</html>

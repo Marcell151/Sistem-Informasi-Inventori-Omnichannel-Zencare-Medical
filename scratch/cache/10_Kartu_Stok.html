@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><base href="http://localhost/inventory_zencare/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kartu Stok – ZenCare Medical</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- jQuery & Select2 for Searchable Dropdowns (Offline Local Assets + CDN Fallback) -->
+<script src="/inventory_zencare/assets/js/jquery-3.7.1.min.js"></script>
+<script>if (typeof jQuery === 'undefined') { document.write('<script src="https://code.jquery.com/jquery-3.7.1.min.js"><\/script>'); }</script>
+<link href="/inventory_zencare/assets/css/select2.min.css" rel="stylesheet" />
+<script src="/inventory_zencare/assets/js/select2.min.js"></script>
+<!-- SweetAlert2 (Offline Local Asset + CDN Fallback) -->
+<script src="/inventory_zencare/assets/js/sweetalert2.all.min.js"></script>
+<script>if (typeof Swal === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"><\/script>'); }</script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ["Inter", "sans-serif"] },
+        colors: {
+          zc:      "#1a75d2",
+          zcNavy:  "#0f2d5a",
+          zcHv:    "#0f2d5a",
+          zcLt:    "#eef6fb",
+          zcRed:   "#c0392b",
+          zcBg:    "#f8fafc",
+          zcCard:  "#ffffff",
+          zcBrd:   "#e2e8f0",
+          zcTxt:   "#0f2d5a",
+          zcMut:   "#64748b",
+          zcEm:    "#059669",
+        }
+      }
+    }
+  }
+</script>
+<style>
+  ::-webkit-scrollbar{width:5px;height:5px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px}
+  body{color:#1e293b;background-color:#f8fafc}
+  .sidebar-link{display:flex;align-items:center;gap:10px;padding:8.5px 12px;border-radius:6px;font-size:13px;font-weight:500;color:#475569;transition:all .15s}
+  .sidebar-link:hover{background:#f1f5f9;color:#0f2d5a}
+  .sidebar-link.active{background:#eef6fb;color:#0f2d5a;font-weight:700;border-left:3px solid #1a75d2;padding-left:9px}
+  .sidebar-link.active svg{color:#1a75d2;opacity:1}
+  .sidebar-link svg{flex-shrink:0;color:#64748b;opacity:.85}
+  .sidebar-section{font-size:10.5px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.07em;padding:16px 12px 6px}
+
+  /* ── Global Readability Upgrade (No Microscopic 9px/10px Text) ────────── */
+  .text-\[9px\], .text-\[10px\] {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+  .text-\[11px\] {
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+  }
+  [style*="font-size:9px"], [style*="font-size: 9px"],
+  [style*="font-size:10px"], [style*="font-size: 10px"] {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+  [style*="font-size:11px"], [style*="font-size: 11px"] {
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* ── Responsive Adaptation for Laptop vs PC Resolutions (1280px–1536px) ─ */
+  @media (max-width: 1536px) {
+    table.min-w-\[900px\], table.min-w-\[920px\], table.min-w-\[950px\],
+    table.min-w-\[1000px\], table.min-w-\[1020px\], table.min-w-\[1050px\],
+    table.min-w-\[1100px\] {
+      min-width: 100% !important;
+    }
+    table th, table td {
+      padding-left: 0.625rem !important;
+      padding-right: 0.625rem !important;
+    }
+  }
+
+  /* ── Harmonize Off-Brand Purple/Indigo AI Accents to ZenCare Logo Palette ── */
+  .bg-indigo-50, .bg-purple-50, .bg-violet-50, .bg-indigo-50\/50, .bg-purple-50\/50 {
+    background-color: #eef6fb !important;
+  }
+  .bg-indigo-100, .bg-purple-100, .bg-violet-100 {
+    background-color: #dbeafe !important;
+  }
+  .text-indigo-600, .text-indigo-700, .text-indigo-800,
+  .text-purple-600, .text-purple-700, .text-purple-800,
+  .text-violet-600, .text-violet-700 {
+    color: #0f2d5a !important;
+  }
+  .border-indigo-100, .border-indigo-200, .border-purple-100, .border-purple-200, .border-violet-200 {
+    border-color: #cbe4f5 !important;
+  }
+  .bg-indigo-600, .bg-purple-600, .bg-violet-600 {
+    background-color: #0f2d5a !important;
+  }
+  .hover\:bg-indigo-700:hover, .hover\:bg-purple-700:hover {
+    background-color: #1a75d2 !important;
+  }
+
+  /* ── Clean Enterprise Table & Card Refinement ─────────────────────────── */
+  table th:not(.text-white):not([class*="text-"]) {
+    letter-spacing: 0.04em;
+    color: #475569;
+  }
+
+  /* ── Modern Minimalist Select2 Theme (Ecommerce-Grade) ────────────────── */
+  .select2-container--default .select2-selection--single {
+    min-height: 40px !important;
+    height: 40px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.75rem !important;
+    padding: 6px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    background-color: #ffffff !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03) !important;
+  }
+  .select2-container--default.select2-container--open .select2-selection--single,
+  .select2-container--default .select2-selection--single:focus {
+    border-color: #1a75d2 !important;
+    box-shadow: 0 0 0 3px rgba(26, 117, 210, 0.12) !important;
+    outline: none !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #1e293b !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    padding-left: 0 !important;
+    padding-right: 20px !important;
+    line-height: normal !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #94a3b8 !important;
+    font-size: 0.8125rem !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 100% !important;
+    right: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #94a3b8 transparent transparent transparent !important;
+    border-width: 5px 4px 0 4px !important;
+  }
+  .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-color: transparent transparent #1a75d2 transparent !important;
+    border-width: 0 4px 5px 4px !important;
+  }
+  .select2-dropdown {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.875rem !important;
+    box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.04) !important;
+    overflow: hidden !important;
+    z-index: 9999 !important;
+    margin-top: 4px !important;
+    background-color: #ffffff !important;
+    padding: 4px !important;
+  }
+  .select2-search--dropdown {
+    padding: 6px !important;
+  }
+  .select2-search--dropdown .select2-search__field {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.5rem !important;
+    padding: 7px 10px !important;
+    font-size: 0.8125rem !important;
+    background-color: #f8fafc !important;
+    color: #1e293b !important;
+    outline: none !important;
+    transition: all 0.15s ease !important;
+  }
+  .select2-search--dropdown .select2-search__field:focus {
+    border-color: #1a75d2 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(26, 117, 210, 0.1) !important;
+  }
+  .select2-results__option {
+    font-size: 0.8125rem !important;
+    padding: 8px 12px !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 2px !important;
+    color: #334155 !important;
+    transition: all 0.1s ease !important;
+  }
+  .select2-results__option--highlighted {
+    background-color: #eff6ff !important;
+    color: #1a75d2 !important;
+    font-weight: 600 !important;
+  }
+  .select2-results__option[aria-selected="true"] {
+    background-color: #1a75d2 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+  }
+  .select2-results__options {
+    max-height: 250px !important;
+    overflow-y: auto !important;
+  }
+  .select2-container--default .select2-results__message {
+    color: #94a3b8 !important;
+    font-size: 0.75rem !important;
+    padding: 12px !important;
+    text-align: center !important;
+  }
+  /* Table context compact select2 */
+  table .select2-container--default .select2-selection--single {
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 4px 8px !important;
+    border-radius: 0.5rem !important;
+  }
+  table .select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-size: 0.75rem !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  table .select2-container--default .select2-selection--single .select2-selection__arrow {
+    right: 6px !important;
+  }
+</style></head><body class="bg-zcBg text-zcTxt font-sans antialiased min-h-screen flex"><aside id="app-sidebar" class="w-[216px] xl:w-[236px] bg-white border-r border-zcBrd flex flex-col shrink-0 min-h-screen sticky top-0 hidden md:flex transition-all duration-200 z-40"><div class="h-16 flex items-center px-4 border-b border-zcBrd gap-3">
+      <div class="w-10 h-10 rounded-full bg-white border border-zcBrd flex items-center justify-center shrink-0 overflow-hidden">
+        <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
+      </div>
+      <div>
+        <div class="text-[14px] font-extrabold leading-tight tracking-tight">
+          <span class="text-[#0f2d5a]">ZenCare</span> <span class="text-[#c0392b]">Medical</span>
+        </div>
+        <span class="text-[11px] text-slate-500 font-medium block">Sistem Inventori &amp; POS</span>
+      </div>
+    </div><nav class="flex-1 px-2 py-3 overflow-y-auto"><p class="sidebar-section">Utama</p><a href="/inventory_zencare/index.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a><p class="sidebar-section">Transaksi</p><a href="/inventory_zencare/admin/pesanan.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg><span>Transaksi</span></a><p class="sidebar-section">Master Data</p><a href="/inventory_zencare/admin/master_produk.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 10-7-7l-10 10a4.95 4.95 0 107 7z"/><line x1="8.5" y1="8.5" x2="15.5" y2="15.5"/></svg><span>Produk</span></a><a href="/inventory_zencare/admin/master_uom.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4M7 12h10"/></svg><span>Satuan & UOM</span></a><a href="/inventory_zencare/admin/master_supplier.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 00-2-2H4a2 2 0 00-2 2v11a1 1 0 001 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 001-1v-3.65a1 1 0 00-.22-.624l-3.48-4.35A1 1 0 0017.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg><span>Supplier</span></a><p class="sidebar-section">Logistik & Inventori</p><a href="/inventory_zencare/inventori/tambah_stok.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span>Penerimaan Barang</span></a><a href="/inventory_zencare/inventori/proses_mutasi.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4"/></svg><span>Mutasi Stok Manual</span></a><a href="/inventory_zencare/inventori/konversi_uom.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4M7 12h10"/></svg><span>Konversi (UOM)</span></a><a href="/inventory_zencare/inventori/histori_konversi.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg><span>Histori Konversi</span></a><a href="/inventory_zencare/inventori/stok_opname.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/><path d="M9 10h6"/></svg><span>Stok Opname</span></a><a href="/inventory_zencare/laporan/kartu_stok.php" class="sidebar-link active"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12l2 2 4-4"/></svg><span>Kartu Stok</span></a><a href="/inventory_zencare/inventori/logistik_medis.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><path d="M12 11v6M9 14h6"/></svg><span>Logistik Medis</span></a></nav><div class="px-3 py-3 border-t border-zcBrd">
+      <div class="flex items-center gap-2.5 p-2.5 rounded-lg bg-[#f8fafc] border border-zcBrd mb-2">
+        <div class="w-8 h-8 rounded-full bg-[#0f2d5a] text-white font-bold text-xs flex items-center justify-center shrink-0">A</div>
+        <div class="min-w-0 flex-1">
+          <span class="text-xs font-bold text-[#0f2d5a] truncate block leading-snug">Admin Toko</span>
+          <span class="text-[11px] text-slate-500 font-medium block">Admin</span>
+        </div>
+      </div>
+      <a href="/inventory_zencare/logout.php" class="sidebar-link text-[#c0392b] hover:!bg-rose-50 hover:!text-rose-700 justify-center gap-2 py-2 text-xs font-semibold"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg> <span>Keluar Sistem</span></a>
+    </div></aside><div class="flex-1 flex flex-col min-w-0">
+    <header class="h-16 bg-white border-b border-zcBrd px-5 flex items-center justify-between sticky top-0 z-30 shrink-0">
+      <div>
+        <h1 class="text-base font-bold text-[#0f2d5a] leading-tight">Kartu Stok Barang</h1><p class="text-xs text-slate-500 mt-0.5">Log mutasi fisik keluar/masuk (Pusat - Muharto)</p>  </div>
+      <div class="flex items-center gap-3 shrink-0"><div class="hidden sm:flex items-center gap-1.5 text-xs bg-[#eef6fb] border border-[#cbe4f5] text-[#0f2d5a] rounded-md px-3 py-1.5 font-semibold">
+        <svg class="w-3.5 h-3.5 text-[#1a75d2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        Pusat (Muharto)
+      </div><div class="flex items-center gap-2.5 border border-zcBrd px-3 py-1.5 rounded-md bg-white">
+          <div class="w-7 h-7 rounded-full bg-[#0f2d5a] text-white font-bold text-xs flex items-center justify-center">A</div>
+          <div>
+            <span class="text-xs font-bold text-[#0f2d5a] block leading-tight">Admin Toko</span>
+            <span class="text-[11px] text-slate-500 block leading-tight">Admin</span>
+          </div>
+        </div>
+      </div>
+    </header><main class="p-3 sm:p-4 xl:p-6 flex-1 min-w-0 overflow-x-hidden">
+<div class="bg-white border border-zcBrd rounded-2xl p-6 shadow-sm mb-6">
+    <form method="GET" onsubmit="var sk = document.getElementById('select_kanal'); if(sk) sk.disabled = false;" class="flex flex-wrap items-end gap-4">
+        <div class="flex-1 min-w-[250px]">
+            <label class="block text-xs font-semibold text-zcTxt mb-1.5">Pilih Barang *</label>
+            <select name="id_variasi" required class="select2 w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+                <option value="">-- Pilih Barang / SKU --</option>
+                                <option value="51" >
+                    Alat Cek Asam Urat EasyTouch - Tube Isi 25 [ESY-UA]
+                </option>
+                                <option value="52" >
+                    Alat Cek Kolesterol Nesco - Tube Isi 10 [NSC-CHL]
+                </option>
+                                <option value="48" >
+                    Alkohol Onemed 70% 100ml - Botol 100ml [OM-ALK]
+                </option>
+                                <option value="1" >
+                    Amoxicillin 500mg - Tablet 500mg [AMX-500]
+                </option>
+                                <option value="26" >
+                    Antangin JRG - Sachet 15ml [ANT-JRG]
+                </option>
+                                <option value="18" >
+                    Betadine Solution 15ml - Botol 15ml [BET-15]
+                </option>
+                                <option value="31" >
+                    Bodrex Migra - Strip Isi 4 [BDR-MGR]
+                </option>
+                                <option value="27" >
+                    CDR Effervescent - Tube Isi 15 [CDR-EFT]
+                </option>
+                                <option value="41" >
+                    Cefadroxil 500mg - Strip Isi 10 [CFD-500]
+                </option>
+                                <option value="43" >
+                    Cetirizine 10mg - Strip Isi 10 [CTR-10]
+                </option>
+                                <option value="40" >
+                    Combantrin Jeruk 10ml - Botol 10ml [CMB-JRK]
+                </option>
+                                <option value="19" >
+                    Counterpain Krim 30g - Tube 30g [CTP-30]
+                </option>
+                                <option value="42" >
+                    CTM - Strip Isi 12 [CTM-ALR]
+                </option>
+                                <option value="38" >
+                    Decadryl Expectorant - Botol 120ml [DCD-EXP]
+                </option>
+                                <option value="33" >
+                    Decolgen - Strip Isi 4 [DCL-GEN]
+                </option>
+                                <option value="22" >
+                    Diapet Kapsul - Kapsul Isi 10 [DPT-CAP]
+                </option>
+                                <option value="29" >
+                    Enervon-C Multivitamin - Strip Isi 4 [ENV-C]
+                </option>
+                                <option value="23" >
+                    Entrostop - Tablet [ENT-DSW]
+                </option>
+                                <option value="45" >
+                    Hansaplast Kain Elastis - Box Isi 100 [HNS-PLS]
+                </option>
+                                <option value="7" >
+                    Hufagrip - Hufagrip Biru (Pilek) [HUF-PIL]
+                </option>
+                                <option value="60" >
+                    Hufagrip - Hufagrip BP Anak [HUF-BPA]
+                </option>
+                                <option value="8" >
+                    Hufagrip - Hufagrip Hijau (BP) [HUF-BP]
+                </option>
+                                <option value="9" >
+                    Hufagrip - Hufagrip Kuning (Flu Batuk) [HUF-FLU]
+                </option>
+                                <option value="6" >
+                    Hufagrip - Hufagrip Merah (TMP) [HUF-TMP]
+                </option>
+                                <option value="30" >
+                    Imboost Force - Strip Isi 10 [IMB-FRC]
+                </option>
+                                <option value="17" >
+                    Insto Reguler 7.5ml - Botol 7.5ml [INS-REG]
+                </option>
+                                <option value="47" >
+                    Kasa Steril Onemed - Kotak Isi 10 [OM-KSA]
+                </option>
+                                <option value="25" >
+                    Komix Herbal - Sachet 15ml [KMX-HRB]
+                </option>
+                                <option value="53" >
+                    Kursi Roda Standard Sella - Unit Standar [SLL-KRD]
+                </option>
+                                <option value="44" >
+                    Masker Sensi Earloop - Box Isi 50 [SNS-MSK]
+                </option>
+                                <option value="16" >
+                    Mylanta Cair 150ml - Botol 150ml [MYL-150]
+                </option>
+                                <option value="56" >
+                    Nebulizer Omron - Unit NE-C104 [OMR-NEB]
+                </option>
+                                <option value="32" >
+                    Neozep Forte - Strip Isi 4 [NZP-FRT]
+                </option>
+                                <option value="20" >
+                    Neurobion Forte - Tablet Merah [NEU-FRT]
+                </option>
+                                <option value="34" >
+                    OBH Combi Plus - Botol 100ml [OBH-CPL]
+                </option>
+                                <option value="14" >
+                    Panadol Extra - Kaplet Merah [PND-EXT]
+                </option>
+                                <option value="12" >
+                    Paracetamol - Tablet 125mg [PCT-125]
+                </option>
+                                <option value="11" >
+                    Paracetamol - Tablet 250mg [PCT-250]
+                </option>
+                                <option value="10" >
+                    Paracetamol - Tablet 500mg [PCT-500]
+                </option>
+                                <option value="46" >
+                    Plester Dermafix - Pcs 5x7cm [DRM-FIX]
+                </option>
+                                <option value="39" >
+                    Polysilane Kapsul - Strip Isi 10 [PLS-CAP]
+                </option>
+                                <option value="50" >
+                    Povidone Iodine 1 Liter - Botol 1L [PVD-1L]
+                </option>
+                                <option value="13" >
+                    Promag Tablet - Tablet Kunyah [PRM-01]
+                </option>
+                                <option value="28" >
+                    Redoxon Double Action - Tube Isi 10 [RDX-DBL]
+                </option>
+                                <option value="55" >
+                    Regulator Oksigen - Unit Flowmeter [O2-REG]
+                </option>
+                                <option value="49" >
+                    Rivanol 100ml - Botol 100ml [RVN-100]
+                </option>
+                                <option value="35" >
+                    Salonpas Koyo - Sachet Isi 10 [SLN-PAS]
+                </option>
+                                <option value="21" >
+                    Sangobion Kapsul - Kapsul Merah [SNG-CAP]
+                </option>
+                                <option value="2" >
+                    Sanmol Sirup Anak 60ml - Botol 60ml [SAN-SYR]
+                </option>
+                                <option value="58" >
+                    Stetoskop Littmann - Unit Classic III [LTM-STC]
+                </option>
+                                <option value="3" >
+                    Strip Gula Darah EasyTouch - Tube (25 Pcs) [ESY-GLU]
+                </option>
+                                <option value="54" >
+                    Tabung Oksigen 1m3 - Tabung 1m3 [O2-1M3]
+                </option>
+                                <option value="4" >
+                    Tensimeter Digital Omron - Unit HEM-7120 [OMR-TENS]
+                </option>
+                                <option value="5" >
+                    Termometer Digital Omron - Unit MC-246 [OMR-THER]
+                </option>
+                                <option value="57" >
+                    Termometer Infra Merah - Unit Pistol [IR-THER]
+                </option>
+                                <option value="15" >
+                    Tolak Angin Cair - Sachet 15ml [TLK-ANG]
+                </option>
+                                <option value="37" >
+                    Tolak Linu - Sachet 15ml [TLK-LNU]
+                </option>
+                                <option value="36" >
+                    Vicks VapoRub 10g - Pot 10g [VK-VP10]
+                </option>
+                                <option value="24" >
+                    Woods Peppermint Syr - Botol 100ml [WOD-PEP]
+                </option>
+                            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-zcTxt mb-1.5">Dari Tanggal</label>
+            <input type="date" name="dari" value="2026-11-01" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-zcTxt mb-1.5">Sampai Tanggal</label>
+            <input type="date" name="sampai" value="2026-11-05" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-zcTxt mb-1.5">Kanal Transaksi</label>
+            <select name="kanal" id="select_kanal" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50 font-bold transition " >
+                <option value="semua" selected>Semua Kanal (Omnichannel)</option>
+                <option value="POS" >Hanya POS (Kasir Offline)</option>
+                <option value="E-Commerce" >Hanya E-Commerce (Online)</option>
+            </select>
+            <div id="hint_kanal_disabled" class="text-[10px] text-amber-700 font-semibold mt-1 hidden"></div>
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-zcTxt mb-1.5">Kategori Aktivitas</label>
+            <select name="filter_konversi" id="select_konversi" onchange="handleKonversiChange(this.value)" class="text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc bg-slate-50 font-bold">
+                <option value="0" selected>Semua Aktivitas</option>
+                <option value="1" >Semua Aktivitas Konversi</option>
+            </select>
+        </div>
+        <div class="flex gap-2">
+            <button type="submit" class="px-5 py-2.5 bg-zc hover:bg-zcHv text-white font-bold text-sm rounded-xl transition flex items-center gap-2">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Tampilkan
+            </button>
+                    </div>
+    </form>
+</div>
+
+
+
+
+<script>
+function switchTab(tab) {
+    var cBesar = document.getElementById('tab_content_besar');
+    var cKecil = document.getElementById('tab_content_kecil');
+    var bBesar = document.getElementById('tab_btn_besar');
+    var bKecil = document.getElementById('tab_btn_kecil');
+    if (!cBesar || !cKecil) return;
+
+    if (tab === 'besar') {
+        cBesar.classList.remove('hidden');
+        cKecil.classList.add('hidden');
+        if (bBesar) bBesar.className = 'px-6 py-3 font-bold text-sm border-b-4 border-slate-700 text-slate-900 transition';
+        if (bKecil) bKecil.className = 'px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300 transition';
+    } else {
+        cKecil.classList.remove('hidden');
+        cBesar.classList.add('hidden');
+        if (bKecil) bKecil.className = 'px-6 py-3 font-bold text-sm border-b-4 border-slate-700 text-slate-900 transition';
+        if (bBesar) bBesar.className = 'px-6 py-3 font-bold text-sm border-b-4 border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300 transition';
+    }
+}
+
+function handleKonversiChange(val) {
+    var selKanal = document.getElementById('select_kanal');
+    var hint = document.getElementById('hint_kanal_disabled');
+    if (!selKanal) return;
+    if (val === '1') {
+        selKanal.value = 'semua';
+        selKanal.disabled = true;
+        selKanal.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+        selKanal.classList.remove('bg-slate-50', 'text-zcTxt');
+        if (hint) hint.classList.remove('hidden');
+    } else {
+        selKanal.disabled = false;
+        selKanal.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+        selKanal.classList.add('bg-slate-50', 'text-zcTxt');
+        if (hint) hint.classList.add('hidden');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    
+    let dari = document.querySelector('input[name="dari"]');
+    let sampai = document.querySelector('input[name="sampai"]');
+    
+    if (dari && sampai) {
+        function validateDates() {
+            sampai.min = dari.value;
+            dari.max = sampai.value;
+        }
+
+        dari.addEventListener('change', function() {
+            if (sampai.value && sampai.value < dari.value) sampai.value = dari.value;
+            validateDates();
+        });
+        
+        sampai.addEventListener('change', function() {
+            if (dari.value && sampai.value < dari.value) dari.value = sampai.value;
+            validateDates();
+        });
+        
+        validateDates();
+    }
+});
+</script>
+
+</main></div>
+    <script>
+      $(document).ready(function() {
+          $("select.select2:not(.select2-hidden-accessible)").each(function() {
+              $(this).select2({ width: "100%" });
+              $(this).on("select2:select", function(e) {
+                  this.dispatchEvent(new Event("change", { bubbles: true }));
+              });
+          });
+      });
+    </script>
+    </body></html>

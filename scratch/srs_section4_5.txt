@@ -1,0 +1,145 @@
+## 4. SPESIFIKASI KEBUTUHAN FUNGSIONAL & ALUR SISTEM DETAIL
+
+### 4.1 Modul Penerimaan Logistik (Inbound & Validasi Kedaluwarsa)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Staf as Staf Gudang
+    participant Sys as Sistem ZenCare
+    participant DB as Basis Data (MySQL)
+    
+    Staf->>Sys: Input Nomor Faktur Supplier & Pilih Barang Masuk
+    Sys->>Staf: Tampilkan Form Validasi Fisik (Batch/SN & Exp Date)
+    Staf->>Sys: Input No. Batch & Tgl Exp (Obat) / Scan Serial Number (Alkes)
+    Sys->>Sys: Validasi Batas Minimal Exp Date (Misal >= 180 hari)
+    alt Tanggal Exp Terlalu Dekat / Rusak Fisik
+        Sys-->>Staf: Peringatan Karantina Logistik (Tolak/Tandai Rusak)
+    else Kondisi Fisik Baik & Exp Memenuhi Syarat
+        Sys->>DB: INSERT INTO penerimaan & penerimaan_detail
+        Sys->>DB: INSERT / UPDATE stok_batch (Obat) atau INSERT unit_serial (Alkes)
+        Sys->>DB: UPDATE stok_toko (+qty eceran)
+        Sys->>DB: INSERT INTO kartu_stok (jenis='Masuk', kanal='Penerimaan')
+        Sys-->>Staf: Nota Penerimaan Barang Siap Dicetak (A4)
+    end
+```
+
+### 4.2 Modul Konversi UOM (Bongkar Satuan Besar & Lahir Sub-Batch)
+1. **Pemicu**: Stok satuan kecil (eceran) di etalase habis, namun masih terdapat kemasan besar utuh di gudang.
+2. **Logika Eksekusi Transaksi Database**:
+   - Memilih 1 (atau $n$) Dus dari batch obat tertua (FEFO).
+   - Mengurangi kuantitas fisik pada batch induk sebesar $n \times \text{rasio}$.
+   - Membuat/menambah kuantitas pada sub-batch bertanda notasi titik:
+     $$\text{Kode Sub-Batch} = \text{BatchAsal} + \text{".A" (atau huruf alfabet berikutnya)}$$
+   - Mencatat log pada tabel `histori_konversi`.
+   - Mencatat 2 mutasi pada `kartu_stok`:
+     1. Mutasi Keluar pada Kartu Stok (Satuan Besar): $-n\text{ Box}$.
+     2. Mutasi Masuk pada Kartu Stok (Satuan Kecil): $+(n \times \text{rasio})\text{ Strip/Pcs}$.
+
+### 4.3 Modul Transaksi Kasir POS (Offline Point-of-Sale)
+1. Kasir memindai barcode SKU variasi atau mencari nama produk.
+2. Jika produk adalah **Obat**:
+   - Sistem otomatis mengalokasikan batch terdekat (FEFO) dan menampilkan rekomendasi di layar kasir.
+   - Jika stok eceran kosong, sistem menampilkan modal konfirmasi pembongkaran kemasan dus instan.
+   - Jika kasir mengganti batch secara manual, sistem mengecek apakah ada batch lebih tua yang terlewat. Jika terlewat, sistem memicu pencatatan ke `log_anomali_fefo`.
+3. Jika produk adalah **Alkes**:
+   - Kasir wajib memindai/memilih nomor seri fisik unik (SN) unit yang diambil.
+4. Saat tombol **Bayar** diklik:
+   - Sistem memotong kuantitas pada `stok_batch` (atau mengupdate `unit_serial.status = 'Terjual'`).
+   - Memotong kuantitas akumulasi di `stok_toko`.
+   - Mencatat penjualan ke `penjualan` dan `detail_penjualan` dengan status `Selesai`.
+   - Mencatat mutasi keluar pada `kartu_stok` (`kanal = 'POS'`).
+   - Mencetak struk kasir thermal (80mm/58mm) atau faktur penjualan A4.
+
+### 4.4 Modul E-Commerce & Reservasi Stok Otomatis (Cooldown 2 Jam)
+```mermaid
+stateDiagram-v2
+    [*] --> MenungguPembayaran: Checkout Daring Dibuat
+    state MenungguPembayaran {
+        [*] --> StokReserved: Alokasi Batch FEFO / SN Dikunci
+        StokReserved --> Timer2Jam: Hitung Mundur Cooldown 2 Jam
+    }
+    
+    MenungguPembayaran --> Diproses: Pembayaran Midtrans Berhasil (Settlement)
+    MenungguPembayaran --> Dibatalkan: Batas 2 Jam Habis / Batal Manual
+    
+    state Dibatalkan {
+        [*] --> RestoreStok: Stok Batch & SN Dipulihkan ke Sistem
+    }
+    
+    Diproses --> Dikirim: Kurir Ekspedisi Diinput Resi
+    Diproses --> SiapDiambil: Opsi Pick-Up di Toko
+    Dikirim --> Selesai: Paket Tiba & Dikonfirmasi
+    SiapDiambil --> Selesai: Pelanggan Tunjukkan Kode Pick-up
+```
+
+### 4.5 Modul Manajemen Pesanan & Pemenuhan Fisik (Fulfillment)
+1. Operator logistik membuka menu **Transaksi** ([admin/pesanan.php](file:///c:/xampp/htdocs/inventory_zencare/admin/pesanan.php)).
+2. Membuka detail pesanan berstatus `Diproses`.
+3. Sistem menyajikan **Instruksi Ambil Fisik (Picking List)** yang mencantumkan:
+   - Nama produk & variasi.
+   - Kuantitas yang harus diambil dalam kedua satuan (misal: `1 Box (10 Strip)`).
+   - **Nomor batch spesifik** yang harus diambil dari rak (lengkap dengan sisa hari kedaluwarsa).
+   - **Nomor seri unit (SN)** yang harus diambil (khusus Alkes).
+4. Operator mencetak:
+   - **Faktur Penjualan Kertas A4** ([pos/cetak_invoice.php](file:///c:/xampp/htdocs/inventory_zencare/pos/cetak_invoice.php)).
+   - **Stiker Label Thermal 100x150mm** ([admin/cetak_label_pengiriman.php](file:///c:/xampp/htdocs/inventory_zencare/admin/cetak_label_pengiriman.php)) yang memuat barcode invoice, instruksi kurir, identitas pengirim/penerima, dan rincian alokasi fisik FEFO/SN.
+
+### 4.6 Modul Stok Opname, Rekonsiliasi, & Freeze Bypass Prevention
+1. **Inisiasi & Pembekuan**:
+   - SuperAdmin membuka sesi opname baru.
+   - Sistem mencatat snapshot fisik teoritis (`stok_sistem_fisik`) dari setiap batch obat dan unit serial alkes.
+   - Seluruh modul transaksi dibekukan secara global.
+2. **Pencacahan Fisik (Stock Counting)**:
+   - Staf gudang menghitung fisik barang di rak penyimpanan.
+   - Memasukkan angka `hitung_fisik` ke sistem.
+   - Khusus Alkes: melakukan checklist fisik apakah unit SN ada, rusak, atau hilang.
+3. **Rekonsiliasi Otomatis**:
+   - Jika terdapat selisih ($\text{hitung} \neq \text{sistem}$):
+     - Operator memilih alasan audit: `Barang Rusak`, `Barang Kedaluwarsa`, `Barang Hilang`, atau `Koreksi Salah Catat / Ditemukan`.
+     - Sistem melakukan penyesuaian otomatis pada tabel `stok_batch` dan `stok_toko`.
+     - Mencatat mutasi penyesuaian pada `kartu_stok` (`jenis_mutasi = 'Penyesuaian'`).
+4. **Penutupan Sesi & Pembukaan Blokir**:
+   - SuperAdmin menyetujui hasil opname.
+   - Sistem mencetak **Berita Acara Hasil Pemeriksaan Fisik (Stok Opname)** bertandatangan resmi ([inventori/cetak_berita_acara_opname.php](file:///c:/xampp/htdocs/inventory_zencare/inventori/cetak_berita_acara_opname.php)).
+   - Pembekuan dicabut dan transaksi kembali berjalan normal.
+
+### 4.7 Modul Mutasi Stok Manual & Klaim Garansi
+- Digunakan saat terjadi insiden di luar sesi opname (misal: botol sirup pecah saat penataan rak, obat rusak terkena lembab, atau klaim garansi Alkes).
+- Operator memilih variasi, nomor batch spesifik, jumlah unit, serta alasan mutasi:
+  - `Barang Rusak`
+  - `Barang Kedaluwarsa`
+  - `Klaim Garansi SN`
+  - `Koreksi Manual`
+- Transaksi database secara atomik memotong stok batch/SN dan mencatatnya ke kartu stok resmi.
+
+### 4.8 Modul Kartu Stok & Audit Mutasi Fisik
+- Sesuai standar audit distribusi farmasi dan alkes, sistem memisahkan buku mutasi fisik menjadi:
+  1. **Kartu Stok (Satuan Besar)**: Melacak mutasi kardus utuh / box pabrik.
+  2. **Kartu Stok (Satuan Kecil)**: Melacak mutasi strip, botol, tablet eceran, atau unit alkes.
+- Dilengkapi dengan fitur **Backward Calculation Running Balance** untuk menghitung mundur saldo akhir secara akurat jika pengguna memfilter rentang tanggal tertentu atau memfilter kanal penjualan khusus (Omnichannel Filter).
+
+---
+
+## 5. MATRIKS HAK AKSES PENGGUNA (ROLE-BASED ACCESS CONTROL)
+
+| Fitur / Modul Sistem | SuperAdmin (Pemilik) | Admin (Operasional) | Kasir (Front Office) | Pelanggan (Customer) |
+|---|:---:|:---:|:---:|:---:|
+| **Dashboard Manajerial & Grafik Kinerja** | Ya | Tidak | Tidak | Tidak |
+| **Dashboard Operasional Harian** | Ya | Ya | Tidak | Tidak |
+| **Kasir POS (Penjualan Walk-in)** | Ya | Tidak | Ya | Tidak |
+| **Manajemen Pesanan E-Commerce** | Ya | Ya | Baca/Cetak | Tidak |
+| **Penerimaan Barang Logistik (Inbound)**| Ya | Ya | Tidak | Tidak |
+| **Konversi Satuan UOM (Bongkar Dus)** | Ya | Ya | Tidak | Tidak |
+| **Mutasi Stok Manual (Barang Rusak)** | Ya | Ya | Tidak | Tidak |
+| **Pelaksanaan Stok Opname (Counting)** | Ya | Ya | Tidak | Tidak |
+| **Buka/Tutup Sesi Opname (Freeze Lock)**| Ya | Tidak | Tidak | Tidak |
+| **Kartu Stok & Laporan Mutasi Fisik** | Ya | Ya | Tidak | Tidak |
+| **Laporan Penjualan & Laba/Rugi** | Ya | Tidak | Tidak | Tidak |
+| **Audit Anomali FEFO & Logistik Medis** | Ya | Ya | Tidak | Tidak |
+| **Master Data (Produk, UOM, Supplier)**| Ya | Ya | Tidak | Tidak |
+| **Manajemen Akun Pengguna Staf** | Ya | Tidak | Tidak | Tidak |
+| **Katalog E-Commerce & Checkout Online**| Tidak | Tidak | Tidak | Ya |
+| **Riwayat Pesanan Pelanggan Online** | Tidak | Tidak | Tidak | Ya |
+
+---
+

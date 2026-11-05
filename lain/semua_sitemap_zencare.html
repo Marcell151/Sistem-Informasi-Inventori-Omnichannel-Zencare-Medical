@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagram Peta Situs (Sitemap) Lengkap - ZenCare Medical (Bab 3.3.2)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f8fafc;
+            color: #000;
+            padding: 24px;
+        }
+
+        /* Top Header Control Bar */
+        .header-bar {
+            max-width: 1300px;
+            margin: 0 auto 24px auto;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .header-title h1 {
+            font-size: 18px;
+            font-weight: 800;
+            color: #0f172a;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .header-title p {
+            font-size: 12.5px;
+            color: #64748b;
+            margin-top: 3px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+            background: #f1f5f9;
+            padding: 7px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .nav-links a:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .btn-print {
+            background-color: #0284c7;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .btn-print:hover {
+            background-color: #0369a1;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 36px;
+        }
+
+        /* Card Section */
+        .sitemap-card {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            overflow-x: auto;
+        }
+
+        .card-header {
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 12px;
+        }
+
+        .card-header h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .card-header p {
+            font-size: 12.5px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* ============================================================ */
+        /* CSS TREE - PURE ACADEMIC RECTANGLES WITH ORTHOGONAL CONNECTORS */
+        /* ============================================================ */
+        .diagram-viewport {
+            background: #ffffff;
+            padding: 20px 10px;
+            display: flex;
+            justify-content: flex-start;
+            overflow-x: auto;
+        }
+
+        .tree {
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+            padding: 10px 20px;
+        }
+
+        .node {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Rectangular Box Styles */
+        .box {
+            border: 1.5px solid #000;
+            background: #ffffff;
+            color: #000;
+            font-family: Arial, Helvetica, sans-serif;
+            text-align: center;
+            border-radius: 0px;
+            box-sizing: border-box;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            position: relative;
+        }
+
+        .box.root {
+            font-size: 13px;
+            font-weight: bold;
+            padding: 14px 22px;
+            line-height: 1.4;
+            max-width: 280px;
+            white-space: normal;
+        }
+
+        .box.level-1 {
+            font-size: 12px;
+            font-weight: bold;
+            padding: 8px 16px;
+        }
+
+        .box.level-2 {
+            font-size: 11px;
+            font-weight: normal;
+            padding: 6px 14px;
+        }
+
+        /* Children Container */
+        .children {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 12px;
+            margin-left: 36px;
+            padding-left: 36px;
+            position: relative;
+        }
+
+        /* Horizontal stem leaving parent */
+        .node > .box + .children::before {
+            content: '';
+            position: absolute;
+            left: -36px;
+            top: 50%;
+            width: 36px;
+            height: 1.5px;
+            background-color: #000;
+            transform: translateY(-50%);
+        }
+
+        /* Horizontal branch entering child */
+        .children > .node::before {
+            content: '';
+            position: absolute;
+            left: -36px;
+            top: 50%;
+            width: 36px;
+            height: 1.5px;
+            background-color: #000;
+            transform: translateY(-50%);
+        }
+
+        /* Vertical spine joining siblings */
+        .children::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            background-color: #000;
+            width: 1.5px;
+            z-index: 1;
+        }
+
+        .figure-caption {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #0f172a;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        /* PRINT STYLING */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .header-bar {
+                display: none !important;
+            }
+            .sitemap-card {
+                border: none;
+                box-shadow: none;
+                padding: 10px 0 24px 0;
+                page-break-after: always;
+            }
+            .sitemap-card:last-child {
+                page-break-after: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Tools (No Print) -->
+    <div class="header-bar">
+        <div class="header-title">
+            <h1>Diagram Peta Situs (Sitemap) Lengkap ZenCare Medical</h1>
+            <p>100% Selaras dengan Kode Sistem, SRS, dan Format Pohon Horizontal Word &bull; Bab 3.3.2</p>
+        </div>
+        <div class="nav-links">
+            <a href="#card-pelanggan">1. Pelanggan</a>
+            <a href="#card-kasir">2. Kasir</a>
+            <a href="#card-admin">3. Admin</a>
+            <a href="#card-superadmin">4. Superadmin</a>
+            <button onclick="window.print()" class="btn-print">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                Cetak / Simpan PDF
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- ============================================================ -->
+        <!-- 1. SITEMAP PELANGGAN (E-COMMERCE)                             -->
+        <!-- ============================================================ -->
+        <div class="sitemap-card" id="card-pelanggan">
+            <div class="card-header">
+                <h2>1. Sitemap Pelanggan (Front-End E-Commerce)</h2>
+                <p>Memetakan struktur navigasi pembeli daring: katalog produk grosir satuan besar, keranjang belanja, checkout kurir/pick-up, hingga akun mandiri.</p>
+            </div>
+            
+            <div class="diagram-viewport">
+                <div class="tree" id="tree-pelanggan">
+                    <div class="node">
+                        <div class="box root">Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Pelanggan)</div>
+                        <div class="children">
+                            
+                            <!-- Autentikasi -->
+                            <div class="node">
+                                <div class="box level-1">Autentikasi</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Daftar Akun Baru</div></div>
+                                    <div class="node"><div class="box level-2">Login</div></div>
+                                    <div class="node"><div class="box level-2">Lupa Kata Sandi</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Beranda (Leaf node) -->
+                            <div class="node">
+                                <div class="box level-1">Beranda</div>
+                            </div>
+
+                            <!-- Katalog Produk (1 child) -->
+                            <div class="node">
+                                <div class="box level-1">Katalog Produk</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Detail Produk</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Keranjang Belanja -->
+                            <div class="node">
+                                <div class="box level-1">Keranjang Belanja</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Ubah Kuantitas Produk</div></div>
+                                    <div class="node"><div class="box level-2">Hapus Produk dari Keranjang</div></div>
+                                    <div class="node"><div class="box level-2">Ringkasan Subtotal</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Checkout -->
+                            <div class="node">
+                                <div class="box level-1">Checkout</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Pilih Metode Pengambilan</div></div>
+                                    <div class="node"><div class="box level-2">Isi / Pilih Alamat Pengiriman</div></div>
+                                    <div class="node"><div class="box level-2">Ringkasan Pesanan &amp; Total Bayar</div></div>
+                                    <div class="node"><div class="box level-2">Pembayaran</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Akun Saya -->
+                            <div class="node">
+                                <div class="box level-1">Akun Saya</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Edit Profil</div></div>
+                                    <div class="node"><div class="box level-2">Kelola Alamat Pengiriman</div></div>
+                                    <div class="node"><div class="box level-2">Riwayat Pesanan</div></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="figure-caption">Gambar 3.5 Sitemap Pelanggan (Front-End E-Commerce)</div>
+        </div>
+
+
+        <!-- ============================================================ -->
+        <!-- 2. SITEMAP KASIR (TERMINAL POS)                              -->
+        <!-- ============================================================ -->
+        <div class="sitemap-card" id="card-kasir">
+            <div class="card-header">
+                <h2>2. Sitemap Kasir (Terminal POS Toko Fisik)</h2>
+                <p>Memetakan antarmuka operasional kasir: transaksi langsung luring, dual-UOM &amp; bongkar box, rekomendasi FEFO/SN, anomali deviasi, pembayaran, serta riwayat harian &amp; cetak ulang struk.</p>
+            </div>
+            
+            <div class="diagram-viewport">
+                <div class="tree" id="tree-kasir">
+                    <div class="node">
+                        <div class="box root">Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Kasir)</div>
+                        <div class="children">
+                            
+                            <!-- Autentikasi -->
+                            <div class="node">
+                                <div class="box level-1">Autentikasi</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Login Kasir</div></div>
+                                    <div class="node"><div class="box level-2">Logout</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Terminal Kasir (POS) -->
+                            <div class="node">
+                                <div class="box level-1">Terminal Kasir (POS)</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Pencarian &amp; Scan Barcode</div></div>
+                                    <div class="node"><div class="box level-2">Transaksi Dual-UOM &amp; Bongkar Box</div></div>
+                                    <div class="node"><div class="box level-2">Rekomendasi FEFO Obat &amp; Validasi SN Alkes</div></div>
+                                    <div class="node"><div class="box level-2">Panel Deviasi Anomali FEFO</div></div>
+                                    <div class="node"><div class="box level-2">Pembayaran &amp; Cetak Struk Belanja</div></div>
+                                    <div class="node"><div class="box level-2">Riwayat Transaksi &amp; Cetak Ulang Struk</div></div>
+                                    <div class="node"><div class="box level-2">Indikator Status Freeze Mode</div></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="figure-caption">Gambar 3.6 Sitemap Kasir (Terminal POS Offline)</div>
+        </div>
+
+
+        <!-- ============================================================ -->
+        <!-- 3. SITEMAP ADMIN TOKO (OPERASIONAL & LOGISTIK)               -->
+        <!-- ============================================================ -->
+        <div class="sitemap-card" id="card-admin">
+            <div class="card-header">
+                <h2>3. Sitemap Admin Toko (Back-Office Operasional &amp; Logistik)</h2>
+                <p>Memetakan antarmuka operasional staf toko: dashboard pemantauan, master data persediaan, pemenuhan pesanan daring omnichannel, dan logistik inventori.</p>
+            </div>
+            
+            <div class="diagram-viewport">
+                <div class="tree" id="tree-admin">
+                    <div class="node">
+                        <div class="box root">Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Admin Toko)</div>
+                        <div class="children">
+                            
+                            <!-- Autentikasi -->
+                            <div class="node">
+                                <div class="box level-1">Autentikasi</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Login Admin</div></div>
+                                    <div class="node"><div class="box level-2">Logout</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Dashboard Operasional -->
+                            <div class="node">
+                                <div class="box level-1">Dashboard Operasional</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Ringkasan Persediaan (Stok Besar, Kecil, ROP, ED)</div></div>
+                                    <div class="node"><div class="box level-2">Antrean Pesanan (Daring &amp; Pick-up)</div></div>
+                                    <div class="node"><div class="box level-2">Monitoring Logistik (Anomali FEFO &amp; Retur)</div></div>
+                                    <div class="node"><div class="box level-2">Ringkasan Transaksi Harian &amp; Kartu Stok</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Master Data -->
+                            <div class="node">
+                                <div class="box level-1">Master Data</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Data Produk (Katalog, Tambah, Nonaktifkan)</div></div>
+                                    <div class="node"><div class="box level-2">Data Satuan &amp; Multi-UOM</div></div>
+                                    <div class="node"><div class="box level-2">Direktori Supplier Rekanan</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Manajemen Pesanan Omnichannel -->
+                            <div class="node">
+                                <div class="box level-1">Manajemen Pesanan Omnichannel</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Antrean Pesanan Daring &amp; Pick-up</div></div>
+                                    <div class="node"><div class="box level-2">Instruksi Ambil Fisik (FEFO/SN) &amp; Scan Barcode</div></div>
+                                    <div class="node"><div class="box level-2">Cetak Label Pengiriman &amp; Faktur Penjualan</div></div>
+                                    <div class="node"><div class="box level-2">Pemrosesan Kurir (Resi) &amp; Verifikasi Pick-up</div></div>
+                                    <div class="node"><div class="box level-2">Pembatalan Pesanan &amp; Konfirmasi Refund</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Logistik & Inventori -->
+                            <div class="node">
+                                <div class="box level-1">Logistik &amp; Inventori</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Penerimaan Barang (Batch, ED, SN, Retur, &amp; Barcode)</div></div>
+                                    <div class="node"><div class="box level-2">Konversi Satuan UOM &amp; Mutasi Stok Manual</div></div>
+                                    <div class="node"><div class="box level-2">Pelaksanaan Pencacahan Stok Opname</div></div>
+                                    <div class="node"><div class="box level-2">Buku Kartu Stok &amp; Monitoring Logistik Medis</div></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="figure-caption">Gambar 3.7 Sitemap Admin Toko (Back-Office &amp; Logistik)</div>
+        </div>
+
+
+        <!-- ============================================================ -->
+        <!-- 4. SITEMAP SUPERADMIN (PEMILIK / MANAJERIAL)                 -->
+        <!-- ============================================================ -->
+        <div class="sitemap-card" id="card-superadmin">
+            <div class="card-header">
+                <h2>4. Sitemap Superadmin (Pemilik / Manajerial)</h2>
+                <p>Memetakan otoritas penuh pemilik: analitik manajerial non-finansial, manajemen pengguna, kebijakan stok opname, pelaporan logistik, dan konfigurasi API.</p>
+            </div>
+            
+            <div class="diagram-viewport">
+                <div class="tree" id="tree-superadmin">
+                    <div class="node">
+                        <div class="box root">Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Superadmin)</div>
+                        <div class="children">
+                            
+                            <!-- Autentikasi -->
+                            <div class="node">
+                                <div class="box level-1">Autentikasi</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Login Superadmin</div></div>
+                                    <div class="node"><div class="box level-2">Logout</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Dashboard Manajerial Eksekutif -->
+                            <div class="node">
+                                <div class="box level-1">Dashboard Manajerial Eksekutif</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Analitik Penjualan (Volume POS &amp; Daring, Tren, Top 5)</div></div>
+                                    <div class="node"><div class="box level-2">Ringkasan Metrik Inventori &amp; Monitoring Logistik</div></div>
+                                    <div class="node"><div class="box level-2">Audit Aktivitas Pengadaan, Mutasi, &amp; Kartu Stok</div></div>
+                                    <div class="node"><div class="box level-2">Status Freeze Lock Sesi Stok Opname</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Manajemen Pengguna -->
+                            <div class="node">
+                                <div class="box level-1">Manajemen Pengguna</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Kelola Akun Staf (Admin &amp; Kasir)</div></div>
+                                    <div class="node"><div class="box level-2">Pengaturan Peran, Hak Akses, &amp; Reset Kata Sandi</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Otorisasi Master Data & Supervisi -->
+                            <div class="node">
+                                <div class="box level-1">Otorisasi Master Data &amp; Supervisi</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Penetapan Harga Jual, Multi-UOM, &amp; Import Excel</div></div>
+                                    <div class="node"><div class="box level-2">Tata Kelola Sesi Freeze Stok Opname &amp; Berita Acara</div></div>
+                                    <div class="node"><div class="box level-2">Supervisi Operasional Transaksi POS &amp; Daring</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Modul Pelaporan Kuantitas & Logistik -->
+                            <div class="node">
+                                <div class="box level-1">Modul Pelaporan Kuantitas &amp; Logistik</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Laporan Penjualan Omnichannel (POS vs Daring)</div></div>
+                                    <div class="node"><div class="box level-2">Laporan Persediaan &amp; Kartu Stok Fisik</div></div>
+                                    <div class="node"><div class="box level-2">Laporan Logistik Medis &amp; Audit Deviasi FEFO</div></div>
+                                    <div class="node"><div class="box level-2">Laporan Riwayat Penerimaan, Mutasi, &amp; Konversi UOM</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Pengaturan Sistem -->
+                            <div class="node">
+                                <div class="box level-1">Pengaturan Sistem</div>
+                                <div class="children">
+                                    <div class="node"><div class="box level-2">Konfigurasi API Payment Gateway &amp; Ekspedisi</div></div>
+                                    <div class="node"><div class="box level-2">Pengaturan Profil Usaha &amp; Banner Beranda</div></div>
+                                    <div class="node"><div class="box level-2">Pintasan Akses Toko E-Commerce Publik</div></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="figure-caption">Gambar 3.8 Sitemap Superadmin (Pemilik / Manajerial)</div>
+        </div>
+
+    </div>
+
+    <!-- Script to dynamically calculate exact vertical orthogonal connecting lines -->
+    <script>
+        function drawAllLines() {
+            document.querySelectorAll('.children').forEach((container, i) => {
+                const nodes = Array.from(container.children).filter(el => el.classList.contains('node'));
+                const uniqueClass = 'vert-line-' + i;
+                container.classList.add(uniqueClass);
+                
+                let style = document.getElementById('style-' + uniqueClass);
+                if (!style) {
+                    style = document.createElement('style');
+                    style.id = 'style-' + uniqueClass;
+                    document.head.appendChild(style);
+                }
+
+                if (nodes.length > 1) {
+                    const first = nodes[0];
+                    const last = nodes[nodes.length - 1];
+                    
+                    const topOffset = first.offsetTop + (first.offsetHeight / 2);
+                    const bottomOffset = last.offsetTop + (last.offsetHeight / 2);
+                    
+                    style.innerHTML = `
+                        .${uniqueClass}::after {
+                            display: block;
+                            top: ${topOffset}px;
+                            height: ${bottomOffset - topOffset}px;
+                        }
+                    `;
+                } else {
+                    style.innerHTML = `.${uniqueClass}::after { display: none; }`;
+                }
+            });
+        }
+        
+        window.addEventListener('load', drawAllLines);
+        window.addEventListener('resize', drawAllLines);
+        if (document.fonts) {
+            document.fonts.ready.then(drawAllLines);
+        }
+        setTimeout(drawAllLines, 50);
+        setTimeout(drawAllLines, 250);
+        setTimeout(drawAllLines, 600);
+    </script>
+</body>
+</html>

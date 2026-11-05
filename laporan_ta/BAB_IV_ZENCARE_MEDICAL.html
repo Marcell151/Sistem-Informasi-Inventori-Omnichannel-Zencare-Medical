@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naskah Bab IV - Hasil dan Pembahasan (ZenCare Medical)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Times+New+Roman&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .paper {
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.8;
+            font-size: 12pt;
+            background: white;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        .paper h1,
+        .paper h2,
+        .paper h3,
+        .paper h4,
+        .paper h5,
+        .paper h6 {
+            font-family: 'Times New Roman', Times, serif;
+            color: #000;
+        }
+
+        @media print {
+            body {
+                background: white;
+                color: black;
+                padding: 0;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .paper {
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+        }
+    </style>
+    <script>
+        function copyText(elementId, btnElement) {
+            const el = document.getElementById(elementId);
+            const text = el.innerText || el.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btnElement.innerHTML;
+                btnElement.innerHTML = `<svg class="w-4 h-4 inline mr-1 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Tersalin!`;
+                btnElement.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-300');
+                setTimeout(() => {
+                    btnElement.innerHTML = originalText;
+                    btnElement.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-emerald-300');
+                }, 2000);
+            }).catch(err => {
+                alert('Gagal menyalin: ' + err);
+            });
+        }
+    </script>
+</head>
+
+<body class="py-8 px-4 sm:px-6 lg:px-8">
+
+    <!-- Top Action Bar (No Print) -->
+    <div class="max-w-4xl mx-auto mb-6 no-print">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 mb-1">
+                    Naskah Laporan Terverifikasi Sistem
+                </span>
+                <h1 class="text-xl font-bold text-slate-800">BAB IV: Hasil dan Pembahasan</h1>
+                <p class="text-xs text-slate-500 mt-0.5">Sistem Informasi Inventori Omnichannel - ZenCare Medical (Subbab 4.1 s.d. 4.1.1.27 Implementasi Sistem)</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="BAB_III_ZENCARE_MEDICAL.html" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition border border-slate-300 flex items-center gap-1.5 font-sans">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Lihat Bab III
+                </a>
+                <button onclick="copyText('full_bab4_content', this)" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm font-sans">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                    Salin Semua Bab IV
+                </button>
+                <button onclick="window.print()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition border border-slate-300 flex items-center gap-1.5 font-sans">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Cetak / Simpan PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Academic Paper Container -->
+    <div id="full_bab4_content" class="paper max-w-4xl mx-auto p-8 sm:p-14 rounded-lg">
+        
+        <!-- Title of Chapter -->
+        <div class="text-center mb-10">
+            <h1 class="text-xl sm:text-2xl font-bold uppercase tracking-wide">BAB IV</h1>
+            <h2 class="text-lg sm:text-xl font-bold uppercase tracking-wide mt-1">HASIL DAN PEMBAHASAN</h2>
+        </div>
+
+        <!-- 4.1 Hasil -->
+        <div class="mt-8 mb-6">
+            <div class="flex items-center justify-between border-b pb-2">
+                <h3 class="text-sm font-bold font-serif text-slate-900">4.1 Hasil</h3>
+                <button onclick="copyText('subbab_41_content', this)" class="no-print px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-300 transition flex items-center gap-1 font-sans">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                    Salin Subbab 4.1
+                </button>
+            </div>
+            
+            <div id="subbab_41_content" class="mt-3">
+                <p class="text-xs font-serif text-slate-800 text-justify leading-relaxed indent-8 mb-4">
+                    Bab ini memaparkan hasil dari implementasi sistem informasi inventori dan penjualan omnichannel pada toko kesehatan ZenCare Medical yang telah dibangun berdasarkan analisis kebutuhan serta spesifikasi rancangan pada bab sebelumnya. Implementasi sistem ini mencakup perwujudan antarmuka pengguna sistem (user interface), pengoperasian alur transaksi kasir toko fisik (Point of Sale), pengelolaan persediaan obat dan alat kesehatan multi-satuan dengan kendali kedaluwarsa berbasis FEFO (First Expired, First Out), integrasi etalase toko daring (E-Commerce), hingga penyajian laporan eksekutif terpadu untuk mendukung transparansi operasional dan pengambilan keputusan bisnis.
+                </p>
+
+                <!-- 4.1.1 Implementasi Sistem -->
+                <div class="mt-6">
+                    <div class="flex items-center justify-between border-b pb-1 mb-3">
+                        <h4 class="text-xs font-bold font-serif text-slate-900 uppercase tracking-wide">4.1.1 Implementasi Sistem</h4>
+                        <button onclick="copyText('subbab_411_content', this)" class="no-print px-2.5 py-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 rounded border border-blue-200 transition flex items-center gap-1 font-sans font-medium">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            Salin Subbab 4.1.1
+                        </button>
+                    </div>
+
+                    <div id="subbab_411_content">
+                        <p class="text-xs font-serif text-slate-800 text-justify leading-relaxed indent-8 mb-4">
+                            Implementasi sistem merupakan tahap perwujudan dari rancangan logika basis data, alur aktivitas kerja, dan aturan bisnis yang telah dirumuskan sebelumnya ke dalam bentuk modul-modul fungsional perangkat lunak yang beroperasi secara utuh. Setiap modul dirancang untuk saling terhubung dalam satu arsitektur terintegrasi, memastikan pergerakan stok barang, mutasi transaksi penjualan, dan pencatatan logistik tercatat secara akurat ke dalam basis data. Perwujudan fungsional sistem ini dibuktikan melalui pengoperasian antarmuka pengguna. Rincian implementasi pada masing-masing fungsi sistem diuraikan sebagai berikut:
+                        </p>
+    
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.1 Halaman Login Staf
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/01_Login_Staf.png" alt="Tampilan Antarmuka Halaman Login Staf" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.1 Tampilan Antarmuka Halaman Login Staf
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Halaman autentikasi utama bagi seluruh staf internal toko kesehatan ZenCare Medical yang mencakup tiga peran utama, yaitu Superadmin, Admin, dan Kasir. Antarmuka ini mengimplementasikan sistem keamanan sesi terpusat dengan formulir masukan nama pengguna (username) dan kata sandi (password), identitas visual resmi ZenCare Medical, serta indikator verifikasi kredensial. Pada sisi backend, sistem memvalidasi data masukan terhadap tabel users menggunakan algoritma pencocokan kata sandi terenkripsi hash yang aman. Berdasarkan nilai atribut peran (role), sistem secara otomatis mengarahkan alur kerja ke antarmuka yang tepat: staf dengan peran Kasir langsung diarahkan secara otomatis menuju Terminal Kasir guna mempercepat transaksi penjualan di toko fisik, staf dengan peran Admin diarahkan ke dashboard operasional toko dan logistik gudang, sedangkan peran Superadmin diarahkan ke dashboard eksekutif dan konfigurasi manajerial. Sistem juga memproteksi gerbang ini dari akses pihak luar, apabila akun Pelanggan mencoba masuk melalui formulir staf ini, sistem menolak autentikasi dan menginstruksikan pengguna untuk masuk melalui portal khusus pelanggan.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.2 Dashboard Operasional Admin
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/02_Dashboard_Admin.png" alt="Tampilan Antarmuka Halaman Dashboard Admin" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.2 Tampilan Antarmuka Halaman Dashboard Admin
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Pusat kendali operasional harian bagi staf Admin yang menyajikan ringkasan indikator kinerja toko fisik secara langsung. Antarmuka ini memuat kartu metrik ringkas yang menampilkan jumlah total produk aktif, total transaksi penjualan hari ini, peringatan jumlah persediaan barang yang menipis di bawah ambang batas minimum, serta notifikasi khusus bagi stok yang mendekati masa kedaluwarsa. Terdapat tombol akses cepat menuju terminal kasir (Point of Sale) dan formulir penerimaan barang masuk. Selain itu, antarmuka menyediakan diagram tren transaksi mingguan serta tabel rekapitulasi pesanan terbaru yang memerlukan tindak lanjut cepat. Seluruh data metrik dihimpun secara dinamis dari tabel penjualan, produk_variasi, dan stok_batch.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.3 Terminal Kasir (Point of Sale / POS)
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/03_POS_Kasir.png" alt="Tampilan Antarmuka Halaman Terminal Kasir (Point of Sale / POS)" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.3 Tampilan Antarmuka Halaman Terminal Kasir (Point of Sale / POS)
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Terminal kasir penjualan langsung di toko fisik yang dioperasikan oleh staf Kasir dengan tata letak dua panel terpadu guna mempercepat alur transaksi. Panel sebelah kiri menyajikan bilah pencarian obat dan alat kesehatan berbasis nama maupun pemindaian kode batang (barcode), penyaring kategori medis, serta susunan kartu produk interaktif yang memuat informasi harga satuan eceran dan sisa stok fisik siap jual. Panel sebelah kanan berfungsi sebagai lembar kerja kasir yang memuat daftar keranjang belanja, kalkulasi otomatis subtotal belanja, pilihan metode pembayaran tunai maupun non-tunai, perhitungan nominal uang kembali, serta tombol penyelesaian transaksi. Saat pembayaran disahkan, sistem menjalankan algoritma pengeluaran stok berbasis tanggal kedaluwarsa terdekat (FEFO) secara otomatis melalui alokasi pada tabel pesanan_batch_alokasi, mencatat nomor seri unit alat kesehatan pada unit_serial (jika barang bernomor seri), serta memperbarui buku mutasi kartu_stok secara seketika.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.4 Pengelolaan Transaksi Penjualan Omnichannel
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/04_Transaksi_Omnichannel.png" alt="Tampilan Antarmuka Halaman Transaksi Penjualan Omnichannel" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.4 Tampilan Antarmuka Halaman Transaksi Penjualan Omnichannel
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Pusat kendali rekaman transaksi penjualan yang menyatukan seluruh riwayat pesanan dari saluran kasir toko fisik (POS) maupun saluran pesanan toko daring (E-Commerce). Antarmuka dilengkapi navigasi penyaring saluran penjualan, penyaring status pemrosesan (menunggu pembayaran, diproses, dikirim, selesai, dan dibatalkan), pencarian berdasarkan nomor faktur atau nama pemesan, serta visualisasi lencana status transaksi yang informatif. Staf Admin dapat melihat rincian barang yang dipesan, memperbarui status pengiriman dengan memasukkan nomor resi ekspedisi atau mengonfirmasi pengambilan langsung di toko fisik (in-store pickup), serta mencetak lembar nota resmi. Modul ini beroperasi langsung di atas tabel penjualan dan detail_penjualan.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.5 Pengelolaan Master Produk
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/05_Master_Produk.png" alt="Tampilan Antarmuka Halaman Master Produk dan Katalog Medis" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.5 Tampilan Antarmuka Halaman Master Produk dan Katalog Medis
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Modul pengelolaan katalog dasar induk untuk seluruh komoditas obat dan alat kesehatan yang diperjualbelikan. Menampilkan tabel direktori produk yang memuat foto barang, kode unik produk (SKU Induk), nama produk medis, pengelompokan kategori kesehatan, deskripsi spesifikasi teknis atau indikasi medis, batasan jumlah hari peringatan kedaluwarsa, dan status ketersediaan publikasi. Tersedia tombol aksi untuk menambah entitas produk baru melalui jendela formulir modal pop-up yang telah disterilkan dari gangguan visual, mengubah data barang, maupun menonaktifkan produk. Data pada antarmuka ini terpusat pada tabel produk_induk dan menjadi rujukan utama bagi penetapan variasi kemasan.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.6 Konfigurasi Satuan dan Multi-UOM
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/06_Satuan_UOM.png" alt="Tampilan Antarmuka Halaman Pengaturan Satuan dan Multi-UOM" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.6 Tampilan Antarmuka Halaman Pengaturan Satuan dan Multi-UOM
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Modul konfigurasi struktur multi-satuan (Unit of Measure / Multi-UOM) yang menghubungkan satuan kemasan grosir (seperti dus atau boks) dengan satuan eceran terkecil (seperti strip, botol, tablet, atau saset). Antarmuka ini menampilkan daftar variasi produk beserta rasio konversi matematisnya, penetapan harga jual yang berbeda antara transaksi kasir toko fisik dan penjualan daring, batas kuantitas minimum untuk memicu peringatan stok menipis, serta opsi aktivasi pelacakan nomor seri unik untuk alat kesehatan bernilai tinggi. Struktur data yang dikonfigurasi pada halaman ini tersimpan dalam tabel produk_variasi untuk menjaga ketepatan kalkulasi stok lintas kemasan.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.7 Master Data Supplier
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/07_Direktori_Supplier.png" alt="Tampilan Antarmuka Halaman Direktori Supplier" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.7 Tampilan Antarmuka Halaman Direktori Supplier
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Panel administrasi direktori master data distributor dan pemasok resmi rekanan toko kesehatan ZenCare Medical. Antarmuka menyajikan tabel terstruktur yang memuat nama instansi distributor, narahubung perwakilan penjualan, nomor sambungan telepon, alamat surel korespondensi, alamat lengkap kantor atau pergudangan pemasok, serta status keaktifan kemitraan. Fitur pencarian cepat dan formulir tambah/sunting data memudahkan staf pengadaan dalam memelihara kebaruan informasi pemasok, yang berfungsi sebagai rujukan wajib pada saat penerimaan pasokan barang pada tabel supplier.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.8 Penerimaan Barang Masuk
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/08_Penerimaan_Barang.png" alt="Tampilan Antarmuka Halaman Penerimaan Barang Masuk (Inbound)" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.8 Tampilan Antarmuka Halaman Penerimaan Barang Masuk (Inbound)
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Modul pendataan logistik masuk (inbound) yang mencatat pasokan kiriman persediaan obat dan alat kesehatan dari distributor ke gudang toko fisik ZenCare Medical. Formulir penerimaan mewajibkan penginputan nomor referensi dokumen pengiriman (surat jalan atau faktur distributor), pemilihan mitra distributor, tanggal fisik penerimaan, berkas nota, serta baris daftar barang dinamis. Untuk setiap item yang diterima, staf mencatat nomor batch pabrik, tanggal jatuh tempo kedaluwarsa resmi, kuantitas unit, dan harga beli satuan. Ketika berkas penerimaan disahkan, sistem secara otomatis menambah saldo fisik pada tabel stok_batch dan stok_toko, mencatat riwayat mutasi masuk pada kartu_stok, serta membukukan dokumen penerimaan pada tabel penerimaan_stok dan penerimaan_detail.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.9 Mutasi Stok
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/09_Mutasi_Stok.png" alt="Tampilan Antarmuka Halaman Mutasi Stok Manual" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.9 Tampilan Antarmuka Halaman Mutasi Stok Manual
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Modul penyesuaian kuantitas persediaan fisik di luar siklus transaksi reguler penjualan maupun penerimaan distributor. Antarmuka menyediakan formulir penyesuaian yang memuat pemilihan variasi produk, pemilihan nomor batch spesifik, jenis pergerakan (penambahan stok atau pengurangan stok), jumlah unit yang disesuaikan, serta kolom alasan mutasi (misalnya barang rusak, kemasan bocor, retur internal, atau penyesuaian selisih administratif). Pada panel sisi kanan, sistem menampilkan tabel riwayat mutasi manual terdahulu yang memuat keterangan waktu, jumlah, dan nama staf pelaksana, yang tercatat secara permanen pada tabel kartu_stok.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.10 Kartu Stok
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/10_Kartu_Stok.png" alt="Tampilan Antarmuka Halaman Kartu Stok Audit" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.10 Tampilan Antarmuka Halaman Kartu Stok Audit
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Halaman pemantauan buku besar mutasi persediaan (inventory ledger) yang merekam jejak audit kronologis setiap komoditas medis. Menampilkan tabel catatan pergerakan barang yang mencakup stempel waktu kejadian, nomor dokumen referensi transaksi, saluran aktivitas terkait, jenis aksi mutasi, nomor batch produk, kuantitas barang masuk, kuantitas barang keluar, dan sisa saldo stok akhir yang terverifikasi. Dilengkapi dengan penyaring pilihan produk variasi dan rentang waktu pengamatan, modul ini menjadi rujukan utama bagi auditor internal untuk menelusuri keabsahan saldo fisik pada tabel kartu_stok.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.11 Stok Opname
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/11_Stok_Opname.png" alt="Tampilan Antarmuka Halaman Stok Opname dan Audit Fisik" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.11 Tampilan Antarmuka Halaman Stok Opname dan Audit Fisik
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Modul pelaksanaan kegiatan audit fisik persediaan (stok opname) berkala untuk membandingkan kuantitas persediaan di rak dengan saldo pembukuan sistem. Menampilkan daftar sesi audit yang sedang berlangsung maupun yang telah dibukukan, fasilitas inisiasi sesi opname baru oleh staf berwenang, formulir pencatatan hitung fisik per batch dan nomor seri, serta kalkulasi otomatis terhadap selisih jumlah barang (discrepancy). Apabila hasil verifikasi fisik disetujui, sistem melakukan penyesuaian saldo secara serentak ke dalam tabel stok_batch, sesi_opname, detail_opname_batch, dan riwayat_hitung_opname.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.12 Konversi Satuan dan Pemecahan Kemasan
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/12_Konversi_Satuan.png" alt="Tampilan Antarmuka Halaman Konversi Satuan dan Pemecahan Kemasan" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.12 Tampilan Antarmuka Halaman Konversi Satuan dan Pemecahan Kemasan
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Modul pemrosesan pemecahan kemasan besar menjadi kemasan satuan eceran siap jual (seperti membuka 1 dus menjadi sejumlah botol atau strip). Staf memilih produk variasi, menentukan nomor batch asal yang akan dipecah, dan menginput jumlah kemasan besar yang dibuka. Sistem secara otomatis menghitung jumlah kuantitas eceran yang dihasilkan berdasarkan rasio konversi yang telah ditetapkan, mengurangi saldo kemasan dus pada tabel stok_batch, menambah kuantitas eceran pada batch yang sama, membukukan catatan riwayat pada histori_konversi, serta memperbarui entri mutasi pada kartu_stok sehingga total nilai persediaan tetap seimbang dan teratur.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.13 Dashboard Eksekutif
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/13_Dashboard_Superadmin.png" alt="Tampilan Antarmuka Halaman Dashboard Superadmin" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.13 Tampilan Antarmuka Halaman Dashboard Superadmin
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Pusat pantauan eksekutif bagi pimpinan toko kesehatan ZenCare Medical yang merangkum kesehatan finansial dan operasional usaha. Menampilkan ringkasan metrik strategis berupa total omzet pendapatan kotor, estimasi laba bersih, total valuasi nilai aset barang di gudang, serta proporsi kontribusi penjualan saluran toko fisik dibandingkan toko daring. Antarmuka menyajikan grafik visual tren performa penjualan antarwaktu serta indikator peringatan potensi anomali pengeluaran barang. Informasi tingkat tinggi ini dihitung secara otomatis melalui agregasi tabel penjualan, detail_penjualan, stok_batch, dan log_anomali_fefo.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.14 Laporan Penjualan Omnichannel
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/14_Laporan_Penjualan.png" alt="Tampilan Antarmuka Halaman Laporan Penjualan Barang" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.14 Tampilan Antarmuka Halaman Laporan Penjualan Barang
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Modul rekapitulasi data penjualan komprehensif yang dirancang untuk analisis pendapatan periodik. Pengguna manajerial dapat memfilter data berdasarkan interval tanggal transaksi dan memilah saluran penjualan tertentu (kasir POS atau toko daring). Tabel laporan menyajikan perincian faktur mencakup tanggal transaksi, nomor invoice, nama pembeli atau pelanggan, saluran pembelian, metode pembayaran yang digunakan, total belanja barang, biaya pengiriman, serta status akhir faktur. Halaman dilengkapi tombol ekspor data dan cetak laporan resmi untuk keperluan rekapitulasi kas dan pembukuan keuangan toko.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.15 Laporan Persediaan
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/15_Laporan_Persediaan.png" alt="Tampilan Antarmuka Halaman Laporan Persediaan dan Valuasi Aset" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.15 Tampilan Antarmuka Halaman Laporan Persediaan dan Valuasi Aset
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Modul laporan analitis yang menyajikan nilai modal kerja dan tingkat ketersediaan seluruh persediaan komoditas medis. Antarmuka merinci data per variasi produk yang mencakup jumlah kuantitas fisik yang tersedia di rak dan gudang, harga beli rata-rata, harga jual eceran, estimasi total valuasi aset barang, serta status persediaan (kategori aman, menipis, atau habis). Laporan ini bersumber dari kalkulasi langsung data tabel stok_batch dan produk_variasi, memberikan kepastian kepada manajemen mengenai perputaran modal barang dan efisiensi pengadaan persediaan.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.16 Laporan Logistik Medis
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/16_Laporan_Logistik_Medis.png" alt="Tampilan Antarmuka Halaman Laporan Logistik Medis (Kedaluwarsa)" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.16 Tampilan Antarmuka Halaman Laporan Logistik Medis (Kedaluwarsa)
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Modul pengawasan kelayakan dan keselamatan produk obat serta komoditas medis berdasarkan batas tanggal kedaluwarsa pabrikan. Antarmuka mengelompokkan barang ke dalam tiga tingkat kewaspadaan visual: persediaan dalam kondisi aman, persediaan yang memasuki masa kritis (misalnya kurang dari 30 atau 90 hari sebelum kedaluwarsa), dan persediaan yang telah melewati masa berlaku. Informasi ini memandu pihak manajemen untuk mengambil langkah strategis yang cepat, seperti pelaksanaan diskon khusus (clearance) maupun pemisahan barang retur ke distributor, merujuk data pada tabel stok_batch dan produk_induk.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.17 Laporan Penerimaan Barang Masuk
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/17_Laporan_Penerimaan_Barang.png" alt="Tampilan Antarmuka Halaman Laporan Penerimaan Barang Masuk" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.17 Tampilan Antarmuka Halaman Laporan Penerimaan Barang Masuk
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Modul pelaporan audit logistik masuk (inbound) yang merekapitulasi seluruh pasokan barang yang telah diterima dari distributor. Menampilkan tabel komprehensif yang memuat nomor tanda terima penerimaan, nama instansi distributor pengirim, tanggal kedatangan barang di gudang toko fisik ZenCare Medical, nama staf yang menerima, rincian produk variasi, nomor batch kiriman, tanggal kedaluwarsa resmi, kuantitas pasokan yang diterima, serta total nilai nominal pembelian. Dilengkapi fitur pencarian dan penyaring tanggal, laporan ini memudahkan proses pencocokan faktur tagihan dari distributor dengan pencatatan fisik pada tabel penerimaan_stok dan penerimaan_detail.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.18 Laporan Mutasi dan Konversi Satuan
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/18_Laporan_Mutasi_Konversi.png" alt="Tampilan Antarmuka Halaman Laporan Mutasi dan Konversi Satuan" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.18 Tampilan Antarmuka Halaman Laporan Mutasi dan Konversi Satuan
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Modul rekapitulasi audit pergerakan persediaan non-penjualan yang menyatukan catatan mutasi manual (seperti barang rusak atau koreksi) dan riwayat proses konversi pemecahan satuan (pecah kemasan dus menjadi eceran). Laporan menyajikan stempel waktu kegiatan, nomor referensi dokumen bukti, nama produk variasi medis, nomor batch terkait, kuantitas asal serta kuantitas hasil konversi, penjelasan alasan perubahan, dan identitas staf operasional yang melakukan tindakan. Data ditarik secara konsolidatif dari tabel histori_konversi dan kartu_stok guna menjamin ketertiban tata kelola pergudangan.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.19 Laporan Audit Anomali Pengeluaran FEFO
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/17_Laporan_Anomali_FEFO.png" alt="Tampilan Antarmuka Halaman Laporan Audit Anomali Pengeluaran FEFO" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.19 Tampilan Antarmuka Halaman Laporan Audit Anomali Pengeluaran FEFO
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Panel audit kepatuhan protokol logistik medis yang memantau setiap kejadian penyimpangan dalam pengeluaran barang di kasir maupun gudang. Apabila terjadi pengeluaran batch produk yang masa kedaluwarsanya lebih panjang mendahului batch produk yang masa kedaluwarsanya lebih dekat, sistem mendeteksi insiden tersebut secara otomatis sebagai indikasi anomali. Halaman ini menyajikan tabel audit yang memuat tanggal kejadian, nomor faktur penjualan, nomor batch yang terambil, nomor batch yang semestinya dikeluarkan menurut aturan baku FEFO, jumlah kuantitas barang, serta status verifikasi penanganan pada tabel log_anomali_fefo guna mempertahankan standar mutu pengelolaan obat.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.20 Manajemen Pengguna Sistem
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/18_Manajemen_Pengguna.png" alt="Tampilan Antarmuka Halaman Manajemen Pengguna Sistem" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.20 Tampilan Antarmuka Halaman Manajemen Pengguna Sistem
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Modul tata kelola akun pengguna sistem yang hanya dapat diakses oleh peran Superadmin untuk menjaga integritas otorisasi. Menampilkan tabel master akun pengguna yang memuat identitas nama lengkap, nama pengguna (username), alamat surel, nomor telepon kontak, penugasan hak akses peran (Superadmin, Admin, Kasir, atau Pelanggan), status akun (aktif atau nonaktif), serta waktu pendaftaran. Melalui antarmuka ini, Superadmin dapat mendaftarkan akun staf baru, memperbarui peran kerja, melakukan reset kata sandi, atau menonaktifkan akun yang sudah tidak memiliki wewenang pada tabel users.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.21 Pengaturan Toko Daring
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/19_Pengaturan_Web.png" alt="Tampilan Antarmuka Halaman Pengaturan Toko Daring (Pengaturan Web)" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.21 Tampilan Antarmuka Halaman Pengaturan Toko Daring (Pengaturan Web)
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Modul administrasi konfigurasi profil usaha dan aset informasi publik toko daring ZenCare Medical. Antarmuka ini memfasilitasi Superadmin dalam memperbarui nama resmi bisnis toko, deskripsi profil usaha, alamat operasional gerai dan kantor fisik ZenCare Medical, nomor kontak pelayanan pelanggan (CS), integrasi nomor WhatsApp resmi, berkas gambar logo identitas toko, serta gambar spanduk promosi yang dipajang di halaman muka situs. Seluruh konfigurasi ini disimpan secara terpusat pada tabel pengaturan_web sehingga pembaruan data langsung tercermin secara seragam pada seluruh antarmuka pelanggan.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.22 Pendaftaran dan Masuk Akun Pelanggan
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/20_Login_Pelanggan.png" alt="Tampilan Antarmuka Halaman Masuk dan Pendaftaran Pelanggan" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.22 Tampilan Antarmuka Halaman Masuk dan Pendaftaran Pelanggan
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Gerbang akses bagi masyarakat dan pelanggan toko daring ZenCare Medical yang menyatukan formulir masuk (login) dan formulir pendaftaran akun baru (register) dalam tampilan visual yang bersih dan ramah pengguna. Pengguna baru dapat mengisi data diri mencakup nama lengkap, alamat email, nomor telepon, alamat rumah domisili, nama akun, dan kata sandi rahasia. Setelah formulir diverifikasi, data pengguna direkam ke tabel users dengan peran otomatis sebagai 'pelanggan' dan pengguna langsung dapat melakukan transaksi belanja kebutuhan kesehatan.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.23 Profil dan Pemantauan Pesanan Pelanggan
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/21_Profil_Pelanggan.png" alt="Tampilan Antarmuka Halaman Profil dan Riwayat Pesanan Pelanggan" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.23 Tampilan Antarmuka Halaman Profil dan Riwayat Pesanan Pelanggan
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Halaman panel kendali pribadi pelanggan yang menampilkan profil pengguna terdaftar, alamat tujuan pengiriman barang, nomor kontak aktif, serta daftar rekapitulasi riwayat transaksi belanja yang pernah dilakukan. Pelanggan dapat memantau status pemrosesan pesanan secara langsung (menunggu verifikasi pembayaran, pesanan sedang disiapkan staf, barang dalam proses pengantaran kurir dengan tautan lacak resi, atau pesanan siap diambil di gerai toko fisik ZenCare Medical), lengkap dengan rincian bukti transaksi dari tabel penjualan dan detail_penjualan.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.24 Beranda Toko Daring (E-Commerce)
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/22_Beranda_Ecommerce.png" alt="Tampilan Antarmuka Halaman Beranda Toko Daring (E-Commerce)" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.24 Tampilan Antarmuka Halaman Beranda Toko Daring (E-Commerce)
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Halaman muka etalase digital toko daring ZenCare Medical yang menyambut pengunjung dengan susunan visual yang tertata rapi. Menampilkan spanduk promosi utama di bagian atas layar, bilah pencarian obat dan alat kesehatan yang responsif, navigasi filter kategori produk medis, serta susunan katalog produk unggulan dalam format kotak (grid) interaktif. Setiap kartu produk menyajikan gambar komoditas, nama produk, kategori, kepastian ketersediaan stok fisik, harga ritel resmi, serta tombol aksi untuk melihat informasi detail atau langsung menambahkan barang ke keranjang belanja.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.25 Rincian Informasi Produk (Detail Produk)
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/23_Detail_Produk.png" alt="Tampilan Antarmuka Halaman Rincian Informasi Produk (Detail Produk)" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.25 Tampilan Antarmuka Halaman Rincian Informasi Produk (Detail Produk)
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Halaman rincian spesifikasi barang medis yang dipilih oleh pelanggan untuk memberikan transparansi informasi sebelum membeli. Menampilkan foto komoditas resolusi tinggi, nama produk obat atau alat kesehatan, kepastian status ketersediaan stok fisik terkini di gerai toko fisik ZenCare Medical, pilihan jenis kemasan variasi (seperti strip, botol, atau boks) dengan harga masing-masing, penjelasan indikasi atau manfaat medis, petunjuk penyimpanan barang, pengatur jumlah pembelian, serta tombol aksi untuk memasukkan barang ke keranjang belanja maupun checkout instan.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.26 Panel Keranjang Belanja
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/24_Keranjang_Belanja.png" alt="Tampilan Antarmuka Halaman Panel Keranjang Belanja Interaktif" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.26 Tampilan Antarmuka Halaman Panel Keranjang Belanja Interaktif
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Antarmuka laci keranjang belanja melayang (slide-out drawer) yang muncul dari sisi kanan layar ketika pelanggan memilih produk, sehingga pelanggan dapat meninjau belanjaannya tanpa perlu meninggalkan halaman katalog yang sedang dibuka. Menampilkan daftar item obat dan alkes yang dipilih, pengatur jumlah kuantitas pembelian (+/-), tombol penghapusan barang, penghitungan subtotal nilai belanjaan secara dinamis, serta tombol navigasi langsung menuju tahapan pengisian alamat dan pembayaran.
+                            </p>
+                        </div>
+        
+
+                        <div class="mt-5 mb-2">
+                            <h5 class="text-xs font-bold font-serif text-slate-900">
+                                4.1.1.27 Pembayaran dan Pengiriman Pesanan (Checkout)
+                            </h5>
+                        </div>
+
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/25_Checkout_Pembayaran.png" alt="Tampilan Antarmuka Halaman Pembayaran dan Pengiriman (Checkout)" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.27 Tampilan Antarmuka Halaman Pembayaran dan Pengiriman (Checkout)
+                            </p>
+                            <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
+                                Halaman tahap akhir transaksi daring pelanggan yang memadukan formulir data penerima barang, pilihan metode penyerahan pesanan (diantar oleh kurir ekspedisi ke alamat tujuan atau diambil langsung secara mandiri di gerai fisik ZenCare Medical / in-store pickup), penentuan titik lokasi koordinat pengiriman yang akurat menggunakan penanda peta digital interaktif, kalkulasi otomatis tarif ongkos kirim berdasarkan kota tujuan, ringkasan rincian tagihan belanja, serta tombol pembayaran aman yang terhubung langsung dengan penyedia gerbang pembayaran digital. Saat transaksi dikonfirmasi, sistem secara otomatis membukukan pesanan baru ke dalam tabel penjualan dan detail_penjualan.
+                            </p>
+                        </div>
+        
+
+                    </div> <!-- Closes subbab_411_content -->
+                </div> <!-- Closes 4.1.1 -->
+            </div> <!-- Closes subbab_41_content -->
+        </div> <!-- Closes 4.1 -->
+    
+    </div>
+
+    <!-- Bottom Notification (No Print) -->
+    <div class="max-w-4xl mx-auto mt-6 text-center text-xs text-slate-500 no-print">
+        Dokumen Laporan Tugas Akhir &bull; Marcell Chandra (322310015) &bull; Sistem Informasi Inventori Omnichannel ZenCare Medical
+    </div>
+
+</body>
+</html>

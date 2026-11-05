@@ -397,6 +397,45 @@ if ($userRole === "superadmin") {
     $stmtListAnomaliKasir->execute([$kasirUserId]);
     $listAnomaliKasir = $stmtListAnomaliKasir->fetchAll();
 }
+
+// ==========================================
+// Query Riwayat Transaksi Kasir Hari Ini (Read-Only & Cetak Ulang Struk)
+// ==========================================
+if ($userRole === "superadmin") {
+    $stmtRiwayatKasir = $pdo->query("
+        SELECT p.id, p.no_invoice, p.total_harga, p.metode_bayar_pos, p.created_at, u.nama_lengkap AS nama_kasir,
+               (SELECT COUNT(*) FROM detail_penjualan WHERE id_penjualan = p.id) AS total_item
+        FROM penjualan p
+        LEFT JOIN users u ON p.id_user = u.id
+        WHERE p.tipe_transaksi = 'pos' AND DATE(p.created_at) = CURDATE()
+        ORDER BY p.id DESC
+    ");
+} else {
+    $stmtRiwayatKasir = $pdo->prepare("
+        SELECT p.id, p.no_invoice, p.total_harga, p.metode_bayar_pos, p.created_at, u.nama_lengkap AS nama_kasir,
+               (SELECT COUNT(*) FROM detail_penjualan WHERE id_penjualan = p.id) AS total_item
+        FROM penjualan p
+        LEFT JOIN users u ON p.id_user = u.id
+        WHERE p.tipe_transaksi = 'pos' AND DATE(p.created_at) = CURDATE() AND p.id_user = ?
+        ORDER BY p.id DESC
+    ");
+    $stmtRiwayatKasir->execute([$kasirUserId]);
+}
+$riwayatKasirHariIni = $stmtRiwayatKasir->fetchAll(PDO::FETCH_ASSOC);
+
+$totalTrxKasir = count($riwayatKasirHariIni);
+$omzetKasirHariIni = 0;
+$omzetTunaiKasir = 0;
+$omzetNonTunaiKasir = 0;
+
+foreach ($riwayatKasirHariIni as $rTrx) {
+    $omzetKasirHariIni += (float)$rTrx['total_harga'];
+    if (strtolower($rTrx['metode_bayar_pos'] ?? '') === 'tunai') {
+        $omzetTunaiKasir += (float)$rTrx['total_harga'];
+    } else {
+        $omzetNonTunaiKasir += (float)$rTrx['total_harga'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -504,6 +543,10 @@ if ($userRole === "superadmin") {
                 </div>
             </div>
             <div class="flex items-center gap-2 self-start sm:self-auto">
+                <button type="button" onclick="openRiwayatModal()" class="text-xs font-bold bg-[#eef6fb] hover:bg-[#dbeafe] text-[#0f2d5a] border border-[#cde3f5] px-3.5 py-2 rounded transition flex items-center gap-1.5" title="Buka riwayat transaksi kasir hari ini dan cetak ulang struk">
+                    <svg class="w-3.5 h-3.5 text-[#1a75d2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Riwayat Hari Ini (<?= $totalTrxKasir ?>)</span>
+                </button>
                 <a href="../index.php" class="text-xs font-bold bg-white hover:bg-slate-50 text-[#0f2d5a] border border-slate-300 px-3.5 py-2 rounded transition flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                     Dashboard Utama
@@ -1052,6 +1095,120 @@ if ($userRole === "superadmin") {
                 <span class="text-[11px] text-slate-500">Otomatis berbunyi bip saat barcode terbaca.</span>
                 <button type="button" onclick="closeCameraScannerModal()" class="px-4 py-2 rounded text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 transition">
                     Tutup Scanner
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Riwayat Transaksi Kasir Hari Ini (Read-Only & Reprint Struk) -->
+    <div id="riwayat_modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-3xl rounded-lg shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0 duration-200 border border-slate-200 flex flex-col max-h-[90vh]" id="riwayat_modal_content">
+            <!-- Modal Header -->
+            <div class="bg-[#0f2d5a] px-6 py-4 flex items-center justify-between text-white shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded bg-white/10 flex items-center justify-center text-sky-300">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white leading-tight">Riwayat Transaksi Kasir Hari Ini</h3>
+                        <p class="text-[11px] text-slate-300">Daftar transaksi POS luring &bull; <?= date('d M Y') ?></p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeRiwayatModal()" class="text-slate-300 hover:text-white transition p-1">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+
+            <!-- Ringkasan Rekap Kasir Shift Hari Ini -->
+            <div class="p-5 border-b border-slate-200 bg-[#f8fafc] shrink-0">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+                    <div class="bg-white p-3 rounded border border-slate-200 shadow-2xs">
+                        <span class="text-[11px] text-slate-500 font-medium block">Total Transaksi Selesai</span>
+                        <strong class="text-base font-bold text-[#0f2d5a]"><?= $totalTrxKasir ?> Transaksi</strong>
+                    </div>
+                    <div class="bg-white p-3 rounded border border-slate-200 shadow-2xs">
+                        <span class="text-[11px] text-slate-500 font-medium block">Total Omzet Kasir Hari Ini</span>
+                        <strong class="text-base font-bold text-emerald-600">Rp <?= number_format($omzetKasirHariIni, 0, ',', '.') ?></strong>
+                    </div>
+                    <div class="bg-white p-3 rounded border border-slate-200 shadow-2xs">
+                        <span class="text-[11px] text-slate-500 font-medium block">Rincian Pembayaran</span>
+                        <div class="text-xs font-semibold text-slate-700 mt-0.5">
+                            <span class="text-sky-700">Tunai: Rp <?= number_format($omzetTunaiKasir, 0, ',', '.') ?></span>
+                            <span class="text-slate-300 mx-1">|</span>
+                            <span class="text-purple-700">QRIS: Rp <?= number_format($omzetNonTunaiKasir, 0, ',', '.') ?></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabel Riwayat Transaksi Kasir (Scrollable) -->
+            <div class="p-5 overflow-y-auto flex-1">
+                <?php if (empty($riwayatKasirHariIni)): ?>
+                    <div class="text-center py-10 bg-slate-50 rounded border border-dashed border-slate-200">
+                        <svg class="w-10 h-10 text-slate-300 mx-auto mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <p class="text-xs font-bold text-slate-600">Belum ada transaksi POS yang diselesaikan hari ini.</p>
+                        <p class="text-[11px] text-slate-400 mt-1">Transaksi yang Anda proses akan otomatis muncul di sini dan dapat dicetak ulang sewaktu-waktu.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="overflow-x-auto border border-slate-200 rounded">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100 text-[#0f2d5a] font-bold border-b border-slate-200">
+                                <tr>
+                                    <th class="py-2.5 px-3">Waktu</th>
+                                    <th class="py-2.5 px-3">No. Invoice</th>
+                                    <th class="py-2.5 px-3 text-center">Jumlah Item</th>
+                                    <th class="py-2.5 px-3">Metode Bayar</th>
+                                    <th class="py-2.5 px-3 text-right">Total Bayar</th>
+                                    <th class="py-2.5 px-3 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 font-sans">
+                                <?php foreach ($riwayatKasirHariIni as $trx): ?>
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="py-2.5 px-3 text-slate-500 font-mono text-[11px]">
+                                        <?= date('H:i', strtotime($trx['created_at'])) ?> WIB
+                                    </td>
+                                    <td class="py-2.5 px-3 font-mono font-bold text-[#0f2d5a]">
+                                        <?= htmlspecialchars($trx['no_invoice']) ?>
+                                    </td>
+                                    <td class="py-2.5 px-3 text-center text-slate-600">
+                                        <?= $trx['total_item'] ?> produk
+                                    </td>
+                                    <td class="py-2.5 px-3">
+                                        <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold <?= strtolower($trx['metode_bayar_pos'] ?? '') === 'tunai' ? 'bg-sky-50 text-sky-800 border border-sky-200' : 'bg-purple-50 text-purple-800 border border-purple-200' ?>">
+                                            <?= htmlspecialchars($trx['metode_bayar_pos'] ?? 'Tunai') ?>
+                                        </span>
+                                    </td>
+                                    <td class="py-2.5 px-3 text-right font-bold text-[#0f2d5a]">
+                                        Rp <?= number_format($trx['total_harga'], 0, ',', '.') ?>
+                                    </td>
+                                    <td class="py-2.5 px-3 text-center">
+                                        <a href="cetak_invoice.php?no_invoice=<?= urlencode($trx['no_invoice']) ?>" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-white hover:bg-slate-100 text-[#0f2d5a] border border-slate-300 font-bold text-[11px] transition shadow-2xs" title="Cetak ulang struk nota belanja">
+                                            <svg class="w-3.5 h-3.5 text-[#1a75d2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                                <rect x="6" y="14" width="12" height="8"></rect>
+                                            </svg>
+                                            <span>Cetak Ulang</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-slate-200 bg-[#f8fafc] flex flex-col sm:flex-row justify-between items-center gap-2 shrink-0">
+                <span class="text-[11px] text-slate-500 italic">*Data riwayat kasir bersifat read-only. Pembatalan transaksi atau retur uang harus melalui wewenang Admin/Superadmin.</span>
+                <button type="button" onclick="closeRiwayatModal()" class="px-4 py-2 rounded text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 transition">
+                    Tutup Riwayat
                 </button>
             </div>
         </div>
@@ -1991,6 +2148,28 @@ if ($userRole === "superadmin") {
         content.classList.remove('scale-100', 'opacity-100');
         content.classList.add('scale-95', 'opacity-0');
         setTimeout(function() { modal.classList.add('hidden'); }, 200);
+    }
+
+    function openRiwayatModal() {
+        var modal = document.getElementById('riwayat_modal');
+        var content = document.getElementById('riwayat_modal_content');
+        if (!modal || !content) return;
+        modal.classList.remove('hidden');
+        setTimeout(function() {
+            content.classList.remove('scale-95', 'opacity-0');
+            content.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    function closeRiwayatModal() {
+        var modal = document.getElementById('riwayat_modal');
+        var content = document.getElementById('riwayat_modal_content');
+        if (!modal || !content) return;
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
+        setTimeout(function() {
+            modal.classList.add('hidden');
+        }, 200);
     }
 
     function setNominal(val) {

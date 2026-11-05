@@ -1,0 +1,142 @@
+<svg viewBox="0 0 980 1260" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="font-family: Arial, sans-serif; background: #ffffff;">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0f172a" />
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#dc2626" />
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#16a34a" />
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#2563eb" />
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+  <!-- Outer Border & Header -->
+  <rect x="10" y="10" width="960" height="1240" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+  <rect x="10" y="10" width="960" height="35" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="490" y="33" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">Output (Laporan Manajerial, Audit Logistik &amp; RBAC Gatekeeper)</text>
+
+  <!-- Swimlane Headers -->
+  <rect x="10" y="45" width="410" height="32" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>
+  <text x="215" y="66" text-anchor="middle" font-size="12" font-weight="bold" fill="#0f172a">Superadmin (Pemilik)</text>
+
+  <rect x="420" y="45" width="550" height="32" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>
+  <text x="695" y="66" text-anchor="middle" font-size="12" font-weight="bold" fill="#0f172a">Sistem Back-Office</text>
+
+  <!-- Divider -->
+  <line x1="420" y1="45" x2="420" y2="1250" stroke="#0f172a" stroke-width="1.5"/>
+
+  <!-- ================= INITIAL STEP: ACCESS REPORT ================= -->
+  <circle cx="215" cy="100" r="10" fill="#0f172a"/>
+  <line x1="215" y1="110" x2="215" y2="135" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="105" y="135" width="220" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="215" y="153" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#0f172a">Membuka Menu Laporan</text>
+  <text x="215" y="167" text-anchor="middle" font-size="10.5" fill="#0f172a">Kuantitas &amp; Audit Logistik</text>
+  <!-- To Sistem (Orthogonal: right to x=560) -->
+  <path d="M 325 156 L 560 156" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Sistem: RBAC Gatekeeper -->
+  <rect x="560" y="135" width="270" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="153" text-anchor="middle" font-size="10" font-weight="bold" fill="#0f172a">Validasi Otoritas Sesi Pengguna</text>
+  <text x="695" y="167" text-anchor="middle" font-size="9" fill="#0f172a">(RBAC Gatekeeper Sesi)</text>
+  <line x1="695" y1="177" x2="695" y2="205" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Decision: Superadmin? -->
+  <polygon points="695,205 750,225 695,245 640,225" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="695" y="229" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Superadmin?</text>
+
+  <!-- [Bukan Superadmin] (Orthogonal: right to x=860, down to y=280) -->
+  <text x="760" y="218" font-size="8.5" font-weight="bold" fill="#dc2626">[Bukan Superadmin]</text>
+  <path d="M 750 225 L 860 225 L 860 280" fill="none" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+  <rect x="785" y="280" width="150" height="40" rx="6" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="860" y="297" text-anchor="middle" font-size="8" font-weight="bold" fill="#dc2626">Blokir Akses &amp; Alihkan</text>
+  <text x="860" y="309" text-anchor="middle" font-size="8" fill="#dc2626">ke Dashboard Utama</text>
+  <line x1="860" y1="320" x2="860" y2="355" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <circle cx="860" cy="367" r="12" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <circle cx="860" cy="367" r="7" fill="#0f172a"/>
+
+  <!-- [Superadmin] (Orthogonal straight down) -->
+  <text x="705" y="265" font-size="9" font-weight="bold" fill="#16a34a">[Superadmin]</text>
+  <line x1="695" y1="245" x2="695" y2="280" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- THE 6 REPORTS BOX -->
+  <rect x="525" y="280" width="340" height="110" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="299" text-anchor="middle" font-size="10" font-weight="bold" fill="#0f172a">Buka Akses 6 Modul Pelaporan Manajerial:</text>
+  <text x="695" y="313" text-anchor="middle" font-size="8" fill="#0f172a">1. Lap. Penjualan Omnichannel (POS vs Daring)</text>
+  <text x="695" y="325" text-anchor="middle" font-size="8" fill="#0f172a">2. Lap. Persediaan Stok (Kuantitas &amp; Batas Min)</text>
+  <text x="695" y="337" text-anchor="middle" font-size="8" fill="#0f172a">3. Lap. Logistik Medis (Batch, ED &amp; Jejak SN)</text>
+  <text x="695" y="349" text-anchor="middle" font-size="8" fill="#0f172a">4. Lap. Penerimaan Barang dari Supplier</text>
+  <text x="695" y="361" text-anchor="middle" font-size="8" fill="#0f172a">5. Lap. Mutasi &amp; Konversi UOM (Bongkar Box)</text>
+  <text x="695" y="375" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#dc2626">6. Lap. Audit Anomali FEFO Kasir</text>
+  <!-- To Superadmin (Orthogonal: left from x=525 to x=325) -->
+  <path d="M 525 335 L 325 335" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Superadmin selects report & filters -->
+  <rect x="105" y="310" width="220" height="48" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="215" y="328" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Pilih Kategori dari 6 Laporan &amp;</text>
+  <text x="215" y="342" text-anchor="middle" font-size="9" fill="#0f172a">Tentukan Parameter Filter</text>
+  <line x1="215" y1="358" x2="215" y2="390" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="105" y="390" width="220" height="40" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="215" y="414" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#0f172a">Tekan Tombol "Filter Data"</text>
+  <!-- To Sistem (Orthogonal: right to x=560) -->
+  <path d="M 325 410 L 560 410" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Sistem queries & renders data -->
+  <rect x="560" y="390" width="270" height="44" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="408" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Eksekusi Kueri Agregasi Basis Data &amp;</text>
+  <text x="695" y="421" text-anchor="middle" font-size="9" fill="#0f172a">Sajikan Visualisasi Data Tabular</text>
+  <!-- Back to Superadmin (Orthogonal: left to x=325) -->
+  <path d="M 695 434 L 695 475 L 325 475" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Superadmin reviews data -->
+  <rect x="105" y="455" width="220" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="215" y="473" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Meninjau &amp; Menganalisis Data</text>
+  <text x="215" y="486" text-anchor="middle" font-size="9" fill="#0f172a">Rekapitulasi Kuantitas Fisik</text>
+  <line x1="215" y1="497" x2="215" y2="525" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Decision: Cetak Arsip? -->
+  <polygon points="215,525 260,545 215,565 170,545" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="215" y="549" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Cetak Arsip?</text>
+
+  <!-- [Tidak / Cukup Layar] (Orthogonal: left to x=100, down to y=600) -->
+  <text x="85" y="538" font-size="8.5" font-weight="bold" fill="#0f172a">[Tidak/Cukup Layar]</text>
+  <path d="M 170 545 L 100 545 L 100 600" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="35" y="600" width="130" height="38" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="100" y="623" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Selesai Meninjau</text>
+  <line x1="100" y1="638" x2="100" y2="665" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <circle cx="100" cy="677" r="12" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <circle cx="100" cy="677" r="7" fill="#0f172a"/>
+
+  <!-- [Ya / Cetak PDF] (Orthogonal: right to x=280, down to y=600) -->
+  <text x="250" y="538" font-size="8.5" font-weight="bold" fill="#16a34a">[Ya / Cetak PDF]</text>
+  <path d="M 260 545 L 280 545 L 280 600" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="205" y="600" width="150" height="40" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="280" y="617" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0f172a">Tekan Tombol Cetak /</text>
+  <text x="280" y="630" text-anchor="middle" font-size="8.5" fill="#0f172a">Ekspor Laporan PDF</text>
+  <!-- To Sistem (Orthogonal: right to x=560) -->
+  <path d="M 355 620 L 560 620" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Sistem generates PDF -->
+  <rect x="560" y="600" width="270" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="695" y="617" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Format Dokumen Rekapitulasi Resmi &amp;</text>
+  <text x="695" y="630" text-anchor="middle" font-size="9" fill="#0f172a">Generate Berkas Laporan PDF</text>
+  <!-- Back to Superadmin (Orthogonal: left to x=280) -->
+  <path d="M 695 642 L 695 685 L 280 685 L 280 710" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Superadmin archives PDF -->
+  <rect x="205" y="710" width="150" height="42" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="280" y="728" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0f172a">Menyimpan &amp; Mengarsipkan</text>
+  <text x="280" y="741" text-anchor="middle" font-size="8.5" fill="#0f172a">Dokumen Fisik Manajerial</text>
+
+  <!-- Final Node -->
+  <line x1="280" y1="752" x2="280" y2="785" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <circle cx="280" cy="797" r="12" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <circle cx="280" cy="797" r="7" fill="#0f172a"/>
+</svg>

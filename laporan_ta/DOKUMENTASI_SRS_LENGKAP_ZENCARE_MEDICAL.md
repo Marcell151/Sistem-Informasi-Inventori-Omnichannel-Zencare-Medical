@@ -1,5 +1,5 @@
 # DOKUMEN SPESIFIKASI KEBUTUHAN PERANGKAT LUNAK (SRS)
-## SISTEM INFORMASI INVENTORI & POS OMNICHANNEL DISTRIBUTOR FARMASI & ALKES
+## SISTEM INFORMASI INVENTORI & POS OMNICHANNEL DISTRIBUTOR LOGISTIK OBAT & ALKES
 ### "ZENCARE MEDICAL"
 
 ---
@@ -33,7 +33,7 @@
 ## 1. PENDAHULUAN & RUANG LINGKUP SISTEM
 
 ### 1.1 Tujuan Dokumen
-Dokumen Software Requirements Specification (SRS) ini disusun secara komprehensif untuk mendokumentasikan seluruh arsitektur perangkat lunak, aturan bisnis farmasi/alkes, model data relasional, dan logika alur kerja transaksi pada sistem **ZenCare Medical**. Dokumen ini menjadi rujukan teknis utama dalam penyusunan laporan Tugas Akhir (TA) serta integrasi dengan LLM (Gemini / Claude).
+Dokumen Software Requirements Specification (SRS) ini disusun secara komprehensif untuk mendokumentasikan seluruh arsitektur perangkat lunak, aturan bisnis obat dan alkes/alkes, model data relasional, dan logika alur kerja transaksi pada sistem **ZenCare Medical**. Dokumen ini menjadi rujukan teknis utama dalam penyusunan laporan Tugas Akhir (TA) serta integrasi dengan LLM (Gemini / Claude).
 
 ### 1.2 Identitas Entitas Bisnis
 - **Nama Usaha**: ZenCare Medical
@@ -215,7 +215,7 @@ erDiagram
 | `is_active` | tinyint(1) | YES | - | 1 | Status aktif variasi SKU |
 | `gambar` | varchar(500) | YES | - | NULL | URL / path foto spesifik variasi |
 
-#### 4. Tabel `stok_batch` (Penyimpanan Lot/Batch Farmasi & FEFO)
+#### 4. Tabel `stok_batch` (Penyimpanan Lot/Batch Obat & FEFO)
 | Kolom | Tipe Data | Null | Key | Default | Deskripsi Fungsional |
 |---|---|---|---|---|---|
 | `id` | int(11) | NO | PRI | auto_increment | Primary key nomor batch |
@@ -485,7 +485,7 @@ stateDiagram-v2
 - Transaksi database secara atomik memotong stok batch/SN dan mencatatnya ke kartu stok resmi.
 
 ### 4.8 Modul Kartu Stok & Audit Mutasi Fisik
-- Sesuai standar audit distribusi farmasi dan alkes, sistem memisahkan buku mutasi fisik menjadi:
+- Sesuai standar audit distribusi obat dan alat kesehatan, sistem memisahkan buku mutasi fisik menjadi:
   1. **Kartu Stok (Satuan Besar)**: Melacak mutasi kardus utuh / box pabrik.
   2. **Kartu Stok (Satuan Kecil)**: Melacak mutasi strip, botol, tablet eceran, atau unit alkes.
 - Dilengkapi dengan fitur **Backward Calculation Running Balance** untuk menghitung mundur saldo akhir secara akurat jika pengguna memfilter rentang tanggal tertentu atau memfilter kanal penjualan khusus (Omnichannel Filter).

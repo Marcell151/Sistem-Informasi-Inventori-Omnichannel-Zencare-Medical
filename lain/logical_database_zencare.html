@@ -1,0 +1,2395 @@
+<!DOCTYPE html>
+
+<html lang="id">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Logical Database Model (LDM) - ZenCare Medical (Bab 3.4)</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Times+New+Roman&display=swap" rel="stylesheet">
+
+    <style>
+
+        * {
+
+            box-sizing: border-box;
+
+            margin: 0;
+
+            padding: 0;
+
+        }
+
+        body {
+
+            font-family: Arial, Helvetica, sans-serif;
+
+            background-color: #f8fafc;
+
+            color: #0f172a;
+
+            padding: 24px;
+
+        }
+
+        /* Top Header Control Bar */
+
+        .header-bar {
+
+            max-width: 1360px;
+
+            margin: 0 auto 20px auto;
+
+            background: #ffffff;
+
+            border: 1px solid #cbd5e1;
+
+            border-radius: 12px;
+
+            padding: 16px 24px;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+
+            flex-wrap: wrap;
+
+            gap: 12px;
+
+        }
+
+        .header-title h1 {
+
+            font-size: 18px;
+
+            font-weight: 800;
+
+            color: #0f172a;
+
+            font-family: 'Plus Jakarta Sans', sans-serif;
+
+        }
+
+        .header-title p {
+
+            font-size: 12.5px;
+
+            color: #64748b;
+
+            margin-top: 2px;
+
+        }
+
+        .header-nav {
+
+            display: flex;
+
+            gap: 10px;
+
+            flex-wrap: wrap;
+
+        }
+
+        .btn-nav {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 6px;
+
+            padding: 8px 14px;
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            text-decoration: none;
+
+            border-radius: 8px;
+
+            transition: all 0.2s;
+
+            cursor: pointer;
+
+            border: 1px solid transparent;
+
+            font-family: 'Plus Jakarta Sans', sans-serif;
+
+        }
+
+        .btn-primary {
+
+            background-color: #2563eb;
+
+            color: #ffffff;
+
+        }
+
+        .btn-primary:hover {
+
+            background-color: #1d4ed8;
+
+        }
+
+        .btn-outline {
+
+            background-color: #ffffff;
+
+            color: #334155;
+
+            border-color: #cbd5e1;
+
+        }
+
+        .btn-outline:hover {
+
+            background-color: #f1f5f9;
+
+            color: #0f172a;
+
+        }
+
+        .btn-success {
+
+            background-color: #059669;
+
+            color: #ffffff;
+
+        }
+
+        .btn-success:hover {
+
+            background-color: #047857;
+
+        }
+
+        /* Filter Tab Bar */
+
+        .tab-bar {
+
+            max-width: 1360px;
+
+            margin: 0 auto 20px auto;
+
+            display: flex;
+
+            gap: 8px;
+
+            overflow-x: auto;
+
+            padding-bottom: 6px;
+
+        }
+
+        .tab-btn {
+
+            padding: 8px 14px;
+
+            background: #ffffff;
+
+            border: 1px solid #cbd5e1;
+
+            border-radius: 8px;
+
+            font-size: 12.5px;
+
+            font-weight: 600;
+
+            color: #475569;
+
+            cursor: pointer;
+
+            white-space: nowrap;
+
+            transition: all 0.15s;
+
+            font-family: 'Plus Jakarta Sans', sans-serif;
+
+        }
+
+        .tab-btn.active {
+
+            background: #2563eb;
+
+            color: #ffffff;
+
+            border-color: #2563eb;
+
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
+
+        }
+
+        .tab-btn:hover:not(.active) {
+
+            background: #f1f5f9;
+
+            color: #1e293b;
+
+        }
+
+        /* Container Layout */
+
+        .main-container {
+
+            max-width: 1360px;
+
+            margin: 0 auto;
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 24px;
+
+        }
+
+        /* Academic Narration Card */
+
+        .narasi-card {
+
+            background: #ffffff;
+
+            border: 1px solid #cbd5e1;
+
+            border-radius: 12px;
+
+            padding: 24px 28px;
+
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+
+            font-family: 'Times New Roman', Times, serif;
+
+            font-size: 15px;
+
+            line-height: 1.7;
+
+            color: #1e293b;
+
+        }
+
+        .narasi-card h3 {
+
+            font-family: 'Plus Jakarta Sans', sans-serif;
+
+            font-size: 16px;
+
+            font-weight: 800;
+
+            color: #0f172a;
+
+            margin-bottom: 14px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+        }
+
+        .narasi-card p {
+
+            text-align: justify;
+
+            text-indent: 32px;
+
+            margin-bottom: 12px;
+
+        }
+
+        .narasi-card ol {
+
+            margin-left: 36px;
+
+            margin-bottom: 14px;
+
+        }
+
+        .narasi-card li {
+
+            margin-bottom: 6px;
+
+            text-align: justify;
+
+        }
+
+        .highlight-box {
+
+            background: #f0fdf4;
+
+            border: 1px solid #bbf7d0;
+
+            border-radius: 8px;
+
+            padding: 12px 16px;
+
+            font-family: Arial, Helvetica, sans-serif;
+
+            font-size: 12.5px;
+
+            color: #166534;
+
+            margin: 14px 0;
+
+            display: flex;
+
+            align-items: flex-start;
+
+            gap: 10px;
+
+        }
+
+        /* Tables Grid */
+
+        .tables-grid {
+
+            display: grid;
+
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+
+            gap: 16px;
+
+        }
+
+        .table-card {
+
+            background: #ffffff;
+
+            border: 1px solid #cbd5e1;
+
+            border-radius: 10px;
+
+            overflow: hidden;
+
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+
+            display: flex;
+
+            flex-direction: column;
+
+            transition: transform 0.15s, box-shadow 0.15s;
+
+        }
+
+        .table-card:hover {
+
+            transform: translateY(-2px);
+
+            box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.08);
+
+        }
+
+        .table-header {
+
+            padding: 10px 14px;
+
+            border-bottom: 1px solid #e2e8f0;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+        }
+
+        .table-name {
+
+            font-family: 'JetBrains Mono', monospace;
+
+            font-size: 13.5px;
+
+            font-weight: 700;
+
+            color: #0f172a;
+
+        }
+
+        .badge {
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            text-transform: uppercase;
+
+            padding: 2px 7px;
+
+            border-radius: 6px;
+
+            font-family: 'Plus Jakarta Sans', sans-serif;
+
+        }
+
+        .badge-master { background: #dbeafe; color: #1e40af; }
+
+        .badge-transaksi { background: #dcfce7; color: #166534; }
+
+        .badge-stok { background: #fef3c7; color: #92400e; }
+
+        .badge-audit { background: #f3e8ff; color: #6b21a8; }
+
+        .badge-setting { background: #f1f5f9; color: #475569; }
+
+        .table-body {
+
+            padding: 10px 14px;
+
+            flex-grow: 1;
+
+            font-size: 11.5px;
+
+        }
+
+        .col-list {
+
+            list-style: none;
+
+            max-height: 240px;
+
+            overflow-y: auto;
+
+        }
+
+        .col-item {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            padding: 3.5px 0;
+
+            border-bottom: 1px dashed #f1f5f9;
+
+            font-family: 'JetBrains Mono', monospace;
+
+        }
+
+        .col-name {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 5px;
+
+            color: #1e293b;
+
+            font-weight: 500;
+
+        }
+
+        .col-type {
+
+            color: #64748b;
+
+            font-size: 10.5px;
+
+        }
+
+        .key-pk {
+
+            font-size: 9px;
+
+            background: #ef4444;
+
+            color: white;
+
+            padding: 1px 4px;
+
+            border-radius: 3px;
+
+            font-weight: bold;
+
+        }
+
+        .key-fk {
+
+            font-size: 9px;
+
+            background: #3b82f6;
+
+            color: white;
+
+            padding: 1px 4px;
+
+            border-radius: 3px;
+
+            font-weight: bold;
+
+        }
+
+        .table-desc {
+
+            padding: 10px 14px;
+
+            background: #f8fafc;
+
+            border-top: 1px solid #e2e8f0;
+
+            font-size: 11px;
+
+            color: #475569;
+
+            line-height: 1.4;
+
+        }
+
+        /* DBML Code Box */
+
+        .code-box-container {
+
+            background: #ffffff;
+
+            border: 1px solid #cbd5e1;
+
+            border-radius: 12px;
+
+            overflow: hidden;
+
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+
+        }
+
+        .code-box-header {
+
+            background: #1e293b;
+
+            color: #f8fafc;
+
+            padding: 12px 18px;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            font-family: 'Plus Jakarta Sans', sans-serif;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+        }
+
+        .code-box-content {
+
+            background: #0f172a;
+
+            color: #e2e8f0;
+
+            padding: 16px;
+
+            max-height: 400px;
+
+            overflow-y: auto;
+
+            font-family: 'JetBrains Mono', monospace;
+
+            font-size: 12px;
+
+            line-height: 1.5;
+
+            white-space: pre;
+
+        }
+
+        /* Toast Notification */
+
+        .toast {
+
+            position: fixed;
+
+            bottom: 24px;
+
+            right: 24px;
+
+            background: #0f172a;
+
+            color: #ffffff;
+
+            padding: 10px 18px;
+
+            border-radius: 8px;
+
+            font-size: 13px;
+
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+
+            opacity: 0;
+
+            pointer-events: none;
+
+            transition: opacity 0.25s ease;
+
+            z-index: 9999;
+
+            font-family: 'Plus Jakarta Sans', sans-serif;
+
+        }
+
+        .toast.show {
+
+            opacity: 1;
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <!-- Header Control Bar -->
+
+    <div class="header-bar">
+
+        <div class="header-title">
+
+            <h1>Logical Database Model (LDM) - ZenCare Medical</h1>
+
+            <p>Pemetaan Arsitektur Relasional 20 Entitas Tabel &amp; Schema DBML (Subbab 3.4)</p>
+
+        </div>
+
+        <div class="header-nav">
+
+            <a href="../laporan_ta/BAB_III_ZENCARE_MEDICAL.html#sec_3_4" class="btn-nav btn-outline" target="_blank">
+
+                &larr; Buka Bab 3 Skripsi
+
+            </a>
+
+            <button onclick="copyDBML()" class="btn-nav btn-primary">
+
+                Salin Kode DBML (dbdiagram.io)
+
+            </button>
+
+            <button onclick="copyCleanSQL()" class="btn-nav btn-success">
+
+                Salin Schema SQL Bersih
+
+            </button>
+
+            <button onclick="copyNarasiText()" class="btn-nav btn-outline">
+
+                Salin Narasi Bab 3.4
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- Filter Tab Bar -->
+
+    <div class="tab-bar">
+
+        <button class="tab-btn active" onclick="filterDomain('all', this)">Semua (20 Tabel)</button>
+
+        <button class="tab-btn" onclick="filterDomain('master', this)">1. Master &amp; Katalog (4)</button>
+
+        <button class="tab-btn" onclick="filterDomain('fisik', this)">2. Persediaan Fisik (3)</button>
+
+        <button class="tab-btn" onclick="filterDomain('transaksi', this)">3. Transaksi Omnichannel (6)</button>
+
+        <button class="tab-btn" onclick="filterDomain('fefo', this)">4. Pengendalian FEFO &amp; Konversi (2)</button>
+
+        <button class="tab-btn" onclick="filterDomain('opname', this)">5. Audit Stok Opname (4)</button>
+
+        <button class="tab-btn" onclick="filterDomain('setting', this)">6. Pengaturan Web (1)</button>
+
+    </div>
+
+    <div class="main-container">
+
+        <!-- Narasi Akademik Bab 3.4 -->
+
+        <div class="narasi-card" id="narasi_bab_3_4">
+            <h3>
+                <span>Uraian Naratif Akademik (Subbab 3.4 Logical Database)</span>
+                <span style="font-size: 11px; font-weight: normal; color: #64748b; font-family: sans-serif;">Gaya Bahasa Akademik Baku EYD V (Versi Padat)</span>
+            </h3>
+            <p>
+                <i>Logical Data Model</i> (LDM) pada Sistem Informasi Inventori Omnichannel ZenCare Medical dirancang menggunakan basis data relasional yang memetakan <b>20 entitas tabel</b> terintegrasi. Pusat relasi data bertumpu pada tabel <code>produk_variasi</code> yang menjadi poros logistik multi-satuan dan turunan langsung dari <code>produk_induk</code> (katalog informasi dasar obat dan alat kesehatan). Dari <code>produk_variasi</code>, aliran pencatatan fisik persediaan dipisahkan menjadi tiga entitas spesifik: <code>stok_toko</code> untuk akumulasi saldo aktif siap jual, <code>stok_batch</code> untuk sediaan obat berbasis nomor batch dan tanggal kedaluwarsa terdekat (*First Expired First Out* / FEFO), serta <code>unit_serial</code> untuk pelacakan nomor seri unik (*Serial Number*) dan masa berlaku garansi alat kesehatan secara individual.
+            </p>
+            <p>
+                Pencatatan arus masuk dan keluar barang menerapkan skema tabel induk dan rincian. Pasokan masuk dari distributor diakomodasi oleh <code>penerimaan_stok</code> dan <code>penerimaan_detail</code> yang terhubung dinamis ke tabel <code>supplier</code> sehingga satu jenis produk dapat dipasok oleh banyak distributor rekanan. Sementara itu, arus barang keluar lintas saluran (kasir toko fisik dan pesanan belanja <i>e-commerce</i>) ditampung pada tabel <code>penjualan</code> dan <code>detail_penjualan</code>. Khusus pesanan daring, entitas <code>pesanan_batch_alokasi</code> bertugas mengunci nomor batch fisik obat sementara sebelum barang dikemas agar tidak terjual ganda di meja kasir. Seluruh transaksi ini diikat ke tabel <code>users</code> guna mengidentifikasi staf penanggung jawab berdasarkan perannya (Superadmin, Admin, Kasir, dan Pelanggan).
+            </p>
+            <p>
+                Seluruh pergerakan barang bermuara pada <code>kartu_stok</code> sebagai buku besar mutasi yang mencatat riwayat pergerakan fisik dan saldo berjalan secara permanen. Pengendalian mutu operasional diperkuat oleh <code>histori_konversi</code> untuk rekam jejak pembongkaran kemasan dus ke eceran secara otomatis saat persediaan rak habis, serta <code>log_anomali_fefo</code> untuk mendokumentasikan deviasi pemilihan nomor batch di kasir demi kebutuhan audit kepatuhan. Pengendalian intern berkala didukung modul stok opname yang mencakup <code>sesi_opname</code> (pembekuan transaksi kasir sementara), <code>detail_opname_batch</code> (lembar hitung fisik obat dan kalkulasi selisih), <code>detail_opname_sn</code> (verifikasi alkes berseri), serta <code>riwayat_hitung_opname</code> (rekam jejak koreksi hitungan). Sebagai pelengkap, entitas mandiri <code>pengaturan_web</code> mengelola informasi portal publik tanpa mencampuri relasi logistik. Struktur relasional ke-20 entitas tabel disajikan pada Gambar 3.18.
+            </p>
+            <div class="highlight-box">
+
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+
+                </svg>
+
+                <div>
+
+                    <strong>Penyelarasan Basis Data Penuh (20 Tabel):</strong>
+
+                    Model logis ini 100% selaras dengan skema riil database <code>db_inventory (demo) 3.sql</code>, Use Case 4 aktor, Workflow usulan, dan seluruh alur Activity Diagram Bab 3.
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- DBML Code Box (Ready for dbdiagram.io) -->
+
+        
+
+        <!-- Visual Diagram ERD Card (dbdiagram Style) -->
+
+        <div class="code-box-container" style="border-radius: 12px; overflow: hidden; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); background: #ffffff;">
+
+            <div class="code-box-header" style="background: #0f172a; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;">
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+
+                    <span style="font-size: 14px; font-weight: 800; color: #ffffff;">Gambar 3.18 Logical Data Model (ERD) - 20 Entitas Tabel</span>
+
+                    <span style="font-size: 11px; background: #2563eb; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-weight: 700;">34 Relasi FK</span>
+
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+
+                    <button onclick="zoomIn()" class="btn-nav btn-outline" style="padding: 4px 10px; font-size: 11px; background: #334155; color: #ffffff; border-color: #475569;">+ Zoom In</button>
+
+                    <button onclick="zoomOut()" class="btn-nav btn-outline" style="padding: 4px 10px; font-size: 11px; background: #334155; color: #ffffff; border-color: #475569;">- Zoom Out</button>
+
+                    <button onclick="resetZoom()" class="btn-nav btn-outline" style="padding: 4px 10px; font-size: 11px; background: #334155; color: #ffffff; border-color: #475569;">Reset</button>
+
+                    <a href="Gambar_3.18_Logical_Database_Model.svg" target="_blank" class="btn-nav btn-primary" style="padding: 4px 10px; font-size: 11px;">Buka SVG Penuh</a>
+
+                    <a href="Gambar_3.18_Logical_Database_Model.svg" download="Gambar_3.18_Logical_Database_Model_ZenCare.svg" class="btn-nav btn-success" style="padding: 4px 10px; font-size: 11px;">Unduh SVG</a>
+
+                </div>
+
+            </div>
+
+            <div id="svg_viewport" style="background: #f8fafc; overflow: auto; max-height: 750px; border-bottom: 1px solid #e2e8f0; padding: 16px; text-align: center; cursor: grab;">
+
+                <div id="svg_wrapper" style="display: inline-block; transform-origin: top center; transition: transform 0.2s ease;">
+
+                    <img src="Gambar_3.18_Logical_Database_Model.svg" alt="Logical Data Model Diagram ZenCare Medical" style="max-width: 100%; height: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-radius: 8px;">
+
+                </div>
+
+            </div>
+
+            <div style="padding: 8px 16px; background: #ffffff; font-size: 11.5px; color: #64748b; display: flex; justify-content: space-between; align-items: center;">
+
+                <span>Tips: Gunakan tombol zoom atau klik kanan &gt; "Open Image in New Tab" untuk melihat diagram dalam resolusi ultra tajam tanpa batas.</span>
+
+                <span style="font-weight: 600; color: #059669;">&bull; Terintegrasi 100% dengan database db_inventory (demo) 3.sql</span>
+
+            </div>
+
+        </div>
+
+<div class="code-box-container">
+
+            <div class="code-box-header">
+
+                <span>Skrip DBML Lengkap (Siap Di-paste ke https://dbdiagram.io)</span>
+
+                <button onclick="copyDBML()" class="btn-nav btn-primary" style="padding: 4px 10px; font-size: 11px;">
+
+                    Salin Semua DBML
+
+                </button>
+
+            </div>
+
+            <div class="code-box-content" id="dbml_code_content">// =========================================================================
+
+// LOGICAL DATA MODEL (ERD) - ZENCARE MEDICAL
+
+// Sistem Informasi Inventori Omnichannel Obat & Alat Kesehatan (20 Tabel)
+
+// Format DBML Valid untuk https://dbdiagram.io
+
+// =========================================================================
+
+Table users {
+
+  id_user int [pk, increment]
+
+  username varchar(50) [not null, unique]
+
+  password varchar(255) [not null]
+
+  nama_lengkap varchar(100) [not null]
+
+  role varchar(50) [not null]
+
+  email varchar(150)
+
+  telepon varchar(20)
+
+  alamat text
+
+  kota_id int
+
+  is_active boolean [default: true]
+
+  created_at timestamp [not null]
+
+}
+
+Table supplier {
+
+  id_supplier int [pk, increment]
+
+  nama varchar(100) [not null]
+
+  kontak varchar(50)
+
+  email varchar(150)
+
+  alamat text
+
+  is_active boolean [default: true]
+
+}
+
+Table produk_induk {
+
+  id_produk_induk int [pk, increment]
+
+  sku_induk varchar(50) [not null, unique]
+
+  nama_produk varchar(150) [not null]
+
+  deskripsi text
+
+  spesifikasi text
+
+  info_pengiriman text
+
+  kategori varchar(50) [not null]
+
+  gambar varchar(255)
+
+  is_active boolean [default: true]
+
+  batas_hari_expired int [default: 0]
+
+  created_at timestamp [not null]
+
+}
+
+Table produk_variasi {
+
+  id_variasi int [pk, increment]
+
+  id_produk_induk int
+
+  sku_variasi varchar(50) [not null, unique]
+
+  nama_variasi varchar(100) [not null]
+
+  satuan_kecil varchar(50) [not null, default: 'Pcs']
+
+  satuan_besar varchar(50) [not null, default: 'Box']
+
+  rasio_konversi smallint [not null, default: 1]
+
+  harga_jual_kecil decimal(12,2) [not null, default: 0.00]
+
+  harga_jual_besar decimal(12,2) [not null, default: 0.00]
+
+  stok_minimum_kecil int [default: 0]
+
+  stok_minimum_besar int [default: 0]
+
+  berat int [not null, default: 100]
+
+  tampil_di_online boolean [default: true]
+
+  is_active boolean [default: true]
+
+  gambar varchar(500)
+
+}
+
+Table stok_toko {
+
+  id_stok_toko int [pk, increment]
+
+  id_variasi int [not null, unique]
+
+  stok int [not null, default: 0]
+
+}
+
+Table stok_batch {
+
+  id_stok_batch int [pk, increment]
+
+  id_variasi int [not null]
+
+  no_batch varchar(100) [not null]
+
+  tgl_exp date [not null]
+
+  stok_sisa int [not null, default: 0]
+
+  created_at timestamp [not null]
+
+}
+
+Table unit_serial {
+
+  id_unit_serial int [pk, increment]
+
+  id_variasi int [not null]
+
+  serial_number varchar(150) [not null, unique]
+
+  status varchar(50) [not null, default: 'Tersedia']
+
+  id_penjualan int
+
+  catatan varchar(255)
+
+  tgl_habis_garansi date
+
+  created_at timestamp [not null]
+
+  updated_at timestamp
+
+}
+
+Table penerimaan_stok {
+
+  id_penerimaan int [pk, increment]
+
+  no_referensi varchar(50) [not null]
+
+  sumber varchar(50) [not null]
+
+  id_supplier int
+
+  tanggal_terima date [not null]
+
+  catatan text
+
+  file_nota varchar(255)
+
+  dibuat_oleh int
+
+  created_at timestamp [not null]
+
+}
+
+Table penerimaan_detail {
+
+  id_penerimaan_detail int [pk, increment]
+
+  id_penerimaan int [not null]
+
+  id_variasi int [not null]
+
+  qty_pesan int [not null, default: 0]
+
+  qty_terima int [not null]
+
+  qty_rusak int [not null, default: 0]
+
+  harga_beli decimal(15,2)
+
+  no_batch varchar(50)
+
+  tgl_exp date
+
+  status_retur varchar(30) [not null, default: 'tidak_ada']
+
+  qty_pengganti_diterima int [not null, default: 0]
+
+  no_batch_pengganti varchar(50)
+
+  tgl_exp_pengganti date
+
+  tgl_selesai_retur date
+
+  catatan_retur text
+
+}
+
+Table penjualan {
+
+  id_penjualan int [pk, increment]
+
+  no_invoice varchar(50) [not null, unique]
+
+  id_user int
+
+  tipe_transaksi varchar(50) [not null]
+
+  metode_pengambilan varchar(50)
+
+  status_pesanan varchar(50) [not null, default: 'Menunggu Pembayaran']
+
+  alasan_batal varchar(255)
+
+  dibatalkan_oleh varchar(50)
+
+  waktu_batal timestamp
+
+  request_batal boolean [not null, default: false]
+
+  request_batal_alasan varchar(255)
+
+  request_batal_waktu timestamp
+
+  total_harga decimal(12,2) [not null]
+
+  metode_bayar_pos varchar(50) [default: 'Tunai']
+
+  ongkir decimal(10,2) [default: 0.00]
+
+  nama_penerima varchar(100)
+
+  telepon_penerima varchar(20)
+
+  alamat_lengkap text
+
+  kota_tujuan varchar(100)
+
+  kurir varchar(50)
+
+  layanan varchar(50)
+
+  snap_token varchar(255)
+
+  payment_method_ecommerce varchar(50)
+
+  paid_at timestamp
+
+  kode_pickup varchar(20)
+
+  created_at timestamp [not null]
+
+  updated_at timestamp
+
+}
+
+Table detail_penjualan {
+
+  id_detail_penjualan int [pk, increment]
+
+  id_penjualan int [not null]
+
+  id_variasi int [not null]
+
+  qty int [not null]
+
+  harga_satuan decimal(12,2) [not null]
+
+  catatan_logistik text
+
+}
+
+Table pesanan_batch_alokasi {
+
+  id_alokasi_batch int [pk, increment]
+
+  id_penjualan int [not null]
+
+  id_detail_penjualan int [not null]
+
+  id_batch int [not null]
+
+  qty_satuan_kecil int [not null]
+
+  created_at timestamp [not null]
+
+}
+
+Table kartu_stok {
+
+  id_kartu_stok int [pk, increment]
+
+  id_variasi int [not null]
+
+  id_batch int
+
+  satuan_tipe varchar(50) [not null, default: 'kecil']
+
+  jenis_mutasi varchar(50) [not null]
+
+  kanal varchar(50) [not null, default: 'Manual']
+
+  alasan_mutasi varchar(50) [not null, default: 'Selisih Stok Opname']
+
+  no_ref_dokumen varchar(100)
+
+  qty int [not null]
+
+  sisa_stok int [not null]
+
+  keterangan text
+
+  dibuat_oleh int
+
+  tanggal timestamp [not null]
+
+}
+
+Table histori_konversi {
+
+  id_histori_konversi int [pk, increment]
+
+  id_variasi int [not null]
+
+  batch_asal varchar(100) [not null]
+
+  batch_hasil varchar(100) [not null]
+
+  qty_box_buka int [not null]
+
+  qty_pcs_hasil int [not null]
+
+  sisa_dus_akhir int [default: 0]
+
+  dibuat_oleh int
+
+  created_at timestamp [not null]
+
+}
+
+Table log_anomali_fefo {
+
+  id_log_anomali int [pk, increment]
+
+  id_penjualan int
+
+  id_user int [not null]
+
+  id_variasi int [not null]
+
+  batch_diambil varchar(100)
+
+  batch_seharusnya varchar(100)
+
+  qty int
+
+  satuan_tipe varchar(20) [not null, default: 'kecil']
+
+  status varchar(50) [not null, default: 'terlewat']
+
+  qty_disesuaikan int [not null, default: 0]
+
+  resolved_in_penjualan int
+
+  resolved_at date
+
+  created_at timestamp [not null]
+
+}
+
+Table sesi_opname {
+
+  id_sesi_opname int [pk, increment]
+
+  kode_sesi varchar(50) [not null, unique]
+
+  status varchar(50) [not null, default: 'Aktif']
+
+  dibekukan_oleh int [not null]
+
+  dibekukan_pada timestamp [not null]
+
+  dibuka_oleh int
+
+  dibuka_pada timestamp
+
+  catatan text
+
+}
+
+Table detail_opname_batch {
+
+  id_detail_opname int [pk, increment]
+
+  id_sesi int [not null]
+
+  id_batch int
+
+  id_variasi int [not null]
+
+  jenis_komoditas varchar(50) [not null, default: 'Obat']
+
+  satuan_tipe varchar(50) [not null, default: 'kecil']
+
+  nama_satuan varchar(50) [not null, default: 'Unit']
+
+  stok_tersedia_sistem int [not null]
+
+  stok_reserved int [not null]
+
+  stok_sistem_fisik int [not null]
+
+  hitung_fisik int
+
+  selisih int
+
+  status_mutasi varchar(50) [not null, default: 'Belum Dimutasi']
+
+  alasan_mutasi varchar(255)
+
+  keterangan_mutasi text
+
+  id_kartu_stok int
+
+  dihitung_oleh int
+
+  waktu_hitung timestamp
+
+  dimutasi_oleh int
+
+  waktu_mutasi timestamp
+
+}
+
+Table detail_opname_sn {
+
+  id_opname_sn int [pk, increment]
+
+  id_detail_opname int [not null]
+
+  id_unit_serial int
+
+  serial_number varchar(100) [not null]
+
+  jenis_tindakan varchar(50) [not null]
+
+  created_at timestamp [not null]
+
+}
+
+Table riwayat_hitung_opname {
+
+  id_riwayat_hitung int [pk, increment]
+
+  id_detail_opname int [not null]
+
+  hitung_sebelumnya int
+
+  hitung_baru int [not null]
+
+  dihitung_oleh int [not null]
+
+  alasan_koreksi text
+
+  waktu_koreksi timestamp [not null]
+
+}
+
+Table pengaturan_web {
+
+  id_pengaturan int [pk, increment]
+
+  nama_toko varchar(100) [not null, default: 'ZenCare Medical']
+
+  deskripsi text
+
+  telepon varchar(20)
+
+  whatsapp varchar(20)
+
+  alamat text
+
+  logo varchar(255)
+
+  banner_promosi varchar(255)
+
+  email_cs varchar(150)
+
+}
+
+// =========================================================================
+
+// RELASI ANTAR-TABEL (FOREIGN KEY CONSTRAINTS)
+
+// =========================================================================
+
+Ref: detail_opname_batch.id_sesi > sesi_opname.id_sesi_opname
+
+Ref: detail_opname_batch.id_batch > stok_batch.id_stok_batch
+
+Ref: detail_opname_batch.id_variasi > produk_variasi.id_variasi
+
+Ref: detail_opname_batch.dihitung_oleh > users.id_user
+
+Ref: detail_opname_batch.dimutasi_oleh > users.id_user
+
+Ref: detail_opname_sn.id_detail_opname > detail_opname_batch.id_detail_opname
+
+Ref: detail_opname_sn.id_unit_serial > unit_serial.id_unit_serial
+
+Ref: detail_penjualan.id_penjualan > penjualan.id_penjualan
+
+Ref: detail_penjualan.id_variasi > produk_variasi.id_variasi
+
+Ref: histori_konversi.id_variasi > produk_variasi.id_variasi
+
+Ref: histori_konversi.dibuat_oleh > users.id_user
+
+Ref: kartu_stok.id_variasi > produk_variasi.id_variasi
+
+Ref: kartu_stok.dibuat_oleh > users.id_user
+
+Ref: penerimaan_detail.id_penerimaan > penerimaan_stok.id_penerimaan
+
+Ref: penerimaan_detail.id_variasi > produk_variasi.id_variasi
+
+Ref: penerimaan_stok.id_supplier > supplier.id_supplier
+
+Ref: penerimaan_stok.dibuat_oleh > users.id_user
+
+Ref: penjualan.id_user > users.id_user
+
+Ref: pesanan_batch_alokasi.id_penjualan > penjualan.id_penjualan
+
+Ref: pesanan_batch_alokasi.id_detail_penjualan > detail_penjualan.id_detail_penjualan
+
+Ref: pesanan_batch_alokasi.id_batch > stok_batch.id_stok_batch
+
+Ref: produk_variasi.id_produk_induk > produk_induk.id_produk_induk
+
+Ref: riwayat_hitung_opname.id_detail_opname > detail_opname_batch.id_detail_opname
+
+Ref: riwayat_hitung_opname.dihitung_oleh > users.id_user
+
+Ref: sesi_opname.dibekukan_oleh > users.id_user
+
+Ref: sesi_opname.dibuka_oleh > users.id_user
+
+Ref: stok_batch.id_variasi > produk_variasi.id_variasi
+
+Ref: stok_toko.id_variasi > produk_variasi.id_variasi
+
+Ref: unit_serial.id_variasi > produk_variasi.id_variasi
+
+// Relasi Fungsional Operasional:
+
+Ref: log_anomali_fefo.id_penjualan > penjualan.id_penjualan
+
+Ref: log_anomali_fefo.id_user > users.id_user
+
+Ref: log_anomali_fefo.id_variasi > produk_variasi.id_variasi
+
+Ref: unit_serial.id_penjualan > penjualan.id_penjualan
+
+Ref: kartu_stok.id_batch > stok_batch.id_stok_batch</div>
+
+        </div>
+
+        <!-- 20 Table Cards Grid -->
+
+        <div>
+
+            <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 800; margin-bottom: 14px; color: #0f172a;">
+
+                Eksplorasi Struktur Kamus Data (20 Entitas Tabel)
+
+            </h3>
+
+            <div class="tables-grid" id="tables_container">
+
+                <!-- Dynamically populated via JS -->
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Toast -->
+
+    <div id="toast" class="toast">Teks berhasil disalin ke clipboard!</div>
+
+    <script>
+
+        // Data 20 Tables Schema
+
+        const tablesData = [
+
+            // Domain 1: Master
+
+            {
+
+                name: "users",
+
+                domain: "master",
+
+                badge: "badge-master",
+
+                badgeText: "Master Data",
+
+                desc: "Menyimpan data akun pengguna sistem internal (Superadmin, Admin, Kasir) dan pelanggan e-commerce beserta informasi kontak dan status aktif.",
+
+                cols: [
+
+                    { name: "id_user", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "username", type: "varchar(50)", key: "", extra: "unique" },
+
+                    { name: "password", type: "varchar(255)", key: "", extra: "hash" },
+
+                    { name: "nama_lengkap", type: "varchar(100)", key: "", extra: "" },
+
+                    { name: "role", type: "enum(superadmin, admin, kasir, pelanggan)", key: "", extra: "" },
+
+                    { name: "email", type: "varchar(150)", key: "", extra: "" },
+
+                    { name: "telepon", type: "varchar(20)", key: "", extra: "" },
+
+                    { name: "alamat", type: "text", key: "", extra: "" },
+
+                    { name: "kota_id", type: "int(11)", key: "", extra: "" },
+
+                    { name: "is_active", type: "tinyint(1)", key: "", extra: "default 1" },
+
+                    { name: "created_at", type: "timestamp", key: "", extra: "" }
+
+                ]
+
+            },
+
+            {
+
+                name: "supplier",
+
+                domain: "master",
+
+                badge: "badge-master",
+
+                badgeText: "Master Data",
+
+                desc: "Menyimpan data profil distributor rekanan resmi pemasok komoditas obat dan alat kesehatan.",
+
+                cols: [
+
+                    { name: "id_supplier", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "nama", type: "varchar(100)", key: "", extra: "" },
+
+                    { name: "kontak", type: "varchar(50)", key: "", extra: "" },
+
+                    { name: "email", type: "varchar(150)", key: "", extra: "" },
+
+                    { name: "alamat", type: "text", key: "", extra: "" },
+
+                    { name: "is_active", type: "tinyint(1)", key: "", extra: "default 1" }
+
+                ]
+
+            },
+
+            {
+
+                name: "produk_induk",
+
+                domain: "master",
+
+                badge: "badge-master",
+
+                badgeText: "Master Data",
+
+                desc: "Katalog induk komoditas medis yang memuat identitas umum, deskripsi, spesifikasi, serta kategori (Obat atau Alat Kesehatan).",
+
+                cols: [
+
+                    { name: "id_produk_induk", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "sku_induk", type: "varchar(50)", key: "", extra: "unique" },
+
+                    { name: "nama_produk", type: "varchar(150)", key: "", extra: "" },
+
+                    { name: "deskripsi", type: "text", key: "", extra: "" },
+
+                    { name: "spesifikasi", type: "text", key: "", extra: "" },
+
+                    { name: "info_pengiriman", type: "text", key: "", extra: "" },
+
+                    { name: "kategori", type: "enum(Obat, Alat Kesehatan)", key: "", extra: "" },
+
+                    { name: "gambar", type: "varchar(255)", key: "", extra: "" },
+
+                    { name: "is_active", type: "tinyint(1)", key: "", extra: "default 1" },
+
+                    { name: "batas_hari_expired", type: "int(11)", key: "", extra: "default 60" },
+
+                    { name: "created_at", type: "timestamp", key: "", extra: "" }
+
+                ]
+
+            },
+
+            {
+
+                name: "produk_variasi",
+
+                domain: "master",
+
+                badge: "badge-master",
+
+                badgeText: "Core Entity",
+
+                desc: "Pusat relasi logistik yang mengatur atribut kemasan bertingkat (satuan kecil & satuan besar), rasio konversi dus, harga, dan batas minimum.",
+
+                cols: [
+
+                    { name: "id_variasi", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "id_produk_induk", type: "int(11)", key: "FK", extra: "-> produk_induk.id_produk_induk" },
+
+                    { name: "sku_variasi", type: "varchar(50)", key: "", extra: "unique" },
+
+                    { name: "nama_variasi", type: "varchar(100)", key: "", extra: "" },
+
+                    { name: "satuan_kecil", type: "varchar(50)", key: "", extra: "Strip/Botol/Pcs" },
+
+                    { name: "satuan_besar", type: "varchar(50)", key: "", extra: "Box/Dus" },
+
+                    { name: "rasio_konversi", type: "smallint(6)", key: "", extra: "" },
+
+                    { name: "harga_jual_kecil", type: "decimal(12,2)", key: "", extra: "" },
+
+                    { name: "harga_jual_besar", type: "decimal(12,2)", key: "", extra: "" },
+
+                    { name: "stok_minimum_kecil", type: "int(11)", key: "", extra: "" },
+
+                    { name: "stok_minimum_besar", type: "int(11)", key: "", extra: "" },
+
+                    { name: "berat", type: "int(11)", key: "", extra: "gram" },
+
+                    { name: "tampil_di_online", type: "tinyint(1)", key: "", extra: "default 1" },
+
+                    { name: "is_active", type: "tinyint(1)", key: "", extra: "default 1" },
+
+                    { name: "gambar", type: "varchar(500)", key: "", extra: "" }
+
+                ]
+
+            },
+
+            // Domain 2: Fisik
+
+            {
+
+                name: "stok_toko",
+
+                domain: "fisik",
+
+                badge: "badge-stok",
+
+                badgeText: "Persediaan Fisik",
+
+                desc: "Menyimpan saldo total persediaan fisik siap jual untuk masing-masing variasi produk.",
+
+                cols: [
+
+                    { name: "id_stok_toko", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "id_variasi", type: "int(11)", key: "FK", extra: "-> produk_variasi.id_variasi" },
+
+                    { name: "stok", type: "int(11)", key: "", extra: "kuantitas fisik" }
+
+                ]
+
+            },
+
+            {
+
+                name: "stok_batch",
+
+                domain: "fefo",
+
+                badge: "badge-stok",
+
+                badgeText: "Logistik FEFO",
+
+                desc: "Pengelolaan sediaan obat berkaidah FEFO berdasarkan nomor batch dan tanggal kedaluwarsa terdekat.",
+
+                cols: [
+
+                    { name: "id_stok_batch", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "id_variasi", type: "int(11)", key: "FK", extra: "-> produk_variasi.id_variasi" },
+
+                    { name: "no_batch", type: "varchar(100)", key: "", extra: "" },
+
+                    { name: "tgl_exp", type: "date", key: "", extra: "kunci FEFO" },
+
+                    { name: "stok_sisa", type: "int(11)", key: "", extra: "" },
+
+                    { name: "created_at", type: "timestamp", key: "", extra: "" }
+
+                ]
+
+            },
+
+            {
+
+                name: "unit_serial",
+
+                domain: "fisik",
+
+                badge: "badge-stok",
+
+                badgeText: "Serial Number",
+
+                desc: "Pengelolaan individual nomor seri unit alat kesehatan beserta status ketersediaan dan masa berlaku garansi.",
+
+                cols: [
+
+                    { name: "id_unit_serial", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "id_variasi", type: "int(11)", key: "FK", extra: "-> produk_variasi.id_variasi" },
+
+                    { name: "serial_number", type: "varchar(150)", key: "", extra: "unique" },
+
+                    { name: "status", type: "enum(Tersedia, Terjual, Rusak, Retur)", key: "", extra: "" },
+
+                    { name: "id_penjualan", type: "int(11)", key: "FK", extra: "-> penjualan.id_penjualan" },
+
+                    { name: "catatan", type: "varchar(255)", key: "", extra: "" },
+
+                    { name: "tgl_habis_garansi", type: "date", key: "", extra: "" },
+
+                    { name: "created_at", type: "timestamp", key: "", extra: "" },
+
+                    { name: "updated_at", type: "timestamp", key: "", extra: "" }
+
+                ]
+
+            },
+
+            // Domain 3: Transaksi Masuk & Keluar
+
+            {
+
+                name: "penerimaan_stok",
+
+                domain: "transaksi",
+
+                badge: "badge-transaksi",
+
+                badgeText: "Transaksi Masuk",
+
+                desc: "Kepala (header) dokumen pengadaan barang masuk dari distributor rekanan.",
+
+                cols: [
+
+                    { name: "id_penerimaan", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "no_referensi", type: "varchar(50)", key: "", extra: "No Faktur/Surat Jalan" },
+
+                    { name: "sumber", type: "enum(Supplier, Retur Pelanggan, Lainnya)", key: "", extra: "" },
+
+                    { name: "id_supplier", type: "int(11)", key: "FK", extra: "-> supplier.id_supplier" },
+
+                    { name: "tanggal_terima", type: "date", key: "", extra: "" },
+
+                    { name: "catatan", type: "text", key: "", extra: "" },
+
+                    { name: "file_nota", type: "varchar(255)", key: "", extra: "lampiran nota" },
+
+                    { name: "dibuat_oleh", type: "int(11)", key: "FK", extra: "-> users.id_user" },
+
+                    { name: "created_at", type: "timestamp", key: "", extra: "" }
+
+                ]
+
+            },
+
+            {
+
+                name: "penerimaan_detail",
+
+                domain: "transaksi",
+
+                badge: "badge-transaksi",
+
+                badgeText: "Transaksi Masuk",
+
+                desc: "Rincian barang pasokan masuk, kuantitas terima/rusak, harga beli, nomor batch, serta status klaim retur pemasok.",
+
+                cols: [
+
+                    { name: "id_penerimaan_detail", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "id_penerimaan", type: "int(11)", key: "FK", extra: "-> penerimaan_stok.id_penerimaan" },
+
+                    { name: "id_variasi", type: "int(11)", key: "FK", extra: "-> produk_variasi.id_variasi" },
+
+                    { name: "qty_pesan", type: "int(11)", key: "", extra: "" },
+
+                    { name: "qty_terima", type: "int(11)", key: "", extra: "" },
+
+                    { name: "qty_rusak", type: "int(11)", key: "", extra: "" },
+
+                    { name: "harga_beli", type: "decimal(15,2)", key: "", extra: "" },
+
+                    { name: "no_batch", type: "varchar(50)", key: "", extra: "" },
+
+                    { name: "tgl_exp", type: "date", key: "", extra: "" },
+
+                    { name: "status_retur", type: "enum(Tidak Ada, Pengajuan, Selesai)", key: "", extra: "" },
+
+                    { name: "qty_pengganti_diterima", type: "int(11)", key: "", extra: "" },
+
+                    { name: "no_batch_pengganti", type: "varchar(50)", key: "", extra: "" },
+
+                    { name: "tgl_exp_pengganti", type: "date", key: "", extra: "" },
+
+                    { name: "tgl_selesai_retur", type: "date", key: "", extra: "" },
+
+                    { name: "catatan_retur", type: "text", key: "", extra: "" }
+
+                ]
+
+            },
+
+            {
+
+                name: "penjualan",
+
+                domain: "transaksi",
+
+                badge: "badge-transaksi",
+
+                badgeText: "Transaksi Keluar",
+
+                desc: "Kepala (header) transaksi penjualan omnichannel (kasir toko fisik POS maupun checkout e-commerce).",
+
+                cols: [
+
+                    { name: "id_penjualan", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "no_invoice", type: "varchar(50)", key: "", extra: "unique" },
+
+                    { name: "id_user", type: "int(11)", key: "FK", extra: "-> users.id_user" },
+
+                    { name: "tipe_transaksi", type: "enum(offline, online)", key: "", extra: "" },
+
+                    { name: "metode_pengambilan", type: "enum(pickup, delivery)", key: "", extra: "" },
+
+                    { name: "status_pesanan", type: "enum(pending, dibayar, diproses, siap_diambil, dikirim, selesai, batal)", key: "", extra: "" },
+
+                    { name: "total_harga", type: "decimal(12,2)", key: "", extra: "" },
+
+                    { name: "ongkir", type: "decimal(10,2)", key: "", extra: "" },
+
+                    { name: "metode_bayar_pos", type: "varchar(50)", key: "", extra: "tunai/qris" },
+
+                    { name: "snap_token", type: "varchar(255)", key: "", extra: "token digital" },
+
+                    { name: "kode_pickup", type: "varchar(20)", key: "", extra: "verifikasi ambil" },
+
+                    { name: "created_at", type: "timestamp", key: "", extra: "" }
+
+                ]
+
+            },
+
+            {
+
+                name: "detail_penjualan",
+
+                domain: "transaksi",
+
+                badge: "badge-transaksi",
+
+                badgeText: "Transaksi Keluar",
+
+                desc: "Rincian item produk yang terjual per transaksi penjualan beserta harga satuan dan catatan logistik.",
+
+                cols: [
+
+                    { name: "id_detail_penjualan", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "id_penjualan", type: "int(11)", key: "FK", extra: "-> penjualan.id_penjualan" },
+
+                    { name: "id_variasi", type: "int(11)", key: "FK", extra: "-> produk_variasi.id_variasi" },
+
+                    { name: "qty", type: "int(11)", key: "", extra: "" },
+
+                    { name: "harga_satuan", type: "decimal(12,2)", key: "", extra: "" },
+
+                    { name: "catatan_logistik", type: "text", key: "", extra: "" }
+
+                ]
+
+            },
+
+            {
+
+                name: "pesanan_batch_alokasi",
+
+                domain: "transaksi",
+
+                badge: "badge-transaksi",
+
+                badgeText: "Kuncian Alokasi",
+
+                desc: "Mengunci persediaan fisik (reserved stock) nomor batch obat untuk pesanan e-commerce sebelum diproses/dikirim.",
+
+                cols: [
+
+                    { name: "id_alokasi_batch", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "id_penjualan", type: "int(11)", key: "FK", extra: "-> penjualan.id_penjualan" },
+
+                    { name: "id_detail_penjualan", type: "int(11)", key: "FK", extra: "-> detail_penjualan.id_detail_penjualan" },
+
+                    { name: "id_batch", type: "int(11)", key: "FK", extra: "-> stok_batch.id_stok_batch" },
+
+                    { name: "qty_satuan_kecil", type: "int(11)", key: "", extra: "kuantitas terkunci" },
+
+                    { name: "created_at", type: "timestamp", key: "", extra: "" }
+
+                ]
+
+            },
+
+            {
+
+                name: "kartu_stok",
+
+                domain: "transaksi",
+
+                badge: "badge-transaksi",
+
+                badgeText: "Buku Besar Audit",
+
+                desc: "Buku besar mutasi persediaan yang mencatat setiap arus masuk, keluar, dan penyesuaian fisik secara transparan.",
+
+                cols: [
+
+                    { name: "id_kartu_stok", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "id_variasi", type: "int(11)", key: "FK", extra: "-> produk_variasi.id_variasi" },
+
+                    { name: "id_batch", type: "int(11)", key: "FK", extra: "-> stok_batch.id_stok_batch" },
+
+                    { name: "satuan_tipe", type: "enum(besar, kecil)", key: "", extra: "" },
+
+                    { name: "jenis_mutasi", type: "enum(masuk, keluar, penyesuaian)", key: "", extra: "" },
+
+                    { name: "kanal", type: "enum(pos, ecommerce, gudang)", key: "", extra: "" },
+
+                    { name: "alasan_mutasi", type: "enum(penjualan, penerimaan, retur, rusak, kadaluarsa, opname, konversi)", key: "", extra: "" },
+
+                    { name: "no_ref_dokumen", type: "varchar(100)", key: "", extra: "" },
+
+                    { name: "qty", type: "int(11)", key: "", extra: "" },
+
+                    { name: "sisa_stok", type: "int(11)", key: "", extra: "saldo berjalan" },
+
+                    { name: "keterangan", type: "text", key: "", extra: "" },
+
+                    { name: "dibuat_oleh", type: "int(11)", key: "FK", extra: "-> users.id_user" },
+
+                    { name: "tanggal", type: "timestamp", key: "", extra: "" }
+
+                ]
+
+            },
+
+            // Domain 4: Pengendalian & Konversi
+
+            {
+
+                name: "histori_konversi",
+
+                domain: "fefo",
+
+                badge: "badge-stok",
+
+                badgeText: "Konversi Satuan",
+
+                desc: "Mencatat riwayat pembongkaran kemasan dus besar ke kemasan eceran (Bongkar Box) secara otomatis.",
+
+                cols: [
+
+                    { name: "id_histori_konversi", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "id_variasi", type: "int(11)", key: "FK", extra: "-> produk_variasi.id_variasi" },
+
+                    { name: "batch_asal", type: "varchar(50)", key: "", extra: "batch dus" },
+
+                    { name: "batch_hasil", type: "varchar(50)", key: "", extra: "batch eceran" },
+
+                    { name: "qty_box_buka", type: "int(11)", key: "", extra: "jumlah dus dibuka" },
+
+                    { name: "qty_pcs_hasil", type: "int(11)", key: "", extra: "hasil eceran" },
+
+                    { name: "sisa_dus_akhir", type: "int(11)", key: "", extra: "" },
+
+                    { name: "dibuat_oleh", type: "int(11)", key: "FK", extra: "-> users.id_user" },
+
+                    { name: "created_at", type: "timestamp", key: "", extra: "" }
+
+                ]
+
+            },
+
+            {
+
+                name: "log_anomali_fefo",
+
+                domain: "fefo",
+
+                badge: "badge-audit",
+
+                badgeText: "Audit Kepatuhan",
+
+                desc: "Mendokumentasikan kejadian saat kasir mengambil nomor batch obat yang berbeda dari rekomendasi FEFO sistem.",
+
+                cols: [
+
+                    { name: "id_log_anomali", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "id_penjualan", type: "int(11)", key: "FK", extra: "-> penjualan.id_penjualan" },
+
+                    { name: "id_user", type: "int(11)", key: "FK", extra: "-> users.id_user" },
+
+                    { name: "id_variasi", type: "int(11)", key: "FK", extra: "-> produk_variasi.id_variasi" },
+
+                    { name: "batch_diambil", type: "varchar(100)", key: "", extra: "batch fisik riil" },
+
+                    { name: "batch_seharusnya", type: "varchar(100)", key: "", extra: "saran FEFO sistem" },
+
+                    { name: "qty", type: "int(11)", key: "", extra: "" },
+
+                    { name: "satuan_tipe", type: "enum(besar, kecil)", key: "", extra: "" },
+
+                    { name: "status", type: "enum(Pending, Selesai)", key: "", extra: "" },
+
+                    { name: "created_at", type: "timestamp", key: "", extra: "" }
+
+                ]
+
+            },
+
+            // Domain 5: Audit Stok Opname
+
+            {
+
+                name: "sesi_opname",
+
+                domain: "opname",
+
+                badge: "badge-audit",
+
+                badgeText: "Audit Opname",
+
+                desc: "Mengelola sesi audit fisik berkala serta mencatat waktu pembekuan operasional (Freeze Lock) dan pembukaan kembali.",
+
+                cols: [
+
+                    { name: "id_sesi_opname", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "kode_sesi", type: "varchar(50)", key: "", extra: "unique" },
+
+                    { name: "status", type: "enum(Aktif, Ditutup, Dibatalkan)", key: "", extra: "" },
+
+                    { name: "dibekukan_oleh", type: "int(11)", key: "FK", extra: "-> users.id_user" },
+
+                    { name: "dibekukan_pada", type: "timestamp", key: "", extra: "kunci freeze" },
+
+                    { name: "dibuka_oleh", type: "int(11)", key: "FK", extra: "-> users.id_user" },
+
+                    { name: "dibuka_pada", type: "timestamp", key: "", extra: "buka freeze" },
+
+                    { name: "catatan", type: "text", key: "", extra: "" }
+
+                ]
+
+            },
+
+            {
+
+                name: "detail_opname_batch",
+
+                domain: "opname",
+
+                badge: "badge-audit",
+
+                badgeText: "Audit Opname",
+
+                desc: "Lembar kerja pencacahan fisik obat per nomor batch, hasil hitungan fisik, kalkulasi selisih, dan eksekusi mutasi penyesuaian.",
+
+                cols: [
+
+                    { name: "id_detail_opname", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "id_sesi", type: "int(11)", key: "FK", extra: "-> sesi_opname.id_sesi_opname" },
+
+                    { name: "id_batch", type: "int(11)", key: "FK", extra: "-> stok_batch.id_stok_batch" },
+
+                    { name: "id_variasi", type: "int(11)", key: "FK", extra: "-> produk_variasi.id_variasi" },
+
+                    { name: "jenis_komoditas", type: "enum(Obat, Alkes)", key: "", extra: "" },
+
+                    { name: "satuan_tipe", type: "enum(besar, kecil)", key: "", extra: "" },
+
+                    { name: "stok_sistem_fisik", type: "int(11)", key: "", extra: "stok buku" },
+
+                    { name: "hitung_fisik", type: "int(11)", key: "", extra: "cacahan riil" },
+
+                    { name: "selisih", type: "int(11)", key: "", extra: "varian" },
+
+                    { name: "status_mutasi", type: "enum(Belum Dimutasi, Sudah Dimutasi, Sesuai)", key: "", extra: "" },
+
+                    { name: "alasan_mutasi", type: "varchar(255)", key: "", extra: "" },
+
+                    { name: "dihitung_oleh", type: "int(11)", key: "FK", extra: "-> users.id_user" },
+
+                    { name: "waktu_hitung", type: "timestamp", key: "", extra: "" }
+
+                ]
+
+            },
+
+            {
+
+                name: "detail_opname_sn",
+
+                domain: "opname",
+
+                badge: "badge-audit",
+
+                badgeText: "Audit Opname",
+
+                desc: "Mencatat rincian verifikasi fisik per unit nomor seri alat kesehatan yang ditemukan selama sesi stok opname.",
+
+                cols: [
+
+                    { name: "id_opname_sn", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "id_detail_opname", type: "int(11)", key: "FK", extra: "-> detail_opname_batch.id_detail_opname" },
+
+                    { name: "id_unit_serial", type: "int(11)", key: "FK", extra: "-> unit_serial.id_unit_serial" },
+
+                    { name: "serial_number", type: "varchar(150)", key: "", extra: "" },
+
+                    { name: "jenis_tindakan", type: "enum(Ada_Sesuai, Hilang, Ditemukan_Baru)", key: "", extra: "" },
+
+                    { name: "created_at", type: "timestamp", key: "", extra: "" }
+
+                ]
+
+            },
+
+            {
+
+                name: "riwayat_hitung_opname",
+
+                domain: "opname",
+
+                badge: "badge-audit",
+
+                badgeText: "Audit Opname",
+
+                desc: "Merekam jejak audit riwayat koreksi perhitungan fisik opname guna mencegah kecurangan atau manipulasi angka.",
+
+                cols: [
+
+                    { name: "id_riwayat_hitung", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "id_detail_opname", type: "int(11)", key: "FK", extra: "-> detail_opname_batch.id_detail_opname" },
+
+                    { name: "hitung_sebelumnya", type: "int(11)", key: "", extra: "" },
+
+                    { name: "hitung_baru", type: "int(11)", key: "", extra: "" },
+
+                    { name: "dihitung_oleh", type: "int(11)", key: "FK", extra: "-> users.id_user" },
+
+                    { name: "alasan_koreksi", type: "text", key: "", extra: "" },
+
+                    { name: "waktu_koreksi", type: "timestamp", key: "", extra: "" }
+
+                ]
+
+            },
+
+            // Domain 6: Pengaturan
+
+            {
+
+                name: "pengaturan_web",
+
+                domain: "setting",
+
+                badge: "badge-setting",
+
+                badgeText: "Pengaturan Sistem",
+
+                desc: "Menyimpan konfigurasi independen profil toko, kontak layanan pelanggan, dan identitas visual portal web publik.",
+
+                cols: [
+
+                    { name: "id_pengaturan", type: "int(11)", key: "PK", extra: "auto_inc" },
+
+                    { name: "nama_toko", type: "varchar(100)", key: "", extra: "" },
+
+                    { name: "deskripsi", type: "text", key: "", extra: "" },
+
+                    { name: "telepon", type: "varchar(20)", key: "", extra: "" },
+
+                    { name: "whatsapp", type: "varchar(20)", key: "", extra: "" },
+
+                    { name: "alamat", type: "text", key: "", extra: "" },
+
+                    { name: "logo", type: "varchar(255)", key: "", extra: "" },
+
+                    { name: "banner_promosi", type: "varchar(255)", key: "", extra: "" },
+
+                    { name: "email_cs", type: "varchar(150)", key: "", extra: "" }
+
+                ]
+
+            }
+
+        ];
+
+        // Render Table Cards
+
+        function renderTables(filter = 'all') {
+
+            const container = document.getElementById('tables_container');
+
+            container.innerHTML = '';
+
+            const filtered = filter === 'all' 
+
+                ? tablesData 
+
+                : tablesData.filter(t => t.domain === filter);
+
+            filtered.forEach(t => {
+
+                const card = document.createElement('div');
+
+                card.className = 'table-card';
+
+                let colsHtml = '';
+
+                t.cols.forEach(c => {
+
+                    let keyBadge = '';
+
+                    if (c.key === 'PK') keyBadge = '<span class="key-pk">PK</span>';
+
+                    else if (c.key === 'FK') keyBadge = '<span class="key-fk">FK</span>';
+
+                    colsHtml += `
+
+                        <li class="col-item">
+
+                            <span class="col-name">${keyBadge} ${c.name}</span>
+
+                            <span class="col-type">${c.type}</span>
+
+                        </li>
+
+                    `;
+
+                });
+
+                card.innerHTML = `
+
+                    <div class="table-header">
+
+                        <span class="table-name">${t.name}</span>
+
+                        <span class="badge ${t.badge}">${t.badgeText}</span>
+
+                    </div>
+
+                    <div class="table-body">
+
+                        <ul class="col-list">
+
+                            ${colsHtml}
+
+                        </ul>
+
+                    </div>
+
+                    <div class="table-desc">
+
+                        ${t.desc}
+
+                    </div>
+
+                `;
+
+                container.appendChild(card);
+
+            });
+
+        }
+
+        function filterDomain(domain, btn) {
+
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+            btn.classList.add('active');
+
+            renderTables(domain);
+
+        }
+
+        // Fetch DBML Code
+
+        let cachedDBML = "// =========================================================================\n// LOGICAL DATA MODEL (ERD) - ZENCARE MEDICAL\n// Sistem Informasi Inventori Omnichannel Obat & Alat Kesehatan (20 Tabel)\n// Format DBML Valid untuk https://dbdiagram.io\n// =========================================================================\n\nTable users {\n  id int [pk, increment]\n  username varchar(50) [not null, unique]\n  password varchar(255) [not null]\n  nama_lengkap varchar(100) [not null]\n  role varchar(50) [not null]\n  email varchar(150)\n  telepon varchar(20)\n  alamat text\n  kota_id int\n  is_active boolean [default: true]\n  created_at timestamp [not null]\n}\n\nTable supplier {\n  id int [pk, increment]\n  nama varchar(100) [not null]\n  kontak varchar(50)\n  email varchar(150)\n  alamat text\n  is_active boolean [default: true]\n}\n\nTable produk_induk {\n  id int [pk, increment]\n  sku_induk varchar(50) [not null, unique]\n  nama_produk varchar(150) [not null]\n  deskripsi text\n  spesifikasi text\n  info_pengiriman text\n  kategori varchar(50) [not null]\n  gambar varchar(255)\n  is_active boolean [default: true]\n  batas_hari_expired int [default: 0]\n  created_at timestamp [not null]\n}\n\nTable produk_variasi {\n  id int [pk, increment]\n  id_produk_induk int\n  sku_variasi varchar(50) [not null, unique]\n  nama_variasi varchar(100) [not null]\n  satuan_kecil varchar(50) [not null, default: 'Pcs']\n  satuan_besar varchar(50) [not null, default: 'Box']\n  rasio_konversi smallint [not null, default: 1]\n  harga_jual_kecil decimal(12,2) [not null, default: 0.00]\n  harga_jual_besar decimal(12,2) [not null, default: 0.00]\n  stok_minimum_kecil int [default: 0]\n  stok_minimum_besar int [default: 0]\n  berat int [not null, default: 100]\n  tampil_di_online boolean [default: true]\n  is_active boolean [default: true]\n  gambar varchar(500)\n}\n\nTable stok_toko {\n  id int [pk, increment]\n  id_variasi int [not null, unique]\n  stok int [not null, default: 0]\n}\n\nTable stok_batch {\n  id int [pk, increment]\n  id_variasi int [not null]\n  no_batch varchar(100) [not null]\n  tgl_exp date [not null]\n  stok_sisa int [not null, default: 0]\n  created_at timestamp [not null]\n}\n\nTable unit_serial {\n  id int [pk, increment]\n  id_variasi int [not null]\n  serial_number varchar(150) [not null, unique]\n  status varchar(50) [not null, default: 'Tersedia']\n  id_penjualan int\n  catatan varchar(255)\n  tgl_habis_garansi date\n  created_at timestamp [not null]\n  updated_at timestamp\n}\n\nTable penerimaan_stok {\n  id int [pk, increment]\n  no_referensi varchar(50) [not null]\n  sumber varchar(50) [not null]\n  id_supplier int\n  tanggal_terima date [not null]\n  catatan text\n  file_nota varchar(255)\n  dibuat_oleh int\n  created_at timestamp [not null]\n}\n\nTable penerimaan_detail {\n  id int [pk, increment]\n  id_penerimaan int [not null]\n  id_variasi int [not null]\n  qty_pesan int [not null, default: 0]\n  qty_terima int [not null]\n  qty_rusak int [not null, default: 0]\n  harga_beli decimal(15,2)\n  no_batch varchar(50)\n  tgl_exp date\n  status_retur varchar(30) [not null, default: 'tidak_ada']\n  qty_pengganti_diterima int [not null, default: 0]\n  no_batch_pengganti varchar(50)\n  tgl_exp_pengganti date\n  tgl_selesai_retur date\n  catatan_retur text\n}\n\nTable penjualan {\n  id int [pk, increment]\n  no_invoice varchar(50) [not null, unique]\n  id_user int\n  tipe_transaksi varchar(50) [not null]\n  metode_pengambilan varchar(50)\n  status_pesanan varchar(50) [not null, default: 'Menunggu Pembayaran']\n  alasan_batal varchar(255)\n  dibatalkan_oleh varchar(50)\n  waktu_batal timestamp\n  request_batal boolean [not null, default: false]\n  request_batal_alasan varchar(255)\n  request_batal_waktu timestamp\n  total_harga decimal(12,2) [not null]\n  metode_bayar_pos varchar(50) [default: 'Tunai']\n  ongkir decimal(10,2) [default: 0.00]\n  nama_penerima varchar(100)\n  telepon_penerima varchar(20)\n  alamat_lengkap text\n  kota_tujuan varchar(100)\n  kurir varchar(50)\n  layanan varchar(50)\n  snap_token varchar(255)\n  payment_method_ecommerce varchar(50)\n  paid_at timestamp\n  kode_pickup varchar(20)\n  created_at timestamp [not null]\n  updated_at timestamp\n}\n\nTable detail_penjualan {\n  id int [pk, increment]\n  id_penjualan int [not null]\n  id_variasi int [not null]\n  qty int [not null]\n  harga_satuan decimal(12,2) [not null]\n  catatan_logistik text\n}\n\nTable pesanan_batch_alokasi {\n  id int [pk, increment]\n  id_penjualan int [not null]\n  id_detail_penjualan int [not null]\n  id_batch int [not null]\n  qty_satuan_kecil int [not null]\n  created_at timestamp [not null]\n}\n\nTable kartu_stok {\n  id int [pk, increment]\n  id_variasi int [not null]\n  id_batch int\n  satuan_tipe varchar(50) [not null, default: 'kecil']\n  jenis_mutasi varchar(50) [not null]\n  kanal varchar(50) [not null, default: 'Manual']\n  alasan_mutasi varchar(50) [not null, default: 'Selisih Stok Opname']\n  no_ref_dokumen varchar(100)\n  qty int [not null]\n  sisa_stok int [not null]\n  keterangan text\n  dibuat_oleh int\n  tanggal timestamp [not null]\n}\n\nTable histori_konversi {\n  id int [pk, increment]\n  id_variasi int [not null]\n  batch_asal varchar(100) [not null]\n  batch_hasil varchar(100) [not null]\n  qty_box_buka int [not null]\n  qty_pcs_hasil int [not null]\n  sisa_dus_akhir int [default: 0]\n  dibuat_oleh int\n  created_at timestamp [not null]\n}\n\nTable log_anomali_fefo {\n  id int [pk, increment]\n  id_penjualan int\n  id_user int [not null]\n  id_variasi int [not null]\n  batch_diambil varchar(100)\n  batch_seharusnya varchar(100)\n  qty int\n  satuan_tipe varchar(20) [not null, default: 'kecil']\n  status varchar(50) [not null, default: 'terlewat']\n  qty_disesuaikan int [not null, default: 0]\n  resolved_in_penjualan int\n  resolved_at date\n  created_at timestamp [not null]\n}\n\nTable sesi_opname {\n  id int [pk, increment]\n  kode_sesi varchar(50) [not null, unique]\n  status varchar(50) [not null, default: 'Aktif']\n  dibekukan_oleh int [not null]\n  dibekukan_pada timestamp [not null]\n  dibuka_oleh int\n  dibuka_pada timestamp\n  catatan text\n}\n\nTable detail_opname_batch {\n  id int [pk, increment]\n  id_sesi int [not null]\n  id_batch int\n  id_variasi int [not null]\n  jenis_komoditas varchar(50) [not null, default: 'Obat']\n  satuan_tipe varchar(50) [not null, default: 'kecil']\n  nama_satuan varchar(50) [not null, default: 'Unit']\n  stok_tersedia_sistem int [not null]\n  stok_reserved int [not null]\n  stok_sistem_fisik int [not null]\n  hitung_fisik int\n  selisih int\n  status_mutasi varchar(50) [not null, default: 'Belum Dimutasi']\n  alasan_mutasi varchar(255)\n  keterangan_mutasi text\n  id_kartu_stok int\n  dihitung_oleh int\n  waktu_hitung timestamp\n  dimutasi_oleh int\n  waktu_mutasi timestamp\n}\n\nTable detail_opname_sn {\n  id int [pk, increment]\n  id_detail_opname int [not null]\n  id_unit_serial int\n  serial_number varchar(100) [not null]\n  jenis_tindakan varchar(50) [not null]\n  created_at timestamp [not null]\n}\n\nTable riwayat_hitung_opname {\n  id int [pk, increment]\n  id_detail_opname int [not null]\n  hitung_sebelumnya int\n  hitung_baru int [not null]\n  dihitung_oleh int [not null]\n  alasan_koreksi text\n  waktu_koreksi timestamp [not null]\n}\n\nTable pengaturan_web {\n  id int [pk, increment]\n  nama_toko varchar(100) [not null, default: 'ZenCare Medical']\n  deskripsi text\n  telepon varchar(20)\n  whatsapp varchar(20)\n  alamat text\n  logo varchar(255)\n  banner_promosi varchar(255)\n  email_cs varchar(150)\n}\n\n// =========================================================================\n// RELASI ANTAR-TABEL (FOREIGN KEY CONSTRAINTS)\n// =========================================================================\nRef: detail_opname_batch.id_sesi > sesi_opname.id_sesi_opname\nRef: detail_opname_batch.id_batch > stok_batch.id_stok_batch\nRef: detail_opname_batch.id_variasi > produk_variasi.id_variasi\nRef: detail_opname_batch.dihitung_oleh > users.id_user\nRef: detail_opname_batch.dimutasi_oleh > users.id_user\nRef: detail_opname_sn.id_detail_opname > detail_opname_batch.id_detail_opname\nRef: detail_opname_sn.id_unit_serial > unit_serial.id_unit_serial\nRef: detail_penjualan.id_penjualan > penjualan.id_penjualan\nRef: detail_penjualan.id_variasi > produk_variasi.id_variasi\nRef: histori_konversi.id_variasi > produk_variasi.id_variasi\nRef: histori_konversi.dibuat_oleh > users.id_user\nRef: kartu_stok.id_variasi > produk_variasi.id_variasi\nRef: kartu_stok.dibuat_oleh > users.id_user\nRef: penerimaan_detail.id_penerimaan > penerimaan_stok.id_penerimaan\nRef: penerimaan_detail.id_variasi > produk_variasi.id_variasi\nRef: penerimaan_stok.id_supplier > supplier.id_supplier\nRef: penerimaan_stok.dibuat_oleh > users.id_user\nRef: penjualan.id_user > users.id_user\nRef: pesanan_batch_alokasi.id_penjualan > penjualan.id_penjualan\nRef: pesanan_batch_alokasi.id_detail_penjualan > detail_penjualan.id_detail_penjualan\nRef: pesanan_batch_alokasi.id_batch > stok_batch.id_stok_batch\nRef: produk_variasi.id_produk_induk > produk_induk.id_produk_induk\nRef: riwayat_hitung_opname.id_detail_opname > detail_opname_batch.id_detail_opname\nRef: riwayat_hitung_opname.dihitung_oleh > users.id_user\nRef: sesi_opname.dibekukan_oleh > users.id_user\nRef: sesi_opname.dibuka_oleh > users.id_user\nRef: stok_batch.id_variasi > produk_variasi.id_variasi\nRef: stok_toko.id_variasi > produk_variasi.id_variasi\nRef: unit_serial.id_variasi > produk_variasi.id_variasi\n\n// Relasi Fungsional Operasional:\nRef: log_anomali_fefo.id_penjualan > penjualan.id_penjualan\nRef: log_anomali_fefo.id_user > users.id_user\nRef: log_anomali_fefo.id_variasi > produk_variasi.id_variasi\nRef: unit_serial.id_penjualan > penjualan.id_penjualan\nRef: kartu_stok.id_batch > stok_batch.id_stok_batch";
+
+        fetch('zencare_dbml_dbdiagram.txt')
+
+            .then(res => res.text())
+
+            .then(txt => {
+
+                cachedDBML = txt;
+
+                document.getElementById('dbml_code_content').textContent = txt;
+
+            })
+
+            .catch(() => {
+
+                document.getElementById('dbml_code_content').textContent = "// Gagal memuat file zencare_dbml_dbdiagram.txt. Silakan periksa direktori /lain.";
+
+            });
+
+        // Copy Functions
+
+        function copyDBML() {
+
+            if (cachedDBML) {
+
+                navigator.clipboard.writeText(cachedDBML).then(() => showToast("Kode DBML (20 Tabel) berhasil disalin untuk dbdiagram.io!"));
+
+            } else {
+
+                showToast("DBML belum selesai dimuat.");
+
+            }
+
+        }
+
+        function copyCleanSQL() {
+
+            fetch('zencare_clean_schema.sql')
+
+                .then(res => res.text())
+
+                .then(txt => {
+
+                    navigator.clipboard.writeText(txt).then(() => showToast("Schema SQL Bersih (20 Tabel) berhasil disalin!"));
+
+                });
+
+        }
+
+        function copyNarasiText() {
+
+            const narasi = document.getElementById('narasi_bab_3_4').innerText;
+
+            navigator.clipboard.writeText(narasi).then(() => showToast("Teks Narasi Subbab 3.4 berhasil disalin!"));
+
+        }
+
+        function showToast(msg) {
+
+            const toast = document.getElementById('toast');
+
+            toast.textContent = msg;
+
+            toast.classList.add('show');
+
+            setTimeout(() => toast.classList.remove('show'), 2800);
+
+        }
+
+        
+
+        // Zoom functionality
+
+        let currentZoom = 1.0;
+
+        function zoomIn() {
+
+            currentZoom = Math.min(2.5, currentZoom + 0.15);
+
+            applyZoom();
+
+        }
+
+        function zoomOut() {
+
+            currentZoom = Math.max(0.4, currentZoom - 0.15);
+
+            applyZoom();
+
+        }
+
+        function resetZoom() {
+
+            currentZoom = 1.0;
+
+            applyZoom();
+
+        }
+
+        function applyZoom() {
+
+            const wrapper = document.getElementById('svg_wrapper');
+
+            if (wrapper) {
+
+                wrapper.style.transform = `scale(${currentZoom})`;
+
+            }
+
+        }
+
+        // Init
+
+        renderTables('all');
+
+    </script>
+
+</body>
+
+</html>

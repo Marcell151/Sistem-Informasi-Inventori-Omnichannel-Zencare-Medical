@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><base href="http://localhost/inventory_zencare/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Satuan &amp; UOM – ZenCare Medical</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- jQuery & Select2 for Searchable Dropdowns (Offline Local Assets + CDN Fallback) -->
+<script src="/inventory_zencare/assets/js/jquery-3.7.1.min.js"></script>
+<script>if (typeof jQuery === 'undefined') { document.write('<script src="https://code.jquery.com/jquery-3.7.1.min.js"><\/script>'); }</script>
+<link href="/inventory_zencare/assets/css/select2.min.css" rel="stylesheet" />
+<script src="/inventory_zencare/assets/js/select2.min.js"></script>
+<!-- SweetAlert2 (Offline Local Asset + CDN Fallback) -->
+<script src="/inventory_zencare/assets/js/sweetalert2.all.min.js"></script>
+<script>if (typeof Swal === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"><\/script>'); }</script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ["Inter", "sans-serif"] },
+        colors: {
+          zc:      "#1a75d2",
+          zcNavy:  "#0f2d5a",
+          zcHv:    "#0f2d5a",
+          zcLt:    "#eef6fb",
+          zcRed:   "#c0392b",
+          zcBg:    "#f8fafc",
+          zcCard:  "#ffffff",
+          zcBrd:   "#e2e8f0",
+          zcTxt:   "#0f2d5a",
+          zcMut:   "#64748b",
+          zcEm:    "#059669",
+        }
+      }
+    }
+  }
+</script>
+<style>
+  ::-webkit-scrollbar{width:5px;height:5px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px}
+  body{color:#1e293b;background-color:#f8fafc}
+  .sidebar-link{display:flex;align-items:center;gap:10px;padding:8.5px 12px;border-radius:6px;font-size:13px;font-weight:500;color:#475569;transition:all .15s}
+  .sidebar-link:hover{background:#f1f5f9;color:#0f2d5a}
+  .sidebar-link.active{background:#eef6fb;color:#0f2d5a;font-weight:700;border-left:3px solid #1a75d2;padding-left:9px}
+  .sidebar-link.active svg{color:#1a75d2;opacity:1}
+  .sidebar-link svg{flex-shrink:0;color:#64748b;opacity:.85}
+  .sidebar-section{font-size:10.5px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.07em;padding:16px 12px 6px}
+
+  /* ── Global Readability Upgrade (No Microscopic 9px/10px Text) ────────── */
+  .text-\[9px\], .text-\[10px\] {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+  .text-\[11px\] {
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+  }
+  [style*="font-size:9px"], [style*="font-size: 9px"],
+  [style*="font-size:10px"], [style*="font-size: 10px"] {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+  [style*="font-size:11px"], [style*="font-size: 11px"] {
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* ── Responsive Adaptation for Laptop vs PC Resolutions (1280px–1536px) ─ */
+  @media (max-width: 1536px) {
+    table.min-w-\[900px\], table.min-w-\[920px\], table.min-w-\[950px\],
+    table.min-w-\[1000px\], table.min-w-\[1020px\], table.min-w-\[1050px\],
+    table.min-w-\[1100px\] {
+      min-width: 100% !important;
+    }
+    table th, table td {
+      padding-left: 0.625rem !important;
+      padding-right: 0.625rem !important;
+    }
+  }
+
+  /* ── Harmonize Off-Brand Purple/Indigo AI Accents to ZenCare Logo Palette ── */
+  .bg-indigo-50, .bg-purple-50, .bg-violet-50, .bg-indigo-50\/50, .bg-purple-50\/50 {
+    background-color: #eef6fb !important;
+  }
+  .bg-indigo-100, .bg-purple-100, .bg-violet-100 {
+    background-color: #dbeafe !important;
+  }
+  .text-indigo-600, .text-indigo-700, .text-indigo-800,
+  .text-purple-600, .text-purple-700, .text-purple-800,
+  .text-violet-600, .text-violet-700 {
+    color: #0f2d5a !important;
+  }
+  .border-indigo-100, .border-indigo-200, .border-purple-100, .border-purple-200, .border-violet-200 {
+    border-color: #cbe4f5 !important;
+  }
+  .bg-indigo-600, .bg-purple-600, .bg-violet-600 {
+    background-color: #0f2d5a !important;
+  }
+  .hover\:bg-indigo-700:hover, .hover\:bg-purple-700:hover {
+    background-color: #1a75d2 !important;
+  }
+
+  /* ── Clean Enterprise Table & Card Refinement ─────────────────────────── */
+  table th:not(.text-white):not([class*="text-"]) {
+    letter-spacing: 0.04em;
+    color: #475569;
+  }
+
+  /* ── Modern Minimalist Select2 Theme (Ecommerce-Grade) ────────────────── */
+  .select2-container--default .select2-selection--single {
+    min-height: 40px !important;
+    height: 40px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.75rem !important;
+    padding: 6px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    background-color: #ffffff !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03) !important;
+  }
+  .select2-container--default.select2-container--open .select2-selection--single,
+  .select2-container--default .select2-selection--single:focus {
+    border-color: #1a75d2 !important;
+    box-shadow: 0 0 0 3px rgba(26, 117, 210, 0.12) !important;
+    outline: none !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #1e293b !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    padding-left: 0 !important;
+    padding-right: 20px !important;
+    line-height: normal !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #94a3b8 !important;
+    font-size: 0.8125rem !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 100% !important;
+    right: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #94a3b8 transparent transparent transparent !important;
+    border-width: 5px 4px 0 4px !important;
+  }
+  .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-color: transparent transparent #1a75d2 transparent !important;
+    border-width: 0 4px 5px 4px !important;
+  }
+  .select2-dropdown {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.875rem !important;
+    box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.04) !important;
+    overflow: hidden !important;
+    z-index: 9999 !important;
+    margin-top: 4px !important;
+    background-color: #ffffff !important;
+    padding: 4px !important;
+  }
+  .select2-search--dropdown {
+    padding: 6px !important;
+  }
+  .select2-search--dropdown .select2-search__field {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.5rem !important;
+    padding: 7px 10px !important;
+    font-size: 0.8125rem !important;
+    background-color: #f8fafc !important;
+    color: #1e293b !important;
+    outline: none !important;
+    transition: all 0.15s ease !important;
+  }
+  .select2-search--dropdown .select2-search__field:focus {
+    border-color: #1a75d2 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(26, 117, 210, 0.1) !important;
+  }
+  .select2-results__option {
+    font-size: 0.8125rem !important;
+    padding: 8px 12px !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 2px !important;
+    color: #334155 !important;
+    transition: all 0.1s ease !important;
+  }
+  .select2-results__option--highlighted {
+    background-color: #eff6ff !important;
+    color: #1a75d2 !important;
+    font-weight: 600 !important;
+  }
+  .select2-results__option[aria-selected="true"] {
+    background-color: #1a75d2 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+  }
+  .select2-results__options {
+    max-height: 250px !important;
+    overflow-y: auto !important;
+  }
+  .select2-container--default .select2-results__message {
+    color: #94a3b8 !important;
+    font-size: 0.75rem !important;
+    padding: 12px !important;
+    text-align: center !important;
+  }
+  /* Table context compact select2 */
+  table .select2-container--default .select2-selection--single {
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 4px 8px !important;
+    border-radius: 0.5rem !important;
+  }
+  table .select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-size: 0.75rem !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  table .select2-container--default .select2-selection--single .select2-selection__arrow {
+    right: 6px !important;
+  }
+</style></head><body class="bg-zcBg text-zcTxt font-sans antialiased min-h-screen flex"><aside id="app-sidebar" class="w-[216px] xl:w-[236px] bg-white border-r border-zcBrd flex flex-col shrink-0 min-h-screen sticky top-0 hidden md:flex transition-all duration-200 z-40"><div class="h-16 flex items-center px-4 border-b border-zcBrd gap-3">
+      <div class="w-10 h-10 rounded-full bg-white border border-zcBrd flex items-center justify-center shrink-0 overflow-hidden">
+        <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
+      </div>
+      <div>
+        <div class="text-[14px] font-extrabold leading-tight tracking-tight">
+          <span class="text-[#0f2d5a]">ZenCare</span> <span class="text-[#c0392b]">Medical</span>
+        </div>
+        <span class="text-[11px] text-slate-500 font-medium block">Sistem Inventori &amp; POS</span>
+      </div>
+    </div><nav class="flex-1 px-2 py-3 overflow-y-auto"><p class="sidebar-section">Utama</p><a href="/inventory_zencare/index.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a><p class="sidebar-section">Transaksi</p><a href="/inventory_zencare/admin/pesanan.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg><span>Transaksi</span></a><p class="sidebar-section">Master Data</p><a href="/inventory_zencare/admin/master_produk.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 10-7-7l-10 10a4.95 4.95 0 107 7z"/><line x1="8.5" y1="8.5" x2="15.5" y2="15.5"/></svg><span>Produk</span></a><a href="/inventory_zencare/admin/master_uom.php" class="sidebar-link active"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4M7 12h10"/></svg><span>Satuan & UOM</span></a><a href="/inventory_zencare/admin/master_supplier.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 00-2-2H4a2 2 0 00-2 2v11a1 1 0 001 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 001-1v-3.65a1 1 0 00-.22-.624l-3.48-4.35A1 1 0 0017.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg><span>Supplier</span></a><p class="sidebar-section">Logistik & Inventori</p><a href="/inventory_zencare/inventori/tambah_stok.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span>Penerimaan Barang</span></a><a href="/inventory_zencare/inventori/proses_mutasi.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4"/></svg><span>Mutasi Stok Manual</span></a><a href="/inventory_zencare/inventori/konversi_uom.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4M7 12h10"/></svg><span>Konversi (UOM)</span></a><a href="/inventory_zencare/inventori/histori_konversi.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg><span>Histori Konversi</span></a><a href="/inventory_zencare/inventori/stok_opname.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/><path d="M9 10h6"/></svg><span>Stok Opname</span></a><a href="/inventory_zencare/laporan/kartu_stok.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12l2 2 4-4"/></svg><span>Kartu Stok</span></a><a href="/inventory_zencare/inventori/logistik_medis.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><path d="M12 11v6M9 14h6"/></svg><span>Logistik Medis</span></a></nav><div class="px-3 py-3 border-t border-zcBrd">
+      <div class="flex items-center gap-2.5 p-2.5 rounded-lg bg-[#f8fafc] border border-zcBrd mb-2">
+        <div class="w-8 h-8 rounded-full bg-[#0f2d5a] text-white font-bold text-xs flex items-center justify-center shrink-0">A</div>
+        <div class="min-w-0 flex-1">
+          <span class="text-xs font-bold text-[#0f2d5a] truncate block leading-snug">Admin Toko</span>
+          <span class="text-[11px] text-slate-500 font-medium block">Admin</span>
+        </div>
+      </div>
+      <a href="/inventory_zencare/logout.php" class="sidebar-link text-[#c0392b] hover:!bg-rose-50 hover:!text-rose-700 justify-center gap-2 py-2 text-xs font-semibold"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg> <span>Keluar Sistem</span></a>
+    </div></aside><div class="flex-1 flex flex-col min-w-0">
+    <header class="h-16 bg-white border-b border-zcBrd px-5 flex items-center justify-between sticky top-0 z-30 shrink-0">
+      <div>
+        <h1 class="text-base font-bold text-[#0f2d5a] leading-tight">Master Satuan &amp; UOM</h1><p class="text-xs text-slate-500 mt-0.5">Pengaturan Unit of Measure &amp; Harga Berbasis Produk Induk</p>  </div>
+      <div class="flex items-center gap-3 shrink-0"><div class="hidden sm:flex items-center gap-1.5 text-xs bg-[#eef6fb] border border-[#cbe4f5] text-[#0f2d5a] rounded-md px-3 py-1.5 font-semibold">
+        <svg class="w-3.5 h-3.5 text-[#1a75d2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        Pusat (Muharto)
+      </div><div class="flex items-center gap-2.5 border border-zcBrd px-3 py-1.5 rounded-md bg-white">
+          <div class="w-7 h-7 rounded-full bg-[#0f2d5a] text-white font-bold text-xs flex items-center justify-center">A</div>
+          <div>
+            <span class="text-xs font-bold text-[#0f2d5a] block leading-tight">Admin Toko</span>
+            <span class="text-[11px] text-slate-500 block leading-tight">Admin</span>
+          </div>
+        </div>
+      </div>
+    </header><main class="p-3 sm:p-4 xl:p-6 flex-1 min-w-0 overflow-x-hidden">
+
+<!-- CATEGORY FILTER TABS -->
+<div class="flex items-center gap-2 mb-4 flex-wrap">
+    <a href="?kategori=semua" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-zc text-white shadow-xs">
+        Semua Produk (53)
+    </a>
+    <a href="?kategori=Obat" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-white border border-zcBrd text-indigo-700 hover:bg-indigo-50/50">
+        Obat (35)
+    </a>
+    <a href="?kategori=Alat+Kesehatan" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-white border border-zcBrd text-teal-700 hover:bg-teal-50/50">
+        Alat Kesehatan (18)
+    </a>
+</div>
+
+<!-- ACTION & SEARCH HEADER -->
+<div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+    <div>
+        <h2 class="text-sm font-bold text-zcTxt">Daftar Satuan &amp; UOM Berbasis Produk Induk</h2>
+        <p class="text-xs text-zcMut mt-0.5">Total: 53 Produk Induk (59 SKU Variasi) &bull; Klik &blacktriangledown; untuk melihat dan mengatur UOM variasi</p>
+    </div>
+    <form method="GET" class="flex items-center gap-2">
+        <input type="hidden" name="kategori" value="semua">
+        <div class="relative w-full md:max-w-xs">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </span>
+            <input type="text" name="q" id="searchUom" value="" placeholder="Cari nama atau SKU..." 
+                   class="w-full pl-9 pr-4 py-2 bg-white border border-zcBrd rounded-xl text-xs focus:outline-none focus:border-zc shadow-sm">
+        </div>
+        <button type="submit" class="px-3.5 py-2 bg-zc hover:bg-zcHv text-white rounded-xl text-xs font-bold transition shadow-sm">Cari</button>
+            </form>
+</div>
+
+<!-- Info Box & Expand All Buttons -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+    <div class="bg-blue-50 border border-blue-200 rounded-2xl p-3 flex-1 flex gap-2.5">
+        <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <div class="text-[11px] text-blue-700 leading-tight">
+            <strong>Aturan UOM:</strong> <strong>Obat</strong> memiliki rasio konversi grosir &gt; 1 (1 Box = X Strip/Botol). <strong>Alat Kesehatan</strong> menggunakan Single-UOM (rasio 1:1).
+        </div>
+    </div>
+    <div class="flex items-center gap-2 self-start sm:self-auto shrink-0">
+        <button type="button" onclick="toggleAllUom(true)" class="px-3 py-2 bg-white border border-zcBrd text-zcTxt text-xs font-bold rounded-xl hover:bg-slate-50 transition shadow-2xs">
+            &darr; Buka Semua
+        </button>
+        <button type="button" onclick="toggleAllUom(false)" class="px-3 py-2 bg-white border border-zcBrd text-zcTxt text-xs font-bold rounded-xl hover:bg-slate-50 transition shadow-2xs">
+            &uarr; Tutup Semua
+        </button>
+    </div>
+</div>
+
+<!-- List Produk Induk Accordion -->
+<div class="space-y-3.5 mb-8">
+                    <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden transition duration-150">
+            
+            <!-- Parent Header -->
+            <div onclick="toggleUomAcc('uom_acc_1')" class="p-4 cursor-pointer hover:bg-slate-50/70 flex items-center justify-between gap-3 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700">
+                        Obat                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-zcTxt truncate flex items-center gap-2">
+                            <span>Amoxicillin 500mg</span>
+                                                            <span class="text-[11px] font-mono font-normal text-zcMut">(IND-D4853B)</span>
+                                                    </h3>
+                        <p class="text-[11px] text-zcMut mt-0.5">
+                            1 variasi kemasan terdaftar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-semibold text-zc font-mono bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                        1 SKU
+                    </span>
+                    <div id="uom_icon_1" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-transform text-xs">
+                        &#9660;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Table (Collapsible) -->
+            <div id="uom_acc_1" class="uom-acc-content hidden border-t border-zcBrd bg-slate-50/60 p-4">
+                <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd shadow-2xs">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBrd">
+                            <tr>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">SKU Variasi</th>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">Nama Variasi</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Kecil</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Besar</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Rasio</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Ecer (POS)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Grosir (Web)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Stok Min</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBrd">
+                                                        <tr class="hover:bg-slate-50/70 transition" id="row-1">
+                                <td class="px-3 py-2.5 font-mono text-[11px] text-slate-600 font-semibold">AMX-500</td>
+                                <td class="px-3 py-2.5 font-bold text-zcTxt">Tablet 500mg</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Strip</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Box</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px]">1:10</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-zcTxt">Rp 5.000</td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">Rp 48.000</td>
+                                <td class="px-3 py-2.5 text-right">
+                                    <div class="text-[10px]">Kecil: <span class="font-bold text-amber-600">10</span></div>
+                                    <div class="text-[10px]">Besar: <span class="font-bold text-amber-600">2</span></div>
+                                </td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button onclick='openEditModal({&quot;id&quot;:1,&quot;id_produk_induk&quot;:1,&quot;sku_variasi&quot;:&quot;AMX-500&quot;,&quot;nama_variasi&quot;:&quot;Tablet 500mg&quot;,&quot;satuan_kecil&quot;:&quot;Strip&quot;,&quot;satuan_besar&quot;:&quot;Box&quot;,&quot;rasio_konversi&quot;:10,&quot;harga_jual_kecil&quot;:&quot;5000.00&quot;,&quot;harga_jual_besar&quot;:&quot;48000.00&quot;,&quot;stok_minimum_kecil&quot;:10,&quot;stok_minimum_besar&quot;:2,&quot;berat&quot;:100,&quot;tampil_di_online&quot;:1,&quot;is_active&quot;:1,&quot;gambar&quot;:&quot;assets\/img\/produk\/var_1_1.jpg,assets\/img\/produk\/var_1_2.jpg,assets\/img\/produk\/var_1_3.jpg,assets\/img\/produk\/var_1_4.jpg&quot;,&quot;id_induk&quot;:1,&quot;nama_produk&quot;:&quot;Amoxicillin 500mg&quot;,&quot;kategori&quot;:&quot;Obat&quot;,&quot;sku_induk&quot;:&quot;IND-D4853B&quot;})'
+                                        class="px-2.5 py-1 bg-zcLt text-zc rounded-lg hover:bg-blue-100 font-bold text-[11px] transition shadow-2xs">
+                                        Edit UOM
+                                    </button>
+                                </td>
+                            </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+                <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden transition duration-150">
+            
+            <!-- Parent Header -->
+            <div onclick="toggleUomAcc('uom_acc_21')" class="p-4 cursor-pointer hover:bg-slate-50/70 flex items-center justify-between gap-3 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700">
+                        Obat                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-zcTxt truncate flex items-center gap-2">
+                            <span>Antangin JRG</span>
+                                                            <span class="text-[11px] font-mono font-normal text-zcMut">(IND-E6B0E1)</span>
+                                                    </h3>
+                        <p class="text-[11px] text-zcMut mt-0.5">
+                            1 variasi kemasan terdaftar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-semibold text-zc font-mono bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                        1 SKU
+                    </span>
+                    <div id="uom_icon_21" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-transform text-xs">
+                        &#9660;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Table (Collapsible) -->
+            <div id="uom_acc_21" class="uom-acc-content hidden border-t border-zcBrd bg-slate-50/60 p-4">
+                <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd shadow-2xs">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBrd">
+                            <tr>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">SKU Variasi</th>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">Nama Variasi</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Kecil</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Besar</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Rasio</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Ecer (POS)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Grosir (Web)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Stok Min</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBrd">
+                                                        <tr class="hover:bg-slate-50/70 transition" id="row-26">
+                                <td class="px-3 py-2.5 font-mono text-[11px] text-slate-600 font-semibold">ANT-JRG</td>
+                                <td class="px-3 py-2.5 font-bold text-zcTxt">Sachet 15ml</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Sachet</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Box</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px]">1:12</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-zcTxt">Rp 4.000</td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">Rp 46.000</td>
+                                <td class="px-3 py-2.5 text-right">
+                                    <div class="text-[10px]">Kecil: <span class="font-bold text-slate-400"></span></div>
+                                    <div class="text-[10px]">Besar: <span class="font-bold text-amber-600">2</span></div>
+                                </td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button onclick='openEditModal({&quot;id&quot;:26,&quot;id_produk_induk&quot;:21,&quot;sku_variasi&quot;:&quot;ANT-JRG&quot;,&quot;nama_variasi&quot;:&quot;Sachet 15ml&quot;,&quot;satuan_kecil&quot;:&quot;Sachet&quot;,&quot;satuan_besar&quot;:&quot;Box&quot;,&quot;rasio_konversi&quot;:12,&quot;harga_jual_kecil&quot;:&quot;4000.00&quot;,&quot;harga_jual_besar&quot;:&quot;46000.00&quot;,&quot;stok_minimum_kecil&quot;:null,&quot;stok_minimum_besar&quot;:2,&quot;berat&quot;:100,&quot;tampil_di_online&quot;:1,&quot;is_active&quot;:1,&quot;gambar&quot;:&quot;assets\/img\/produk\/var_26_1.jpg,assets\/img\/produk\/var_26_2.jpg,assets\/img\/produk\/var_26_3.jpg,assets\/img\/produk\/var_26_4.jpg&quot;,&quot;id_induk&quot;:21,&quot;nama_produk&quot;:&quot;Antangin JRG&quot;,&quot;kategori&quot;:&quot;Obat&quot;,&quot;sku_induk&quot;:&quot;IND-E6B0E1&quot;})'
+                                        class="px-2.5 py-1 bg-zcLt text-zc rounded-lg hover:bg-blue-100 font-bold text-[11px] transition shadow-2xs">
+                                        Edit UOM
+                                    </button>
+                                </td>
+                            </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+                <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden transition duration-150">
+            
+            <!-- Parent Header -->
+            <div onclick="toggleUomAcc('uom_acc_13')" class="p-4 cursor-pointer hover:bg-slate-50/70 flex items-center justify-between gap-3 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700">
+                        Obat                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-zcTxt truncate flex items-center gap-2">
+                            <span>Betadine Solution 15ml</span>
+                                                            <span class="text-[11px] font-mono font-normal text-zcMut">(IND-70AB72)</span>
+                                                    </h3>
+                        <p class="text-[11px] text-zcMut mt-0.5">
+                            1 variasi kemasan terdaftar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-semibold text-zc font-mono bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                        1 SKU
+                    </span>
+                    <div id="uom_icon_13" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-transform text-xs">
+                        &#9660;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Table (Collapsible) -->
+            <div id="uom_acc_13" class="uom-acc-content hidden border-t border-zcBrd bg-slate-50/60 p-4">
+                <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd shadow-2xs">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBrd">
+                            <tr>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">SKU Variasi</th>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">Nama Variasi</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Kecil</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Besar</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Rasio</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Ecer (POS)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Grosir (Web)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Stok Min</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBrd">
+                                                        <tr class="hover:bg-slate-50/70 transition" id="row-18">
+                                <td class="px-3 py-2.5 font-mono text-[11px] text-slate-600 font-semibold">BET-15</td>
+                                <td class="px-3 py-2.5 font-bold text-zcTxt">Botol 15ml</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Botol</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Box</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px]">1:12</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-zcTxt">Rp 12.500</td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">Rp 145.000</td>
+                                <td class="px-3 py-2.5 text-right">
+                                    <div class="text-[10px]">Kecil: <span class="font-bold text-slate-400"></span></div>
+                                    <div class="text-[10px]">Besar: <span class="font-bold text-amber-600">2</span></div>
+                                </td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button onclick='openEditModal({&quot;id&quot;:18,&quot;id_produk_induk&quot;:13,&quot;sku_variasi&quot;:&quot;BET-15&quot;,&quot;nama_variasi&quot;:&quot;Botol 15ml&quot;,&quot;satuan_kecil&quot;:&quot;Botol&quot;,&quot;satuan_besar&quot;:&quot;Box&quot;,&quot;rasio_konversi&quot;:12,&quot;harga_jual_kecil&quot;:&quot;12500.00&quot;,&quot;harga_jual_besar&quot;:&quot;145000.00&quot;,&quot;stok_minimum_kecil&quot;:null,&quot;stok_minimum_besar&quot;:2,&quot;berat&quot;:100,&quot;tampil_di_online&quot;:1,&quot;is_active&quot;:1,&quot;gambar&quot;:&quot;assets\/img\/produk\/var_18_1.jpg,assets\/img\/produk\/var_18_2.jpg,assets\/img\/produk\/var_18_3.jpg,assets\/img\/produk\/var_18_4.jpg&quot;,&quot;id_induk&quot;:13,&quot;nama_produk&quot;:&quot;Betadine Solution 15ml&quot;,&quot;kategori&quot;:&quot;Obat&quot;,&quot;sku_induk&quot;:&quot;IND-70AB72&quot;})'
+                                        class="px-2.5 py-1 bg-zcLt text-zc rounded-lg hover:bg-blue-100 font-bold text-[11px] transition shadow-2xs">
+                                        Edit UOM
+                                    </button>
+                                </td>
+                            </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+                <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden transition duration-150">
+            
+            <!-- Parent Header -->
+            <div onclick="toggleUomAcc('uom_acc_26')" class="p-4 cursor-pointer hover:bg-slate-50/70 flex items-center justify-between gap-3 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700">
+                        Obat                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-zcTxt truncate flex items-center gap-2">
+                            <span>Bodrex Migra</span>
+                                                            <span class="text-[11px] font-mono font-normal text-zcMut">(IND-95AB80)</span>
+                                                    </h3>
+                        <p class="text-[11px] text-zcMut mt-0.5">
+                            1 variasi kemasan terdaftar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-semibold text-zc font-mono bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                        1 SKU
+                    </span>
+                    <div id="uom_icon_26" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-transform text-xs">
+                        &#9660;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Table (Collapsible) -->
+            <div id="uom_acc_26" class="uom-acc-content hidden border-t border-zcBrd bg-slate-50/60 p-4">
+                <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd shadow-2xs">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBrd">
+                            <tr>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">SKU Variasi</th>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">Nama Variasi</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Kecil</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Besar</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Rasio</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Ecer (POS)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Grosir (Web)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Stok Min</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBrd">
+                                                        <tr class="hover:bg-slate-50/70 transition" id="row-31">
+                                <td class="px-3 py-2.5 font-mono text-[11px] text-slate-600 font-semibold">BDR-MGR</td>
+                                <td class="px-3 py-2.5 font-bold text-zcTxt">Strip Isi 4</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Strip</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Box</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px]">1:25</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-zcTxt">Rp 3.500</td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">Rp 85.000</td>
+                                <td class="px-3 py-2.5 text-right">
+                                    <div class="text-[10px]">Kecil: <span class="font-bold text-slate-400"></span></div>
+                                    <div class="text-[10px]">Besar: <span class="font-bold text-amber-600">2</span></div>
+                                </td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button onclick='openEditModal({&quot;id&quot;:31,&quot;id_produk_induk&quot;:26,&quot;sku_variasi&quot;:&quot;BDR-MGR&quot;,&quot;nama_variasi&quot;:&quot;Strip Isi 4&quot;,&quot;satuan_kecil&quot;:&quot;Strip&quot;,&quot;satuan_besar&quot;:&quot;Box&quot;,&quot;rasio_konversi&quot;:25,&quot;harga_jual_kecil&quot;:&quot;3500.00&quot;,&quot;harga_jual_besar&quot;:&quot;85000.00&quot;,&quot;stok_minimum_kecil&quot;:null,&quot;stok_minimum_besar&quot;:2,&quot;berat&quot;:100,&quot;tampil_di_online&quot;:1,&quot;is_active&quot;:1,&quot;gambar&quot;:&quot;assets\/img\/produk\/var_31_1.jpg,assets\/img\/produk\/var_31_2.jpg,assets\/img\/produk\/var_31_3.jpg,assets\/img\/produk\/var_31_4.jpg&quot;,&quot;id_induk&quot;:26,&quot;nama_produk&quot;:&quot;Bodrex Migra&quot;,&quot;kategori&quot;:&quot;Obat&quot;,&quot;sku_induk&quot;:&quot;IND-95AB80&quot;})'
+                                        class="px-2.5 py-1 bg-zcLt text-zc rounded-lg hover:bg-blue-100 font-bold text-[11px] transition shadow-2xs">
+                                        Edit UOM
+                                    </button>
+                                </td>
+                            </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+                <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden transition duration-150">
+            
+            <!-- Parent Header -->
+            <div onclick="toggleUomAcc('uom_acc_22')" class="p-4 cursor-pointer hover:bg-slate-50/70 flex items-center justify-between gap-3 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700">
+                        Obat                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-zcTxt truncate flex items-center gap-2">
+                            <span>CDR Effervescent</span>
+                                                            <span class="text-[11px] font-mono font-normal text-zcMut">(IND-429941)</span>
+                                                    </h3>
+                        <p class="text-[11px] text-zcMut mt-0.5">
+                            1 variasi kemasan terdaftar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-semibold text-zc font-mono bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                        1 SKU
+                    </span>
+                    <div id="uom_icon_22" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-transform text-xs">
+                        &#9660;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Table (Collapsible) -->
+            <div id="uom_acc_22" class="uom-acc-content hidden border-t border-zcBrd bg-slate-50/60 p-4">
+                <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd shadow-2xs">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBrd">
+                            <tr>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">SKU Variasi</th>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">Nama Variasi</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Kecil</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Besar</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Rasio</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Ecer (POS)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Grosir (Web)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Stok Min</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBrd">
+                                                        <tr class="hover:bg-slate-50/70 transition" id="row-27">
+                                <td class="px-3 py-2.5 font-mono text-[11px] text-slate-600 font-semibold">CDR-EFT</td>
+                                <td class="px-3 py-2.5 font-bold text-zcTxt">Tube Isi 15</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Tube</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Karton</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px]">1:10</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-zcTxt">Rp 65.000</td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">Rp 630.000</td>
+                                <td class="px-3 py-2.5 text-right">
+                                    <div class="text-[10px]">Kecil: <span class="font-bold text-slate-400"></span></div>
+                                    <div class="text-[10px]">Besar: <span class="font-bold text-amber-600">2</span></div>
+                                </td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button onclick='openEditModal({&quot;id&quot;:27,&quot;id_produk_induk&quot;:22,&quot;sku_variasi&quot;:&quot;CDR-EFT&quot;,&quot;nama_variasi&quot;:&quot;Tube Isi 15&quot;,&quot;satuan_kecil&quot;:&quot;Tube&quot;,&quot;satuan_besar&quot;:&quot;Karton&quot;,&quot;rasio_konversi&quot;:10,&quot;harga_jual_kecil&quot;:&quot;65000.00&quot;,&quot;harga_jual_besar&quot;:&quot;630000.00&quot;,&quot;stok_minimum_kecil&quot;:null,&quot;stok_minimum_besar&quot;:2,&quot;berat&quot;:100,&quot;tampil_di_online&quot;:1,&quot;is_active&quot;:1,&quot;gambar&quot;:&quot;assets\/img\/produk\/var_27_1.jpg,assets\/img\/produk\/var_27_2.jpg,assets\/img\/produk\/var_27_3.jpg,assets\/img\/produk\/var_27_4.jpg&quot;,&quot;id_induk&quot;:22,&quot;nama_produk&quot;:&quot;CDR Effervescent&quot;,&quot;kategori&quot;:&quot;Obat&quot;,&quot;sku_induk&quot;:&quot;IND-429941&quot;})'
+                                        class="px-2.5 py-1 bg-zcLt text-zc rounded-lg hover:bg-blue-100 font-bold text-[11px] transition shadow-2xs">
+                                        Edit UOM
+                                    </button>
+                                </td>
+                            </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+                <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden transition duration-150">
+            
+            <!-- Parent Header -->
+            <div onclick="toggleUomAcc('uom_acc_36')" class="p-4 cursor-pointer hover:bg-slate-50/70 flex items-center justify-between gap-3 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700">
+                        Obat                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-zcTxt truncate flex items-center gap-2">
+                            <span>Cefadroxil 500mg</span>
+                                                            <span class="text-[11px] font-mono font-normal text-zcMut">(IND-2A3D66)</span>
+                                                    </h3>
+                        <p class="text-[11px] text-zcMut mt-0.5">
+                            1 variasi kemasan terdaftar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-semibold text-zc font-mono bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                        1 SKU
+                    </span>
+                    <div id="uom_icon_36" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-transform text-xs">
+                        &#9660;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Table (Collapsible) -->
+            <div id="uom_acc_36" class="uom-acc-content hidden border-t border-zcBrd bg-slate-50/60 p-4">
+                <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd shadow-2xs">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBrd">
+                            <tr>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">SKU Variasi</th>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">Nama Variasi</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Kecil</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Besar</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Rasio</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Ecer (POS)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Grosir (Web)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Stok Min</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBrd">
+                                                        <tr class="hover:bg-slate-50/70 transition" id="row-41">
+                                <td class="px-3 py-2.5 font-mono text-[11px] text-slate-600 font-semibold">CFD-500</td>
+                                <td class="px-3 py-2.5 font-bold text-zcTxt">Strip Isi 10</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Strip</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Box</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px]">1:10</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-zcTxt">Rp 18.000</td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">Rp 170.000</td>
+                                <td class="px-3 py-2.5 text-right">
+                                    <div class="text-[10px]">Kecil: <span class="font-bold text-slate-400"></span></div>
+                                    <div class="text-[10px]">Besar: <span class="font-bold text-amber-600">2</span></div>
+                                </td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button onclick='openEditModal({&quot;id&quot;:41,&quot;id_produk_induk&quot;:36,&quot;sku_variasi&quot;:&quot;CFD-500&quot;,&quot;nama_variasi&quot;:&quot;Strip Isi 10&quot;,&quot;satuan_kecil&quot;:&quot;Strip&quot;,&quot;satuan_besar&quot;:&quot;Box&quot;,&quot;rasio_konversi&quot;:10,&quot;harga_jual_kecil&quot;:&quot;18000.00&quot;,&quot;harga_jual_besar&quot;:&quot;170000.00&quot;,&quot;stok_minimum_kecil&quot;:null,&quot;stok_minimum_besar&quot;:2,&quot;berat&quot;:100,&quot;tampil_di_online&quot;:1,&quot;is_active&quot;:1,&quot;gambar&quot;:&quot;assets\/img\/produk\/var_41_1.jpg,assets\/img\/produk\/var_41_2.jpg,assets\/img\/produk\/var_41_3.jpg,assets\/img\/produk\/var_41_4.jpg&quot;,&quot;id_induk&quot;:36,&quot;nama_produk&quot;:&quot;Cefadroxil 500mg&quot;,&quot;kategori&quot;:&quot;Obat&quot;,&quot;sku_induk&quot;:&quot;IND-2A3D66&quot;})'
+                                        class="px-2.5 py-1 bg-zcLt text-zc rounded-lg hover:bg-blue-100 font-bold text-[11px] transition shadow-2xs">
+                                        Edit UOM
+                                    </button>
+                                </td>
+                            </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+                <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden transition duration-150">
+            
+            <!-- Parent Header -->
+            <div onclick="toggleUomAcc('uom_acc_38')" class="p-4 cursor-pointer hover:bg-slate-50/70 flex items-center justify-between gap-3 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700">
+                        Obat                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-zcTxt truncate flex items-center gap-2">
+                            <span>Cetirizine 10mg</span>
+                                                            <span class="text-[11px] font-mono font-normal text-zcMut">(IND-0DA012)</span>
+                                                    </h3>
+                        <p class="text-[11px] text-zcMut mt-0.5">
+                            1 variasi kemasan terdaftar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-semibold text-zc font-mono bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                        1 SKU
+                    </span>
+                    <div id="uom_icon_38" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-transform text-xs">
+                        &#9660;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Table (Collapsible) -->
+            <div id="uom_acc_38" class="uom-acc-content hidden border-t border-zcBrd bg-slate-50/60 p-4">
+                <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd shadow-2xs">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBrd">
+                            <tr>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">SKU Variasi</th>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">Nama Variasi</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Kecil</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Besar</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Rasio</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Ecer (POS)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Grosir (Web)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Stok Min</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBrd">
+                                                        <tr class="hover:bg-slate-50/70 transition" id="row-43">
+                                <td class="px-3 py-2.5 font-mono text-[11px] text-slate-600 font-semibold">CTR-10</td>
+                                <td class="px-3 py-2.5 font-bold text-zcTxt">Strip Isi 10</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Strip</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Box</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px]">1:10</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-zcTxt">Rp 8.500</td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">Rp 80.000</td>
+                                <td class="px-3 py-2.5 text-right">
+                                    <div class="text-[10px]">Kecil: <span class="font-bold text-slate-400"></span></div>
+                                    <div class="text-[10px]">Besar: <span class="font-bold text-amber-600">2</span></div>
+                                </td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button onclick='openEditModal({&quot;id&quot;:43,&quot;id_produk_induk&quot;:38,&quot;sku_variasi&quot;:&quot;CTR-10&quot;,&quot;nama_variasi&quot;:&quot;Strip Isi 10&quot;,&quot;satuan_kecil&quot;:&quot;Strip&quot;,&quot;satuan_besar&quot;:&quot;Box&quot;,&quot;rasio_konversi&quot;:10,&quot;harga_jual_kecil&quot;:&quot;8500.00&quot;,&quot;harga_jual_besar&quot;:&quot;80000.00&quot;,&quot;stok_minimum_kecil&quot;:null,&quot;stok_minimum_besar&quot;:2,&quot;berat&quot;:100,&quot;tampil_di_online&quot;:1,&quot;is_active&quot;:1,&quot;gambar&quot;:&quot;assets\/img\/produk\/var_43_1.jpg,assets\/img\/produk\/var_43_2.jpg,assets\/img\/produk\/var_43_3.jpg,assets\/img\/produk\/var_43_4.jpg&quot;,&quot;id_induk&quot;:38,&quot;nama_produk&quot;:&quot;Cetirizine 10mg&quot;,&quot;kategori&quot;:&quot;Obat&quot;,&quot;sku_induk&quot;:&quot;IND-0DA012&quot;})'
+                                        class="px-2.5 py-1 bg-zcLt text-zc rounded-lg hover:bg-blue-100 font-bold text-[11px] transition shadow-2xs">
+                                        Edit UOM
+                                    </button>
+                                </td>
+                            </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+                <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden transition duration-150">
+            
+            <!-- Parent Header -->
+            <div onclick="toggleUomAcc('uom_acc_35')" class="p-4 cursor-pointer hover:bg-slate-50/70 flex items-center justify-between gap-3 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700">
+                        Obat                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-zcTxt truncate flex items-center gap-2">
+                            <span>Combantrin Jeruk 10ml</span>
+                                                            <span class="text-[11px] font-mono font-normal text-zcMut">(IND-A35F8F)</span>
+                                                    </h3>
+                        <p class="text-[11px] text-zcMut mt-0.5">
+                            1 variasi kemasan terdaftar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-semibold text-zc font-mono bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                        1 SKU
+                    </span>
+                    <div id="uom_icon_35" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-transform text-xs">
+                        &#9660;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Table (Collapsible) -->
+            <div id="uom_acc_35" class="uom-acc-content hidden border-t border-zcBrd bg-slate-50/60 p-4">
+                <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd shadow-2xs">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBrd">
+                            <tr>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">SKU Variasi</th>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">Nama Variasi</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Kecil</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Besar</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Rasio</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Ecer (POS)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Grosir (Web)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Stok Min</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBrd">
+                                                        <tr class="hover:bg-slate-50/70 transition" id="row-40">
+                                <td class="px-3 py-2.5 font-mono text-[11px] text-slate-600 font-semibold">CMB-JRK</td>
+                                <td class="px-3 py-2.5 font-bold text-zcTxt">Botol 10ml</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Botol</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Box</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px]">1:12</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-zcTxt">Rp 21.000</td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">Rp 245.000</td>
+                                <td class="px-3 py-2.5 text-right">
+                                    <div class="text-[10px]">Kecil: <span class="font-bold text-slate-400"></span></div>
+                                    <div class="text-[10px]">Besar: <span class="font-bold text-amber-600">2</span></div>
+                                </td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button onclick='openEditModal({&quot;id&quot;:40,&quot;id_produk_induk&quot;:35,&quot;sku_variasi&quot;:&quot;CMB-JRK&quot;,&quot;nama_variasi&quot;:&quot;Botol 10ml&quot;,&quot;satuan_kecil&quot;:&quot;Botol&quot;,&quot;satuan_besar&quot;:&quot;Box&quot;,&quot;rasio_konversi&quot;:12,&quot;harga_jual_kecil&quot;:&quot;21000.00&quot;,&quot;harga_jual_besar&quot;:&quot;245000.00&quot;,&quot;stok_minimum_kecil&quot;:null,&quot;stok_minimum_besar&quot;:2,&quot;berat&quot;:100,&quot;tampil_di_online&quot;:1,&quot;is_active&quot;:1,&quot;gambar&quot;:&quot;assets\/img\/produk\/var_40_1.jpg,assets\/img\/produk\/var_40_2.jpg,assets\/img\/produk\/var_40_3.jpg,assets\/img\/produk\/var_40_4.jpg&quot;,&quot;id_induk&quot;:35,&quot;nama_produk&quot;:&quot;Combantrin Jeruk 10ml&quot;,&quot;kategori&quot;:&quot;Obat&quot;,&quot;sku_induk&quot;:&quot;IND-A35F8F&quot;})'
+                                        class="px-2.5 py-1 bg-zcLt text-zc rounded-lg hover:bg-blue-100 font-bold text-[11px] transition shadow-2xs">
+                                        Edit UOM
+                                    </button>
+                                </td>
+                            </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+                <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden transition duration-150">
+            
+            <!-- Parent Header -->
+            <div onclick="toggleUomAcc('uom_acc_14')" class="p-4 cursor-pointer hover:bg-slate-50/70 flex items-center justify-between gap-3 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700">
+                        Obat                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-zcTxt truncate flex items-center gap-2">
+                            <span>Counterpain Krim 30g</span>
+                                                            <span class="text-[11px] font-mono font-normal text-zcMut">(IND-ABF94E)</span>
+                                                    </h3>
+                        <p class="text-[11px] text-zcMut mt-0.5">
+                            1 variasi kemasan terdaftar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-semibold text-zc font-mono bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                        1 SKU
+                    </span>
+                    <div id="uom_icon_14" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-transform text-xs">
+                        &#9660;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Table (Collapsible) -->
+            <div id="uom_acc_14" class="uom-acc-content hidden border-t border-zcBrd bg-slate-50/60 p-4">
+                <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd shadow-2xs">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBrd">
+                            <tr>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">SKU Variasi</th>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">Nama Variasi</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Kecil</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Besar</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Rasio</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Ecer (POS)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Grosir (Web)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Stok Min</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBrd">
+                                                        <tr class="hover:bg-slate-50/70 transition" id="row-19">
+                                <td class="px-3 py-2.5 font-mono text-[11px] text-slate-600 font-semibold">CTP-30</td>
+                                <td class="px-3 py-2.5 font-bold text-zcTxt">Tube 30g</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Tube</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Box</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px]">1:10</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-zcTxt">Rp 55.000</td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">Rp 530.000</td>
+                                <td class="px-3 py-2.5 text-right">
+                                    <div class="text-[10px]">Kecil: <span class="font-bold text-slate-400"></span></div>
+                                    <div class="text-[10px]">Besar: <span class="font-bold text-amber-600">2</span></div>
+                                </td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button onclick='openEditModal({&quot;id&quot;:19,&quot;id_produk_induk&quot;:14,&quot;sku_variasi&quot;:&quot;CTP-30&quot;,&quot;nama_variasi&quot;:&quot;Tube 30g&quot;,&quot;satuan_kecil&quot;:&quot;Tube&quot;,&quot;satuan_besar&quot;:&quot;Box&quot;,&quot;rasio_konversi&quot;:10,&quot;harga_jual_kecil&quot;:&quot;55000.00&quot;,&quot;harga_jual_besar&quot;:&quot;530000.00&quot;,&quot;stok_minimum_kecil&quot;:null,&quot;stok_minimum_besar&quot;:2,&quot;berat&quot;:100,&quot;tampil_di_online&quot;:1,&quot;is_active&quot;:1,&quot;gambar&quot;:&quot;assets\/img\/produk\/var_19_1.jpg,assets\/img\/produk\/var_19_2.jpg,assets\/img\/produk\/var_19_3.jpg,assets\/img\/produk\/var_19_4.jpg&quot;,&quot;id_induk&quot;:14,&quot;nama_produk&quot;:&quot;Counterpain Krim 30g&quot;,&quot;kategori&quot;:&quot;Obat&quot;,&quot;sku_induk&quot;:&quot;IND-ABF94E&quot;})'
+                                        class="px-2.5 py-1 bg-zcLt text-zc rounded-lg hover:bg-blue-100 font-bold text-[11px] transition shadow-2xs">
+                                        Edit UOM
+                                    </button>
+                                </td>
+                            </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+                <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden transition duration-150">
+            
+            <!-- Parent Header -->
+            <div onclick="toggleUomAcc('uom_acc_37')" class="p-4 cursor-pointer hover:bg-slate-50/70 flex items-center justify-between gap-3 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700">
+                        Obat                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-zcTxt truncate flex items-center gap-2">
+                            <span>CTM</span>
+                                                            <span class="text-[11px] font-mono font-normal text-zcMut">(IND-9D0FFA)</span>
+                                                    </h3>
+                        <p class="text-[11px] text-zcMut mt-0.5">
+                            1 variasi kemasan terdaftar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-semibold text-zc font-mono bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                        1 SKU
+                    </span>
+                    <div id="uom_icon_37" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-transform text-xs">
+                        &#9660;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Table (Collapsible) -->
+            <div id="uom_acc_37" class="uom-acc-content hidden border-t border-zcBrd bg-slate-50/60 p-4">
+                <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd shadow-2xs">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBrd">
+                            <tr>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">SKU Variasi</th>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">Nama Variasi</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Kecil</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Besar</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Rasio</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Ecer (POS)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Grosir (Web)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Stok Min</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBrd">
+                                                        <tr class="hover:bg-slate-50/70 transition" id="row-42">
+                                <td class="px-3 py-2.5 font-mono text-[11px] text-slate-600 font-semibold">CTM-ALR</td>
+                                <td class="px-3 py-2.5 font-bold text-zcTxt">Strip Isi 12</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Strip</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Box</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px]">1:10</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-zcTxt">Rp 2.500</td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">Rp 23.000</td>
+                                <td class="px-3 py-2.5 text-right">
+                                    <div class="text-[10px]">Kecil: <span class="font-bold text-slate-400"></span></div>
+                                    <div class="text-[10px]">Besar: <span class="font-bold text-amber-600">2</span></div>
+                                </td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button onclick='openEditModal({&quot;id&quot;:42,&quot;id_produk_induk&quot;:37,&quot;sku_variasi&quot;:&quot;CTM-ALR&quot;,&quot;nama_variasi&quot;:&quot;Strip Isi 12&quot;,&quot;satuan_kecil&quot;:&quot;Strip&quot;,&quot;satuan_besar&quot;:&quot;Box&quot;,&quot;rasio_konversi&quot;:10,&quot;harga_jual_kecil&quot;:&quot;2500.00&quot;,&quot;harga_jual_besar&quot;:&quot;23000.00&quot;,&quot;stok_minimum_kecil&quot;:null,&quot;stok_minimum_besar&quot;:2,&quot;berat&quot;:100,&quot;tampil_di_online&quot;:1,&quot;is_active&quot;:1,&quot;gambar&quot;:&quot;assets\/img\/produk\/var_42_1.jpg,assets\/img\/produk\/var_42_2.jpg,assets\/img\/produk\/var_42_3.jpg,assets\/img\/produk\/var_42_4.jpg&quot;,&quot;id_induk&quot;:37,&quot;nama_produk&quot;:&quot;CTM&quot;,&quot;kategori&quot;:&quot;Obat&quot;,&quot;sku_induk&quot;:&quot;IND-9D0FFA&quot;})'
+                                        class="px-2.5 py-1 bg-zcLt text-zc rounded-lg hover:bg-blue-100 font-bold text-[11px] transition shadow-2xs">
+                                        Edit UOM
+                                    </button>
+                                </td>
+                            </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+                <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden transition duration-150">
+            
+            <!-- Parent Header -->
+            <div onclick="toggleUomAcc('uom_acc_33')" class="p-4 cursor-pointer hover:bg-slate-50/70 flex items-center justify-between gap-3 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700">
+                        Obat                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-zcTxt truncate flex items-center gap-2">
+                            <span>Decadryl Expectorant</span>
+                                                            <span class="text-[11px] font-mono font-normal text-zcMut">(IND-B79B70)</span>
+                                                    </h3>
+                        <p class="text-[11px] text-zcMut mt-0.5">
+                            1 variasi kemasan terdaftar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-semibold text-zc font-mono bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                        1 SKU
+                    </span>
+                    <div id="uom_icon_33" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-transform text-xs">
+                        &#9660;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Table (Collapsible) -->
+            <div id="uom_acc_33" class="uom-acc-content hidden border-t border-zcBrd bg-slate-50/60 p-4">
+                <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd shadow-2xs">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBrd">
+                            <tr>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">SKU Variasi</th>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">Nama Variasi</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Kecil</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Besar</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Rasio</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Ecer (POS)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Grosir (Web)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Stok Min</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBrd">
+                                                        <tr class="hover:bg-slate-50/70 transition" id="row-38">
+                                <td class="px-3 py-2.5 font-mono text-[11px] text-slate-600 font-semibold">DCD-EXP</td>
+                                <td class="px-3 py-2.5 font-bold text-zcTxt">Botol 120ml</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Botol</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Karton</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px]">1:24</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-zcTxt">Rp 22.000</td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">Rp 510.000</td>
+                                <td class="px-3 py-2.5 text-right">
+                                    <div class="text-[10px]">Kecil: <span class="font-bold text-slate-400"></span></div>
+                                    <div class="text-[10px]">Besar: <span class="font-bold text-amber-600">2</span></div>
+                                </td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button onclick='openEditModal({&quot;id&quot;:38,&quot;id_produk_induk&quot;:33,&quot;sku_variasi&quot;:&quot;DCD-EXP&quot;,&quot;nama_variasi&quot;:&quot;Botol 120ml&quot;,&quot;satuan_kecil&quot;:&quot;Botol&quot;,&quot;satuan_besar&quot;:&quot;Karton&quot;,&quot;rasio_konversi&quot;:24,&quot;harga_jual_kecil&quot;:&quot;22000.00&quot;,&quot;harga_jual_besar&quot;:&quot;510000.00&quot;,&quot;stok_minimum_kecil&quot;:null,&quot;stok_minimum_besar&quot;:2,&quot;berat&quot;:100,&quot;tampil_di_online&quot;:1,&quot;is_active&quot;:1,&quot;gambar&quot;:&quot;assets\/img\/produk\/var_38_1.jpg,assets\/img\/produk\/var_38_2.jpg,assets\/img\/produk\/var_38_3.jpg,assets\/img\/produk\/var_38_4.jpg&quot;,&quot;id_induk&quot;:33,&quot;nama_produk&quot;:&quot;Decadryl Expectorant&quot;,&quot;kategori&quot;:&quot;Obat&quot;,&quot;sku_induk&quot;:&quot;IND-B79B70&quot;})'
+                                        class="px-2.5 py-1 bg-zcLt text-zc rounded-lg hover:bg-blue-100 font-bold text-[11px] transition shadow-2xs">
+                                        Edit UOM
+                                    </button>
+                                </td>
+                            </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+                <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden transition duration-150">
+            
+            <!-- Parent Header -->
+            <div onclick="toggleUomAcc('uom_acc_28')" class="p-4 cursor-pointer hover:bg-slate-50/70 flex items-center justify-between gap-3 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700">
+                        Obat                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-zcTxt truncate flex items-center gap-2">
+                            <span>Decolgen</span>
+                                                            <span class="text-[11px] font-mono font-normal text-zcMut">(IND-CDE41C)</span>
+                                                    </h3>
+                        <p class="text-[11px] text-zcMut mt-0.5">
+                            1 variasi kemasan terdaftar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-semibold text-zc font-mono bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                        1 SKU
+                    </span>
+                    <div id="uom_icon_28" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-transform text-xs">
+                        &#9660;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Table (Collapsible) -->
+            <div id="uom_acc_28" class="uom-acc-content hidden border-t border-zcBrd bg-slate-50/60 p-4">
+                <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd shadow-2xs">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBrd">
+                            <tr>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">SKU Variasi</th>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">Nama Variasi</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Kecil</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Besar</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Rasio</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Ecer (POS)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Grosir (Web)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Stok Min</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBrd">
+                                                        <tr class="hover:bg-slate-50/70 transition" id="row-33">
+                                <td class="px-3 py-2.5 font-mono text-[11px] text-slate-600 font-semibold">DCL-GEN</td>
+                                <td class="px-3 py-2.5 font-bold text-zcTxt">Strip Isi 4</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Strip</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Box</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px]">1:25</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-zcTxt">Rp 3.000</td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">Rp 72.000</td>
+                                <td class="px-3 py-2.5 text-right">
+                                    <div class="text-[10px]">Kecil: <span class="font-bold text-slate-400"></span></div>
+                                    <div class="text-[10px]">Besar: <span class="font-bold text-amber-600">2</span></div>
+                                </td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button onclick='openEditModal({&quot;id&quot;:33,&quot;id_produk_induk&quot;:28,&quot;sku_variasi&quot;:&quot;DCL-GEN&quot;,&quot;nama_variasi&quot;:&quot;Strip Isi 4&quot;,&quot;satuan_kecil&quot;:&quot;Strip&quot;,&quot;satuan_besar&quot;:&quot;Box&quot;,&quot;rasio_konversi&quot;:25,&quot;harga_jual_kecil&quot;:&quot;3000.00&quot;,&quot;harga_jual_besar&quot;:&quot;72000.00&quot;,&quot;stok_minimum_kecil&quot;:null,&quot;stok_minimum_besar&quot;:2,&quot;berat&quot;:100,&quot;tampil_di_online&quot;:1,&quot;is_active&quot;:1,&quot;gambar&quot;:&quot;assets\/img\/produk\/var_33_1.jpg,assets\/img\/produk\/var_33_2.jpg,assets\/img\/produk\/var_33_3.jpg,assets\/img\/produk\/var_33_4.jpg&quot;,&quot;id_induk&quot;:28,&quot;nama_produk&quot;:&quot;Decolgen&quot;,&quot;kategori&quot;:&quot;Obat&quot;,&quot;sku_induk&quot;:&quot;IND-CDE41C&quot;})'
+                                        class="px-2.5 py-1 bg-zcLt text-zc rounded-lg hover:bg-blue-100 font-bold text-[11px] transition shadow-2xs">
+                                        Edit UOM
+                                    </button>
+                                </td>
+                            </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+                <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden transition duration-150">
+            
+            <!-- Parent Header -->
+            <div onclick="toggleUomAcc('uom_acc_17')" class="p-4 cursor-pointer hover:bg-slate-50/70 flex items-center justify-between gap-3 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700">
+                        Obat                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-zcTxt truncate flex items-center gap-2">
+                            <span>Diapet Kapsul</span>
+                                                            <span class="text-[11px] font-mono font-normal text-zcMut">(IND-7F92A0)</span>
+                                                    </h3>
+                        <p class="text-[11px] text-zcMut mt-0.5">
+                            1 variasi kemasan terdaftar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-semibold text-zc font-mono bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                        1 SKU
+                    </span>
+                    <div id="uom_icon_17" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-transform text-xs">
+                        &#9660;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Table (Collapsible) -->
+            <div id="uom_acc_17" class="uom-acc-content hidden border-t border-zcBrd bg-slate-50/60 p-4">
+                <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd shadow-2xs">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBrd">
+                            <tr>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">SKU Variasi</th>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">Nama Variasi</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Kecil</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Besar</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Rasio</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Ecer (POS)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Grosir (Web)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Stok Min</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBrd">
+                                                        <tr class="hover:bg-slate-50/70 transition" id="row-22">
+                                <td class="px-3 py-2.5 font-mono text-[11px] text-slate-600 font-semibold">DPT-CAP</td>
+                                <td class="px-3 py-2.5 font-bold text-zcTxt">Kapsul Isi 10</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Strip</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Box</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px]">1:25</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-zcTxt">Rp 4.500</td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">Rp 105.000</td>
+                                <td class="px-3 py-2.5 text-right">
+                                    <div class="text-[10px]">Kecil: <span class="font-bold text-slate-400"></span></div>
+                                    <div class="text-[10px]">Besar: <span class="font-bold text-amber-600">2</span></div>
+                                </td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button onclick='openEditModal({&quot;id&quot;:22,&quot;id_produk_induk&quot;:17,&quot;sku_variasi&quot;:&quot;DPT-CAP&quot;,&quot;nama_variasi&quot;:&quot;Kapsul Isi 10&quot;,&quot;satuan_kecil&quot;:&quot;Strip&quot;,&quot;satuan_besar&quot;:&quot;Box&quot;,&quot;rasio_konversi&quot;:25,&quot;harga_jual_kecil&quot;:&quot;4500.00&quot;,&quot;harga_jual_besar&quot;:&quot;105000.00&quot;,&quot;stok_minimum_kecil&quot;:null,&quot;stok_minimum_besar&quot;:2,&quot;berat&quot;:100,&quot;tampil_di_online&quot;:1,&quot;is_active&quot;:1,&quot;gambar&quot;:&quot;assets\/img\/produk\/var_22_1.jpg,assets\/img\/produk\/var_22_2.jpg,assets\/img\/produk\/var_22_3.jpg,assets\/img\/produk\/var_22_4.jpg&quot;,&quot;id_induk&quot;:17,&quot;nama_produk&quot;:&quot;Diapet Kapsul&quot;,&quot;kategori&quot;:&quot;Obat&quot;,&quot;sku_induk&quot;:&quot;IND-7F92A0&quot;})'
+                                        class="px-2.5 py-1 bg-zcLt text-zc rounded-lg hover:bg-blue-100 font-bold text-[11px] transition shadow-2xs">
+                                        Edit UOM
+                                    </button>
+                                </td>
+                            </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+                <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden transition duration-150">
+            
+            <!-- Parent Header -->
+            <div onclick="toggleUomAcc('uom_acc_24')" class="p-4 cursor-pointer hover:bg-slate-50/70 flex items-center justify-between gap-3 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700">
+                        Obat                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-zcTxt truncate flex items-center gap-2">
+                            <span>Enervon-C Multivitamin</span>
+                                                            <span class="text-[11px] font-mono font-normal text-zcMut">(IND-F85AB5)</span>
+                                                    </h3>
+                        <p class="text-[11px] text-zcMut mt-0.5">
+                            1 variasi kemasan terdaftar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-semibold text-zc font-mono bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                        1 SKU
+                    </span>
+                    <div id="uom_icon_24" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-transform text-xs">
+                        &#9660;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Table (Collapsible) -->
+            <div id="uom_acc_24" class="uom-acc-content hidden border-t border-zcBrd bg-slate-50/60 p-4">
+                <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd shadow-2xs">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBrd">
+                            <tr>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">SKU Variasi</th>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">Nama Variasi</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Kecil</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Besar</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Rasio</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Ecer (POS)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Grosir (Web)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Stok Min</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBrd">
+                                                        <tr class="hover:bg-slate-50/70 transition" id="row-29">
+                                <td class="px-3 py-2.5 font-mono text-[11px] text-slate-600 font-semibold">ENV-C</td>
+                                <td class="px-3 py-2.5 font-bold text-zcTxt">Strip Isi 4</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Strip</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Box</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px]">1:25</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-zcTxt">Rp 6.000</td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">Rp 145.000</td>
+                                <td class="px-3 py-2.5 text-right">
+                                    <div class="text-[10px]">Kecil: <span class="font-bold text-slate-400"></span></div>
+                                    <div class="text-[10px]">Besar: <span class="font-bold text-amber-600">2</span></div>
+                                </td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button onclick='openEditModal({&quot;id&quot;:29,&quot;id_produk_induk&quot;:24,&quot;sku_variasi&quot;:&quot;ENV-C&quot;,&quot;nama_variasi&quot;:&quot;Strip Isi 4&quot;,&quot;satuan_kecil&quot;:&quot;Strip&quot;,&quot;satuan_besar&quot;:&quot;Box&quot;,&quot;rasio_konversi&quot;:25,&quot;harga_jual_kecil&quot;:&quot;6000.00&quot;,&quot;harga_jual_besar&quot;:&quot;145000.00&quot;,&quot;stok_minimum_kecil&quot;:null,&quot;stok_minimum_besar&quot;:2,&quot;berat&quot;:100,&quot;tampil_di_online&quot;:1,&quot;is_active&quot;:1,&quot;gambar&quot;:&quot;assets\/img\/produk\/var_29_1.jpg,assets\/img\/produk\/var_29_2.jpg,assets\/img\/produk\/var_29_3.jpg,assets\/img\/produk\/var_29_4.jpg&quot;,&quot;id_induk&quot;:24,&quot;nama_produk&quot;:&quot;Enervon-C Multivitamin&quot;,&quot;kategori&quot;:&quot;Obat&quot;,&quot;sku_induk&quot;:&quot;IND-F85AB5&quot;})'
+                                        class="px-2.5 py-1 bg-zcLt text-zc rounded-lg hover:bg-blue-100 font-bold text-[11px] transition shadow-2xs">
+                                        Edit UOM
+                                    </button>
+                                </td>
+                            </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+                <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden transition duration-150">
+            
+            <!-- Parent Header -->
+            <div onclick="toggleUomAcc('uom_acc_18')" class="p-4 cursor-pointer hover:bg-slate-50/70 flex items-center justify-between gap-3 select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="px-2.5 py-1 rounded-lg border text-[11px] font-bold shrink-0 bg-indigo-50 border-indigo-200 text-indigo-700">
+                        Obat                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-zcTxt truncate flex items-center gap-2">
+                            <span>Entrostop</span>
+                                                            <span class="text-[11px] font-mono font-normal text-zcMut">(IND-D23520)</span>
+                                                    </h3>
+                        <p class="text-[11px] text-zcMut mt-0.5">
+                            1 variasi kemasan terdaftar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                    <span class="text-xs font-semibold text-zc font-mono bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                        1 SKU
+                    </span>
+                    <div id="uom_icon_18" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-transform text-xs">
+                        &#9660;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variations Table (Collapsible) -->
+            <div id="uom_acc_18" class="uom-acc-content hidden border-t border-zcBrd bg-slate-50/60 p-4">
+                <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd shadow-2xs">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 border-b border-zcBrd">
+                            <tr>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">SKU Variasi</th>
+                                <th class="text-left px-3 py-2.5 font-bold text-zcMut">Nama Variasi</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Kecil</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Satuan Besar</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Rasio</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Ecer (POS)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Harga Grosir (Web)</th>
+                                <th class="text-right px-3 py-2.5 font-bold text-zcMut">Stok Min</th>
+                                <th class="text-center px-3 py-2.5 font-bold text-zcMut">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zcBrd">
+                                                        <tr class="hover:bg-slate-50/70 transition" id="row-23">
+                                <td class="px-3 py-2.5 font-mono text-[11px] text-slate-600 font-semibold">ENT-DSW</td>
+                                <td class="px-3 py-2.5 font-bold text-zcTxt">Tablet</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Strip</td>
+                                <td class="px-3 py-2.5 text-center font-semibold text-zcTxt">Box</td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px]">1:20</span>
+                                </td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-zcTxt">Rp 9.500</td>
+                                <td class="px-3 py-2.5 text-right font-semibold text-emerald-700">Rp 180.000</td>
+                                <td class="px-3 py-2.5 text-right">
+                                    <div class="text-[10px]">Kecil: <span class="font-bold text-slate-400"></span></div>
+                                    <div class="text-[10px]">Besar: <span class="font-bold text-amber-600">2</span></div>
+                                </td>
+                                <td class="px-3 py-2.5 text-center">
+                                    <button onclick='openEditModal({&quot;id&quot;:23,&quot;id_produk_induk&quot;:18,&quot;sku_variasi&quot;:&quot;ENT-DSW&quot;,&quot;nama_variasi&quot;:&quot;Tablet&quot;,&quot;satuan_kecil&quot;:&quot;Strip&quot;,&quot;satuan_besar&quot;:&quot;Box&quot;,&quot;rasio_konversi&quot;:20,&quot;harga_jual_kecil&quot;:&quot;9500.00&quot;,&quot;harga_jual_besar&quot;:&quot;180000.00&quot;,&quot;stok_minimum_kecil&quot;:null,&quot;stok_minimum_besar&quot;:2,&quot;berat&quot;:100,&quot;tampil_di_online&quot;:1,&quot;is_active&quot;:1,&quot;gambar&quot;:&quot;assets\/img\/produk\/var_23_1.jpg,assets\/img\/produk\/var_23_2.jpg,assets\/img\/produk\/var_23_3.jpg,assets\/img\/produk\/var_23_4.jpg&quot;,&quot;id_induk&quot;:18,&quot;nama_produk&quot;:&quot;Entrostop&quot;,&quot;kategori&quot;:&quot;Obat&quot;,&quot;sku_induk&quot;:&quot;IND-D23520&quot;})'
+                                        class="px-2.5 py-1 bg-zcLt text-zc rounded-lg hover:bg-blue-100 font-bold text-[11px] transition shadow-2xs">
+                                        Edit UOM
+                                    </button>
+                                </td>
+                            </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+            </div>
+
+<!-- Pagination Controls -->
+<div class="p-4 bg-white rounded-2xl border border-zcBrd flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-xs mb-8">
+    <span class="text-zcMut font-medium">
+        Menampilkan 1 – 15 dari 53 Produk Induk
+    </span>
+    <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-100 text-slate-400 font-semibold cursor-not-allowed">&larr; Sebelumnya</span>
+        
+                                    <a href="?page=1" class="w-8 h-8 flex items-center justify-center rounded-lg border text-xs font-bold transition bg-zc border-zc text-white shadow-xs">1</a>
+                                                <a href="?page=2" class="w-8 h-8 flex items-center justify-center rounded-lg border text-xs font-bold transition border-zcBrd bg-white text-zcTxt hover:bg-slate-50">2</a>
+                                                <a href="?page=3" class="w-8 h-8 flex items-center justify-center rounded-lg border text-xs font-bold transition border-zcBrd bg-white text-zcTxt hover:bg-slate-50">3</a>
+                                                <a href="?page=4" class="w-8 h-8 flex items-center justify-center rounded-lg border text-xs font-bold transition border-zcBrd bg-white text-zcTxt hover:bg-slate-50">4</a>
+                    
+                    <a href="?page=2" class="px-3 py-1.5 rounded-lg border border-zcBrd bg-white text-zcTxt hover:bg-slate-50 font-semibold transition">Selanjutnya &rarr;</a>
+            </div>
+</div>
+
+<!-- Modal Edit UOM -->
+<div id="modal-edit-uom" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+        <div class="p-5 border-b border-zcBrd flex items-center justify-between">
+            <h3 class="text-sm font-bold text-zcTxt" id="modal-title">Edit UOM</h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-red-500">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <form method="POST" class="p-5 space-y-4">
+            <input type="hidden" name="action" value="update_uom">
+            <input type="hidden" name="id_variasi" id="edit_id_variasi">
+
+            <div id="alkes-note" class="hidden bg-purple-50 border border-purple-200 rounded-xl p-3 text-xs text-purple-700 font-medium">
+                <strong>Alat Kesehatan (Single-UOM)</strong>: Rasio konversi otomatis = 1. Harga besar = harga kecil.
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5">Satuan Kecil *</label>
+                    <input type="text" name="satuan_kecil" id="edit_satuan_kecil" required placeholder="Botol / Strip / Pcs"
+                        class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5">Satuan Besar *</label>
+                    <input type="text" name="satuan_besar" id="edit_satuan_besar" required placeholder="Box / Dus / Karton"
+                        class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-zcTxt mb-1.5 flex justify-between">Rasio Konversi (1 Besar = ? Kecil) * <span class="text-[9px] text-rose-500 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Terkunci</span></label>
+                <input type="number" name="rasio_konversi" id="edit_rasio" min="1" required
+                    readonly class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-100 text-slate-500 cursor-not-allowed focus:outline-none">
+                <p class="text-[10px] text-zcMut mt-1">Obat: sesuai kemasan (mis. 50 = 1 Karton isi 50 Botol). Alkes: wajib 1.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5 flex justify-between">Harga Jual Kecil (POS) * <span class="text-[9px] text-rose-500 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Terkunci</span></label>
+                    <input type="number" name="harga_jual_kecil" id="edit_harga_kecil" min="0" step="100" required
+                        readonly class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-100 text-slate-500 cursor-not-allowed focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5 flex justify-between">Harga Jual Besar (E-Commerce) * <span class="text-[9px] text-rose-500 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Terkunci</span></label>
+                    <input type="number" name="harga_jual_besar" id="edit_harga_besar" min="0" step="100" required
+                        readonly class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-100 text-slate-500 cursor-not-allowed focus:outline-none">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5">Stok Min (Eceran)</label>
+                    <input type="number" name="stok_minimum_kecil" id="edit_stok_min_kecil" min="0"
+                        class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
+                    
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5 mt-2">Stok Min (Grosir)</label>
+                    <input type="number" name="stok_minimum_besar" id="edit_stok_min_besar" min="0"
+                        class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-zcTxt mb-1.5">Berat (gram)</label>
+                    <input type="number" name="berat" id="edit_berat" min="0"
+                        class="w-full text-sm border border-zcBrd rounded-xl px-3 py-2.5 focus:outline-none focus:border-zc">
+                    <p class="text-[10px] text-zcMut mt-1">Untuk kalkulasi ongkos kirim ekspedisi</p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="closeModal()" class="px-5 py-2 rounded-xl border border-zcBrd text-zcMut text-xs font-semibold">Batal</button>
+                <button type="submit" class="px-6 py-2 rounded-xl bg-zc hover:bg-zcHv text-white text-xs font-bold shadow-sm shadow-blue-500/20">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleUomAcc(id) {
+    const el = document.getElementById(id);
+    const iconId = id.replace('uom_acc_', 'uom_icon_');
+    const icon = document.getElementById(iconId);
+    if (!el) return;
+    
+    if (el.classList.contains('hidden')) {
+        el.classList.remove('hidden');
+        if (icon) icon.style.transform = 'rotate(180deg)';
+    } else {
+        el.classList.add('hidden');
+        if (icon) icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+function toggleAllUom(expand) {
+    document.querySelectorAll('.uom-acc-content').forEach(el => {
+        const iconId = el.id.replace('uom_acc_', 'uom_icon_');
+        const icon = document.getElementById(iconId);
+        if (expand) {
+            el.classList.remove('hidden');
+            if (icon) icon.style.transform = 'rotate(180deg)';
+        } else {
+            el.classList.add('hidden');
+            if (icon) icon.style.transform = 'rotate(0deg)';
+        }
+    });
+}
+
+function openEditModal(data) {
+    document.getElementById('edit_id_variasi').value = data.id;
+    document.getElementById('modal-title').textContent = 'Edit UOM: ' + data.nama_produk + ' (' + data.nama_variasi + ')';
+    document.getElementById('edit_satuan_kecil').value = data.satuan_kecil;
+    document.getElementById('edit_satuan_besar').value = data.satuan_besar;
+    document.getElementById('edit_rasio').value = data.rasio_konversi;
+    document.getElementById('edit_harga_kecil').value = data.harga_jual_kecil;
+    document.getElementById('edit_harga_besar').value = data.harga_jual_besar;
+    document.getElementById('edit_stok_min_kecil').value = data.stok_minimum_kecil;
+    document.getElementById('edit_stok_min_besar').value = data.stok_minimum_besar;
+    document.getElementById('edit_berat').value = data.berat;
+    
+    const isAlkes = (parseInt(data.rasio_konversi) === 1);
+    document.getElementById('alkes-note').classList.toggle('hidden', !isAlkes);
+    document.getElementById('modal-edit-uom').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('modal-edit-uom').classList.add('hidden');
+}
+</script>
+
+</main></div>
+    <script>
+      $(document).ready(function() {
+          $("select.select2:not(.select2-hidden-accessible)").each(function() {
+              $(this).select2({ width: "100%" });
+              $(this).on("select2:select", function(e) {
+                  this.dispatchEvent(new Event("change", { bubbles: true }));
+              });
+          });
+      });
+    </script>
+    </body></html>

@@ -1,0 +1,35 @@
+## 5. MATRIKS HAK AKSES PENGGUNA (ROLE-BASED ACCESS CONTROL)
+
+| Fitur / Modul Sistem | SuperAdmin (Pemilik) | Admin (Operasional) | Kasir (Front Office) | Pelanggan (Customer) |
+|---|:---:|:---:|:---:|:---:|
+| **Dashboard Manajerial & Grafik Kinerja** | Ya | Tidak | Tidak | Tidak |
+| **Dashboard Operasional Harian** | Ya | Ya | Tidak | Tidak |
+| **Kasir POS (Penjualan Walk-in)** | Ya | Tidak | Ya | Tidak |
+| **Manajemen Pesanan E-Commerce** | Ya | Ya | Baca/Cetak | Tidak |
+| **Penerimaan Barang Logistik (Inbound)**| Ya | Ya | Tidak | Tidak |
+| **Konversi Satuan UOM (Bongkar Dus)** | Ya | Ya | Tidak | Tidak |
+| **Mutasi Stok Manual (Barang Rusak)** | Ya | Ya | Tidak | Tidak |
+| **Pelaksanaan Stok Opname (Counting)** | Ya | Ya | Tidak | Tidak |
+| **Buka/Tutup Sesi Opname (Freeze Lock)**| Ya | Tidak | Tidak | Tidak |
+| **Kartu Stok & Laporan Mutasi Fisik** | Ya | Ya | Tidak | Tidak |
+| **Laporan Penjualan & Laba/Rugi** | Ya | Tidak | Tidak | Tidak |
+| **Audit Anomali FEFO & Logistik Medis** | Ya | Ya | Tidak | Tidak |
+| **Master Data (Produk, UOM, Supplier)**| Ya | Ya | Tidak | Tidak |
+| **Manajemen Akun Pengguna Staf** | Ya | Tidak | Tidak | Tidak |
+| **Katalog E-Commerce & Checkout Online**| Tidak | Tidak | Tidak | Ya |
+| **Riwayat Pesanan Pelanggan Online** | Tidak | Tidak | Tidak | Ya |
+
+---
+
+## 6. PERSYARATAN NON-FUNGSIONAL & ARSITEKTUR TEKNOLOGI
+
+1. **Arsitektur Aplikasi**: Monolithic MVC-pattern berbasis PHP Native 8.x dengan PDO MySQL Strict Mode.
+2. **Basis Data**: MySQL/MariaDB dengan InnoDB Storage Engine (Mendukung ACID Transactions: `beginTransaction()`, `commit()`, `rollBack()`).
+3. **Front-End & UI/UX**:
+   - **Framework CSS**: Tailwind CSS (Utility-First) dengan palet brand resmi ZenCare (*Deep Navy `#0f2d5a`*, *Medical Blue `#1a75d2`*, dan *Medical Crimson `#c0392b`*).
+   - **Tipografi**: Plus Jakarta Sans & Inter font family dengan ukuran teks minimal $\ge 11\text{px}$ untuk menjamin legibilitas klinis.
+   - **Desain Responsif**: Menggunakan grid adaptif `repeat(auto-fit, minmax(...))` yang kompatibel mulai dari monitor desktop (1920x1080), laptop standar (1366x768 / 1280x720), hingga perangkat mobile/tablet e-commerce.
+4. **Integrasi Pihak Ketiga (Third-Party APIs)**:
+   - **Payment Gateway**: Midtrans Snap API (Virtual Account, QRIS, E-Wallet).
+   - **Kalkulasi Ongkos Kirim**: RajaOngkir Pro/Starter API untuk kurir JNE, POS Indonesia, dan TIKI.
+   - **Pencetakan Barcode**: JsBarcode library untuk render stiker thermal 100x150mm & faktur in
