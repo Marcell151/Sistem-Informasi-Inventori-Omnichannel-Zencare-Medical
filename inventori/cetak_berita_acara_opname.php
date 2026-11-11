@@ -32,6 +32,8 @@ if (!$sesi) {
 
 $stmtItems = $pdo->prepare("
     SELECT dob.*, pv.nama_variasi, pv.sku_variasi, pv.satuan_besar, pv.satuan_kecil, pv.rasio_konversi,
+           pv.harga_jual_kecil, pv.harga_jual_besar,
+           (SELECT pd.harga_beli FROM penerimaan_detail pd WHERE pd.id_variasi = pv.id ORDER BY pd.id DESC LIMIT 1) AS last_harga_beli,
            pi.nama_produk, pi.kategori, sb.no_batch, sb.tgl_exp,
            u_hit.nama_lengkap AS nama_penghitung, u_mut.nama_lengkap AS nama_pemutasi
     FROM detail_opname_batch dob
@@ -50,9 +52,10 @@ $totalItem = count($items);
 $totalSesuai = 0;
 $totalSelisih = 0;
 $totalMutasi = 0;
+$grandTotalKerugian = 0;
 
 $groupedItems = [];
-foreach ($items as $it) {
+foreach ($items as &$it) {
     $sel = intval($it['selisih'] ?? 0);
     if ($it['hitung_fisik'] !== null && $sel === 0) {
         $totalSesuai++;
@@ -62,6 +65,30 @@ foreach ($items as $it) {
             $totalMutasi++;
         }
     }
+
+    // Tentukan Harga Beli Acuan Acuan (Harga Beli):
+    $rasio = max(1, intval($it['rasio_konversi'] ?? 1));
+    $hBeli = floatval($it['last_harga_beli'] ?? 0);
+    if ($hBeli <= 0) {
+        // Estimasi Harga Beli modal 80% dari harga jual jika belum ada riwayat penerimaan
+        $hBeli = floatval($it['harga_jual_besar'] ?? 0) * 0.8;
+    }
+    if ($hBeli <= 0) {
+        $hBeli = floatval($it['harga_jual_kecil'] ?? 0) * $rasio * 0.8;
+    }
+    if ($hBeli <= 0) $hBeli = 15000;
+
+    $hargaSatuan = ($it['satuan_tipe'] === 'besar') ? $hBeli : round($hBeli / $rasio);
+    $it['harga_satuan'] = $hargaSatuan;
+
+    // Hitung kerugian: Hanya selisih kurang (defisit) yang menimbulkan beban kerugian
+    if ($sel < 0) {
+        $subKerugian = abs($sel) * $hargaSatuan;
+    } else {
+        $subKerugian = 0;
+    }
+    $it['subtotal_kerugian'] = $subKerugian;
+    $grandTotalKerugian += $subKerugian;
 
     $vid = $it['id_variasi'];
     if (!isset($groupedItems[$vid])) {
@@ -80,6 +107,7 @@ foreach ($items as $it) {
     }
     $groupedItems[$vid]['items'][] = $it;
 }
+unset($it);
 
 // Ambil seluruh Serial Number aktif (Tersedia) per variasi alkes untuk dicantumkan di Berita Acara
 $alkesSnMap = [];
@@ -370,8 +398,8 @@ foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
                 <span class="val" style="color: #1d4ed8;"><?= number_format($totalMutasi) ?> / <?= number_format($totalSelisih) ?> Dimutasi</span>
             </td>
             <td style="width: 20%;">
-                <span class="label">Tingkat Akurasi</span>
-                <span class="val" style="color: #0f2d5a;"><?= $totalItem > 0 ? round(($totalSesuai / $totalItem) * 100, 1) : 0 ?>% Sesuai</span>
+                <span class="label">Total Estimasi Kerugian</span>
+                <span class="val" style="color: #b91c1c;">Rp <?= number_format($grandTotalKerugian, 0, ',', '.') ?></span>
             </td>
         </tr>
     </table>
@@ -380,33 +408,37 @@ foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 24px;">No</th>
-                <th style="width: 140px;">Tingkat Satuan / Komoditas</th>
+                <th style="width: 22px;">No</th>
+                <th style="width: 85px;">Tingkat Satuan</th>
                 <th>Batch / Identitas Serial Number</th>
-                <th style="width: 55px;">Satuan</th>
-                <th style="width: 55px;">Sistem</th>
-                <th style="width: 55px;">Fisik</th>
-                <th style="width: 55px;">Selisih</th>
-                <th style="width: 115px;">Tindakan &amp; Keterangan</th>
+                <th style="width: 45px;">Satuan</th>
+                <th style="width: 45px;">Sistem</th>
+                <th style="width: 45px;">Fisik</th>
+                <th style="width: 48px;">Selisih</th>
+                <th style="width: 70px;">Harga Beli Acuan</th>
+                <th style="width: 80px;">Kerugian (Rp)</th>
+                <th style="width: 105px;">Tindakan Mutasi</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($groupedItems)): ?>
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 12px; color: #64748b; font-style: italic;">
+                    <td colspan="10" style="text-align: center; padding: 12px; color: #64748b; font-style: italic;">
                         Tidak ada data pemeriksaan fisik pada sesi ini.
                     </td>
                 </tr>
             <?php else: 
                 $pNo = 1;
                 foreach ($groupedItems as $grp): 
+                    $firstItemGrp = $grp['items'][0] ?? null;
+                    $grpHasBatch = ($firstItemGrp && (!empty($firstItemGrp['id_batch']) || !empty($firstItemGrp['no_batch'])));
             ?>
                 <!-- Header Produk Induk & Variasi (Format Bersih & Rapi) -->
                 <tr style="background-color: #f8fafc; font-weight: bold; border-top: 2px solid #64748b; border-bottom: 1px solid #cbd5e1; page-break-after: avoid;">
                     <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: center; color: #334155; font-weight: bold;"><?= $pNo++ ?></td>
-                    <td colspan="3" style="border: 1px solid #cbd5e1; padding: 6px 10px;">
+                    <td colspan="4" style="border: 1px solid #cbd5e1; padding: 6px 10px;">
                         <span style="font-size: 7.5pt; font-weight: bold; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; margin-right: 6px;">
-                            <?= $grp['jenis_komoditas'] === 'Obat' ? 'Obat' : 'Alkes' ?>
+                            <?= $grp['kategori'] === 'Alat Kesehatan' ? ($grpHasBatch ? 'Alkes (BMHP)' : 'Alkes (SN)') : 'Obat' ?>
                         </span>
                         <strong style="font-size: 9pt; color: #0f2d5a;"><?= htmlspecialchars($grp['nama_produk']) ?></strong>
                         <span style="font-weight: normal; color: #475569;">— <?= htmlspecialchars($grp['nama_variasi']) ?></span>
@@ -414,11 +446,11 @@ foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
                             <span style="font-family: monospace; font-size: 7.5pt; color: #64748b;">[<?= htmlspecialchars($grp['sku_variasi']) ?>]</span>
                         <?php endif; ?>
                     </td>
-                    <td colspan="4" style="border: 1px solid #cbd5e1; padding: 6px 10px; text-align: right; font-size: 8pt; color: #334155;">
-                        <?php if ($grp['jenis_komoditas'] === 'Obat' && $grp['rasio_konversi'] > 1): ?>
+                    <td colspan="5" style="border: 1px solid #cbd5e1; padding: 6px 10px; text-align: right; font-size: 8pt; color: #334155;">
+                        <?php if ($grpHasBatch && $grp['rasio_konversi'] > 1): ?>
                             <span style="font-weight: 600; color: #334155;">Konversi: 1 <?= htmlspecialchars($grp['satuan_besar']) ?> = <?= $grp['rasio_konversi'] ?> <?= htmlspecialchars($grp['satuan_kecil']) ?></span>
-                            <span style="color: #64748b; font-size: 7.5pt;">(Konversi Satuan Besar &amp; Satuan Kecil)</span>
-                        <?php elseif ($grp['jenis_komoditas'] === 'Alat Kesehatan'): ?>
+                            <span style="color: #64748b; font-size: 7.5pt;">(Satuan Besar &amp; Satuan Kecil)</span>
+                        <?php elseif (!$grpHasBatch): ?>
                             <span style="font-weight: 600; color: #0f2d5a;">Pelacakan Serial Number</span>
                         <?php else: ?>
                             <span style="color: #64748b;">Satuan Tunggal (<?= htmlspecialchars($grp['satuan_kecil']) ?>)</span>
@@ -429,11 +461,15 @@ foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
                 <!-- Baris Sub-Item / Batch / SN di Bawah Produk Tersebut -->
                 <?php foreach ($grp['items'] as $it): 
                     $sel = intval($it['selisih'] ?? 0);
+                    $fRusakRow = intval($it['fisik_rusak'] ?? 0);
+                    $fExpRow = intval($it['fisik_expired'] ?? 0);
+                    $isAnomali = ($sel !== 0 || $fRusakRow > 0 || $fExpRow > 0);
+                    $itHasBatch = (!empty($it['id_batch']) || !empty($it['no_batch']));
                 ?>
-                    <tr style="border-bottom: 1px solid #e2e8f0;">
-                        <td style="text-align: center; color: #94a3b8; font-size: 8pt; border: 1px solid #cbd5e1;">▷</td>
+                    <tr style="border-bottom: 1px solid #cbd5e1; <?= $isAnomali ? 'background-color: #fff1f2; outline: 2px solid #dc2626; border: 2px solid #dc2626; font-weight: 600;' : '' ?>">
+                        <td style="text-align: center; color: #94a3b8; font-size: 8pt; border: 1px solid #cbd5e1;">&gt;</td>
                         <td style="border: 1px solid #cbd5e1; font-size: 8pt; padding: 6px 8px;">
-                            <?php if ($it['jenis_komoditas'] === 'Obat'): ?>
+                            <?php if ($itHasBatch): ?>
                                 <?php if ($it['satuan_tipe'] === 'besar'): ?>
                                     <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; font-size: 7.5pt;">Satuan Besar</span>
                                 <?php else: ?>
@@ -444,7 +480,7 @@ foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
                             <?php endif; ?>
                         </td>
                         <td style="border: 1px solid #cbd5e1; padding: 6px 8px;">
-                            <?php if ($it['jenis_komoditas'] === 'Obat'): ?>
+                            <?php if ($itHasBatch): ?>
                                 <strong style="font-family: monospace; font-size: 8pt;"><?= htmlspecialchars($it['no_batch'] ?: '-') ?></strong>
                                 <span style="font-size: 7.5pt; color: #64748b; font-family: sans-serif; margin-left: 4px;">(Exp: <?= $it['tgl_exp'] ? date('d/m/Y', strtotime($it['tgl_exp'])) : '-' ?>)</span>
                             <?php else: 
@@ -467,11 +503,11 @@ foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
                                         <div style="margin-top: 3px; padding-top: 2px; border-top: 1px dashed #cbd5e1; font-size: 7pt; color: #b91c1c;">
                                             <strong>SN Disesuaikan:</strong>
                                             <?php 
-                                            $snMutTxt = [];
-                                            foreach ($mutSnList as $msn) {
-                                                $snMutTxt[] = htmlspecialchars($msn['serial_number']) . ' (' . str_replace('_', ' ', $msn['jenis_tindakan']) . ')';
-                                            }
-                                            echo implode(', ', $snMutTxt);
+                                             $snMutTxt = [];
+                                             foreach ($mutSnList as $msn) {
+                                                 $snMutTxt[] = htmlspecialchars($msn['serial_number']) . ' (' . str_replace('_', ' ', $msn['jenis_tindakan']) . ')';
+                                             }
+                                             echo implode(', ', $snMutTxt);
                                             ?>
                                         </div>
                                     <?php endif; ?>
@@ -486,18 +522,39 @@ foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
                         </td>
                         <td style="text-align: right; border: 1px solid #cbd5e1; font-family: monospace; font-size: 8.5pt; font-weight: bold; background: #fafafa; padding: 6px 8px;">
                             <?= $it['hitung_fisik'] !== null ? number_format($it['hitung_fisik']) : '-' ?>
+                            <?php if ($fRusakRow > 0): ?>
+                                <div style="font-size: 7pt; color: #b45309; font-family: sans-serif; font-weight: 600;">Rusak: <?= $fRusakRow ?></div>
+                            <?php endif; ?>
+                            <?php if ($fExpRow > 0): ?>
+                                <div style="font-size: 7pt; color: #b91c1c; font-family: sans-serif; font-weight: 600;">Exp: <?= $fExpRow ?></div>
+                            <?php endif; ?>
                         </td>
                         <td style="text-align: right; border: 1px solid #cbd5e1; font-family: monospace; font-size: 8.5pt; font-weight: bold; color: <?= $sel < 0 ? '#b91c1c' : ($sel > 0 ? '#1d4ed8' : '#047857') ?>; padding: 6px 8px;">
                             <?= $sel > 0 ? "+$sel" : "$sel" ?>
                         </td>
+                        <td style="text-align: right; border: 1px solid #cbd5e1; font-family: monospace; font-size: 8pt; color: #475569; padding: 6px 8px;">
+                            Rp <?= number_format($it['harga_satuan'], 0, ',', '.') ?>
+                        </td>
+                        <td style="text-align: right; border: 1px solid #cbd5e1; font-family: monospace; font-size: 8.5pt; padding: 6px 8px;">
+                            <?php if ($it['subtotal_kerugian'] > 0): ?>
+                                <strong style="color: #b91c1c;">Rp <?= number_format($it['subtotal_kerugian'], 0, ',', '.') ?></strong>
+                            <?php elseif ($sel > 0): ?>
+                                <span style="color: #1d4ed8; font-size: 7.5pt;">Rp 0 (Surplus)</span>
+                            <?php else: ?>
+                                <span style="color: #64748b; font-size: 7.5pt;">Rp 0</span>
+                            <?php endif; ?>
+                        </td>
                         <td style="font-size: 8pt; text-align: center; border: 1px solid #cbd5e1; padding: 6px 8px;">
-                            <?php if ($sel === 0): ?>
+                            <?php if ($sel === 0 && $fRusakRow === 0 && $fExpRow === 0): ?>
                                 <span style="color: #047857; font-weight: bold;">Sesuai (0)</span>
                             <?php else: ?>
                                 <div style="font-weight: bold; color: <?= $it['status_mutasi'] === 'Sudah Dimutasi' ? '#047857' : '#b91c1c' ?>;">
                                     <?= $it['status_mutasi'] === 'Sudah Dimutasi' ? 'Telah Dimutasi' : 'Belum Dimutasi' ?>
                                 </div>
-                                <div style="font-size: 7.5pt; color: #475569;"><?= htmlspecialchars($it['alasan_mutasi'] ?: '-') ?></div>
+                                <div style="font-size: 7.5pt; color: #1e293b; font-weight: 600;"><?= htmlspecialchars($it['alasan_mutasi'] ?: '-') ?></div>
+                                <?php if (!empty($it['keterangan_mutasi'])): ?>
+                                    <div style="font-size: 7pt; color: #64748b; margin-top: 1px;"><?= htmlspecialchars($it['keterangan_mutasi']) ?></div>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -505,6 +562,19 @@ foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
             <?php endforeach; ?>
             <?php endif; ?>
         </tbody>
+        <tfoot>
+            <tr style="background: #f8fafc; font-weight: bold; border-top: 2px solid #0f172a; border-bottom: 2px solid #0f172a;">
+                <td colspan="8" style="text-align: right; padding: 8px 10px; font-size: 8.5pt; text-transform: uppercase;">
+                    Total Estimasi Nilai Acuan Kerugian Persediaan:
+                </td>
+                <td style="text-align: right; padding: 8px 10px; font-size: 9.5pt; color: #b91c1c; font-family: monospace;">
+                    Rp <?= number_format($grandTotalKerugian, 0, ',', '.') ?>
+                </td>
+                <td style="text-align: center; padding: 8px 6px; font-size: 7.5pt; color: #64748b;">
+                    <?= $totalSelisih > 0 ? ($totalMutasi >= $totalSelisih ? 'Tuntas Rekonsiliasi' : 'Sebagian Dimutasi') : 'Stok Klop' ?>
+                </td>
+            </tr>
+        </tfoot>
     </table>
 
     <!-- Bagian Tanda Tangan (TTD) Resmi Berita Acara -->
@@ -532,7 +602,7 @@ foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
     <!-- Catatan Penutup Sesi -->
     <?php if (!empty($sesi['catatan'])): ?>
         <div style="margin-top: 14px; padding: 6px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 7.5pt; color: #475569;">
-            <strong>Catatan Audit:</strong> <?= htmlspecialchars($sesi['catatan']) ?>
+            <strong>Catatan Verifikasi Fisik:</strong> <?= htmlspecialchars($sesi['catatan']) ?>
         </div>
     <?php endif; ?>
 

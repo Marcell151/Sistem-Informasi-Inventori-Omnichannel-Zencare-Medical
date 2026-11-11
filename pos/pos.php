@@ -13,6 +13,13 @@ requireRole(['superadmin', 'admin', 'kasir']);
 $sesiOpnameAktif = cekSesiOpnameAktif($pdo);
 $idCabangKaryawan = $_SESSION['id_cabang'] ?? 1;
 
+// Pengalihan Otomatis Antarmuka Kasir jika Sesi Opname Aktif (Sesuai SOP & Arahan Bimbingan)
+if ($sesiOpnameAktif && ($_SESSION['role'] ?? '') === 'kasir') {
+    $redirectMsg = "PERHATIAN: Terminal POS sedang dibekukan sementara karena Sesi Stok Opname [" . htmlspecialchars($sesiOpnameAktif['kode_sesi']) . "] sedang berlangsung. Seluruh transaksi kasir dinonaktifkan dan Anda dialihkan ke formulir penghitungan fisik lapangan (Blind Count).";
+    header("Location: /inventory_zencare/inventori/stok_opname.php?msg=" . urlencode($redirectMsg) . "&type=info");
+    exit;
+}
+
 $msg = ''; $msgType = '';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['aksi'] ?? '') === 'bayar_pos') {
@@ -1965,7 +1972,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                             var displayBatch = (al.scanned_batch || al.batch).toUpperCase();
                             var swappedTag = al.is_anomaly ? '<span class="ml-1 px-1.5 py-0.2 bg-amber-200 text-amber-900 rounded text-[8px] font-extrabold uppercase">DITUKAR</span>' : '';
                             badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-[#eef6fb] border border-[#cde3f5] text-[#0f2d5a] text-[10px] font-bold">' +
-                                '<span class="text-[#1a75d2] font-extrabold">✓</span>' +
+                                '<svg class="w-3 h-3 text-[#1a75d2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' +
                                 '<span>Fisik Tervalidasi: <b class="font-mono text-[#0f2d5a]">' + displayBatch + '</b> (' + al.qty + ' ' + i.satuan_label + ')</span>' +
                                 swappedTag +
                             '</div>';
@@ -1983,7 +1990,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                     i.alkes_allocations.forEach(function(u, idx) {
                         if (u.verified) {
                             badgesHtml += '<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-[#eef6fb] border border-[#cde3f5] text-[#0f2d5a] text-[10px] font-bold">' +
-                                '<span class="text-[#1a75d2] font-extrabold">✓</span>' +
+                                '<svg class="w-3 h-3 text-[#1a75d2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' +
                                 '<span>SN Tervalidasi: <b class="font-mono text-[#0f2d5a]">' + u.sn.toUpperCase() + '</b> (Unit ' + (idx + 1) + ')</span>' +
                             '</div>';
                         } else {
@@ -2402,9 +2409,9 @@ foreach ($riwayatKasirHariIni as $rTrx) {
         if (totalEl) totalEl.innerText = 'Rp ' + totalPrice.toLocaleString('id-ID');
         
         if (lastProductName && prodEl) {
-            prodEl.innerHTML = `<span class="text-emerald-700 font-extrabold truncate block">✓ ${lastProductName}</span>`;
+            prodEl.innerHTML = `<span class="text-emerald-700 font-extrabold truncate block">${lastProductName}</span>`;
             if (cdEl) {
-                cdEl.innerText = '✓ Berhasil Masuk';
+                cdEl.innerText = 'Berhasil Masuk';
                 cdEl.className = 'text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2 py-1 rounded-lg border border-emerald-300 shrink-0';
                 setTimeout(() => {
                     if (cdEl) {

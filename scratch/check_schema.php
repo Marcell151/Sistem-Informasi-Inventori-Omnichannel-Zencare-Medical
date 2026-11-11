@@ -1,6 +1,25 @@
 <?php
-require_once __DIR__ . '/../config/koneksi.php';
-$rows = $pdo->query("SELECT pv.id, pi.nama_produk, pv.nama_variasi, pi.kategori, pv.rasio_konversi, pv.satuan_besar, pv.satuan_kecil, pv.harga_jual_besar, pv.harga_jual_kecil FROM produk_variasi pv JOIN produk_induk pi ON pv.id_produk_induk=pi.id WHERE pi.kategori='Alat Kesehatan'")->fetchAll(PDO::FETCH_ASSOC);
-foreach ($rows as $r) {
-    echo "ID: {$r['id']} | {$r['nama_produk']} | Rasio: {$r['rasio_konversi']} | Besar: {$r['satuan_besar']} | Kecil: {$r['satuan_kecil']} | HrgB: {$r['harga_jual_besar']} | HrgK: {$r['harga_jual_kecil']}\n";
+require __DIR__ . '/../config/db.php';
+$pdo = DB::connect();
+
+echo "=== detail_opname_batch columns ===\n";
+$stmt = $pdo->query('DESCRIBE detail_opname_batch');
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    echo $row['Field'] . ' | ' . $row['Type'] . "\n";
+}
+
+echo "\n=== produk_variasi price columns ===\n";
+$stmt = $pdo->query('DESCRIBE produk_variasi');
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    if (strpos($row['Field'], 'harga') !== false) {
+        echo $row['Field'] . ' | ' . $row['Type'] . "\n";
+    }
+}
+
+echo "\n=== stok_batch columns ===\n";
+$stmt = $pdo->query('DESCRIBE stok_batch');
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    if (strpos($row['Field'], 'harga') !== false || strpos($row['Field'], 'exp') !== false) {
+        echo $row['Field'] . ' | ' . $row['Type'] . "\n";
+    }
 }

@@ -1,5 +1,7 @@
 <?php
-require 'config/koneksi.php';
-$hs = $pdo->query('SELECT * FROM sesi_opname ORDER BY id DESC')->fetchAll(PDO::FETCH_ASSOC);
-print_r($hs);
-
+require_once __DIR__ . '/../config/db.php';
+$pdo = DB::connect();
+$stmt = $pdo->query("SELECT id, kode_sesi, status, tahap FROM sesi_opname ORDER BY id DESC LIMIT 5");
+while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    echo json_encode($r) . PHP_EOL;
+}

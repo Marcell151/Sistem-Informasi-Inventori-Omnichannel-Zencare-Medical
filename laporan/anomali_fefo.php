@@ -522,6 +522,5 @@ layoutHeader('Laporan Anomali FEFO', 'Pencatatan deviasi batch fisik obat yang d
         </tfoot>
     </table>
 </div>
-</div>
 
 <?php layoutFooter(); ?>

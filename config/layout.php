@@ -328,6 +328,9 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
             $link('/inventory_zencare/pos/pos.php', 'pos', 'Kasir (POS)', 'pos');
         }
         $link('/inventory_zencare/admin/pesanan.php', 'orders', 'Transaksi', 'pesanan');
+        if ($role === 'kasir') {
+            $link('/inventory_zencare/inventori/stok_opname.php', 'opname', 'Blind Count Opname', 'stok_opname');
+        }
 
         // ── MASTER DATA ───────────────────────────────────────────────────
         if (in_array($role, ['superadmin', 'admin'])) {

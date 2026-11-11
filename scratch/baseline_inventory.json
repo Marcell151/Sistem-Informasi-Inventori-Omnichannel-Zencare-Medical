@@ -1,0 +1,1711 @@
+{
+    "timestamp": "2026-11-09 11:11:51",
+    "stok_batch": [
+        {
+            "id": 1,
+            "id_variasi": 1,
+            "no_batch": "AMX-24C081",
+            "tgl_exp": "2025-08-15",
+            "stok_sisa": 0,
+            "created_at": "2025-08-15 15:00:00"
+        },
+        {
+            "id": 2,
+            "id_variasi": 10,
+            "no_batch": "PCT-24D012",
+            "tgl_exp": "2025-10-01",
+            "stok_sisa": 0,
+            "created_at": "2025-10-01 15:00:00"
+        },
+        {
+            "id": 3,
+            "id_variasi": 2,
+            "no_batch": "SNM-24K061",
+            "tgl_exp": "2026-10-15",
+            "stok_sisa": 120,
+            "created_at": "2026-08-10 17:00:00"
+        },
+        {
+            "id": 4,
+            "id_variasi": 31,
+            "no_batch": "BDR-25D110",
+            "tgl_exp": "2027-02-07",
+            "stok_sisa": 100,
+            "created_at": "2026-08-15 17:00:00"
+        },
+        {
+            "id": 5,
+            "id_variasi": 42,
+            "no_batch": "CTM-25E080",
+            "tgl_exp": "2027-02-12",
+            "stok_sisa": 80,
+            "created_at": "2026-08-20 17:00:00"
+        },
+        {
+            "id": 6,
+            "id_variasi": 6,
+            "no_batch": "HUF-24J089",
+            "tgl_exp": "2027-02-20",
+            "stok_sisa": 300,
+            "created_at": "2026-08-25 17:00:00"
+        },
+        {
+            "id": 7,
+            "id_variasi": 1,
+            "no_batch": "AMX-2026-01",
+            "tgl_exp": "2027-12-15",
+            "stok_sisa": 30,
+            "created_at": "2026-10-15 15:30:00"
+        },
+        {
+            "id": 8,
+            "id_variasi": 1,
+            "no_batch": "AMX-2026-01.A",
+            "tgl_exp": "2027-12-15",
+            "stok_sisa": 8,
+            "created_at": "2026-10-05 16:15:00"
+        },
+        {
+            "id": 9,
+            "id_variasi": 2,
+            "no_batch": "SNM-2026-A",
+            "tgl_exp": "2028-05-10",
+            "stok_sisa": 240,
+            "created_at": "2026-10-15 15:30:00"
+        },
+        {
+            "id": 10,
+            "id_variasi": 2,
+            "no_batch": "SNM-2026-A.A",
+            "tgl_exp": "2028-05-10",
+            "stok_sisa": 24,
+            "created_at": "2026-10-07 17:30:00"
+        },
+        {
+            "id": 11,
+            "id_variasi": 3,
+            "no_batch": "BMHP-ESYGLU-28",
+            "tgl_exp": "2028-11-20",
+            "stok_sisa": 15,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 12,
+            "id_variasi": 6,
+            "no_batch": "HUF-TMP-26",
+            "tgl_exp": "2027-08-15",
+            "stok_sisa": 300,
+            "created_at": "2026-09-10 16:00:00"
+        },
+        {
+            "id": 13,
+            "id_variasi": 6,
+            "no_batch": "HUF-TMP-26.A",
+            "tgl_exp": "2027-08-15",
+            "stok_sisa": 45,
+            "created_at": "2026-10-09 20:45:00"
+        },
+        {
+            "id": 14,
+            "id_variasi": 6,
+            "no_batch": "HUF-TMP-27",
+            "tgl_exp": "2028-06-20",
+            "stok_sisa": 400,
+            "created_at": "2026-10-15 15:30:00"
+        },
+        {
+            "id": 15,
+            "id_variasi": 6,
+            "no_batch": "HUF-TMP-27.A",
+            "tgl_exp": "2028-06-20",
+            "stok_sisa": 47,
+            "created_at": "2026-10-11 22:30:00"
+        },
+        {
+            "id": 16,
+            "id_variasi": 7,
+            "no_batch": "HUFPIL-2027-01",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 34900,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 17,
+            "id_variasi": 8,
+            "no_batch": "HUFBP-2027-01",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 32400,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 18,
+            "id_variasi": 9,
+            "no_batch": "HUFFLU-2027-01",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 37450,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 19,
+            "id_variasi": 10,
+            "no_batch": "PCT-500-26",
+            "tgl_exp": "2027-11-20",
+            "stok_sisa": 210,
+            "created_at": "2026-10-15 15:30:00"
+        },
+        {
+            "id": 20,
+            "id_variasi": 10,
+            "no_batch": "PCT-500-26.A",
+            "tgl_exp": "2027-11-20",
+            "stok_sisa": 7,
+            "created_at": "2026-10-08 18:00:00"
+        },
+        {
+            "id": 21,
+            "id_variasi": 10,
+            "no_batch": "PCT-500-26.B",
+            "tgl_exp": "2027-11-20",
+            "stok_sisa": 8,
+            "created_at": "2026-10-10 21:20:00"
+        },
+        {
+            "id": 22,
+            "id_variasi": 11,
+            "no_batch": "PCT250-2027-01",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 1490,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 23,
+            "id_variasi": 12,
+            "no_batch": "PCT125-2027-01",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 1490,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 24,
+            "id_variasi": 13,
+            "no_batch": "PRM-KLK-26",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 348,
+            "created_at": "2026-10-20 17:00:00"
+        },
+        {
+            "id": 25,
+            "id_variasi": 13,
+            "no_batch": "PRM-KLK-26.A",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 12,
+            "created_at": "2026-10-21 18:00:00"
+        },
+        {
+            "id": 26,
+            "id_variasi": 14,
+            "no_batch": "PND-KLK-26",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 240,
+            "created_at": "2026-10-20 17:00:00"
+        },
+        {
+            "id": 27,
+            "id_variasi": 15,
+            "no_batch": "TLKANG-2027-01",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 2148,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 28,
+            "id_variasi": 16,
+            "no_batch": "MYL150-2027-01",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 8616,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 29,
+            "id_variasi": 17,
+            "no_batch": "INSREG-2027-01",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 2148,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 30,
+            "id_variasi": 18,
+            "no_batch": "BET-15-26",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 168,
+            "created_at": "2026-10-24 22:30:00"
+        },
+        {
+            "id": 31,
+            "id_variasi": 19,
+            "no_batch": "CTP30-2027-01",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 1490,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 32,
+            "id_variasi": 20,
+            "no_batch": "NEUFRT-2027-01",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 1490,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 33,
+            "id_variasi": 21,
+            "no_batch": "SNGCAP-2027-01",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 9350,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 34,
+            "id_variasi": 22,
+            "no_batch": "DPT-CAP-26",
+            "tgl_exp": "2027-09-10",
+            "stok_sisa": 475,
+            "created_at": "2026-10-24 22:30:00"
+        },
+        {
+            "id": 35,
+            "id_variasi": 23,
+            "no_batch": "ENTDSW-2027-01",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 5980,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 36,
+            "id_variasi": 24,
+            "no_batch": "WOD-PEP-26",
+            "tgl_exp": "2028-04-10",
+            "stok_sisa": 192,
+            "created_at": "2026-10-22 18:20:00"
+        },
+        {
+            "id": 37,
+            "id_variasi": 24,
+            "no_batch": "WOD-GNT-26",
+            "tgl_exp": "2028-05-20",
+            "stok_sisa": 72,
+            "created_at": "2026-10-25 18:15:00"
+        },
+        {
+            "id": 38,
+            "id_variasi": 24,
+            "no_batch": "WOD-PEP-26.A",
+            "tgl_exp": "2028-04-10",
+            "stok_sisa": 24,
+            "created_at": "2026-10-23 23:30:00"
+        },
+        {
+            "id": 39,
+            "id_variasi": 25,
+            "no_batch": "KMXHRB-2027-01",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 13470,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 40,
+            "id_variasi": 26,
+            "no_batch": "ANTJRG-2027-01",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 2124,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 41,
+            "id_variasi": 27,
+            "no_batch": "CDR-EFT-26",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 90,
+            "created_at": "2026-10-22 18:20:00"
+        },
+        {
+            "id": 42,
+            "id_variasi": 28,
+            "no_batch": "RDXDBL-2027-01",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 1490,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 43,
+            "id_variasi": 29,
+            "no_batch": "ENV-C-26",
+            "tgl_exp": "2028-03-15",
+            "stok_sisa": 350,
+            "created_at": "2026-10-22 18:20:00"
+        },
+        {
+            "id": 44,
+            "id_variasi": 30,
+            "no_batch": "IMB-FRC-26",
+            "tgl_exp": "2027-09-15",
+            "stok_sisa": 171,
+            "created_at": "2026-10-15 15:30:00"
+        },
+        {
+            "id": 45,
+            "id_variasi": 31,
+            "no_batch": "BDR-2028",
+            "tgl_exp": "2028-03-12",
+            "stok_sisa": 6225,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 46,
+            "id_variasi": 32,
+            "no_batch": "NZPFRT-2027-01",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 9350,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 47,
+            "id_variasi": 33,
+            "no_batch": "DCL-GEN-26",
+            "tgl_exp": "2027-10-15",
+            "stok_sisa": 175,
+            "created_at": "2026-10-24 22:30:00"
+        },
+        {
+            "id": 48,
+            "id_variasi": 34,
+            "no_batch": "OBHCPL-2027-01",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 8616,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 49,
+            "id_variasi": 35,
+            "no_batch": "SLNPAS-2027-01",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 23960,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 50,
+            "id_variasi": 36,
+            "no_batch": "VKVP10-2027-01",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 8616,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 51,
+            "id_variasi": 37,
+            "no_batch": "TLKLNU-2027-01",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 2148,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 52,
+            "id_variasi": 38,
+            "no_batch": "DCD-27A01",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 8616,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 53,
+            "id_variasi": 39,
+            "no_batch": "PLSCAP-2027-01",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 1490,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 54,
+            "id_variasi": 40,
+            "no_batch": "CMBJRK-2027-01",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 2148,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 55,
+            "id_variasi": 41,
+            "no_batch": "CFD-500-26",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 70,
+            "created_at": "2026-10-22 18:20:00"
+        },
+        {
+            "id": 56,
+            "id_variasi": 41,
+            "no_batch": "CFD-GNT-26",
+            "tgl_exp": "2028-02-15",
+            "stok_sisa": 20,
+            "created_at": "2026-10-25 17:30:00"
+        },
+        {
+            "id": 57,
+            "id_variasi": 42,
+            "no_batch": "CTMALR-2027-01",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 1490,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 58,
+            "id_variasi": 43,
+            "no_batch": "CTR10-2027-01",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 1490,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 59,
+            "id_variasi": 44,
+            "no_batch": "BMHP-SNSMSK-28",
+            "tgl_exp": "2028-11-20",
+            "stok_sisa": 65,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 60,
+            "id_variasi": 45,
+            "no_batch": "BMHP-HNSPLS-28",
+            "tgl_exp": "2028-11-20",
+            "stok_sisa": 14,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 61,
+            "id_variasi": 46,
+            "no_batch": "BMHP-DRMFIX-28",
+            "tgl_exp": "2028-11-20",
+            "stok_sisa": 115,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 62,
+            "id_variasi": 47,
+            "no_batch": "BMHP-OMKSA-28",
+            "tgl_exp": "2028-11-20",
+            "stok_sisa": 65,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 63,
+            "id_variasi": 48,
+            "no_batch": "BMHP-OMALK-28",
+            "tgl_exp": "2028-11-20",
+            "stok_sisa": 55,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 64,
+            "id_variasi": 49,
+            "no_batch": "BMHP-RVN100-28",
+            "tgl_exp": "2028-11-20",
+            "stok_sisa": 15,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 65,
+            "id_variasi": 50,
+            "no_batch": "BMHP-PVD1L-28",
+            "tgl_exp": "2028-11-20",
+            "stok_sisa": 15,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 66,
+            "id_variasi": 51,
+            "no_batch": "BMHP-ESYUA-28",
+            "tgl_exp": "2028-11-20",
+            "stok_sisa": 14,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 67,
+            "id_variasi": 52,
+            "no_batch": "BMHP-NSCCHL-28",
+            "tgl_exp": "2028-11-20",
+            "stok_sisa": 15,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 68,
+            "id_variasi": 60,
+            "no_batch": "HUFBPA-2027-01",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 37450,
+            "created_at": "2026-09-10 17:00:00"
+        },
+        {
+            "id": 80,
+            "id_variasi": 7,
+            "no_batch": "HUFPIL-2027-01.A",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 48,
+            "created_at": "2026-10-28 18:40:56"
+        },
+        {
+            "id": 81,
+            "id_variasi": 26,
+            "no_batch": "ANTJRG-2027-01.A",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 8,
+            "created_at": "2026-10-29 13:30:34"
+        },
+        {
+            "id": 82,
+            "id_variasi": 7,
+            "no_batch": "HUFPIL-2027-01.B",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 48,
+            "created_at": "2026-10-29 13:48:22"
+        },
+        {
+            "id": 83,
+            "id_variasi": 8,
+            "no_batch": "HUFBP-2027-01.1",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 50,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 84,
+            "id_variasi": 9,
+            "no_batch": "HUFFLU-2027-01.1",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 50,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 85,
+            "id_variasi": 11,
+            "no_batch": "PCT250-2027-01.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 10,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 86,
+            "id_variasi": 12,
+            "no_batch": "PCT125-2027-01.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 10,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 87,
+            "id_variasi": 14,
+            "no_batch": "PND-KLK-26.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 10,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 88,
+            "id_variasi": 15,
+            "no_batch": "TLKANG-2027-01.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 12,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 89,
+            "id_variasi": 16,
+            "no_batch": "MYL150-2027-01.1",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 24,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 90,
+            "id_variasi": 17,
+            "no_batch": "INSREG-2027-01.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 12,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 91,
+            "id_variasi": 18,
+            "no_batch": "BET-15-26.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 12,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 92,
+            "id_variasi": 19,
+            "no_batch": "CTP30-2027-01.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 10,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 93,
+            "id_variasi": 20,
+            "no_batch": "NEUFRT-2027-01.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 10,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 94,
+            "id_variasi": 21,
+            "no_batch": "SNGCAP-2027-01.1",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 25,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 95,
+            "id_variasi": 22,
+            "no_batch": "DPT-CAP-26.1",
+            "tgl_exp": "2027-09-10",
+            "stok_sisa": 25,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 96,
+            "id_variasi": 23,
+            "no_batch": "ENTDSW-2027-01.1",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 20,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 97,
+            "id_variasi": 25,
+            "no_batch": "KMXHRB-2027-01.1",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 30,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 98,
+            "id_variasi": 27,
+            "no_batch": "CDR-EFT-26.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 10,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 99,
+            "id_variasi": 28,
+            "no_batch": "RDXDBL-2027-01.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 10,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 100,
+            "id_variasi": 29,
+            "no_batch": "ENV-C-26.1",
+            "tgl_exp": "2028-03-15",
+            "stok_sisa": 25,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 101,
+            "id_variasi": 30,
+            "no_batch": "IMB-FRC-26.1",
+            "tgl_exp": "2027-09-15",
+            "stok_sisa": 3,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 102,
+            "id_variasi": 31,
+            "no_batch": "BDR-2028.1",
+            "tgl_exp": "2028-03-12",
+            "stok_sisa": 25,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 103,
+            "id_variasi": 32,
+            "no_batch": "NZPFRT-2027-01.1",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 25,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 104,
+            "id_variasi": 33,
+            "no_batch": "DCL-GEN-26.1",
+            "tgl_exp": "2027-10-15",
+            "stok_sisa": 25,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 105,
+            "id_variasi": 34,
+            "no_batch": "OBHCPL-2027-01.1",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 24,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 106,
+            "id_variasi": 35,
+            "no_batch": "SLNPAS-2027-01.1",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 40,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 107,
+            "id_variasi": 36,
+            "no_batch": "VKVP10-2027-01.1",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 24,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 108,
+            "id_variasi": 37,
+            "no_batch": "TLKLNU-2027-01.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 12,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 109,
+            "id_variasi": 38,
+            "no_batch": "DCD-27A01.1",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 24,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 110,
+            "id_variasi": 39,
+            "no_batch": "PLSCAP-2027-01.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 10,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 111,
+            "id_variasi": 40,
+            "no_batch": "CMBJRK-2027-01.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 12,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 112,
+            "id_variasi": 41,
+            "no_batch": "CFD-500-26.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 10,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 113,
+            "id_variasi": 42,
+            "no_batch": "CTMALR-2027-01.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 10,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 114,
+            "id_variasi": 43,
+            "no_batch": "CTR10-2027-01.1",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 10,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 115,
+            "id_variasi": 60,
+            "no_batch": "HUFBPA-2027-01.1",
+            "tgl_exp": "2028-08-15",
+            "stok_sisa": 50,
+            "created_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 116,
+            "id_variasi": 26,
+            "no_batch": "ANTJRG-2027-01.B",
+            "tgl_exp": "2027-11-30",
+            "stok_sisa": 10,
+            "created_at": "2026-11-03 19:48:38"
+        }
+    ],
+    "stok_toko": [
+        {
+            "id": 1,
+            "id_variasi": 1,
+            "stok": 38
+        },
+        {
+            "id": 2,
+            "id_variasi": 2,
+            "stok": 384
+        },
+        {
+            "id": 3,
+            "id_variasi": 3,
+            "stok": 15
+        },
+        {
+            "id": 4,
+            "id_variasi": 4,
+            "stok": 8
+        },
+        {
+            "id": 5,
+            "id_variasi": 5,
+            "stok": 11
+        },
+        {
+            "id": 6,
+            "id_variasi": 6,
+            "stok": 1092
+        },
+        {
+            "id": 7,
+            "id_variasi": 7,
+            "stok": 34996
+        },
+        {
+            "id": 8,
+            "id_variasi": 8,
+            "stok": 32450
+        },
+        {
+            "id": 9,
+            "id_variasi": 9,
+            "stok": 37500
+        },
+        {
+            "id": 10,
+            "id_variasi": 10,
+            "stok": 225
+        },
+        {
+            "id": 11,
+            "id_variasi": 11,
+            "stok": 1500
+        },
+        {
+            "id": 12,
+            "id_variasi": 12,
+            "stok": 1500
+        },
+        {
+            "id": 13,
+            "id_variasi": 13,
+            "stok": 360
+        },
+        {
+            "id": 14,
+            "id_variasi": 14,
+            "stok": 250
+        },
+        {
+            "id": 15,
+            "id_variasi": 15,
+            "stok": 2160
+        },
+        {
+            "id": 16,
+            "id_variasi": 16,
+            "stok": 8640
+        },
+        {
+            "id": 17,
+            "id_variasi": 17,
+            "stok": 2160
+        },
+        {
+            "id": 18,
+            "id_variasi": 18,
+            "stok": 180
+        },
+        {
+            "id": 19,
+            "id_variasi": 19,
+            "stok": 1500
+        },
+        {
+            "id": 20,
+            "id_variasi": 20,
+            "stok": 1500
+        },
+        {
+            "id": 21,
+            "id_variasi": 21,
+            "stok": 9375
+        },
+        {
+            "id": 22,
+            "id_variasi": 22,
+            "stok": 500
+        },
+        {
+            "id": 23,
+            "id_variasi": 23,
+            "stok": 6000
+        },
+        {
+            "id": 24,
+            "id_variasi": 24,
+            "stok": 288
+        },
+        {
+            "id": 25,
+            "id_variasi": 25,
+            "stok": 13500
+        },
+        {
+            "id": 26,
+            "id_variasi": 26,
+            "stok": 2142
+        },
+        {
+            "id": 27,
+            "id_variasi": 27,
+            "stok": 100
+        },
+        {
+            "id": 28,
+            "id_variasi": 28,
+            "stok": 1500
+        },
+        {
+            "id": 29,
+            "id_variasi": 29,
+            "stok": 375
+        },
+        {
+            "id": 30,
+            "id_variasi": 30,
+            "stok": 174
+        },
+        {
+            "id": 31,
+            "id_variasi": 31,
+            "stok": 6350
+        },
+        {
+            "id": 32,
+            "id_variasi": 32,
+            "stok": 9375
+        },
+        {
+            "id": 33,
+            "id_variasi": 33,
+            "stok": 200
+        },
+        {
+            "id": 34,
+            "id_variasi": 34,
+            "stok": 8640
+        },
+        {
+            "id": 35,
+            "id_variasi": 35,
+            "stok": 24000
+        },
+        {
+            "id": 36,
+            "id_variasi": 36,
+            "stok": 8640
+        },
+        {
+            "id": 37,
+            "id_variasi": 37,
+            "stok": 2160
+        },
+        {
+            "id": 38,
+            "id_variasi": 38,
+            "stok": 8640
+        },
+        {
+            "id": 39,
+            "id_variasi": 39,
+            "stok": 1500
+        },
+        {
+            "id": 40,
+            "id_variasi": 40,
+            "stok": 2160
+        },
+        {
+            "id": 41,
+            "id_variasi": 41,
+            "stok": 100
+        },
+        {
+            "id": 42,
+            "id_variasi": 42,
+            "stok": 1580
+        },
+        {
+            "id": 43,
+            "id_variasi": 43,
+            "stok": 1500
+        },
+        {
+            "id": 44,
+            "id_variasi": 44,
+            "stok": 65
+        },
+        {
+            "id": 45,
+            "id_variasi": 45,
+            "stok": 14
+        },
+        {
+            "id": 46,
+            "id_variasi": 46,
+            "stok": 115
+        },
+        {
+            "id": 47,
+            "id_variasi": 47,
+            "stok": 65
+        },
+        {
+            "id": 48,
+            "id_variasi": 48,
+            "stok": 55
+        },
+        {
+            "id": 49,
+            "id_variasi": 49,
+            "stok": 15
+        },
+        {
+            "id": 50,
+            "id_variasi": 50,
+            "stok": 15
+        },
+        {
+            "id": 51,
+            "id_variasi": 51,
+            "stok": 14
+        },
+        {
+            "id": 52,
+            "id_variasi": 52,
+            "stok": 15
+        },
+        {
+            "id": 53,
+            "id_variasi": 53,
+            "stok": 1
+        },
+        {
+            "id": 54,
+            "id_variasi": 54,
+            "stok": 4
+        },
+        {
+            "id": 55,
+            "id_variasi": 55,
+            "stok": 3
+        },
+        {
+            "id": 56,
+            "id_variasi": 56,
+            "stok": 5
+        },
+        {
+            "id": 57,
+            "id_variasi": 57,
+            "stok": 6
+        },
+        {
+            "id": 58,
+            "id_variasi": 58,
+            "stok": 3
+        },
+        {
+            "id": 59,
+            "id_variasi": 60,
+            "stok": 37500
+        },
+        {
+            "id": 60,
+            "id_variasi": 61,
+            "stok": 0
+        },
+        {
+            "id": 61,
+            "id_variasi": 62,
+            "stok": 0
+        },
+        {
+            "id": 62,
+            "id_variasi": 63,
+            "stok": 0
+        }
+    ],
+    "unit_serial": [
+        {
+            "id": 1,
+            "id_variasi": 4,
+            "serial_number": "OMR-7120-101",
+            "status": "Terjual",
+            "id_penjualan": 5,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-10-19",
+            "created_at": "2026-09-25 16:15:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 2,
+            "id_variasi": 4,
+            "serial_number": "OMR-7120-102",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-10-19",
+            "created_at": "2026-09-25 16:15:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 3,
+            "id_variasi": 4,
+            "serial_number": "OMR-7120-103",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-10-19",
+            "created_at": "2026-09-25 16:15:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 4,
+            "id_variasi": 4,
+            "serial_number": "OMR-7120-104",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-10-19",
+            "created_at": "2026-09-25 16:15:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 5,
+            "id_variasi": 4,
+            "serial_number": "OMR-7120-105",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-10-19",
+            "created_at": "2026-09-25 16:15:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 6,
+            "id_variasi": 4,
+            "serial_number": "OMR-7120-106",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-10-23",
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 7,
+            "id_variasi": 4,
+            "serial_number": "OMR-7120-107",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-10-23",
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 8,
+            "id_variasi": 4,
+            "serial_number": "OMR-7120-108",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-10-23",
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 9,
+            "id_variasi": 4,
+            "serial_number": "OMR-7120-109",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-10-23",
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 10,
+            "id_variasi": 4,
+            "serial_number": "OMR-7120-R01",
+            "status": "Retur\/Rusak",
+            "id_penjualan": null,
+            "catatan": "Cacat Pabrik: Layar LCD garis vertikal saat unboxing (Klaim PO: PO-20261023-ALKES-RETUR)",
+            "tgl_habis_garansi": null,
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:26:03"
+        },
+        {
+            "id": 11,
+            "id_variasi": 4,
+            "serial_number": "OMR-7120-R02",
+            "status": "Retur\/Rusak",
+            "id_penjualan": null,
+            "catatan": "Cacat Pabrik: Motor pompa cuff bocor angin (Klaim PO: PO-20261023-ALKES-RETUR)",
+            "tgl_habis_garansi": null,
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:26:03"
+        },
+        {
+            "id": 12,
+            "id_variasi": 5,
+            "serial_number": "OMR-MC246-01",
+            "status": "Terjual",
+            "id_penjualan": 1,
+            "catatan": null,
+            "tgl_habis_garansi": "2027-10-14",
+            "created_at": "2026-09-15 15:30:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 13,
+            "id_variasi": 5,
+            "serial_number": "OMR-MC246-02",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2027-10-14",
+            "created_at": "2026-09-15 15:30:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 14,
+            "id_variasi": 5,
+            "serial_number": "OMR-MC246-03",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2027-10-14",
+            "created_at": "2026-09-15 15:30:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 15,
+            "id_variasi": 5,
+            "serial_number": "OMR-MC246-04",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2027-10-14",
+            "created_at": "2026-09-15 15:30:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 16,
+            "id_variasi": 5,
+            "serial_number": "OMR-MC246-05",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2027-10-14",
+            "created_at": "2026-09-15 15:30:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 17,
+            "id_variasi": 5,
+            "serial_number": "OMR-MC246-06",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2027-10-23",
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 18,
+            "id_variasi": 5,
+            "serial_number": "OMR-MC246-07",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2027-10-23",
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 19,
+            "id_variasi": 5,
+            "serial_number": "OMR-MC246-08",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2027-10-23",
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 20,
+            "id_variasi": 5,
+            "serial_number": "OMR-MC246-09",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2027-10-23",
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 21,
+            "id_variasi": 5,
+            "serial_number": "OMR-MC246-10",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2027-10-23",
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 22,
+            "id_variasi": 5,
+            "serial_number": "OMR-MC246-11",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2027-10-23",
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 23,
+            "id_variasi": 5,
+            "serial_number": "OMR-MC246-12",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2027-10-23",
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 24,
+            "id_variasi": 5,
+            "serial_number": "OMR-MC246-R01",
+            "status": "Retur\/Rusak",
+            "id_penjualan": null,
+            "catatan": "Cacat Pabrik: Error E-01 sensor mati (Klaim PO: PO-20261023-ALKES-RETUR)",
+            "tgl_habis_garansi": null,
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:26:03"
+        },
+        {
+            "id": 25,
+            "id_variasi": 53,
+            "serial_number": "SLL-CR809-01",
+            "status": "Retur\/Rusak",
+            "id_penjualan": null,
+            "catatan": "[Opname OPN-20261103-440] Barang Rusak",
+            "tgl_habis_garansi": "2028-09-01",
+            "created_at": "2026-09-01 16:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 26,
+            "id_variasi": 53,
+            "serial_number": "SLL-CR809-02",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-09-01",
+            "created_at": "2026-09-01 16:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 27,
+            "id_variasi": 54,
+            "serial_number": "O2-1M3-01",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-06-30",
+            "created_at": "2026-09-10 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 28,
+            "id_variasi": 54,
+            "serial_number": "O2-1M3-02",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-06-30",
+            "created_at": "2026-09-10 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 29,
+            "id_variasi": 54,
+            "serial_number": "O2-1M3-03",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-06-30",
+            "created_at": "2026-09-10 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 30,
+            "id_variasi": 54,
+            "serial_number": "O2-1M3-04",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-06-30",
+            "created_at": "2026-09-10 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 31,
+            "id_variasi": 54,
+            "serial_number": "O21M3-RET1",
+            "status": "Retur\/Rusak",
+            "id_penjualan": null,
+            "catatan": "Drat kran valve bocor gas (Klaim Kulakan: KUL-20261024-CAMPUR-RETUR)",
+            "tgl_habis_garansi": null,
+            "created_at": "2026-10-24 22:30:00",
+            "updated_at": null
+        },
+        {
+            "id": 32,
+            "id_variasi": 55,
+            "serial_number": "O2-REG-01",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2027-09-01",
+            "created_at": "2026-09-01 16:00:00",
+            "updated_at": null
+        },
+        {
+            "id": 33,
+            "id_variasi": 55,
+            "serial_number": "O2-REG-02",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2027-09-01",
+            "created_at": "2026-09-01 16:00:00",
+            "updated_at": null
+        },
+        {
+            "id": 34,
+            "id_variasi": 55,
+            "serial_number": "O2-REG-03",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2027-09-01",
+            "created_at": "2026-09-01 16:00:00",
+            "updated_at": null
+        },
+        {
+            "id": 35,
+            "id_variasi": 56,
+            "serial_number": "OMR-NEB-99",
+            "status": "Retur\/Rusak",
+            "id_penjualan": 6,
+            "catatan": "Retur Pelanggan: Kompresor macet & uap tidak keluar (Klaim Garansi)",
+            "tgl_habis_garansi": "2028-10-12",
+            "created_at": "2026-09-20 17:00:00",
+            "updated_at": "2026-10-15 18:20:00"
+        },
+        {
+            "id": 36,
+            "id_variasi": 56,
+            "serial_number": "OMR-C104-01",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-10-12",
+            "created_at": "2026-09-20 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 37,
+            "id_variasi": 56,
+            "serial_number": "OMR-C104-02",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-10-12",
+            "created_at": "2026-09-20 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 38,
+            "id_variasi": 56,
+            "serial_number": "OMR-C104-03",
+            "status": "Hilang",
+            "id_penjualan": null,
+            "catatan": "[Opname OPN-20261103-440] Barang Hilang",
+            "tgl_habis_garansi": "2028-10-12",
+            "created_at": "2026-09-20 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 39,
+            "id_variasi": 56,
+            "serial_number": "OMR-C104-04",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-10-23",
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 40,
+            "id_variasi": 56,
+            "serial_number": "OMR-C104-05",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-10-23",
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 41,
+            "id_variasi": 56,
+            "serial_number": "OMR-C104-06",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-10-23",
+            "created_at": "2026-10-23 20:45:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 42,
+            "id_variasi": 57,
+            "serial_number": "IRT-FR1-01",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-06-30",
+            "created_at": "2026-09-10 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 43,
+            "id_variasi": 57,
+            "serial_number": "IRT-FR1-02",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-06-30",
+            "created_at": "2026-09-10 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 44,
+            "id_variasi": 57,
+            "serial_number": "IRT-FR1-03",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-06-30",
+            "created_at": "2026-09-10 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 45,
+            "id_variasi": 57,
+            "serial_number": "IRT-FR1-04",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-06-30",
+            "created_at": "2026-09-10 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 46,
+            "id_variasi": 57,
+            "serial_number": "IRT-FR1-05",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-06-30",
+            "created_at": "2026-09-10 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 47,
+            "id_variasi": 57,
+            "serial_number": "IRT-FR1-06",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-06-30",
+            "created_at": "2026-09-10 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 48,
+            "id_variasi": 58,
+            "serial_number": "LIT-CL3-01",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-06-30",
+            "created_at": "2026-09-10 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 49,
+            "id_variasi": 58,
+            "serial_number": "LIT-CL3-02",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-06-30",
+            "created_at": "2026-09-10 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        },
+        {
+            "id": 50,
+            "id_variasi": 58,
+            "serial_number": "LIT-CL3-03",
+            "status": "Tersedia",
+            "id_penjualan": null,
+            "catatan": null,
+            "tgl_habis_garansi": "2028-06-30",
+            "created_at": "2026-09-10 17:00:00",
+            "updated_at": "2026-11-03 17:25:05"
+        }
+    ],
+    "max_kartu_stok_id": 272,
+    "max_sesi_opname_id": 11
+}

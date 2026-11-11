@@ -7,8 +7,11 @@ if (!function_exists('cekSesiOpnameAktif')) {
      * Memeriksa apakah saat ini ada Sesi Stok Opname yang berstatus 'Aktif'.
      * Hasil di-cache dalam static variable selama request berlangsung untuk performa tinggi.
      */
-    function cekSesiOpnameAktif($pdo) {
+    function cekSesiOpnameAktif($pdo, $forceRefresh = false) {
         static $cachedSesi = null;
+        if ($forceRefresh) {
+            $cachedSesi = null;
+        }
         if ($cachedSesi !== null) {
             return $cachedSesi;
         }
