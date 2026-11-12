@@ -1,4 +1,4 @@
-<svg viewBox="0 0 980 1340" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="font-family: Arial, sans-serif; background: #ffffff;">
+<svg viewBox="0 0 1100 1340" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="font-family: Arial, sans-serif; background: #ffffff;">
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 1 L 10 5 L 0 9 z" fill="#0f172a" />
@@ -9,137 +9,191 @@
     <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 1 L 10 5 L 0 9 z" fill="#16a34a" />
     </marker>
-    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 10 5 L 0 9 z" fill="#2563eb" />
-    </marker>
     <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
       <feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-opacity="0.06"/>
     </filter>
   </defs>
+
   <!-- Outer Border & Header -->
-  <rect x="10" y="10" width="960" height="1320" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
-  <rect x="10" y="10" width="960" height="35" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
-  <text x="490" y="33" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">Kelola Stok Opname (System Freeze Lock, Blind Count &amp; Berita Acara)</text>
+  <rect x="10" y="10" width="1080" height="1320" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+  <rect x="10" y="10" width="1080" height="35" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="550" y="33" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">Kelola Stok Opname (Freeze Lock, 3 Kondisi Blind Count, Verifikasi Selisih &amp; Berita Acara)</text>
 
-  <!-- Swimlane Headers -->
-  <rect x="10" y="45" width="280" height="32" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>
-  <text x="150" y="66" text-anchor="middle" font-size="12" font-weight="bold" fill="#0f172a">Superadmin (Pemilik)</text>
+  <!-- 4 Swimlane Headers -->
+  <rect x="10" y="45" width="250" height="32" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>
+  <text x="135" y="66" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#0f172a">Superadmin (Pemilik)</text>
 
-  <rect x="290" y="45" width="320" height="32" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>
-  <text x="450" y="66" text-anchor="middle" font-size="12" font-weight="bold" fill="#0f172a">Admin (Staff Logistik)</text>
+  <rect x="260" y="45" width="270" height="32" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>
+  <text x="395" y="66" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#0f172a">Kasir (Pencacah Lapangan)</text>
 
-  <rect x="610" y="45" width="360" height="32" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>
-  <text x="790" y="66" text-anchor="middle" font-size="12" font-weight="bold" fill="#0f172a">Sistem Back-Office</text>
+  <rect x="530" y="45" width="270" height="32" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>
+  <text x="665" y="66" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#0f172a">Admin Toko (Verifikator)</text>
+
+  <rect x="800" y="45" width="290" height="32" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>
+  <text x="945" y="66" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#0f172a">Sistem Server</text>
 
   <!-- Dividers -->
-  <line x1="290" y1="45" x2="290" y2="1330" stroke="#0f172a" stroke-width="1.5"/>
-  <line x1="610" y1="45" x2="610" y2="1330" stroke="#0f172a" stroke-width="1.5"/>
+  <line x1="260" y1="45" x2="260" y2="1330" stroke="#0f172a" stroke-width="1.5"/>
+  <line x1="530" y1="45" x2="530" y2="1330" stroke="#0f172a" stroke-width="1.5"/>
+  <line x1="800" y1="45" x2="800" y2="1330" stroke="#0f172a" stroke-width="1.5"/>
 
-  <!-- ================= SUPERADMIN: INIT OPNAME ================= -->
-  <circle cx="150" cy="100" r="10" fill="#0f172a"/>
-  <line x1="150" y1="110" x2="150" y2="135" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- ================= 1. SUPERADMIN: INIT OPNAME ================= -->
+  <circle cx="135" cy="95" r="9" fill="#0f172a"/>
+  <line x1="135" y1="104" x2="135" y2="125" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <rect x="45" y="135" width="210" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="150" y="153" text-anchor="middle" font-size="10" font-weight="bold" fill="#0f172a">Membuka Menu Stok Opname &amp;</text>
-  <text x="150" y="167" text-anchor="middle" font-size="9.5" fill="#0f172a">Tentukan Jadwal Sesi Audit</text>
-  <line x1="150" y1="177" x2="150" y2="205" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="25" y="125" width="220" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="135" y="143" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Buka Menu Stok Opname &amp;</text>
+  <text x="135" y="156" text-anchor="middle" font-size="9" fill="#0f172a">Tentukan Jadwal Sesi Opname</text>
+  <line x1="135" y1="167" x2="135" y2="190" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <rect x="45" y="205" width="210" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="150" y="223" text-anchor="middle" font-size="10" font-weight="bold" fill="#0f172a">Tekan Tombol</text>
-  <text x="150" y="237" text-anchor="middle" font-size="10" font-weight="bold" fill="#0f172a">"Buka Sesi Stok Opname"</text>
-  <!-- To Sistem (Orthogonal: right to x=660) -->
-  <path d="M 255 226 L 660 226" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="25" y="190" width="220" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="135" y="208" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Tekan Tombol</text>
+  <text x="135" y="221" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">"Mulai Sesi Stok Opname Baru"</text>
 
-  <!-- Sistem initiates Freeze Lock & prints Blind Count -->
-  <rect x="660" y="205" width="260" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="790" y="223" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Inisiasi Sesi Opname Aktif &amp;</text>
-  <text x="790" y="236" text-anchor="middle" font-size="9" font-weight="bold" fill="#dc2626">Trigger "System Freeze Lock"</text>
-  <text x="790" y="248" text-anchor="middle" font-size="8.5" fill="#dc2626">(Kunci Kasir POS &amp; Checkout Daring)</text>
-  <line x1="790" y1="251" x2="790" y2="280" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- Superadmin ke Sistem (Freeze Lock) -->
+  <path d="M 245 211 L 820 211" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <rect x="660" y="280" width="260" height="44" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="790" y="298" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Cetak Lembar Hitung Buta</text>
-  <text x="790" y="311" text-anchor="middle" font-size="8.5" fill="#0f172a">(Blind Count Sheet tanpa Saldo Buku)</text>
-  <!-- To Admin (Orthogonal: left to x=450) -->
-  <path d="M 660 302 L 560 302" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- Sistem: Freeze Lock & Snapshot -->
+  <rect x="820" y="190" width="250" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="945" y="207" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Aktifkan Freeze Lock Transaksi (423)</text>
+  <text x="945" y="220" text-anchor="middle" font-size="8.5" fill="#dc2626">(Kunci Kasir POS &amp; Checkout Daring)</text>
+  <text x="945" y="231" text-anchor="middle" font-size="8" fill="#0f172a">Snapshot 111 Entitas Persediaan</text>
+  <line x1="945" y1="236" x2="945" y2="265" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <!-- Admin counts physically -->
-  <rect x="340" y="280" width="220" height="44" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="450" y="298" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Lakukan Pencacahan Fisik di Rak</text>
-  <text x="450" y="311" text-anchor="middle" font-size="9" fill="#0f172a">Etalase Toko &amp; Rak Gudang</text>
-  <line x1="450" y1="324" x2="450" y2="350" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="820" y="265" width="250" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="945" y="282" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Buka Layar Pencacahan Fisik Buta</text>
+  <text x="945" y="296" text-anchor="middle" font-size="8" fill="#0f172a">(Blind Count: Stok Buku &amp; Reserved Disembunyikan)</text>
 
-  <rect x="340" y="350" width="220" height="44" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="450" y="368" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Input Hasil Cacahan Fisik ke</text>
-  <text x="450" y="381" text-anchor="middle" font-size="9" fill="#0f172a">Formulir Lembar Kerja Sistem</text>
-  <line x1="450" y1="394" x2="450" y2="420" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- Sistem ke Kasir -->
+  <path d="M 820 286 L 510 286" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <rect x="340" y="420" width="220" height="40" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="450" y="444" text-anchor="middle" font-size="10" font-weight="bold" fill="#0f172a">Tekan "Simpan Data Hitung Fisik"</text>
-  <!-- To Sistem (Orthogonal: right to x=660) -->
-  <path d="M 560 440 L 660 440" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- ================= 2. KASIR: HITUNG FISIK 3 KONDISI ================= -->
+  <rect x="280" y="265" width="230" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="395" y="282" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Login Kasir: Otomatis Masuk ke</text>
+  <text x="395" y="295" text-anchor="middle" font-size="8.5" fill="#0f172a">Input Fisik Stok Opname</text>
+  <line x1="395" y1="307" x2="395" y2="330" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <!-- Sistem calculates variance -->
-  <rect x="660" y="420" width="260" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="790" y="437" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Kalkulasi Otomatis Deviasi Selisih:</text>
-  <text x="790" y="450" text-anchor="middle" font-size="8.5" fill="#0f172a">Fisik vs Saldo Buku Sistem</text>
-  <text x="790" y="462" text-anchor="middle" font-size="8" fill="#0f172a">(Status: Sesuai / Selisih Kurang / Lebih)</text>
-  <!-- To Superadmin (Orthogonal: left to x=255) -->
-  <path d="M 790 466 L 790 500 L 150 500 L 150 520" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="280" y="330" width="230" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="395" y="347" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Hitung Fisik Rak &amp; Scan Barcode:</text>
+  <text x="395" y="359" text-anchor="middle" font-size="8" fill="#0f172a">Input 3 Kolom: Baik, Rusak, Expired</text>
+  <text x="395" y="370" text-anchor="middle" font-size="8" fill="#dc2626">(Batch Kedaluwarsa Otomatis Terkunci)</text>
+  <line x1="395" y1="376" x2="395" y2="400" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <!-- Superadmin evaluates variance -->
-  <rect x="45" y="520" width="210" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="150" y="538" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Evaluasi Matriks Varian Selisih</text>
-  <text x="150" y="551" text-anchor="middle" font-size="8.5" fill="#0f172a">&amp; Input Catatan Justifikasi Audit</text>
-  <line x1="150" y1="566" x2="150" y2="595" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="280" y="400" width="230" height="38" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="395" y="423" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Tekan "Simpan Hasil Hitung"</text>
 
-  <!-- Decision: Perlu Cek Ulang? -->
-  <polygon points="150,595 195,615 150,635 105,615" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
-  <text x="150" y="619" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#0f172a">Cek Ulang?</text>
+  <!-- Kasir ke Sistem Simpan -->
+  <path d="M 510 419 L 820 419" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <!-- [Perlu Cek Ulang] (Orthogonal: right to x=310, up to y=372, right to x=340) -->
-  <text x="180" y="605" font-size="8.5" font-weight="bold" fill="#dc2626">[Cek Ulang]</text>
-  <path d="M 195 615 L 310 615 L 310 372 L 340 372" fill="none" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+  <!-- Sistem: Simpan Hitung Fisik -->
+  <rect x="820" y="400" width="250" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="945" y="417" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Simpan Hitungan Fisik Parsial/Penuh</text>
+  <text x="945" y="430" text-anchor="middle" font-size="8" fill="#0f172a">&amp; Hitung Progres (109 / 111 Selesai)</text>
+  <line x1="945" y1="442" x2="945" y2="470" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <!-- [Tidak / Disetujui] (Orthogonal straight down) -->
-  <text x="160" y="655" font-size="8.5" font-weight="bold" fill="#16a34a">[Disetujui]</text>
-  <line x1="150" y1="635" x2="150" y2="675" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- Decision: Selesai 111 Item? -->
+  <polygon points="945,470 990,490 945,510 900,490" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="945" y="493" text-anchor="middle" font-size="8" font-weight="bold" fill="#0f172a">Semua Dihitung?</text>
 
-  <rect x="45" y="675" width="210" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="150" y="693" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Tekan "Otorisasi Rekonsiliasi</text>
-  <text x="150" y="707" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">&amp; Tutup Sesi Opname"</text>
-  <!-- To Sistem (Orthogonal: right to x=660) -->
-  <path d="M 255 698 L 660 698" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- [Belum] Kembali ke Kasir -->
+  <text x="860" y="485" font-size="8" font-weight="bold" fill="#dc2626">[Belum]</text>
+  <path d="M 900 490 L 395 490 L 395 440" fill="none" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrow-red)"/>
 
-  <!-- Sistem executes reconciliation & unfreezes -->
-  <rect x="660" y="675" width="260" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="790" y="693" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Penyesuaian Saldo Persediaan Otomatis</text>
-  <text x="790" y="706" text-anchor="middle" font-size="8.5" fill="#0f172a">Database Mengikuti Hasil Fisik Riil</text>
-  <line x1="790" y1="721" x2="790" y2="750" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- [Sudah] Buka Akses Tombol Verifikasi ke Admin -->
+  <text x="955" y="525" font-size="8" font-weight="bold" fill="#16a34a">[Sudah 111 Item]</text>
+  <line x1="945" y1="510" x2="945" y2="545" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <rect x="660" y="750" width="260" height="44" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="790" y="768" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Membukukan Jurnal Selisih</text>
-  <text x="790" y="781" text-anchor="middle" font-size="8.5" fill="#0f172a">ke Buku Besar Riwayat Kartu Stok</text>
-  <line x1="790" y1="794" x2="790" y2="820" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="820" y="545" width="250" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="945" y="562" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Aktifkan Tombol "Verifikasi Selisih"</text>
+  <text x="945" y="575" text-anchor="middle" font-size="8" fill="#0f172a">pada Antarmuka Admin Toko</text>
 
-  <rect x="660" y="820" width="260" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="790" y="838" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#16a34a">Lepas Status "System Freeze Lock"</text>
-  <text x="790" y="851" text-anchor="middle" font-size="8.5" fill="#16a34a">(POS Kasir &amp; E-Commerce Kembali Aktif)</text>
-  <line x1="790" y1="866" x2="790" y2="895" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- Sistem ke Admin -->
+  <path d="M 820 566 L 760 566" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <rect x="660" y="895" width="260" height="44" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="790" y="913" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Menerbitkan Dokumen Resmi</text>
-  <text x="790" y="926" text-anchor="middle" font-size="8.5" fill="#0f172a">Berita Acara Stok Opname (PDF)</text>
-  <!-- To Superadmin & Admin (Orthogonal: left to x=450) -->
-  <path d="M 660 917 L 450 917 L 450 960" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- ================= 3. ADMIN: VERIFIKASI & MUTASI ================= -->
+  <rect x="550" y="545" width="210" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="655" y="562" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Admin Buka Tahap 2:</text>
+  <text x="655" y="575" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Tekan "Verifikasi Selisih"</text>
 
-  <!-- Superadmin & Admin sign & archive -->
-  <rect x="250" y="960" width="400" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="450" y="978" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Superadmin &amp; Admin Menandatangani,</text>
-  <text x="450" y="991" text-anchor="middle" font-size="9" fill="#0f172a">Mengunduh &amp; Mengarsipkan Dokumen Berita Acara (PDF)</text>
+  <!-- Admin ke Sistem Filter -->
+  <path d="M 760 580 L 820 580" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="820" y="615" width="250" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="945" y="632" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Filter Otomatis Daftar Kerja Verifikasi:</text>
+  <text x="945" y="644" text-anchor="middle" font-size="8" fill="#16a34a">105 Barang Sesuai Disembunyikan</text>
+  <text x="945" y="654" text-anchor="middle" font-size="8" fill="#dc2626">Hanya 6 Produk Berselisih Ditampilkan</text>
+
+  <!-- Sistem ke Admin -->
+  <path d="M 820 638 L 760 638" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="550" y="615" width="210" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="655" y="632" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Evaluasi Kuantitas 6 Anomali &amp;</text>
+  <text x="655" y="645" text-anchor="middle" font-size="8.5" fill="#0f172a">Estimasi Kerugian (Berdasarkan Harga Beli)</text>
+  <line x1="655" y1="661" x2="655" y2="690" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="550" y="690" width="210" height="48" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="655" y="707" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Pilih Kategori Mutasi (Radio Button):</text>
+  <text x="655" y="719" text-anchor="middle" font-size="8" fill="#0f172a">Rusak / Expired / Hilang / Kelebihan Kirim</text>
+  <text x="655" y="729" text-anchor="middle" font-size="8" fill="#0f172a">&amp; Centang Serial Number pada Alkes SN</text>
+  <line x1="655" y1="738" x2="655" y2="765" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="550" y="765" width="210" height="38" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="655" y="788" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Eksekusi Mutasi Selisih</text>
+
+  <!-- Admin ke Sistem Mutasi -->
+  <path d="M 760 784 L 820 784" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="820" y="765" width="250" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="945" y="782" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Perbarui Stok Batch, Toko, &amp; Serial Number,</text>
+  <text x="945" y="794" text-anchor="middle" font-size="8.5" fill="#0f172a">Serta Catatkan Transaksi ke Kartu Stok</text>
+  <line x1="945" y1="811" x2="945" y2="840" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Decision: Selesai Mutasi 6 Item? -->
+  <polygon points="945,840 990,860 945,880 900,860" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="945" y="863" text-anchor="middle" font-size="8" font-weight="bold" fill="#0f172a">Semua Dimutasi?</text>
+
+  <!-- [Belum] Kembali ke Admin -->
+  <text x="860" y="855" font-size="8" font-weight="bold" fill="#dc2626">[Belum]</text>
+  <path d="M 900 860 L 655 860 L 655 805" fill="none" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+
+  <!-- [Sudah] Berikan Hak Penutupan Sesi ke Superadmin -->
+  <text x="955" y="895" font-size="8" font-weight="bold" fill="#16a34a">[Sudah 6/6 Dimutasi]</text>
+  <line x1="945" y1="880" x2="945" y2="915" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="820" y="915" width="250" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="945" y="932" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Aktifkan Tombol Penutupan Sesi</text>
+  <text x="945" y="945" text-anchor="middle" font-size="8" fill="#0f172a">(Khusus Akun Superadmin)</text>
+
+  <!-- Sistem ke Superadmin -->
+  <path d="M 820 936 L 245 936" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ================= 4. SUPERADMIN: TUTUP SESI & BERITA ACARA ================= -->
+  <rect x="25" y="915" width="220" height="42" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="135" y="932" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Tekan Tombol</text>
+  <text x="135" y="945" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">"Selesaikan Sesi (Buka Kunci Server)"</text>
+
+  <!-- Superadmin ke Sistem Unfreeze -->
+  <path d="M 135 957 L 135 990 L 820 990" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="820" y="970" width="250" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="945" y="987" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#16a34a">Lepas Status "System Freeze Lock"</text>
+  <text x="945" y="1000" text-anchor="middle" font-size="8.5" fill="#16a34a">(POS Kasir &amp; E-Commerce Aktif Normal)</text>
+  <line x1="945" y1="1016" x2="945" y2="1045" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="820" y="1045" width="250" height="44" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="945" y="1062" text-anchor="middle" font-size="9" font-weight="bold" fill="#0f172a">Terbitkan Berita Acara Stok Opname</text>
+  <text x="945" y="1075" text-anchor="middle" font-size="8" fill="#0f172a">(Format Cetak Resmi A4 &amp; Sorotan Merah Selisih)</text>
+
+  <!-- Sistem ke Superadmin & Admin untuk TTD -->
+  <path d="M 820 1067 L 400 1067 L 400 1115" fill="none" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- TTD & Arsip -->
+  <rect x="250" y="1115" width="300" height="46" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="400" y="1133" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0f172a">Superadmin &amp; Admin Menandatangani,</text>
+  <text x="400" y="1146" text-anchor="middle" font-size="9" fill="#0f172a">Mencetak &amp; Mengarsipkan Berita Acara</text>
 
   <!-- Final Node -->
-  <line x1="450" y1="1006" x2="450" y2="1040" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <circle cx="450" cy="1053" r="14" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
-  <circle cx="450" cy="1053" r="8" fill="#0f172a"/>
+  <line x1="400" y1="1161" x2="400" y2="1200" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <circle cx="400" cy="1215" r="14" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+  <circle cx="400" cy="1215" r="8" fill="#0f172a"/>
 </svg>

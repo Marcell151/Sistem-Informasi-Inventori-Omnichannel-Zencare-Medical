@@ -440,7 +440,7 @@
 
         .badge-stok { background: #fef3c7; color: #92400e; }
 
-        .badge-audit { background: #f3e8ff; color: #6b21a8; }
+        .badge-riwayat { background: #f3e8ff; color: #6b21a8; }
 
         .badge-setting { background: #f1f5f9; color: #475569; }
 
@@ -712,7 +712,7 @@
 
         <button class="tab-btn" onclick="filterDomain('fefo', this)">4. Pengendalian FEFO &amp; Konversi (2)</button>
 
-        <button class="tab-btn" onclick="filterDomain('opname', this)">5. Audit Stok Opname (4)</button>
+        <button class="tab-btn" onclick="filterDomain('opname', this)">5. Pemeriksaan Stok Opname (4)</button>
 
         <button class="tab-btn" onclick="filterDomain('setting', this)">6. Pengaturan Web (1)</button>
 
@@ -734,7 +734,7 @@
                 Pencatatan arus masuk dan keluar barang menerapkan skema tabel induk dan rincian. Pasokan masuk dari distributor diakomodasi oleh <code>penerimaan_stok</code> dan <code>penerimaan_detail</code> yang terhubung dinamis ke tabel <code>supplier</code> sehingga satu jenis produk dapat dipasok oleh banyak distributor rekanan. Sementara itu, arus barang keluar lintas saluran (kasir toko fisik dan pesanan belanja <i>e-commerce</i>) ditampung pada tabel <code>penjualan</code> dan <code>detail_penjualan</code>. Khusus pesanan daring, entitas <code>pesanan_batch_alokasi</code> bertugas mengunci nomor batch fisik obat sementara sebelum barang dikemas agar tidak terjual ganda di meja kasir. Seluruh transaksi ini diikat ke tabel <code>users</code> guna mengidentifikasi staf penanggung jawab berdasarkan perannya (Superadmin, Admin, Kasir, dan Pelanggan).
             </p>
             <p>
-                Seluruh pergerakan barang bermuara pada <code>kartu_stok</code> sebagai buku besar mutasi yang mencatat riwayat pergerakan fisik dan saldo berjalan secara permanen. Pengendalian mutu operasional diperkuat oleh <code>histori_konversi</code> untuk rekam jejak pembongkaran kemasan dus ke eceran secara otomatis saat persediaan rak habis, serta <code>log_anomali_fefo</code> untuk mendokumentasikan deviasi pemilihan nomor batch di kasir demi kebutuhan audit kepatuhan. Pengendalian intern berkala didukung modul stok opname yang mencakup <code>sesi_opname</code> (pembekuan transaksi kasir sementara), <code>detail_opname_batch</code> (lembar hitung fisik obat dan kalkulasi selisih), <code>detail_opname_sn</code> (verifikasi alkes berseri), serta <code>riwayat_hitung_opname</code> (rekam jejak koreksi hitungan). Sebagai pelengkap, entitas mandiri <code>pengaturan_web</code> mengelola informasi portal publik tanpa mencampuri relasi logistik. Struktur relasional ke-20 entitas tabel disajikan pada Gambar 3.18.
+                Seluruh pergerakan barang bermuara pada <code>kartu_stok</code> sebagai buku besar mutasi yang mencatat riwayat pergerakan fisik dan saldo berjalan secara permanen. Pengendalian mutu operasional diperkuat oleh <code>histori_konversi</code> untuk rekam jejak pembongkaran kemasan dus ke eceran secara otomatis saat persediaan rak habis, serta <code>log_anomali_fefo</code> untuk mendokumentasikan deviasi pemilihan nomor batch di kasir demi kebutuhan pemantauan kepatuhan. Pengendalian intern berkala didukung modul stok opname yang mencakup <code>sesi_opname</code> (pembekuan transaksi kasir sementara), <code>detail_opname_batch</code> (lembar hitung fisik obat dan kalkulasi selisih), <code>detail_opname_sn</code> (verifikasi alkes berseri), serta <code>riwayat_hitung_opname</code> (rekam jejak koreksi hitungan). Sebagai pelengkap, entitas mandiri <code>pengaturan_web</code> mengelola informasi portal publik tanpa mencampuri relasi logistik. Struktur relasional ke-20 entitas tabel disajikan pada Gambar 3.18.
             </p>
             <div class="highlight-box">
 
@@ -1888,7 +1888,7 @@ Ref: kartu_stok.id_batch > stok_batch.id_stok_batch</div>
 
                 badge: "badge-transaksi",
 
-                badgeText: "Buku Besar Audit",
+                badgeText: "Buku Besar Logistik",
 
                 desc: "Buku besar mutasi persediaan yang mencatat setiap arus masuk, keluar, dan penyesuaian fisik secara transparan.",
 
@@ -1968,9 +1968,9 @@ Ref: kartu_stok.id_batch > stok_batch.id_stok_batch</div>
 
                 domain: "fefo",
 
-                badge: "badge-audit",
+                badge: "badge-riwayat",
 
-                badgeText: "Audit Kepatuhan",
+                badgeText: "Pemantauan Kepatuhan",
 
                 desc: "Mendokumentasikan kejadian saat kasir mengambil nomor batch obat yang berbeda dari rekomendasi FEFO sistem.",
 
@@ -2000,7 +2000,7 @@ Ref: kartu_stok.id_batch > stok_batch.id_stok_batch</div>
 
             },
 
-            // Domain 5: Audit Stok Opname
+            // Domain 5: Stok Opname & Rekonsiliasi
 
             {
 
@@ -2008,11 +2008,11 @@ Ref: kartu_stok.id_batch > stok_batch.id_stok_batch</div>
 
                 domain: "opname",
 
-                badge: "badge-audit",
+                badge: "badge-riwayat",
 
-                badgeText: "Audit Opname",
+                badgeText: "Stok Opname",
 
-                desc: "Mengelola sesi audit fisik berkala serta mencatat waktu pembekuan operasional (Freeze Lock) dan pembukaan kembali.",
+                desc: "Mengelola sesi pemeriksaan fisik berkala serta mencatat waktu pembekuan operasional (Freeze Lock) dan pembukaan kembali.",
 
                 cols: [
 
@@ -2020,11 +2020,17 @@ Ref: kartu_stok.id_batch > stok_batch.id_stok_batch</div>
 
                     { name: "kode_sesi", type: "varchar(50)", key: "", extra: "unique" },
 
-                    { name: "status", type: "enum(Aktif, Ditutup, Dibatalkan)", key: "", extra: "" },
+                    { name: "status", type: "enum(Aktif, Selesai, Dibatalkan)", key: "", extra: "" },
+
+                    { name: "tahap", type: "enum(Penghitungan, Verifikasi, Selesai)", key: "", extra: "alur fase" },
 
                     { name: "dibekukan_oleh", type: "int(11)", key: "FK", extra: "-> users.id_user" },
 
                     { name: "dibekukan_pada", type: "timestamp", key: "", extra: "kunci freeze" },
+
+                    { name: "ditutup_hitung_oleh", type: "int(11)", key: "FK", extra: "-> users.id_user" },
+
+                    { name: "ditutup_hitung_pada", type: "timestamp", key: "", extra: "tutup hitung" },
 
                     { name: "dibuka_oleh", type: "int(11)", key: "FK", extra: "-> users.id_user" },
 
@@ -2042,9 +2048,9 @@ Ref: kartu_stok.id_batch > stok_batch.id_stok_batch</div>
 
                 domain: "opname",
 
-                badge: "badge-audit",
+                badge: "badge-riwayat",
 
-                badgeText: "Audit Opname",
+                badgeText: "Stok Opname",
 
                 desc: "Lembar kerja pencacahan fisik obat per nomor batch, hasil hitungan fisik, kalkulasi selisih, dan eksekusi mutasi penyesuaian.",
 
@@ -2064,7 +2070,15 @@ Ref: kartu_stok.id_batch > stok_batch.id_stok_batch</div>
 
                     { name: "stok_sistem_fisik", type: "int(11)", key: "", extra: "stok buku" },
 
-                    { name: "hitung_fisik", type: "int(11)", key: "", extra: "cacahan riil" },
+                    { name: "fisik_baik", type: "int(11)", key: "", extra: "layak jual" },
+
+                    { name: "fisik_rusak", type: "int(11)", key: "", extra: "rusak/cacat" },
+
+                    { name: "fisik_expired", type: "int(11)", key: "", extra: "kedaluwarsa" },
+
+                    { name: "status_hitung", type: "enum(Belum, Sudah)", key: "", extra: "parsial" },
+
+                    { name: "hitung_fisik", type: "int(11)", key: "", extra: "total riil" },
 
                     { name: "selisih", type: "int(11)", key: "", extra: "varian" },
 
@@ -2086,9 +2100,9 @@ Ref: kartu_stok.id_batch > stok_batch.id_stok_batch</div>
 
                 domain: "opname",
 
-                badge: "badge-audit",
+                badge: "badge-riwayat",
 
-                badgeText: "Audit Opname",
+                badgeText: "Stok Opname",
 
                 desc: "Mencatat rincian verifikasi fisik per unit nomor seri alat kesehatan yang ditemukan selama sesi stok opname.",
 
@@ -2116,11 +2130,11 @@ Ref: kartu_stok.id_batch > stok_batch.id_stok_batch</div>
 
                 domain: "opname",
 
-                badge: "badge-audit",
+                badge: "badge-riwayat",
 
-                badgeText: "Audit Opname",
+                badgeText: "Stok Opname",
 
-                desc: "Merekam jejak audit riwayat koreksi perhitungan fisik opname guna mencegah kecurangan atau manipulasi angka.",
+                desc: "Merekam rekam jejak riwayat koreksi perhitungan fisik opname guna mencegah kecurangan atau manipulasi angka.",
 
                 cols: [
 
@@ -2272,7 +2286,7 @@ Ref: kartu_stok.id_batch > stok_batch.id_stok_batch</div>
 
         // Fetch DBML Code
 
-        let cachedDBML = "// =========================================================================\n// LOGICAL DATA MODEL (ERD) - ZENCARE MEDICAL\n// Sistem Informasi Inventori Omnichannel Obat & Alat Kesehatan (20 Tabel)\n// Format DBML Valid untuk https://dbdiagram.io\n// =========================================================================\n\nTable users {\n  id int [pk, increment]\n  username varchar(50) [not null, unique]\n  password varchar(255) [not null]\n  nama_lengkap varchar(100) [not null]\n  role varchar(50) [not null]\n  email varchar(150)\n  telepon varchar(20)\n  alamat text\n  kota_id int\n  is_active boolean [default: true]\n  created_at timestamp [not null]\n}\n\nTable supplier {\n  id int [pk, increment]\n  nama varchar(100) [not null]\n  kontak varchar(50)\n  email varchar(150)\n  alamat text\n  is_active boolean [default: true]\n}\n\nTable produk_induk {\n  id int [pk, increment]\n  sku_induk varchar(50) [not null, unique]\n  nama_produk varchar(150) [not null]\n  deskripsi text\n  spesifikasi text\n  info_pengiriman text\n  kategori varchar(50) [not null]\n  gambar varchar(255)\n  is_active boolean [default: true]\n  batas_hari_expired int [default: 0]\n  created_at timestamp [not null]\n}\n\nTable produk_variasi {\n  id int [pk, increment]\n  id_produk_induk int\n  sku_variasi varchar(50) [not null, unique]\n  nama_variasi varchar(100) [not null]\n  satuan_kecil varchar(50) [not null, default: 'Pcs']\n  satuan_besar varchar(50) [not null, default: 'Box']\n  rasio_konversi smallint [not null, default: 1]\n  harga_jual_kecil decimal(12,2) [not null, default: 0.00]\n  harga_jual_besar decimal(12,2) [not null, default: 0.00]\n  stok_minimum_kecil int [default: 0]\n  stok_minimum_besar int [default: 0]\n  berat int [not null, default: 100]\n  tampil_di_online boolean [default: true]\n  is_active boolean [default: true]\n  gambar varchar(500)\n}\n\nTable stok_toko {\n  id int [pk, increment]\n  id_variasi int [not null, unique]\n  stok int [not null, default: 0]\n}\n\nTable stok_batch {\n  id int [pk, increment]\n  id_variasi int [not null]\n  no_batch varchar(100) [not null]\n  tgl_exp date [not null]\n  stok_sisa int [not null, default: 0]\n  created_at timestamp [not null]\n}\n\nTable unit_serial {\n  id int [pk, increment]\n  id_variasi int [not null]\n  serial_number varchar(150) [not null, unique]\n  status varchar(50) [not null, default: 'Tersedia']\n  id_penjualan int\n  catatan varchar(255)\n  tgl_habis_garansi date\n  created_at timestamp [not null]\n  updated_at timestamp\n}\n\nTable penerimaan_stok {\n  id int [pk, increment]\n  no_referensi varchar(50) [not null]\n  sumber varchar(50) [not null]\n  id_supplier int\n  tanggal_terima date [not null]\n  catatan text\n  file_nota varchar(255)\n  dibuat_oleh int\n  created_at timestamp [not null]\n}\n\nTable penerimaan_detail {\n  id int [pk, increment]\n  id_penerimaan int [not null]\n  id_variasi int [not null]\n  qty_pesan int [not null, default: 0]\n  qty_terima int [not null]\n  qty_rusak int [not null, default: 0]\n  harga_beli decimal(15,2)\n  no_batch varchar(50)\n  tgl_exp date\n  status_retur varchar(30) [not null, default: 'tidak_ada']\n  qty_pengganti_diterima int [not null, default: 0]\n  no_batch_pengganti varchar(50)\n  tgl_exp_pengganti date\n  tgl_selesai_retur date\n  catatan_retur text\n}\n\nTable penjualan {\n  id int [pk, increment]\n  no_invoice varchar(50) [not null, unique]\n  id_user int\n  tipe_transaksi varchar(50) [not null]\n  metode_pengambilan varchar(50)\n  status_pesanan varchar(50) [not null, default: 'Menunggu Pembayaran']\n  alasan_batal varchar(255)\n  dibatalkan_oleh varchar(50)\n  waktu_batal timestamp\n  request_batal boolean [not null, default: false]\n  request_batal_alasan varchar(255)\n  request_batal_waktu timestamp\n  total_harga decimal(12,2) [not null]\n  metode_bayar_pos varchar(50) [default: 'Tunai']\n  ongkir decimal(10,2) [default: 0.00]\n  nama_penerima varchar(100)\n  telepon_penerima varchar(20)\n  alamat_lengkap text\n  kota_tujuan varchar(100)\n  kurir varchar(50)\n  layanan varchar(50)\n  snap_token varchar(255)\n  payment_method_ecommerce varchar(50)\n  paid_at timestamp\n  kode_pickup varchar(20)\n  created_at timestamp [not null]\n  updated_at timestamp\n}\n\nTable detail_penjualan {\n  id int [pk, increment]\n  id_penjualan int [not null]\n  id_variasi int [not null]\n  qty int [not null]\n  harga_satuan decimal(12,2) [not null]\n  catatan_logistik text\n}\n\nTable pesanan_batch_alokasi {\n  id int [pk, increment]\n  id_penjualan int [not null]\n  id_detail_penjualan int [not null]\n  id_batch int [not null]\n  qty_satuan_kecil int [not null]\n  created_at timestamp [not null]\n}\n\nTable kartu_stok {\n  id int [pk, increment]\n  id_variasi int [not null]\n  id_batch int\n  satuan_tipe varchar(50) [not null, default: 'kecil']\n  jenis_mutasi varchar(50) [not null]\n  kanal varchar(50) [not null, default: 'Manual']\n  alasan_mutasi varchar(50) [not null, default: 'Selisih Stok Opname']\n  no_ref_dokumen varchar(100)\n  qty int [not null]\n  sisa_stok int [not null]\n  keterangan text\n  dibuat_oleh int\n  tanggal timestamp [not null]\n}\n\nTable histori_konversi {\n  id int [pk, increment]\n  id_variasi int [not null]\n  batch_asal varchar(100) [not null]\n  batch_hasil varchar(100) [not null]\n  qty_box_buka int [not null]\n  qty_pcs_hasil int [not null]\n  sisa_dus_akhir int [default: 0]\n  dibuat_oleh int\n  created_at timestamp [not null]\n}\n\nTable log_anomali_fefo {\n  id int [pk, increment]\n  id_penjualan int\n  id_user int [not null]\n  id_variasi int [not null]\n  batch_diambil varchar(100)\n  batch_seharusnya varchar(100)\n  qty int\n  satuan_tipe varchar(20) [not null, default: 'kecil']\n  status varchar(50) [not null, default: 'terlewat']\n  qty_disesuaikan int [not null, default: 0]\n  resolved_in_penjualan int\n  resolved_at date\n  created_at timestamp [not null]\n}\n\nTable sesi_opname {\n  id int [pk, increment]\n  kode_sesi varchar(50) [not null, unique]\n  status varchar(50) [not null, default: 'Aktif']\n  dibekukan_oleh int [not null]\n  dibekukan_pada timestamp [not null]\n  dibuka_oleh int\n  dibuka_pada timestamp\n  catatan text\n}\n\nTable detail_opname_batch {\n  id int [pk, increment]\n  id_sesi int [not null]\n  id_batch int\n  id_variasi int [not null]\n  jenis_komoditas varchar(50) [not null, default: 'Obat']\n  satuan_tipe varchar(50) [not null, default: 'kecil']\n  nama_satuan varchar(50) [not null, default: 'Unit']\n  stok_tersedia_sistem int [not null]\n  stok_reserved int [not null]\n  stok_sistem_fisik int [not null]\n  hitung_fisik int\n  selisih int\n  status_mutasi varchar(50) [not null, default: 'Belum Dimutasi']\n  alasan_mutasi varchar(255)\n  keterangan_mutasi text\n  id_kartu_stok int\n  dihitung_oleh int\n  waktu_hitung timestamp\n  dimutasi_oleh int\n  waktu_mutasi timestamp\n}\n\nTable detail_opname_sn {\n  id int [pk, increment]\n  id_detail_opname int [not null]\n  id_unit_serial int\n  serial_number varchar(100) [not null]\n  jenis_tindakan varchar(50) [not null]\n  created_at timestamp [not null]\n}\n\nTable riwayat_hitung_opname {\n  id int [pk, increment]\n  id_detail_opname int [not null]\n  hitung_sebelumnya int\n  hitung_baru int [not null]\n  dihitung_oleh int [not null]\n  alasan_koreksi text\n  waktu_koreksi timestamp [not null]\n}\n\nTable pengaturan_web {\n  id int [pk, increment]\n  nama_toko varchar(100) [not null, default: 'ZenCare Medical']\n  deskripsi text\n  telepon varchar(20)\n  whatsapp varchar(20)\n  alamat text\n  logo varchar(255)\n  banner_promosi varchar(255)\n  email_cs varchar(150)\n}\n\n// =========================================================================\n// RELASI ANTAR-TABEL (FOREIGN KEY CONSTRAINTS)\n// =========================================================================\nRef: detail_opname_batch.id_sesi > sesi_opname.id_sesi_opname\nRef: detail_opname_batch.id_batch > stok_batch.id_stok_batch\nRef: detail_opname_batch.id_variasi > produk_variasi.id_variasi\nRef: detail_opname_batch.dihitung_oleh > users.id_user\nRef: detail_opname_batch.dimutasi_oleh > users.id_user\nRef: detail_opname_sn.id_detail_opname > detail_opname_batch.id_detail_opname\nRef: detail_opname_sn.id_unit_serial > unit_serial.id_unit_serial\nRef: detail_penjualan.id_penjualan > penjualan.id_penjualan\nRef: detail_penjualan.id_variasi > produk_variasi.id_variasi\nRef: histori_konversi.id_variasi > produk_variasi.id_variasi\nRef: histori_konversi.dibuat_oleh > users.id_user\nRef: kartu_stok.id_variasi > produk_variasi.id_variasi\nRef: kartu_stok.dibuat_oleh > users.id_user\nRef: penerimaan_detail.id_penerimaan > penerimaan_stok.id_penerimaan\nRef: penerimaan_detail.id_variasi > produk_variasi.id_variasi\nRef: penerimaan_stok.id_supplier > supplier.id_supplier\nRef: penerimaan_stok.dibuat_oleh > users.id_user\nRef: penjualan.id_user > users.id_user\nRef: pesanan_batch_alokasi.id_penjualan > penjualan.id_penjualan\nRef: pesanan_batch_alokasi.id_detail_penjualan > detail_penjualan.id_detail_penjualan\nRef: pesanan_batch_alokasi.id_batch > stok_batch.id_stok_batch\nRef: produk_variasi.id_produk_induk > produk_induk.id_produk_induk\nRef: riwayat_hitung_opname.id_detail_opname > detail_opname_batch.id_detail_opname\nRef: riwayat_hitung_opname.dihitung_oleh > users.id_user\nRef: sesi_opname.dibekukan_oleh > users.id_user\nRef: sesi_opname.dibuka_oleh > users.id_user\nRef: stok_batch.id_variasi > produk_variasi.id_variasi\nRef: stok_toko.id_variasi > produk_variasi.id_variasi\nRef: unit_serial.id_variasi > produk_variasi.id_variasi\n\n// Relasi Fungsional Operasional:\nRef: log_anomali_fefo.id_penjualan > penjualan.id_penjualan\nRef: log_anomali_fefo.id_user > users.id_user\nRef: log_anomali_fefo.id_variasi > produk_variasi.id_variasi\nRef: unit_serial.id_penjualan > penjualan.id_penjualan\nRef: kartu_stok.id_batch > stok_batch.id_stok_batch";
+        let cachedDBML = "// =========================================================================\n// LOGICAL DATA MODEL (ERD) - ZENCARE MEDICAL\n// Sistem Informasi Inventori Omnichannel Obat & Alat Kesehatan (20 Tabel)\n// Format DBML Valid untuk https://dbdiagram.io\n// =========================================================================\n\nTable users {\n  id int [pk, increment]\n  username varchar(50) [not null, unique]\n  password varchar(255) [not null]\n  nama_lengkap varchar(100) [not null]\n  role varchar(50) [not null]\n  email varchar(150)\n  telepon varchar(20)\n  alamat text\n  kota_id int\n  is_active boolean [default: true]\n  created_at timestamp [not null]\n}\n\nTable supplier {\n  id int [pk, increment]\n  nama varchar(100) [not null]\n  kontak varchar(50)\n  email varchar(150)\n  alamat text\n  is_active boolean [default: true]\n}\n\nTable produk_induk {\n  id int [pk, increment]\n  sku_induk varchar(50) [not null, unique]\n  nama_produk varchar(150) [not null]\n  deskripsi text\n  spesifikasi text\n  info_pengiriman text\n  kategori varchar(50) [not null]\n  gambar varchar(255)\n  is_active boolean [default: true]\n  batas_hari_expired int [default: 0]\n  created_at timestamp [not null]\n}\n\nTable produk_variasi {\n  id int [pk, increment]\n  id_produk_induk int\n  sku_variasi varchar(50) [not null, unique]\n  nama_variasi varchar(100) [not null]\n  satuan_kecil varchar(50) [not null, default: 'Pcs']\n  satuan_besar varchar(50) [not null, default: 'Box']\n  rasio_konversi smallint [not null, default: 1]\n  harga_jual_kecil decimal(12,2) [not null, default: 0.00]\n  harga_jual_besar decimal(12,2) [not null, default: 0.00]\n  stok_minimum_kecil int [default: 0]\n  stok_minimum_besar int [default: 0]\n  berat int [not null, default: 100]\n  tampil_di_online boolean [default: true]\n  is_active boolean [default: true]\n  gambar varchar(500)\n}\n\nTable stok_toko {\n  id int [pk, increment]\n  id_variasi int [not null, unique]\n  stok int [not null, default: 0]\n}\n\nTable stok_batch {\n  id int [pk, increment]\n  id_variasi int [not null]\n  no_batch varchar(100) [not null]\n  tgl_exp date [not null]\n  stok_sisa int [not null, default: 0]\n  created_at timestamp [not null]\n}\n\nTable unit_serial {\n  id int [pk, increment]\n  id_variasi int [not null]\n  serial_number varchar(150) [not null, unique]\n  status varchar(50) [not null, default: 'Tersedia']\n  id_penjualan int\n  catatan varchar(255)\n  tgl_habis_garansi date\n  created_at timestamp [not null]\n  updated_at timestamp\n}\n\nTable penerimaan_stok {\n  id int [pk, increment]\n  no_referensi varchar(50) [not null]\n  sumber varchar(50) [not null]\n  id_supplier int\n  tanggal_terima date [not null]\n  catatan text\n  file_nota varchar(255)\n  dibuat_oleh int\n  created_at timestamp [not null]\n}\n\nTable penerimaan_detail {\n  id int [pk, increment]\n  id_penerimaan int [not null]\n  id_variasi int [not null]\n  qty_pesan int [not null, default: 0]\n  qty_terima int [not null]\n  qty_rusak int [not null, default: 0]\n  harga_beli decimal(15,2)\n  no_batch varchar(50)\n  tgl_exp date\n  status_retur varchar(30) [not null, default: 'tidak_ada']\n  qty_pengganti_diterima int [not null, default: 0]\n  no_batch_pengganti varchar(50)\n  tgl_exp_pengganti date\n  tgl_selesai_retur date\n  catatan_retur text\n}\n\nTable penjualan {\n  id int [pk, increment]\n  no_invoice varchar(50) [not null, unique]\n  id_user int\n  tipe_transaksi varchar(50) [not null]\n  metode_pengambilan varchar(50)\n  status_pesanan varchar(50) [not null, default: 'Menunggu Pembayaran']\n  alasan_batal varchar(255)\n  dibatalkan_oleh varchar(50)\n  waktu_batal timestamp\n  request_batal boolean [not null, default: false]\n  request_batal_alasan varchar(255)\n  request_batal_waktu timestamp\n  total_harga decimal(12,2) [not null]\n  metode_bayar_pos varchar(50) [default: 'Tunai']\n  ongkir decimal(10,2) [default: 0.00]\n  nama_penerima varchar(100)\n  telepon_penerima varchar(20)\n  alamat_lengkap text\n  kota_tujuan varchar(100)\n  kurir varchar(50)\n  layanan varchar(50)\n  snap_token varchar(255)\n  payment_method_ecommerce varchar(50)\n  paid_at timestamp\n  kode_pickup varchar(20)\n  created_at timestamp [not null]\n  updated_at timestamp\n}\n\nTable detail_penjualan {\n  id int [pk, increment]\n  id_penjualan int [not null]\n  id_variasi int [not null]\n  qty int [not null]\n  harga_satuan decimal(12,2) [not null]\n  catatan_logistik text\n}\n\nTable pesanan_batch_alokasi {\n  id int [pk, increment]\n  id_penjualan int [not null]\n  id_detail_penjualan int [not null]\n  id_batch int [not null]\n  qty_satuan_kecil int [not null]\n  created_at timestamp [not null]\n}\n\nTable kartu_stok {\n  id int [pk, increment]\n  id_variasi int [not null]\n  id_batch int\n  satuan_tipe varchar(50) [not null, default: 'kecil']\n  jenis_mutasi varchar(50) [not null]\n  kanal varchar(50) [not null, default: 'Manual']\n  alasan_mutasi varchar(50) [not null, default: 'Selisih Stok Opname']\n  no_ref_dokumen varchar(100)\n  qty int [not null]\n  sisa_stok int [not null]\n  keterangan text\n  dibuat_oleh int\n  tanggal timestamp [not null]\n}\n\nTable histori_konversi {\n  id int [pk, increment]\n  id_variasi int [not null]\n  batch_asal varchar(100) [not null]\n  batch_hasil varchar(100) [not null]\n  qty_box_buka int [not null]\n  qty_pcs_hasil int [not null]\n  sisa_dus_akhir int [default: 0]\n  dibuat_oleh int\n  created_at timestamp [not null]\n}\n\nTable log_anomali_fefo {\n  id int [pk, increment]\n  id_penjualan int\n  id_user int [not null]\n  id_variasi int [not null]\n  batch_diambil varchar(100)\n  batch_seharusnya varchar(100)\n  qty int\n  satuan_tipe varchar(20) [not null, default: 'kecil']\n  status varchar(50) [not null, default: 'terlewat']\n  qty_disesuaikan int [not null, default: 0]\n  resolved_in_penjualan int\n  resolved_at date\n  created_at timestamp [not null]\n}\n\nTable sesi_opname {\n  id int [pk, increment]\n  kode_sesi varchar(50) [not null, unique]\n  status varchar(50) [not null, default: 'Aktif']\n  tahap varchar(50) [not null, default: 'Penghitungan']\n  dibekukan_oleh int [not null]\n  dibekukan_pada timestamp [not null]\n  ditutup_hitung_oleh int\n  ditutup_hitung_pada timestamp\n  dibuka_oleh int\n  dibuka_pada timestamp\n  catatan text\n}\n\nTable detail_opname_batch {\n  id int [pk, increment]\n  id_sesi int [not null]\n  id_batch int\n  id_variasi int [not null]\n  jenis_komoditas varchar(50) [not null, default: 'Obat']\n  satuan_tipe varchar(50) [not null, default: 'kecil']\n  nama_satuan varchar(50) [not null, default: 'Unit']\n  stok_tersedia_sistem int [not null]\n  stok_reserved int [not null]\n  stok_sistem_fisik int [not null]\n  fisik_baik int\n  fisik_rusak int\n  fisik_expired int\n  status_hitung varchar(50) [default: 'Belum']\n  hitung_fisik int\n  selisih int\n  status_mutasi varchar(50) [not null, default: 'Belum Dimutasi']\n  alasan_mutasi varchar(255)\n  keterangan_mutasi text\n  id_kartu_stok int\n  dihitung_oleh int\n  waktu_hitung timestamp\n  dimutasi_oleh int\n  waktu_mutasi timestamp\n}\n\nTable detail_opname_sn {\n  id int [pk, increment]\n  id_detail_opname int [not null]\n  id_unit_serial int\n  serial_number varchar(100) [not null]\n  jenis_tindakan varchar(50) [not null]\n  created_at timestamp [not null]\n}\n\nTable riwayat_hitung_opname {\n  id int [pk, increment]\n  id_detail_opname int [not null]\n  hitung_sebelumnya int\n  hitung_baru int [not null]\n  dihitung_oleh int [not null]\n  alasan_koreksi text\n  waktu_koreksi timestamp [not null]\n}\n\nTable pengaturan_web {\n  id int [pk, increment]\n  nama_toko varchar(100) [not null, default: 'ZenCare Medical']\n  deskripsi text\n  telepon varchar(20)\n  whatsapp varchar(20)\n  alamat text\n  logo varchar(255)\n  banner_promosi varchar(255)\n  email_cs varchar(150)\n}\n\n// =========================================================================\n// RELASI ANTAR-TABEL (FOREIGN KEY CONSTRAINTS)\n// =========================================================================\nRef: detail_opname_batch.id_sesi > sesi_opname.id_sesi_opname\nRef: detail_opname_batch.id_batch > stok_batch.id_stok_batch\nRef: detail_opname_batch.id_variasi > produk_variasi.id_variasi\nRef: detail_opname_batch.dihitung_oleh > users.id_user\nRef: detail_opname_batch.dimutasi_oleh > users.id_user\nRef: detail_opname_sn.id_detail_opname > detail_opname_batch.id_detail_opname\nRef: detail_opname_sn.id_unit_serial > unit_serial.id_unit_serial\nRef: detail_penjualan.id_penjualan > penjualan.id_penjualan\nRef: detail_penjualan.id_variasi > produk_variasi.id_variasi\nRef: histori_konversi.id_variasi > produk_variasi.id_variasi\nRef: histori_konversi.dibuat_oleh > users.id_user\nRef: kartu_stok.id_variasi > produk_variasi.id_variasi\nRef: kartu_stok.dibuat_oleh > users.id_user\nRef: penerimaan_detail.id_penerimaan > penerimaan_stok.id_penerimaan\nRef: penerimaan_detail.id_variasi > produk_variasi.id_variasi\nRef: penerimaan_stok.id_supplier > supplier.id_supplier\nRef: penerimaan_stok.dibuat_oleh > users.id_user\nRef: penjualan.id_user > users.id_user\nRef: pesanan_batch_alokasi.id_penjualan > penjualan.id_penjualan\nRef: pesanan_batch_alokasi.id_detail_penjualan > detail_penjualan.id_detail_penjualan\nRef: pesanan_batch_alokasi.id_batch > stok_batch.id_stok_batch\nRef: produk_variasi.id_produk_induk > produk_induk.id_produk_induk\nRef: riwayat_hitung_opname.id_detail_opname > detail_opname_batch.id_detail_opname\nRef: riwayat_hitung_opname.dihitung_oleh > users.id_user\nRef: sesi_opname.dibekukan_oleh > users.id_user\nRef: sesi_opname.dibuka_oleh > users.id_user\nRef: stok_batch.id_variasi > produk_variasi.id_variasi\nRef: stok_toko.id_variasi > produk_variasi.id_variasi\nRef: unit_serial.id_variasi > produk_variasi.id_variasi\n\n// Relasi Fungsional Operasional:\nRef: log_anomali_fefo.id_penjualan > penjualan.id_penjualan\nRef: log_anomali_fefo.id_user > users.id_user\nRef: log_anomali_fefo.id_variasi > produk_variasi.id_variasi\nRef: unit_serial.id_penjualan > penjualan.id_penjualan\nRef: kartu_stok.id_batch > stok_batch.id_stok_batch";
 
         fetch('zencare_dbml_dbdiagram.txt')
 

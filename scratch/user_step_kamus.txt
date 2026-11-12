@@ -1,0 +1,295 @@
+<USER_REQUEST>
+nah lanjut ke 3.5 mengenai kamus data nya untuk saat ini bsai nad liaht kamus data saya (yang belum direvisi)
+
+3.5	Kamus Data
+3.5.1	Tabel users
+Primary Key: id_user
+Foreign Key: -
+Fungsi: Tabel master yang berfungsi untuk merekam dan mengelola data pengguna sistem beserta hak aksesnya. Entitas ini secara tegas memisahkan wewenang antara pengguna internal (Superadmin dan Admin) dengan pihak eksternal (Pelanggan), serta mengunci keamanan sistem melalui kredensial yang terenkripsi.
+Tabel 3.1 Tabel users
+No	Nama Field	Tipe Data	Panjang	Keterangan / Deskripsi
+1	id_user	Integer	11	Primary Key, Auto Increment. ID unik pengguna.
+2	username	Varchar	50	Nama pengguna (Unique).
+3	password	Varchar	255	Kata sandi yang telah terenkripsi.
+4	nama_lengkap	Varchar	100	Nama lengkap pengguna / pelanggan.
+5	role	Enum	-	Hak akses sesi ('superadmin', 'admin', 'pelanggan').
+6	email	Varchar	150	Alamat surel / email pelanggan.
+7	telepon	Varchar	20	Nomor telepon atau HP.
+8	alamat	Text	-	Alamat utama pelanggan e-commerce.
+9	kota_id	Integer	11	ID referensi kota untuk API RajaOngkir.
+10	is_active	Boolean	1	Indikator status akun (1 = Aktif, 0 = Nonaktif).
+11	created_at	Timestamp	-	Waktu pendaftaran akun ke dalam sistem.
+3.5.2	Tabel pengaturan_web
+Primary Key: id_pengaturan
+Foreign Key: 
+Fungsi: Entitas independen yang bertugas menyimpan variabel konfigurasi global untuk portal e-commerce. Tabel ini memusatkan pengelolaan informasi profil toko, aset visual, hingga kontak layanan pelanggan agar mudah dikelola melalui satu panel admin.
+Tabel 3.2 Tabel pengaturan_web
+No	Nama Field	Tipe Data	Panjang	Keterangan / Deskripsi
+1	id_pengaturan	Integer	11	Primary Key, Auto Increment. ID pengaturan.
+2	nama_toko	Varchar	100	Nama identitas bisnis / e-commerce.
+3	deskripsi	Text	-	Penjelasan singkat profil toko.
+4	telepon	Varchar	20	Nomor telepon pusat layanan (CS).
+5	whatsapp	Varchar	20	Nomor untuk integrasi fitur WhatsApp.
+6	alamat	Text	-	Alamat fisik operasional apotek.
+7	logo	Varchar	255	Direktori tautan gambar logo.
+8	banner_promosi	Varchar	255	Direktori tautan gambar spanduk beranda.
+9	email_cs	Varchar	150	Alamat email resmi layanan pelanggan.
+
+
+
+
+
+3.5.3	Tabel supplier
+Primary Key: id_supplier
+Foreign Key: 
+Fungsi: Tabel master direktori yang mencatat data profil pemasok atau distributor barang medis. Entitas ini menjadi rujukan utama bagi dokumen penerimaan pasokan barang (inbound) untuk melacak asal-usul ketersediaan stok fisik di gudang.
+Tabel 3.3 Tabel supplier
+No	Nama Field	Tipe Data	Panjang	Keterangan / Deskripsi
+1	id_supplier	Integer	11	Primary Key, Auto Increment. ID distributor.
+2	nama	Varchar	100	Nama instansi pemasok / distributor.
+3	kontak	Varchar	50	Nomor telepon perwakilan distributor.
+4	email	Varchar	150	Alamat email korespondensi pemasok.
+5	alamat	Text	-	Alamat lengkap gudang / kantor pemasok.
+6	is_active	Boolean	1	Indikator keaktifan kerja sama pemasok.
+
+
+
+
+
+
+
+
+
+
+3.5.4	Tabel produk_induk
+Primary Key: id_produk_induk
+Foreign Key:
+Fungsi: Entitas ini menyimpan profil katalog dasar (parent) dari produk medis yang dijual. Data ini memusatkan informasi general seperti deskripsi umum, spesifikasi medis, serta pengelompokan kategori produk untuk mempermudah pencarian barang.
+Tabel 3.4 Tabel produk_induk
+No	Nama Field	Tipe Data	Panjang	Keterangan / Deskripsi
+1	id_produk_induk	Integer	11	Primary Key, Auto Increment. ID induk produk.
+2	sku_induk	Varchar	50	Kode identitas katalog produk (Unique).
+3	nama_produk	Varchar	150	Nama umum produk medis / obat.
+4	deskripsi	Text	-	Penjelasan dan kegunaan barang.
+5	spesifikasi	Text	-	Komposisi atau spesifikasi medis teknis.
+6	info_pengiriman	Text	-	Keterangan perlakuan khusus pengiriman.
+7	kategori	Enum	-	Kategori utama ('Obat', 'Alat Kesehatan').
+8	gambar	Varchar	255	Direktori tautan gambar utama.
+9	is_active	Boolean	1	Indikator tayang produk (1 = Aktif).
+10	created_at	Timestamp	-	Waktu data produk direkam sistem.
+
+
+3.5.5	Tabel produk_variasi
+Primary Key: id_variasi
+Foreign Key: id_produk_induk
+Fungsi: Tabel krusial yang mengatur rasio konversi unit pengukuran (Multi-UOM) dari sebuah entitas produk induk. Tabel ini mendefinisikan hubungan kuantitas antara satuan besar (grosir) dan satuan kecil (eceran), serta mengatur penetapan harga jualnya.
+Tabel 3.5 Tabel produk_variasi
+No	Nama Field	Tipe Data	Panjang	Keterangan / Deskripsi
+1	id_variasi	Integer	11	Primary Key, Auto Increment. ID variasi produk.
+2	id_produk_induk	Integer	11	Foreign Key ke tabel produk_induk.
+3	sku_variasi	Varchar	50	Kode SKU turunan variasi spesifik (Unique).
+4	nama_variasi	Varchar	100	Label nama variasi atau jenis kemasan.
+5	satuan_kecil	Varchar	50	Label satuan transaksi eceran (misal: Strip).
+6	satuan_besar	Varchar	50	Label satuan transaksi grosir (misal: Box).
+7	rasio_konversi	Smallint	6	Angka pengali pembagi konversi stok fisik.
+8	harga_jual_kecil	Decimal	12,2	Ketetapan harga per satuan eceran.
+9	harga_jual_besar	Decimal	12,2	Ketetapan harga per satuan grosir.
+10	stok_minimum	Integer	11	Angka batas peringatan persediaan kritis.
+11	berat	Integer	11	Berat barang dalam gram (untuk ongkos kirim).
+Tabel 3.6 (Lanjutan)
+No	Nama Field	Tipe Data	Panjang	Keterangan / Deskripsi
+12	gambar	Varchar	500	Direktori tautan gambar variasi spesifik.
+13	tampil_di_online	Boolean	1	Izin penayangan variasi pada etalase e-commerce.
+14	is_active	Boolean	1	Indikator keaktifan variasi.
+3.5.6	Tabel stok_toko
+Primary Key: id_stok_toko
+Foreign Key: id_variasi
+Fungsi: Entitas ini merekam angka agregat (kumpulan keseluruhan) dari ketersediaan persediaan barang di rak toko. Data ini diakses dengan cepat oleh sistem untuk menampilkan ketersediaan barang pada antarmuka front-end tanpa perlu menghitung logistik secara mendalam.
+Tabel 3.7 Tabel stok_toko
+No	Nama Field	Tipe Data	Panjang	Keterangan / Deskripsi
+1	id_stok_toko	Integer	11	Primary Key, Auto Increment. ID agregat stok.
+2	id_variasi	Integer	11	Foreign Key ke tabel produk_variasi.
+3	stok	Integer	11	Total akumulasi kuantitas barang fisik.
+
+
+
+
+
+
+
+3.5.7	Tabel stok_batch
+Primary Key: id_stok_batch
+Foreign Key: id_variasi
+Fungsi: Tabel khusus manajemen logistik sediaan obat. Entitas ini mencatat identitas pasokan berdasarkan nomor angkatan produksi (Batch) dan memetakannya dengan tanggal kedaluwarsa fisik untuk mengeksekusi algoritma First Expired First Out (FEFO) secara presisi.
+Tabel 3.8 Tabel stok_batch
+No	Nama Field	Tipe Data	Panjang	Keterangan / Deskripsi
+1	id_stok_batch	Integer	11	Primary Key, Auto Increment. ID data batch.
+2	id_variasi	Integer	11	Foreign Key ke tabel produk_variasi.
+3	no_batch	Varchar	100	Nomor identitas gelombang masuk produksi.
+4	tgl_exp	Date	-	Tanggal kedaluwarsa fisik (Parameter FEFO).
+5	stok_sisa	Integer	11	Sisa kuantitas pada gelombang produksi ini.
+6	created_at	Timestamp	-	Waktu data gelombang dicatat oleh sistem.
+
+
+
+
+
+
+
+
+
+
+3.5.8	Tabel unit_serial
+Primary Key: id_unit_serial
+Foreign Key: id_variasi, id_penjualan
+Fungsi: Tabel logistik spesifik untuk Alat Kesehatan. Entitas ini mengelola pelacakan aset berharga secara individual berdasarkan nomor seri (Serial Number / SN) cetakan pabrik guna mendukung audit ketersediaan tunggal dan histori klaim garansi.
+Tabel 3.9 Tabel unit_serial
+No	Nama Field	Tipe Data	Panjang	Keterangan / Deskripsi
+1	id_unit_serial	Integer	11	Primary Key, Auto Increment. ID data SN.
+2	id_variasi	Integer	11	Foreign Key ke tabel produk_variasi.
+3	serial_number	Varchar	150	Nomor identitas unik fisik alkes (Unique).
+4	status	Enum	-	Indikator ketersediaan ('Tersedia', 'Terjual', 'Retur/Rusak').
+5	id_penjualan	Integer	11	Foreign Key ke tabel penjualan (Jika terjual).
+6	catatan	Varchar	255	Riwayat pelacakan garansi atau kondisi khusus.
+7	created_at	Timestamp	-	Waktu nomor seri diregistrasi.
+8	updated_at	Timestamp	-	Waktu status ketersediaan terakhir diperbarui.
+
+
+
+
+
+
+
+3.5.9	Tabel penerimaan_stok
+Primary Key: id_penerimaan
+Foreign Key: id_supplier, dibuat_oleh
+Fungsi: Menampung data dokumen induk (Header) atas segala aktivitas pasokan atau pengadaan barang fisik ke dalam gudang. Tabel ini merekam aspek administratif penerimaan seperti tanggal fisik kedatangan barang dan bukti digital dokumen penyerahan dari pihak distributor.
+Tabel 3.10 Tabel penerimaan_stok
+No	Nama Field	Tipe Data	Panjang	Keterangan / Deskripsi
+1	id_penerimaan	Integer	11	Primary Key, Auto Increment. ID dokumen masuk.
+2	no_referensi	Varchar	50	Nomor resi atau faktur penyerahan fisik.
+3	sumber	Enum	-	Metode pengadaan ('PO', 'Pembelian Langsung').
+4	id_supplier	Integer	11	Foreign Key ke tabel supplier.
+5	tanggal_terima	Date	-	Tanggal fisik serah terima di lokasi gudang.
+6	catatan	Text	-	Pesan administratif tambahan dari Admin.
+7	file_nota	Varchar	255	Direktori pindaian (scan) fisik faktur.
+8	dibuat_oleh	Integer	11	Foreign Key (ke users) Admin pelaksana.
+9	created_at	Timestamp	-	Waktu perekaman dokumen ke pangkalan data.
+
+
+
+3.5.10	Tabel penerimaan_detail
+Primary Key: id_penerimaan_detail
+Foreign Key: id_penerimaan, id_variasi
+Fungsi: Mencatat spesifikasi rincian barang (Detail) dari dokumen penerimaan induk. Di dalam entitas inilah identitas logistik medis (Batch dan kedaluwarsa) disuntikkan pertama kali ke dalam sistem sebelum didistribusikan secara otomasi ke tabel stok terkait.
+Tabel 3.11 Tabel penerimaan_detail
+No	Nama Field	Tipe Data	Panjang	Keterangan / Deskripsi
+1	id_penerimaan_detail	Integer	11	Primary Key, Auto Increment. ID baris rincian.
+2	id_penerimaan	Integer	11	Foreign Key ke tabel penerimaan_stok.
+3	id_variasi	Integer	11	Foreign Key ke tabel produk_variasi.
+4	qty_terima	Integer	11	Kuantitas fisik barang masuk yang tervalidasi.
+5	harga_beli	Decimal	15,2	Rekaman harga pembelian produk.
+6	no_batch	Varchar	50	Identitas batch kedatangan (Gatekeeper FEFO).
+7	tgl_exp	Date	-	Masa kedaluwarsa barang yang datang.
+
+
+
+
+
+
+
+
+3.5.11	Tabel penjualan
+Primary Key: id_penjualan
+Foreign Key: id_user
+Fungsi: Menampung data dokumen induk (Header) untuk seluruh aktivitas transaksi keluar lintas saluran (Omnichannel). Tabel ini menyatukan pesanan dari POS luring dan E-Commerce daring lengkap dengan rincian biaya pengiriman, alamat tujuan, dan validasi Payment Gateway.
+Tabel 3.12 Tabel penjualan
+No	Nama Field	Tipe Data	Panjang	Keterangan / Deskripsi
+1	id_penjualan	Integer	11	Primary Key, Auto Increment. ID dokumen transaksi.
+2	no_invoice	Varchar	50	Nomor bukti faktur transaksi yang unik.
+3	id_user	Integer	11	Foreign Key ke tabel users (Pelanggan / Kasir).
+4	tipe_transaksi	Enum	-	Pemetaan saluran asal ('pos', 'ecommerce').
+5	metode_pengambilan	Enum	-	Jalur serah terima ('Kurir', 'Pick-up').
+6	status_pesanan	Enum	-	Siklus hidup pesanan (Menunggu Pembayaran, Diproses, Dikirim, Siap Diambil, Selesai, Dibatalkan).
+7	total_harga	Decimal	12,2	Agregat total nilai tagihan keranjang.
+8	ongkir	Decimal	10,2	Beban biaya logistik dari integrasi API.
+9	nama_penerima	Varchar	100	Label kontak tujuan pengiriman fisik.
+
+Tabel 3.13 (Lanjutan)
+No	Nama Field	Tipe Data	Panjang	Keterangan / Deskripsi
+10	telepon_penerima	Varchar	20	Nomor aktif tujuan korespondensi logistik.
+11	alamat_lengkap	Text	-	Rincian destinasi pengantaran paket.
+12	kota_tujuan	Varchar	100	Parameter kota yang dikenali API ekspedisi.
+13	kurir	Varchar	50	Label perusahaan ekspedisi mitra.
+14	layanan	Varchar	50	Klasifikasi paket layanan logistik kurir.
+15	snap_token	Varchar	255	Parameter integrasi antar-muka Payment Gateway.
+16	payment_method_
+ecommerce	Varchar	50	Instrumen pembayaran (hasil callback API).
+17	metode_bayar_pos	Varchar	50	Label administratif bayar tunai atau perbankan.
+18	paid_at	Timestamp	-	Bukti waktu pelunasan transaksi berhasil divalidasi.
+19	kode_pickup	Varchar	20	Kunci rahasia pelanggan opsi Pick-up in Store.
+20	created_at	Timestamp	-	Waktu pembentukan dokumen awal (Checkout).
+21	updated_at	Timestamp	-	Waktu pembaruan siklus pesanan terakhir.
+
+
+
+
+3.5.12	Tabel detail_penjualan
+Primary Key: id_detail_penjualan
+Foreign Key: id_penjualan, id_variasi
+Fungsi: Merekam spesifikasi barang apa saja (Detail) yang terangkum pada satu nota faktur penjualan. Entitas ini berfungsi menyimpan riwayat persis alokasi Batch atau SN fisik mana yang terpotong untuk membuktikan keakuratan kinerja algoritma logistik.
+Tabel 3.14 Tabel detail_penjualan
+No	Nama Field	Tipe Data	Panjang	Keterangan / Deskripsi
+1	id_detail_penjualan	Integer	11	Primary Key, Auto Increment. ID baris transaksi.
+2	id_penjualan	Integer	11	Foreign Key ke tabel penjualan.
+3	id_variasi	Integer	11	Foreign Key ke tabel produk_variasi.
+4	qty	Integer	11	Kuantitas keranjang atas variasi terpilih.
+5	harga_satuan	Decimal	12,2	Kunci nilai tukar saat transaksi dieksekusi.
+6	catatan_logistik	Text	-	Rekaman historis alokasi nomor Batch/SN terpotong.
+3.5.13	Tabel kartu_stok
+Primary Key: id_kartu_stok
+Foreign Key: id_variasi, dibuat_oleh
+Fungsi: Buku besar (Ledger) pangkalan data yang bertugas merekam jejak audit (audit trail) secara permanen. Tabel ini merangkum pergerakan kuantitas masuk, keluar, dan penyesuaian untuk menghasilkan pertanggungjawaban persediaan yang absolut bagi pihak manajerial.
+
+
+Tabel 3.15 Tabel detail_penjualan
+No	Nama Field	Tipe Data	Panjang	Keterangan / Deskripsi
+1	id_kartu_stok	Integer	11	Primary Key, Auto Increment. ID rekaman mutasi.
+2	id_variasi	Integer	11	Foreign Key ke tabel produk_variasi.
+3	jenis_mutasi	Enum	-	Vektor kuantitas ('Masuk', 'Keluar', 'Penyesuaian').
+4	kanal	Enum	-	Sumber kegiatan (POS, E-Commerce, Manual).
+5	alasan_mutasi	Enum	-	Klasifikasi rinci motif pergerakan persediaan.
+6	no_ref_dokumen	Varchar	100	Tautan ID dokumen pendukung kelayakan mutasi.
+7	qty	Integer	11	Besaran volume pergerakan kuantitas fisik.
+8	sisa_stok	Integer	11	Kunci riwayat saldo persediaan akhir setelah aktivitas.
+9	keterangan	Text	-	Anotasi manual admin atas kondisi khusus barang.
+10	dibuat_oleh	Integer	11	Foreign Key (ke users) pelaku validasi sistem.
+11	tanggal	Timestamp	-	Validasi stempel waktu kejadian berlangsung.
+
+
+
+
+
+@[c:\xampp\htdocs\inventory_zencare\lain\322310015_Marcell Chandra Kenchana_TA.docx] coba nad liaht di 3.5 kamus data anda seuaikan tekait itu coba nad seuaikan (brarti ada penamabhan kah terkait kamus data sueaikan lagi seusai databse terbaru ini (ada brapa tabel brarti, brarti sesuai logical yang dibaut barusan itu ) (dneagn seperti seblumnya tidak telalu ai, haumnize, tetap formal, tidka plagiariswme) (lalu juga seuai dnegan srs, sistem ayng dirancang, dan bab bagian sebelumnya yang sudha dibuat dan diseusaikan)
+
+seuai dnegan sitem ayng dirancang dan diseuakan paling baru ini, dan  seusai dokumen srs, dan jgua (seperti sebelunya mengiugakan bahasa yang tidak telralu ai, huamnzie, tetap formal, tidak plagiarisme, dll) coba anda lihat, coba seuaikan mungkin saya lkiaht hidnari pengunaan kata kata yang telralu teknsi dan tidak umu 
+seuaikan
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-11-05T14:58:57+07:00.
+
+The user's current state is as follows:
+Active Document: c:\xampp\htdocs\inventory_zencare\scratch\refined_svgs_part1.py (LANGUAGE_UNSPECIFIED)
+Cursor is on line: 163
+Other open documents:
+- c:\xampp\htdocs\inventory_zencare\config\env_loader.php (LANGUAGE_UNSPECIFIED)
+- c:\xampp\htdocs\inventory_zencare\scratch\sitemap_vertical.html (LANGUAGE_UNSPECIFIED)
+- c:\xampp\htdocs\inventory_zencare\scratch\update_modul_1_2.php (LANGUAGE_UNSPECIFIED)
+- c:\xampp\htdocs\inventory_zencare\scratch\sitemap_lr.html (LANGUAGE_UNSPECIFIED)
+- c:\xampp\htdocs\inventory_zencare\scratch\sitemap_horizontal.html (LANGUAGE_UNSPECIFIED)
+
+The user has mentioned some items in the form @[ITEM]. Here is extra information about the items that were mentioned by the user, in the order that they appear:
+
+@[c:\xampp\htdocs\inventory_zencare\lain\322310015_Marcell Chandra Kenchana_TA.docx] is a [File]:
+c:\xampp\htdocs\inventory_zencare\lain\322310015_Marcell Chandra Kenchana_TA.docx
+</ADDITIONAL_METADATA>

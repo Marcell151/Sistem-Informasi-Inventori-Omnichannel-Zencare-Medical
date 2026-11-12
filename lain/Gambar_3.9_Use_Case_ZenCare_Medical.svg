@@ -32,6 +32,7 @@
 
     <!-- 2. Kasir (Right-Upper: x=890, y=415) -->
     <line x1="890" y1="415" x2="560" y2="415" stroke="#000" stroke-width="1.2"/> <!-- POS -->
+    <line x1="890" y1="415" x2="555" y2="1035" stroke="#000" stroke-width="1.2"/> <!-- Stok Opname (Input Fisik Blind Count) -->
 
     <!-- 3. Superadmin (Left-Bottom: x=110, y=1050) -->
     <line x1="110" y1="1050" x2="440" y2="515" stroke="#000" stroke-width="1.2"/>  <!-- Master Data -->

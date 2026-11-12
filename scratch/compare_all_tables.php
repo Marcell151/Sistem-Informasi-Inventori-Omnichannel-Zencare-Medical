@@ -1,35 +1,33 @@
 <?php
-require __DIR__ . '/../config/koneksi.php';
-
-$sql = file_get_contents(__DIR__ . '/../database/isi/db_inventory (demo) 2.sql');
+require_once __DIR__ . '/../config/koneksi.php';
 
 $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
 
-echo "=== PERBANDINGAN KOLOM PER TABEL ===\n";
+$sql_content = file_get_contents(__DIR__ . '/../Demo_Bersih.sql');
+
+echo "=== MEMERIKSA KESESUAIAN DEMO_BERSIH.SQL DENGAN LIVE DB ===\n";
+
 foreach ($tables as $t) {
-    $dbCols = $pdo->query("SHOW COLUMNS FROM `$t`")->fetchAll(PDO::FETCH_COLUMN);
+    // Get live columns
+    $cols = $pdo->query("SHOW COLUMNS FROM `$t`")->fetchAll(PDO::FETCH_COLUMN);
     
-    // Cari CREATE TABLE di demo 2.sql
-    if (preg_match('/CREATE TABLE `' . $t . '` \((.*?)\) ENGINE/s', $sql, $m)) {
-        $lines = explode("\n", $m[1]);
-        $demo2Cols = [];
-        foreach ($lines as $l) {
-            $l = trim($l);
-            if (preg_match('/^`([a-zA-Z0-9_]+)`/', $l, $cm)) {
-                $demo2Cols[] = $cm[1];
-            }
+    // Check if table exists in Demo_Bersih.sql
+    if (!preg_match("/CREATE TABLE\s+[`\"]?" . preg_quote($t, '/') . "[`\"]?\s*\((.*?)\)\s*ENGINE/si", $sql_content, $matches)) {
+        echo "[MISSING TABLE] $t tidak ditemukan di Demo_Bersih.sql\n";
+        continue;
+    }
+    
+    $table_def = $matches[1];
+    $missing_cols = [];
+    foreach ($cols as $c) {
+        if (!preg_match("/[`\"]?" . preg_quote($c, '/') . "[`\"]?\s+/i", $table_def)) {
+            $missing_cols[] = $c;
         }
-        $diffNew = array_diff($dbCols, $demo2Cols);
-        $diffOld = array_diff($demo2Cols, $dbCols);
-        if (!empty($diffNew) || !empty($diffOld)) {
-            echo "Tabel `$t`:\n";
-            if (!empty($diffNew)) echo "  + Kolom baru di DB aktif: " . implode(', ', $diffNew) . "\n";
-            if (!empty($diffOld)) echo "  - Kolom hanya di demo 2: " . implode(', ', $diffOld) . "\n";
-        } else {
-            echo "Tabel `$t`: IDENTIK (" . count($dbCols) . " kolom)\n";
-        }
+    }
+    
+    if (!empty($missing_cols)) {
+        echo "[KOLOM BEDA] Table $t kurang kolom: " . implode(", ", $missing_cols) . "\n";
     } else {
-        echo "Tabel `$t`: TIDAK ADA DI demo 2.sql!\n";
+        echo "[SESUAI] Table $t (" . count($cols) . " kolom)\n";
     }
 }
-

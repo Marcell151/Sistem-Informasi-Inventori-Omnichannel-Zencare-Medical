@@ -39,12 +39,12 @@
     <path d="M 1130.0 613.0 L 1147.0 613.0 Q 1155.0 613.0, 1155.0 605.0 L 1155.0 106.0 Q 1155.0 98.0, 1147.0 98.0 L 1130.0 98.0" marker-start="url(#dot-start)" marker-end="url(#arrow-end)"/>
     <path d="M 1130.0 413.0 L 1164.0 413.0 Q 1172.0 413.0, 1172.0 421.0 L 1172.0 582.0 Q 1172.0 590.0, 1164.0 590.0 L 1130.0 590.0" marker-start="url(#dot-start)" marker-end="url(#arrow-end)"/>
     <path d="M 1270.0 118.0 L 1203.0 118.0 Q 1195.0 118.0, 1195.0 126.0 L 1195.0 586.0 Q 1195.0 594.0, 1187.0 594.0 L 1130.0 594.0" marker-start="url(#dot-start)" marker-end="url(#arrow-end)"/>
-    <path d="M 1270.0 783.0 L 1223.0 783.0 Q 1215.0 783.0, 1215.0 775.0 L 1215.0 606.0 Q 1215.0 598.0, 1207.0 598.0 L 1130.0 598.0" marker-start="url(#dot-start)" marker-end="url(#arrow-end)"/>
-    <path d="M 1270.0 763.0 L 1243.0 763.0 Q 1235.0 763.0, 1235.0 755.0 L 1235.0 401.0 Q 1235.0 393.0, 1227.0 393.0 L 1130.0 393.0" marker-start="url(#dot-start)" marker-end="url(#arrow-end)"/>
-    <path d="M 1530.0 743.0 L 1552.0 743.0 Q 1560.0 743.0, 1560.0 735.0 L 1560.0 491.0 Q 1560.0 483.0, 1552.0 483.0 L 1530.0 483.0" marker-start="url(#dot-start)" marker-end="url(#arrow-end)"/>
-    <path d="M 1670.0 743.0 L 1603.0 743.0 Q 1595.0 743.0, 1595.0 735.0 L 1595.0 728.0 Q 1595.0 720.0, 1587.0 720.0 L 1530.0 720.0" marker-start="url(#dot-start)" marker-end="url(#arrow-end)"/>
-    <path d="M 1670.0 953.0 L 1633.0 953.0 Q 1625.0 953.0, 1625.0 945.0 L 1625.0 734.0 Q 1625.0 726.0, 1617.0 726.0 L 1530.0 726.0" marker-start="url(#dot-start)" marker-end="url(#arrow-end)"/>
-    <path d="M 1930.0 763.0 L 1957.0 763.0 Q 1965.0 763.0, 1965.0 771.0 L 1965.0 1477.0 Q 1965.0 1485.0, 1957.0 1485.0 L 753.0 1485.0 Q 745.0 1485.0, 745.0 1477.0 L 745.0 1140.5 Q 745.0 1133.0, 737.5 1133.0 L 730.0 1133.0" marker-start="url(#dot-start)" marker-end="url(#arrow-end)"/>
+    <path d="M 1270.0 843.0 L 1223.0 843.0 Q 1215.0 843.0, 1215.0 835.0 L 1215.0 606.0 Q 1215.0 598.0, 1207.0 598.0 L 1130.0 598.0" marker-start="url(#dot-start)" marker-end="url(#arrow-end)"/>
+    <path d="M 1270.0 823.0 L 1243.0 823.0 Q 1235.0 823.0, 1235.0 815.0 L 1235.0 401.0 Q 1235.0 393.0, 1227.0 393.0 L 1130.0 393.0" marker-start="url(#dot-start)" marker-end="url(#arrow-end)"/>
+    <path d="M 1530.0 803.0 L 1552.0 803.0 Q 1560.0 803.0, 1560.0 795.0 L 1560.0 491.0 Q 1560.0 483.0, 1552.0 483.0 L 1530.0 483.0" marker-start="url(#dot-start)" marker-end="url(#arrow-end)"/>
+    <path d="M 1670.0 803.0 L 1603.0 803.0 Q 1595.0 803.0, 1595.0 795.0 L 1595.0 788.0 Q 1595.0 780.0, 1587.0 780.0 L 1530.0 780.0" marker-start="url(#dot-start)" marker-end="url(#arrow-end)"/>
+    <path d="M 1670.0 1003.0 L 1633.0 1003.0 Q 1625.0 1003.0, 1625.0 995.0 L 1625.0 794.0 Q 1625.0 786.0, 1617.0 786.0 L 1530.0 786.0" marker-start="url(#dot-start)" marker-end="url(#arrow-end)"/>
+    <path d="M 1930.0 823.0 L 1957.0 823.0 Q 1965.0 823.0, 1965.0 831.0 L 1965.0 1477.0 Q 1965.0 1485.0, 1957.0 1485.0 L 753.0 1485.0 Q 745.0 1485.0, 745.0 1477.0 L 745.0 1140.5 Q 745.0 1133.0, 737.5 1133.0 L 730.0 1133.0" marker-start="url(#dot-start)" marker-end="url(#arrow-end)"/>
   </g>
   <!-- ================= TABLE CARDS (20 ENTITIES - UNIFORM DEEP BLUE HEADER) ================= -->
   <g class="tables">
@@ -1195,7 +1195,7 @@
     </g>
     <!-- Table: sesi_opname -->
     <g id="table_sesi_opname" filter="url(#card-shadow)">
-      <rect x="1270" y="445" width="260" height="194" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="1270" y="445" width="260" height="254" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
       <path d="M 1270 451 Q 1270 445 1276 445 L 1524 445 Q 1530 445 1530 451 L 1530 473 L 1270 473 Z" fill="#2b5a84"/>
       <g transform="translate(1280, 453)" fill="#93c5fd">
         <rect width="11" height="11" rx="1.5" fill="none" stroke="#ffffff" stroke-width="1.2"/>
@@ -1203,7 +1203,7 @@
         <line x1="4.5" y1="4" x2="4.5" y2="11" stroke="#ffffff" stroke-width="1"/>
       </g>
       <text x="1298" y="463" font-size="11.5" font-weight="700" fill="#ffffff" font-family="monospace">sesi_opname</text>
-      <text x="1520" y="463" font-size="9" font-weight="600" fill="#cbd5e1" text-anchor="end">8 cols</text>
+      <text x="1520" y="463" font-size="9" font-weight="600" fill="#cbd5e1" text-anchor="end">11 cols</text>
       <line x1="1270" y1="473" x2="1530" y2="473" stroke="#f1f5f9" stroke-width="1"/>
       <g transform="translate(1278, 477)">
         <rect width="14" height="11" rx="2" fill="#ef4444"/>
@@ -1225,280 +1225,335 @@
       <text x="1522" y="526.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
       <rect x="1271" y="533" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="533" x2="1530" y2="533" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(1278, 537)">
+      <circle cx="1285" cy="543" r="1.5" fill="#94a3b8"/>
+      <text x="1297" y="546.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">tahap</text>
+      <text x="1504" y="546.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
+      <text x="1522" y="546.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <line x1="1270" y1="553" x2="1530" y2="553" stroke="#f1f5f9" stroke-width="1"/>
+      <g transform="translate(1278, 557)">
         <rect width="14" height="11" rx="2" fill="#3b82f6"/>
         <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
       </g>
-      <text x="1297" y="546.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">dibekukan_oleh</text>
-      <text x="1504" y="546.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
-      <text x="1522" y="546.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <line x1="1270" y1="553" x2="1530" y2="553" stroke="#f1f5f9" stroke-width="1"/>
-      <circle cx="1285" cy="563" r="1.5" fill="#94a3b8"/>
-      <text x="1297" y="566.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">dibekukan_pada</text>
-      <text x="1504" y="566.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
+      <text x="1297" y="566.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">dibekukan_oleh</text>
+      <text x="1504" y="566.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="1522" y="566.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
       <rect x="1271" y="573" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="573" x2="1530" y2="573" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(1278, 577)">
+      <circle cx="1285" cy="583" r="1.5" fill="#94a3b8"/>
+      <text x="1297" y="586.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">dibekukan_pada</text>
+      <text x="1504" y="586.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
+      <text x="1522" y="586.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <line x1="1270" y1="593" x2="1530" y2="593" stroke="#f1f5f9" stroke-width="1"/>
+      <g transform="translate(1278, 597)">
         <rect width="14" height="11" rx="2" fill="#3b82f6"/>
         <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
       </g>
-      <text x="1297" y="586.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">dibuka_oleh</text>
-      <text x="1504" y="586.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
-      <text x="1522" y="586.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <line x1="1270" y1="593" x2="1530" y2="593" stroke="#f1f5f9" stroke-width="1"/>
-      <circle cx="1285" cy="603" r="1.5" fill="#94a3b8"/>
-      <text x="1297" y="606.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">dibuka_pada</text>
-      <text x="1504" y="606.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
+      <text x="1297" y="606.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">ditutup_hitung_oleh</text>
+      <text x="1504" y="606.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="1522" y="606.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
       <rect x="1271" y="613" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="613" x2="1530" y2="613" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="1285" cy="623" r="1.5" fill="#94a3b8"/>
-      <text x="1297" y="626.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">catatan</text>
-      <text x="1504" y="626.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">text</text>
+      <text x="1297" y="626.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">ditutup_hitung_pada</text>
+      <text x="1504" y="626.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
       <text x="1522" y="626.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <line x1="1270" y1="633" x2="1530" y2="633" stroke="#f1f5f9" stroke-width="1"/>
+      <g transform="translate(1278, 637)">
+        <rect width="14" height="11" rx="2" fill="#3b82f6"/>
+        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
+      </g>
+      <text x="1297" y="646.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">dibuka_oleh</text>
+      <text x="1504" y="646.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
+      <text x="1522" y="646.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1271" y="653" width="258" height="20" fill="#f8fafc"/>
+      <line x1="1270" y1="653" x2="1530" y2="653" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="1285" cy="663" r="1.5" fill="#94a3b8"/>
+      <text x="1297" y="666.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">dibuka_pada</text>
+      <text x="1504" y="666.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
+      <text x="1522" y="666.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <line x1="1270" y1="673" x2="1530" y2="673" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="1285" cy="683" r="1.5" fill="#94a3b8"/>
+      <text x="1297" y="686.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">catatan</text>
+      <text x="1504" y="686.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">text</text>
+      <text x="1522" y="686.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
     </g>
     <!-- Table: detail_opname_batch -->
     <g id="table_detail_opname_batch" filter="url(#card-shadow)">
-      <rect x="1270" y="685" width="260" height="394" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
-      <path d="M 1270 691 Q 1270 685 1276 685 L 1524 685 Q 1530 685 1530 691 L 1530 713 L 1270 713 Z" fill="#2b5a84"/>
-      <g transform="translate(1280, 693)" fill="#93c5fd">
+      <rect x="1270" y="745" width="260" height="514" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+      <path d="M 1270 751 Q 1270 745 1276 745 L 1524 745 Q 1530 745 1530 751 L 1530 773 L 1270 773 Z" fill="#2b5a84"/>
+      <g transform="translate(1280, 753)" fill="#93c5fd">
         <rect width="11" height="11" rx="1.5" fill="none" stroke="#ffffff" stroke-width="1.2"/>
         <line x1="0" y1="4" x2="11" y2="4" stroke="#ffffff" stroke-width="1.2"/>
         <line x1="4.5" y1="4" x2="4.5" y2="11" stroke="#ffffff" stroke-width="1"/>
       </g>
-      <text x="1298" y="703" font-size="11.5" font-weight="700" fill="#ffffff" font-family="monospace">detail_opname_batch</text>
-      <text x="1520" y="703" font-size="9" font-weight="600" fill="#cbd5e1" text-anchor="end">18 cols</text>
-      <line x1="1270" y1="713" x2="1530" y2="713" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(1278, 717)">
+      <text x="1298" y="763" font-size="11.5" font-weight="700" fill="#ffffff" font-family="monospace">detail_opname_batch</text>
+      <text x="1520" y="763" font-size="9" font-weight="600" fill="#cbd5e1" text-anchor="end">24 cols</text>
+      <line x1="1270" y1="773" x2="1530" y2="773" stroke="#f1f5f9" stroke-width="1"/>
+      <g transform="translate(1278, 777)">
         <rect width="14" height="11" rx="2" fill="#ef4444"/>
         <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">PK</text>
       </g>
-      <text x="1297" y="726.5" font-size="9.5" font-weight="700" fill="#0f172a" font-family="monospace">id_detail_opname</text>
-      <text x="1504" y="726.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
-      <text x="1522" y="726.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <rect x="1271" y="733" width="258" height="20" fill="#f8fafc"/>
-      <line x1="1270" y1="733" x2="1530" y2="733" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(1278, 737)">
-        <rect width="14" height="11" rx="2" fill="#3b82f6"/>
-        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
-      </g>
-      <text x="1297" y="746.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">id_sesi</text>
-      <text x="1504" y="746.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
-      <text x="1522" y="746.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <line x1="1270" y1="753" x2="1530" y2="753" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(1278, 757)">
-        <rect width="14" height="11" rx="2" fill="#3b82f6"/>
-        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
-      </g>
-      <text x="1297" y="766.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">id_batch</text>
-      <text x="1504" y="766.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
-      <text x="1522" y="766.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <rect x="1271" y="773" width="258" height="20" fill="#f8fafc"/>
-      <line x1="1270" y1="773" x2="1530" y2="773" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(1278, 777)">
-        <rect width="14" height="11" rx="2" fill="#3b82f6"/>
-        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
-      </g>
-      <text x="1297" y="786.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">id_variasi</text>
+      <text x="1297" y="786.5" font-size="9.5" font-weight="700" fill="#0f172a" font-family="monospace">id_detail_opname</text>
       <text x="1504" y="786.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="1522" y="786.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1271" y="793" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="793" x2="1530" y2="793" stroke="#f1f5f9" stroke-width="1"/>
-      <circle cx="1285" cy="803" r="1.5" fill="#94a3b8"/>
-      <text x="1297" y="806.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">jenis_komoditas</text>
-      <text x="1504" y="806.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
+      <g transform="translate(1278, 797)">
+        <rect width="14" height="11" rx="2" fill="#3b82f6"/>
+        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
+      </g>
+      <text x="1297" y="806.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">id_sesi</text>
+      <text x="1504" y="806.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="1522" y="806.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <rect x="1271" y="813" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="813" x2="1530" y2="813" stroke="#f1f5f9" stroke-width="1"/>
-      <circle cx="1285" cy="823" r="1.5" fill="#94a3b8"/>
-      <text x="1297" y="826.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">satuan_tipe</text>
-      <text x="1504" y="826.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
+      <g transform="translate(1278, 817)">
+        <rect width="14" height="11" rx="2" fill="#3b82f6"/>
+        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
+      </g>
+      <text x="1297" y="826.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">id_batch</text>
+      <text x="1504" y="826.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="1522" y="826.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1271" y="833" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="833" x2="1530" y2="833" stroke="#f1f5f9" stroke-width="1"/>
-      <circle cx="1285" cy="843" r="1.5" fill="#94a3b8"/>
-      <text x="1297" y="846.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">nama_satuan</text>
-      <text x="1504" y="846.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
+      <g transform="translate(1278, 837)">
+        <rect width="14" height="11" rx="2" fill="#3b82f6"/>
+        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
+      </g>
+      <text x="1297" y="846.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">id_variasi</text>
+      <text x="1504" y="846.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="1522" y="846.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <rect x="1271" y="853" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="853" x2="1530" y2="853" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="1285" cy="863" r="1.5" fill="#94a3b8"/>
-      <text x="1297" y="866.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">stok_tersedia_sistem</text>
-      <text x="1504" y="866.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
+      <text x="1297" y="866.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">jenis_komoditas</text>
+      <text x="1504" y="866.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
       <text x="1522" y="866.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1271" y="873" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="873" x2="1530" y2="873" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="1285" cy="883" r="1.5" fill="#94a3b8"/>
-      <text x="1297" y="886.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">stok_reserved</text>
-      <text x="1504" y="886.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
+      <text x="1297" y="886.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">satuan_tipe</text>
+      <text x="1504" y="886.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
       <text x="1522" y="886.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <rect x="1271" y="893" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="893" x2="1530" y2="893" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="1285" cy="903" r="1.5" fill="#94a3b8"/>
-      <text x="1297" y="906.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">stok_sistem_fisik</text>
-      <text x="1504" y="906.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
+      <text x="1297" y="906.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">nama_satuan</text>
+      <text x="1504" y="906.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
       <text x="1522" y="906.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1271" y="913" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="913" x2="1530" y2="913" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="1285" cy="923" r="1.5" fill="#94a3b8"/>
-      <text x="1297" y="926.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">hitung_fisik</text>
+      <text x="1297" y="926.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">stok_tersedia_sistem</text>
       <text x="1504" y="926.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="1522" y="926.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <rect x="1271" y="933" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="933" x2="1530" y2="933" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="1285" cy="943" r="1.5" fill="#94a3b8"/>
-      <text x="1297" y="946.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">selisih</text>
+      <text x="1297" y="946.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">stok_reserved</text>
       <text x="1504" y="946.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="1522" y="946.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1271" y="953" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="953" x2="1530" y2="953" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="1285" cy="963" r="1.5" fill="#94a3b8"/>
-      <text x="1297" y="966.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">status_mutasi</text>
-      <text x="1504" y="966.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
+      <text x="1297" y="966.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">stok_sistem_fisik</text>
+      <text x="1504" y="966.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="1522" y="966.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <rect x="1271" y="973" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="973" x2="1530" y2="973" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="1285" cy="983" r="1.5" fill="#94a3b8"/>
-      <text x="1297" y="986.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">alasan_mutasi</text>
-      <text x="1504" y="986.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
+      <text x="1297" y="986.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">fisik_baik</text>
+      <text x="1504" y="986.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="1522" y="986.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1271" y="993" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="993" x2="1530" y2="993" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="1285" cy="1003" r="1.5" fill="#94a3b8"/>
-      <text x="1297" y="1006.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">id_kartu_stok</text>
+      <text x="1297" y="1006.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">fisik_rusak</text>
       <text x="1504" y="1006.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="1522" y="1006.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <rect x="1271" y="1013" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="1013" x2="1530" y2="1013" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(1278, 1017)">
-        <rect width="14" height="11" rx="2" fill="#3b82f6"/>
-        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
-      </g>
-      <text x="1297" y="1026.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">dihitung_oleh</text>
+      <circle cx="1285" cy="1023" r="1.5" fill="#94a3b8"/>
+      <text x="1297" y="1026.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">fisik_expired</text>
       <text x="1504" y="1026.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="1522" y="1026.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1271" y="1033" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="1033" x2="1530" y2="1033" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="1285" cy="1043" r="1.5" fill="#94a3b8"/>
-      <text x="1297" y="1046.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">waktu_hitung</text>
-      <text x="1504" y="1046.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
+      <text x="1297" y="1046.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">status_hitung</text>
+      <text x="1504" y="1046.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
       <text x="1522" y="1046.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <rect x="1271" y="1053" width="258" height="20" fill="#f8fafc"/>
       <line x1="1270" y1="1053" x2="1530" y2="1053" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(1278, 1057)">
+      <circle cx="1285" cy="1063" r="1.5" fill="#94a3b8"/>
+      <text x="1297" y="1066.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">hitung_fisik</text>
+      <text x="1504" y="1066.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
+      <text x="1522" y="1066.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1271" y="1073" width="258" height="20" fill="#f8fafc"/>
+      <line x1="1270" y1="1073" x2="1530" y2="1073" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="1285" cy="1083" r="1.5" fill="#94a3b8"/>
+      <text x="1297" y="1086.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">selisih</text>
+      <text x="1504" y="1086.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
+      <text x="1522" y="1086.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <line x1="1270" y1="1093" x2="1530" y2="1093" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="1285" cy="1103" r="1.5" fill="#94a3b8"/>
+      <text x="1297" y="1106.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">status_mutasi</text>
+      <text x="1504" y="1106.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
+      <text x="1522" y="1106.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1271" y="1113" width="258" height="20" fill="#f8fafc"/>
+      <line x1="1270" y1="1113" x2="1530" y2="1113" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="1285" cy="1123" r="1.5" fill="#94a3b8"/>
+      <text x="1297" y="1126.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">alasan_mutasi</text>
+      <text x="1504" y="1126.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(255)</text>
+      <text x="1522" y="1126.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <line x1="1270" y1="1133" x2="1530" y2="1133" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="1285" cy="1143" r="1.5" fill="#94a3b8"/>
+      <text x="1297" y="1146.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">keterangan_mutasi</text>
+      <text x="1504" y="1146.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">text</text>
+      <text x="1522" y="1146.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1271" y="1153" width="258" height="20" fill="#f8fafc"/>
+      <line x1="1270" y1="1153" x2="1530" y2="1153" stroke="#f1f5f9" stroke-width="1"/>
+      <g transform="translate(1278, 1157)">
         <rect width="14" height="11" rx="2" fill="#3b82f6"/>
         <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
       </g>
-      <text x="1297" y="1066.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">dimutasi_oleh</text>
-      <text x="1504" y="1066.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
-      <text x="1522" y="1066.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <text x="1297" y="1166.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">id_kartu_stok</text>
+      <text x="1504" y="1166.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
+      <text x="1522" y="1166.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <line x1="1270" y1="1173" x2="1530" y2="1173" stroke="#f1f5f9" stroke-width="1"/>
+      <g transform="translate(1278, 1177)">
+        <rect width="14" height="11" rx="2" fill="#3b82f6"/>
+        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
+      </g>
+      <text x="1297" y="1186.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">dihitung_oleh</text>
+      <text x="1504" y="1186.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
+      <text x="1522" y="1186.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1271" y="1193" width="258" height="20" fill="#f8fafc"/>
+      <line x1="1270" y1="1193" x2="1530" y2="1193" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="1285" cy="1203" r="1.5" fill="#94a3b8"/>
+      <text x="1297" y="1206.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">waktu_hitung</text>
+      <text x="1504" y="1206.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
+      <text x="1522" y="1206.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <line x1="1270" y1="1213" x2="1530" y2="1213" stroke="#f1f5f9" stroke-width="1"/>
+      <g transform="translate(1278, 1217)">
+        <rect width="14" height="11" rx="2" fill="#3b82f6"/>
+        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
+      </g>
+      <text x="1297" y="1226.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">dimutasi_oleh</text>
+      <text x="1504" y="1226.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
+      <text x="1522" y="1226.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1271" y="1233" width="258" height="20" fill="#f8fafc"/>
+      <line x1="1270" y1="1233" x2="1530" y2="1233" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="1285" cy="1243" r="1.5" fill="#94a3b8"/>
+      <text x="1297" y="1246.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">waktu_mutasi</text>
+      <text x="1504" y="1246.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
+      <text x="1522" y="1246.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
     </g>
     <!-- Table: detail_opname_sn -->
     <g id="table_detail_opname_sn" filter="url(#card-shadow)">
-      <rect x="1670" y="685" width="260" height="154" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
-      <path d="M 1670 691 Q 1670 685 1676 685 L 1924 685 Q 1930 685 1930 691 L 1930 713 L 1670 713 Z" fill="#2b5a84"/>
-      <g transform="translate(1680, 693)" fill="#93c5fd">
+      <rect x="1670" y="745" width="260" height="154" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+      <path d="M 1670 751 Q 1670 745 1676 745 L 1924 745 Q 1930 745 1930 751 L 1930 773 L 1670 773 Z" fill="#2b5a84"/>
+      <g transform="translate(1680, 753)" fill="#93c5fd">
         <rect width="11" height="11" rx="1.5" fill="none" stroke="#ffffff" stroke-width="1.2"/>
         <line x1="0" y1="4" x2="11" y2="4" stroke="#ffffff" stroke-width="1.2"/>
         <line x1="4.5" y1="4" x2="4.5" y2="11" stroke="#ffffff" stroke-width="1"/>
       </g>
-      <text x="1698" y="703" font-size="11.5" font-weight="700" fill="#ffffff" font-family="monospace">detail_opname_sn</text>
-      <text x="1920" y="703" font-size="9" font-weight="600" fill="#cbd5e1" text-anchor="end">6 cols</text>
-      <line x1="1670" y1="713" x2="1930" y2="713" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(1678, 717)">
+      <text x="1698" y="763" font-size="11.5" font-weight="700" fill="#ffffff" font-family="monospace">detail_opname_sn</text>
+      <text x="1920" y="763" font-size="9" font-weight="600" fill="#cbd5e1" text-anchor="end">6 cols</text>
+      <line x1="1670" y1="773" x2="1930" y2="773" stroke="#f1f5f9" stroke-width="1"/>
+      <g transform="translate(1678, 777)">
         <rect width="14" height="11" rx="2" fill="#ef4444"/>
         <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">PK</text>
       </g>
-      <text x="1697" y="726.5" font-size="9.5" font-weight="700" fill="#0f172a" font-family="monospace">id_opname_sn</text>
-      <text x="1904" y="726.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
-      <text x="1922" y="726.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <rect x="1671" y="733" width="258" height="20" fill="#f8fafc"/>
-      <line x1="1670" y1="733" x2="1930" y2="733" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(1678, 737)">
-        <rect width="14" height="11" rx="2" fill="#3b82f6"/>
-        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
-      </g>
-      <text x="1697" y="746.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">id_detail_opname</text>
-      <text x="1904" y="746.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
-      <text x="1922" y="746.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <line x1="1670" y1="753" x2="1930" y2="753" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(1678, 757)">
-        <rect width="14" height="11" rx="2" fill="#3b82f6"/>
-        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
-      </g>
-      <text x="1697" y="766.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">id_unit_serial</text>
-      <text x="1904" y="766.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
-      <text x="1922" y="766.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <rect x="1671" y="773" width="258" height="20" fill="#f8fafc"/>
-      <line x1="1670" y1="773" x2="1930" y2="773" stroke="#f1f5f9" stroke-width="1"/>
-      <circle cx="1685" cy="783" r="1.5" fill="#94a3b8"/>
-      <text x="1697" y="786.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">serial_number</text>
-      <text x="1904" y="786.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(100)</text>
+      <text x="1697" y="786.5" font-size="9.5" font-weight="700" fill="#0f172a" font-family="monospace">id_opname_sn</text>
+      <text x="1904" y="786.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="1922" y="786.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1671" y="793" width="258" height="20" fill="#f8fafc"/>
       <line x1="1670" y1="793" x2="1930" y2="793" stroke="#f1f5f9" stroke-width="1"/>
-      <circle cx="1685" cy="803" r="1.5" fill="#94a3b8"/>
-      <text x="1697" y="806.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">jenis_tindakan</text>
-      <text x="1904" y="806.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
+      <g transform="translate(1678, 797)">
+        <rect width="14" height="11" rx="2" fill="#3b82f6"/>
+        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
+      </g>
+      <text x="1697" y="806.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">id_detail_opname</text>
+      <text x="1904" y="806.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="1922" y="806.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <rect x="1671" y="813" width="258" height="20" fill="#f8fafc"/>
       <line x1="1670" y1="813" x2="1930" y2="813" stroke="#f1f5f9" stroke-width="1"/>
-      <circle cx="1685" cy="823" r="1.5" fill="#94a3b8"/>
-      <text x="1697" y="826.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">created_at</text>
-      <text x="1904" y="826.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
+      <g transform="translate(1678, 817)">
+        <rect width="14" height="11" rx="2" fill="#3b82f6"/>
+        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
+      </g>
+      <text x="1697" y="826.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">id_unit_serial</text>
+      <text x="1904" y="826.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="1922" y="826.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1671" y="833" width="258" height="20" fill="#f8fafc"/>
+      <line x1="1670" y1="833" x2="1930" y2="833" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="1685" cy="843" r="1.5" fill="#94a3b8"/>
+      <text x="1697" y="846.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">serial_number</text>
+      <text x="1904" y="846.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(100)</text>
+      <text x="1922" y="846.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <line x1="1670" y1="853" x2="1930" y2="853" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="1685" cy="863" r="1.5" fill="#94a3b8"/>
+      <text x="1697" y="866.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">jenis_tindakan</text>
+      <text x="1904" y="866.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
+      <text x="1922" y="866.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1671" y="873" width="258" height="20" fill="#f8fafc"/>
+      <line x1="1670" y1="873" x2="1930" y2="873" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="1685" cy="883" r="1.5" fill="#94a3b8"/>
+      <text x="1697" y="886.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">created_at</text>
+      <text x="1904" y="886.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
+      <text x="1922" y="886.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
     </g>
     <!-- Table: riwayat_hitung_opname -->
     <g id="table_riwayat_hitung_opname" filter="url(#card-shadow)">
-      <rect x="1670" y="895" width="260" height="174" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
-      <path d="M 1670 901 Q 1670 895 1676 895 L 1924 895 Q 1930 895 1930 901 L 1930 923 L 1670 923 Z" fill="#2b5a84"/>
-      <g transform="translate(1680, 903)" fill="#93c5fd">
+      <rect x="1670" y="945" width="260" height="174" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+      <path d="M 1670 951 Q 1670 945 1676 945 L 1924 945 Q 1930 945 1930 951 L 1930 973 L 1670 973 Z" fill="#2b5a84"/>
+      <g transform="translate(1680, 953)" fill="#93c5fd">
         <rect width="11" height="11" rx="1.5" fill="none" stroke="#ffffff" stroke-width="1.2"/>
         <line x1="0" y1="4" x2="11" y2="4" stroke="#ffffff" stroke-width="1.2"/>
         <line x1="4.5" y1="4" x2="4.5" y2="11" stroke="#ffffff" stroke-width="1"/>
       </g>
-      <text x="1698" y="913" font-size="11.5" font-weight="700" fill="#ffffff" font-family="monospace">riwayat_hitung_opname</text>
-      <text x="1920" y="913" font-size="9" font-weight="600" fill="#cbd5e1" text-anchor="end">7 cols</text>
-      <line x1="1670" y1="923" x2="1930" y2="923" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(1678, 927)">
+      <text x="1698" y="963" font-size="11.5" font-weight="700" fill="#ffffff" font-family="monospace">riwayat_hitung_opname</text>
+      <text x="1920" y="963" font-size="9" font-weight="600" fill="#cbd5e1" text-anchor="end">7 cols</text>
+      <line x1="1670" y1="973" x2="1930" y2="973" stroke="#f1f5f9" stroke-width="1"/>
+      <g transform="translate(1678, 977)">
         <rect width="14" height="11" rx="2" fill="#ef4444"/>
         <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">PK</text>
       </g>
-      <text x="1697" y="936.5" font-size="9.5" font-weight="700" fill="#0f172a" font-family="monospace">id_riwayat_hitung</text>
-      <text x="1904" y="936.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
-      <text x="1922" y="936.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <rect x="1671" y="943" width="258" height="20" fill="#f8fafc"/>
-      <line x1="1670" y1="943" x2="1930" y2="943" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(1678, 947)">
+      <text x="1697" y="986.5" font-size="9.5" font-weight="700" fill="#0f172a" font-family="monospace">id_riwayat_hitung</text>
+      <text x="1904" y="986.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
+      <text x="1922" y="986.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1671" y="993" width="258" height="20" fill="#f8fafc"/>
+      <line x1="1670" y1="993" x2="1930" y2="993" stroke="#f1f5f9" stroke-width="1"/>
+      <g transform="translate(1678, 997)">
         <rect width="14" height="11" rx="2" fill="#3b82f6"/>
         <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
       </g>
-      <text x="1697" y="956.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">id_detail_opname</text>
-      <text x="1904" y="956.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
-      <text x="1922" y="956.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <line x1="1670" y1="963" x2="1930" y2="963" stroke="#f1f5f9" stroke-width="1"/>
-      <circle cx="1685" cy="973" r="1.5" fill="#94a3b8"/>
-      <text x="1697" y="976.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">hitung_sebelumnya</text>
-      <text x="1904" y="976.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
-      <text x="1922" y="976.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <rect x="1671" y="983" width="258" height="20" fill="#f8fafc"/>
-      <line x1="1670" y1="983" x2="1930" y2="983" stroke="#f1f5f9" stroke-width="1"/>
-      <circle cx="1685" cy="993" r="1.5" fill="#94a3b8"/>
-      <text x="1697" y="996.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">hitung_baru</text>
-      <text x="1904" y="996.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
-      <text x="1922" y="996.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <line x1="1670" y1="1003" x2="1930" y2="1003" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(1678, 1007)">
+      <text x="1697" y="1006.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">id_detail_opname</text>
+      <text x="1904" y="1006.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
+      <text x="1922" y="1006.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <line x1="1670" y1="1013" x2="1930" y2="1013" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="1685" cy="1023" r="1.5" fill="#94a3b8"/>
+      <text x="1697" y="1026.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">hitung_sebelumnya</text>
+      <text x="1904" y="1026.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
+      <text x="1922" y="1026.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1671" y="1033" width="258" height="20" fill="#f8fafc"/>
+      <line x1="1670" y1="1033" x2="1930" y2="1033" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="1685" cy="1043" r="1.5" fill="#94a3b8"/>
+      <text x="1697" y="1046.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">hitung_baru</text>
+      <text x="1904" y="1046.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
+      <text x="1922" y="1046.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <line x1="1670" y1="1053" x2="1930" y2="1053" stroke="#f1f5f9" stroke-width="1"/>
+      <g transform="translate(1678, 1057)">
         <rect width="14" height="11" rx="2" fill="#3b82f6"/>
         <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
       </g>
-      <text x="1697" y="1016.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">dihitung_oleh</text>
-      <text x="1904" y="1016.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
-      <text x="1922" y="1016.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <rect x="1671" y="1023" width="258" height="20" fill="#f8fafc"/>
-      <line x1="1670" y1="1023" x2="1930" y2="1023" stroke="#f1f5f9" stroke-width="1"/>
-      <circle cx="1685" cy="1033" r="1.5" fill="#94a3b8"/>
-      <text x="1697" y="1036.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">alasan_koreksi</text>
-      <text x="1904" y="1036.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">text</text>
-      <text x="1922" y="1036.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
-      <line x1="1670" y1="1043" x2="1930" y2="1043" stroke="#f1f5f9" stroke-width="1"/>
-      <circle cx="1685" cy="1053" r="1.5" fill="#94a3b8"/>
-      <text x="1697" y="1056.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">waktu_koreksi</text>
-      <text x="1904" y="1056.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
-      <text x="1922" y="1056.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <text x="1697" y="1066.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">dihitung_oleh</text>
+      <text x="1904" y="1066.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
+      <text x="1922" y="1066.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="1671" y="1073" width="258" height="20" fill="#f8fafc"/>
+      <line x1="1670" y1="1073" x2="1930" y2="1073" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="1685" cy="1083" r="1.5" fill="#94a3b8"/>
+      <text x="1697" y="1086.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">alasan_koreksi</text>
+      <text x="1904" y="1086.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">text</text>
+      <text x="1922" y="1086.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <line x1="1670" y1="1093" x2="1930" y2="1093" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="1685" cy="1103" r="1.5" fill="#94a3b8"/>
+      <text x="1697" y="1106.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">waktu_koreksi</text>
+      <text x="1904" y="1106.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
+      <text x="1922" y="1106.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
     </g>
   </g>
 </svg>

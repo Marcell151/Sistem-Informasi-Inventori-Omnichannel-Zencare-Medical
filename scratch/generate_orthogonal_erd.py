@@ -259,15 +259,18 @@ tables_data = {
             ('id_sesi_opname', 'int', True, False),
             ('kode_sesi', 'varchar(50)', False, False),
             ('status', 'varchar(50)', False, False),
+            ('tahap', 'varchar(50)', False, False),
             ('dibekukan_oleh', 'int', False, True),
             ('dibekukan_pada', 'timestamp', False, False),
+            ('ditutup_hitung_oleh', 'int', False, True),
+            ('ditutup_hitung_pada', 'timestamp', False, False),
             ('dibuka_oleh', 'int', False, True),
             ('dibuka_pada', 'timestamp', False, False),
             ('catatan', 'text', False, False)
         ]
     },
     'detail_opname_batch': {
-        'col': 4, 'y': 685,
+        'col': 4, 'y': 745,
         'title': 'detail_opname_batch',
         'fields': [
             ('id_detail_opname', 'int', True, False),
@@ -280,18 +283,24 @@ tables_data = {
             ('stok_tersedia_sistem', 'int', False, False),
             ('stok_reserved', 'int', False, False),
             ('stok_sistem_fisik', 'int', False, False),
+            ('fisik_baik', 'int', False, False),
+            ('fisik_rusak', 'int', False, False),
+            ('fisik_expired', 'int', False, False),
+            ('status_hitung', 'varchar(50)', False, False),
             ('hitung_fisik', 'int', False, False),
             ('selisih', 'int', False, False),
             ('status_mutasi', 'varchar(50)', False, False),
-            ('alasan_mutasi', 'varchar(50)', False, False),
-            ('id_kartu_stok', 'int', False, False),
+            ('alasan_mutasi', 'varchar(255)', False, False),
+            ('keterangan_mutasi', 'text', False, False),
+            ('id_kartu_stok', 'int', False, True),
             ('dihitung_oleh', 'int', False, True),
             ('waktu_hitung', 'timestamp', False, False),
-            ('dimutasi_oleh', 'int', False, True)
+            ('dimutasi_oleh', 'int', False, True),
+            ('waktu_mutasi', 'timestamp', False, False)
         ]
     },
     'detail_opname_sn': {
-        'col': 5, 'y': 685,
+        'col': 5, 'y': 745,
         'title': 'detail_opname_sn',
         'fields': [
             ('id_opname_sn', 'int', True, False),
@@ -303,7 +312,7 @@ tables_data = {
         ]
     },
     'riwayat_hitung_opname': {
-        'col': 5, 'y': 895,
+        'col': 5, 'y': 945,
         'title': 'riwayat_hitung_opname',
         'fields': [
             ('id_riwayat_hitung', 'int', True, False),

@@ -285,6 +285,7 @@
 
     <!-- 2. Kasir (Right-Upper: x=890, y=415) -->
     <line x1="890" y1="415" x2="560" y2="415" stroke="#000" stroke-width="1.2"/> <!-- POS -->
+    <line x1="890" y1="415" x2="555" y2="1035" stroke="#000" stroke-width="1.2"/> <!-- Stok Opname (Input Fisik Blind Count) -->
 
     <!-- 3. Superadmin (Left-Bottom: x=110, y=1050) -->
     <line x1="110" y1="1050" x2="440" y2="515" stroke="#000" stroke-width="1.2"/>  <!-- Master Data -->
@@ -625,10 +626,10 @@
                             &bull; Kelola Transaksi Kasir (POS)<br>
                             &bull; Transaksi Dual-UOM &amp; Bongkar Box<br>
                             &bull; Rekomendasi FEFO &amp; Validasi SN<br>
-                            &bull; Riwayat Transaksi &amp; Cetak Ulang Struk
+                            &bull; Riwayat Transaksi &amp; Cetak Ulang Struk<br>
+                            &bull; Kelola Stok Opname (Input Fisik / <i>Blind Count</i>)
                         </td>
-                        <td>Wewenang bersifat <i>read-only</i> untuk riwayat harian dan pencetakan nota. Tidak memiliki
-                            hak manipulasi (*void*) transaksi kasir atau mengubah stok manual.</td>
+                        <td>Wewenang transaksi kasir bersifat <i>read-only</i> untuk riwayat harian. Saat sesi stok opname aktif, akses kasir otomatis dialihkan ke antarmuka Input Fisik Stok Opname tanpa melihat angka buku sistem (<i>blind count</i>).</td>
                     </tr>
                     <tr>
                         <td><b>Admin (Staff)</b><br><span style="font-size:11px;color:#64748b;">(Internal Staff)</span>
@@ -640,11 +641,10 @@
                             &bull; Kelola Pesanan Online &amp; Resi<br>
                             &bull; Kelola Penerimaan Barang (Batch/ED/SN)<br>
                             &bull; Lakukan Mutasi Stok &amp; Konversi UOM<br>
-                            &bull; Kelola Stok Opname (Pencacahan Fisik / <i>Blind Count</i>)<br>
+                            &bull; Kelola Stok Opname (Monitoring &amp; Verifikasi Selisih)<br>
                             &bull; Akses Buku Kartu Stok
                         </td>
-                        <td>Tidak melayani transaksi meja kasir POS harian. Dibatasi dari pengubahan harga jual, rasio
-                            konversi UOM, pembatalan stok opname, dan manajemen user.</td>
+                        <td>Tidak melayani transaksi meja kasir POS harian. Pada stok opname, admin dilarang menginput angka fisik (hanya memantau progres dan memverifikasi mutasi selisih). Dibatasi dari pengubahan harga jual, rasio konversi UOM, dan manajemen user.</td>
                     </tr>
                     <tr>
                         <td><b>Superadmin</b><br><span style="font-size:11px;color:#64748b;">(Owner / Manajerial)</span>
@@ -659,8 +659,7 @@
                             &bull; Akses Laporan Kuantitas &amp; Logistik<br>
                             &bull; Pengaturan Sistem (API &amp; Web)
                         </td>
-                        <td>Pemegang kendali tertinggi sistem. Otoritas tunggal pembukaan/penutupan sesi *Freeze Lock*
-                            stok opname, penetapan kebijakan harga, dan laporan audit logistik.</td>
+                        <td>Pemegang kendali tertinggi sistem. Otoritas tunggal pembukaan/penutupan sesi <i>Freeze Lock</i> stok opname, penetapan kebijakan harga, penyelesaian sesi, dan pengesahan Berita Acara.</td>
                     </tr>
                 </tbody>
             </table>

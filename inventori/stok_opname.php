@@ -1678,7 +1678,7 @@ if ($isKasir) {
                     <img src="/inventory_zencare/gambar/Logo.png" alt="Logo" class="h-9 w-auto object-contain" onerror="this.src='../gambar/Logo.png'">
                     <div>
                         <h1 class="font-extrabold text-sm text-slate-900 tracking-tight">ZENCARE MEDICAL</h1>
-                        <p class="text-[11px] text-slate-500 font-medium">Terminal Pencacahan Fisik Rak (Strict Blind Count)</p>
+                        <p class="text-[11px] text-slate-500 font-medium">Input Fisik Stok Opname (Blind Count)</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-4">

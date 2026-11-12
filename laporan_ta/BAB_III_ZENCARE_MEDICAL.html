@@ -1276,13 +1276,9 @@
 
                                 <ul class="list-disc pl-6 space-y-1 mt-1 text-slate-700">
 
-                                    <li>Untuk produk <b>Obat</b>, staf wajib menginput Nomor Batch dan Tanggal
+                                    <li>Untuk produk <b>Obat</b> serta <b>Alat Kesehatan Habis Pakai / BMHP</b> (seperti strip tes, jarum lancet, alat cek asam urat), staf wajib menginput Nomor Batch dan Tanggal Kedaluwarsa.</li>
 
-                                        Kedaluwarsa.</li>
-
-                                    <li>Untuk produk <b>Alat Kesehatan</b>, staf wajib menginput Nomor Seri (<i>Serial
-
-                                            Number</i>) unik untuk setiap unit fisik.</li>
+                                    <li>Untuk produk <b>Alat Kesehatan ber-unit</b> (seperti Tensimeter Digital, Termometer Digital), staf wajib menginput Nomor Seri (<i>Serial Number</i>) unik untuk setiap unit fisik.</li>
 
                                 </ul>
 
@@ -1400,9 +1396,7 @@
 
                                 graph LR
 
-                                Pelanggan["Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Pelanggan)"] -->
-
-                                P1["Autentikasi"]
+                                Pelanggan["Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Pelanggan)"] --> P1["Autentikasi"]
 
                                 Pelanggan --> P2["Beranda"]
 
@@ -1454,9 +1448,7 @@
 
 
 
-                                style Pelanggan
-
-                                fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000,font-weight:bold
+                                style Pelanggan fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000,font-weight:bold
 
                                 style P1 fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000,font-weight:bold
 
@@ -1544,9 +1536,9 @@
 
                             untuk kecepatan transaksi luring (<i>walk-in customer</i>) dan kepatuhan alokasi logistik
 
-                            medis di meja kasir, sebagaimana ditunjukkan pada Gambar 3.6. Alur navigasi ini mencakup 2
+                            medis di meja kasir, sebagaimana ditunjukkan pada Gambar 3.6. Alur navigasi ini mencakup 3
 
-                            (dua) komponen utama:
+                            (tiga) komponen utama:
 
                         </p>
 
@@ -1560,11 +1552,11 @@
 
                                 graph LR
 
-                                Kasir["Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Kasir)"] -->
-
-                                K1["Autentikasi"]
+                                Kasir["Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Kasir)"] --> K1["Autentikasi"]
 
                                 Kasir --> K2["Terminal Kasir (POS)"]
+
+                                Kasir --> K3["Input Fisik Stok Opname (Saat Sesi Freeze Aktif)"]
 
 
 
@@ -1586,17 +1578,27 @@
 
                                 K2 --> K2_6["Riwayat Transaksi & Cetak Ulang Struk"]
 
-                                K2 --> K2_7["Indikator Status Freeze Mode"]
+                                K2 --> K2_7["Pengalihan Otomatis Saat Sesi Stok Opname Aktif"]
 
 
 
-                                style Kasir
+                                K3 --> K3_1["Pencarian Cepat Barcode/SKU Rak"]
 
-                                fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000,font-weight:bold
+                                K3 --> K3_2["Input Fisik Tiga Kondisi (Baik, Rusak, Expired)"]
+
+                                K3 --> K3_3["Penguncian Otomatis Batch Kedaluwarsa"]
+
+                                K3 --> K3_4["Simpan Hasil Hitung Fisik (Blind Count)"]
+
+
+
+                                style Kasir fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000,font-weight:bold
 
                                 style K1 fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000,font-weight:bold
 
                                 style K2 fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000,font-weight:bold
+
+                                style K3 fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000,font-weight:bold
 
                             </div>
 
@@ -1636,7 +1638,7 @@
 
                                 belanja (<i>reprint receipt</i>) darurat serta rekonsiliasi penutupan shift kasir, serta
 
-                                indikator pembekuan transaksi otomatis (<i>Freeze Mode</i>) ketika sesi stok opname
+                                pengalihan otomatis ke antarmuka pencacahan fisik ketika sesi stok opname
 
                                 sedang berlangsung. Kasir tidak diberikan wewenang pembatalan transaksi (<i>void</i>)
 
@@ -1645,6 +1647,8 @@
                                 secara terkendali pada menu pesanan omnichannel di bawah wewenang Admin dan Superadmin.
 
                             </li>
+
+                            <li><b>Input Fisik Stok Opname (Blind Count):</b> Antarmuka layar penuh khusus input hitungan fisik yang otomatis aktif menggantikan akses POS kasir ketika Superadmin membekukan sistem untuk pemeriksaan stok opname. Pada antarmuka ini, kasir tidak dapat melihat stok pembukuan sistem maupun status reservasi, dan diwajibkan mencatat kuantitas riil di rak ke dalam 3 kolom kondisi: Kondisi Baik, Kondisi Rusak, dan Kondisi Expired (dengan penguncian otomatis pada batch yang telah melewati tanggal kedaluwarsa). Dilengkapi fasilitas pemindai barcode / pencarian cepat SKU serta penyimpanan parsial berkala.</li>
 
                         </ol>
 
@@ -1680,9 +1684,7 @@
 
                                 graph LR
 
-                                Admin["Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Admin Toko)"] -->
-
-                                A1["Autentikasi"]
+                                Admin["Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Admin Toko)"] --> A1["Autentikasi"]
 
                                 Admin --> A2["Dashboard Operasional"]
 
@@ -1734,15 +1736,13 @@
 
                                 A5 --> A5_2["Konversi Satuan UOM & Mutasi Stok Manual"]
 
-                                A5 --> A5_3["Pelaksanaan Pencacahan Stok Opname"]
+                                A5 --> A5_3["Monitoring Progres & Verifikasi Selisih Stok Opname"]
 
                                 A5 --> A5_4["Buku Kartu Stok & Monitoring Logistik Medis"]
 
 
 
-                                style Admin
-
-                                fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000,font-weight:bold
+                                style Admin fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000,font-weight:bold
 
                                 style A1 fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000,font-weight:bold
 
@@ -1812,7 +1812,7 @@
 
                                 konversi satuan kemasan dus ke eceran beserta mutasi stok penyesuaian manual (barang
 
-                                rusak/garansi), pencatatan lembar cacah fisik saat sesi stok opname berlangsung, serta
+                                rusak/garansi), monitoring progres penghitungan fisik kasir dan eksekusi verifikasi mutasi selisih anomali saat sesi stok opname berlangsung (tanpa hak membuka/menutup sesi), serta
 
                                 monitoring ketersediaan buku Kartu Stok terpisah dan direktori logistik medis.</li>
 
@@ -1834,7 +1834,7 @@
 
                             pemilik usaha (<i>owner</i>) untuk pengawasan strategis pergerakan kuantitas fisik,
 
-                            kebijakan operasional, kepatuhan audit persediaan medis, dan tata kelola sistem, sebagaimana
+                            kebijakan operasional, kepatuhan pengendalian persediaan medis, dan tata kelola sistem, sebagaimana
 
                             ditunjukkan pada Gambar 3.8. Modul ini dirancang ke dalam 6 (enam) kelompok manajerial
 
@@ -1852,9 +1852,7 @@
 
                                 graph LR
 
-                                Superadmin["Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Superadmin)"] -->
-
-                                S1["Autentikasi"]
+                                Superadmin["Sistem Informasi Inventori Omnichannel<br>ZenCare Medical (Superadmin)"] --> S1["Autentikasi"]
 
                                 Superadmin --> S2["Dashboard Manajerial Eksekutif"]
 
@@ -1878,7 +1876,7 @@
 
                                 S2 --> S2_2["Ringkasan Metrik Inventori & Monitoring Logistik"]
 
-                                S2 --> S2_3["Audit Aktivitas Pengadaan, Mutasi, & Kartu Stok"]
+                                S2 --> S2_3["Pemeriksaan Aktivitas Pengadaan, Mutasi, & Kartu Stok"]
 
                                 S2 --> S2_4["Status Freeze Lock Sesi Stok Opname"]
 
@@ -1902,7 +1900,7 @@
 
                                 S5 --> S5_2["Laporan Persediaan & Kartu Stok Fisik"]
 
-                                S5 --> S5_3["Laporan Logistik Medis & Audit Deviasi FEFO"]
+                                S5 --> S5_3["Laporan Logistik Medis & Rekapitulasi Deviasi FEFO"]
 
                                 S5 --> S5_4["Laporan Riwayat Penerimaan, Mutasi, & Konversi UOM"]
 
@@ -1916,9 +1914,7 @@
 
 
 
-                                style Superadmin
-
-                                fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000,font-weight:bold
+                                style Superadmin fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000,font-weight:bold
 
                                 style S1 fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000,font-weight:bold
 
@@ -1956,7 +1952,7 @@
 
                                 (SKU, stok besar, kecil, ROP, dan obat mendekati kedaluwarsa) beserta monitoring
 
-                                logistik, rekam audit pengadaan barang masuk dan log kartu stok terkini, serta indikator
+                                logistik, rekam jejak pengadaan barang masuk dan log kartu stok terkini, serta indikator
 
                                 status penguncian transaksi (<i>Freeze Lock</i>) sesi stok opname.</li>
 
@@ -1982,13 +1978,13 @@
 
                             <li><b>Modul Pelaporan Kuantitas &amp; Logistik:</b> Direktori laporan manajerial terpusat
 
-                                yang berfokus ketat pada audit pergerakan kuantitas fisik dan kepatuhan medis tanpa
+                                yang berfokus ketat pada pemantauan pergerakan kuantitas fisik dan kepatuhan medis tanpa
 
-                                variabel akuntansi keuangan, meliputi Laporan Penjualan Omnichannel (komparasi volume
+                                variabel pembukuan keuangan, meliputi Laporan Penjualan Omnichannel (komparasi volume
 
                                 fisik kasir POS vs pesanan daring), Laporan Ketersediaan Persediaan &amp; Kartu Stok
 
-                                Fisik, Laporan Logistik Medis &amp; Audit Deviasi FEFO, serta Laporan Riwayat
+                                Fisik, Laporan Logistik Medis &amp; Rekapitulasi Deviasi FEFO, serta Laporan Riwayat
 
                                 Penerimaan, Mutasi Penyesuaian, dan Konversi UOM.</li>
 
@@ -2186,6 +2182,8 @@
 
                                 Kasir((Kasir)) --> UC5
 
+                                Kasir --> UC11
+
 
 
                                 Admin((Admin Staff)) --> UC6
@@ -2370,6 +2368,8 @@
 
                                     kas.</li>
 
+                                <li><b>Kelola Stok Opname (Input Fisik Stok Opname / Blind Count):</b> Melaksanakan proses input hasil penghitungan fisik persediaan di etalase dan rak penyimpanan (<i>blind count</i>) selama sesi stok opname aktif tanpa melihat angka kuantitas buku sistem guna menjamin integritas dan objektivitas data persediaan. Kasir mencatat kuantitas riil ke dalam tiga kolom kondisi fisik (Baik, Rusak, Expired) dengan penguncian otomatis pada batch kedaluwarsa.</li>
+
                             </ul>
 
                         </li>
@@ -2456,7 +2456,7 @@
 
                                     berkala.</li>
 
-                                <li><b>Kelola Stok Opname:</b> Melaksanakan proses penghitungan dan pencacahan fisik persediaan di etalase dan rak penyimpanan (<i>blind count</i>) selama sesi stok opname aktif tanpa melihat angka kuantitas buku sistem guna menjamin integritas dan objektivitas verifikasi data persediaan.</li>
+                                <li><b>Kelola Stok Opname (Verifikasi Selisih &amp; Rekonsiliasi):</b> Memantau progres pengisian fisik kasir selama tahap penghitungan tanpa dapat menginput angka fisik, lalu mengevaluasi baris selisih anomali pada tahap verifikasi (105 item klop disaring otomatis), mengeksekusi mutasi selisih (rusak, kedaluwarsa, hilang, atau kelebihan kirim), serta memilih identitas serial number pada Alkes SN sebelum sesi diajukan untuk diselesaikan oleh Superadmin. Admin tidak memiliki wewenang membuka maupun menutup sesi opname.</li>
 
                                 <li><b>Akses Kartu Stok:</b> Memeriksa buku besar kartu stok (<i>stock ledger</i>) per
 
@@ -2480,7 +2480,7 @@
 
                                 Merupakan pemegang entitas manajerial dan kendali wewenang tertinggi dalam sistem.
 
-                                Superadmin bertindak sebagai penentu kebijakan strategis usaha, pengawas keabsahan audit standar peredaran
+                                Superadmin bertindak sebagai penentu kebijakan strategis usaha, pengawas keabsahan standar tata kelola peredaran
 
                                 obat dan alat kesehatan, serta administrator infrastruktur teknologi informasi. Selain memiliki
 
@@ -2518,7 +2518,7 @@
 
                                     pengawasan penuh untuk mengambil alih atau membantu memproses transaksi POS kasir
 
-                                    saat terjadi lonjakan antrean pembeli, mengaudit kepatuhan pengambilan batch FEFO
+                                    saat terjadi lonjakan antrean pembeli, mengevaluasi kepatuhan pengambilan batch FEFO
 
                                     obat, serta mengevaluasi dokumen pesanan omnichannel bermasalah yang memerlukan
 
@@ -2530,11 +2530,11 @@
 
                                     volume pergerakan kuantitas fisik dan kepatuhan medis tanpa mencampuradukkan
 
-                                    variabel akuntansi finansial toko, meliputi Laporan Penjualan Omnichannel (komparasi
+                                    variabel pembukuan finansial toko, meliputi Laporan Penjualan Omnichannel (komparasi
 
                                     volume fisik kasir POS vs pesanan daring), Laporan Persediaan &amp; Kartu Stok
 
-                                    Fisik, Laporan Logistik Medis &amp; Audit Deviasi FEFO, serta Laporan Riwayat
+                                    Fisik, Laporan Logistik Medis &amp; Rekapitulasi Deviasi FEFO, serta Laporan Riwayat
 
                                     Penerimaan, Mutasi Penyesuaian, dan Konversi UOM.</li>
 
@@ -2624,7 +2624,7 @@
 
                         <p class="text-justify indent-8 mb-4">
 
-                            Saat nama pengguna dan kata sandi dikirimkan, sistem melakukan verifikasi keabsahan data terhadap catatan akun di basis data. Apabila data tidak cocok, sistem memunculkan pesan peringatan kesalahan dan meminta pengguna memasukkan kembali data kredensialnya. Sebaliknya, apabila data terverifikasi benar, sistem mengevaluasi peran dan hak akses pengguna untuk mengarahkan ke halaman kerja yang sesuai dengan wewenangnya: Kasir diarahkan langsung membuka terminal kasir fisik POS; Admin diarahkan ke dasbor operasional, data master, transaksi keluar, serta logistik pergudangan; Superadmin diarahkan ke kendali manajerial menyeluruh (mencakup seluruh modul operasional ditambah manajemen pengguna, laporan audit, dan pengaturan sistem); sementara Pelanggan diarahkan kembali ke beranda belanja, keranjang belanja, dan profil pengguna. Alur ini divisualisasikan pada Gambar 3.10.
+                            Saat nama pengguna dan kata sandi dikirimkan, sistem melakukan verifikasi keabsahan data terhadap catatan akun di basis data. Apabila data tidak cocok, sistem memunculkan pesan peringatan kesalahan dan meminta pengguna memasukkan kembali data kredensialnya. Sebaliknya, apabila data terverifikasi benar, sistem mengevaluasi peran dan hak akses pengguna untuk mengarahkan ke halaman kerja yang sesuai dengan wewenangnya: Kasir diarahkan langsung membuka terminal kasir fisik POS; Admin diarahkan ke dasbor operasional, data master, transaksi keluar, serta logistik pergudangan; Superadmin diarahkan ke kendali manajerial menyeluruh (mencakup seluruh modul operasional ditambah manajemen pengguna, laporan manajerial, dan pengaturan sistem); sementara Pelanggan diarahkan kembali ke beranda belanja, keranjang belanja, dan profil pengguna. Alur ini divisualisasikan pada Gambar 3.10.
 
                         </p>
 
@@ -2834,7 +2834,7 @@
 
                         <p class="text-justify indent-8 mb-4">
 
-                            Setelah hak akses dinyatakan sah, Superadmin dapat memilih salah satu dari <b>6 (enam) modul laporan manajerial dan audit persediaan</b> yang tersedia di dalam sistem, meliputi:
+                            Setelah hak akses dinyatakan sah, Superadmin dapat memilih salah satu dari <b>6 (enam) modul laporan manajerial dan pemantauan persediaan</b> yang tersedia di dalam sistem, meliputi:
 
                         </p>
 
@@ -2876,33 +2876,33 @@
 
 
 
-                    <!-- H. Kelola Stok Opname & Audit Fisik -->
+                    <!-- H. Kelola Stok Opname & Pemeriksaan Fisik -->
 
                     <div class="mb-8">
 
-                        <h5 class="font-bold text-slate-800 mb-2">H. Kelola Stok Opname &amp; Audit Fisik (Kunci Kasir &amp; Berita Acara)</h5>
+                        <h5 class="font-bold text-slate-800 mb-2">H. Kelola Stok Opname &amp; Pemeriksaan Fisik (Freeze Lock, Input Fisik Kasir, Verifikasi Admin, &amp; Berita Acara)</h5>
 
                         <p class="text-justify indent-8 mb-3">
 
-                            Diagram aktivitas Kelola Stok Opname memetakan prosedur pemeriksaan fisik persediaan secara berkala yang melibatkan kerja sama antara <b>Superadmin (Pemilik)</b>, <b>Admin (Staff)</b>, dan <b>Sistem</b> guna memastikan kesesuaian antara jumlah barang riil di rak toko dan gudang dengan catatan persediaan di sistem.
+                            Diagram aktivitas Kelola Stok Opname memetakan prosedur pemeriksaan fisik persediaan secara berkala yang menerapkan prinsip pemisahan wewenang operasional (<i>segregation of duties</i>) antara <b>Superadmin (Pemilik)</b>, <b>Kasir (Pencacah Lapangan)</b>, <b>Admin Toko (Verifikator Anomali)</b>, dan <b>Sistem</b> guna memastikan keabsahan dan objektivitas data persediaan riil di rak etalase dan gudang dengan catatan pembukuan sistem.
 
                         </p>
 
                         <p class="text-justify indent-8 mb-4">
 
-                            Proses dimulai ketika Superadmin membuka menu Stok Opname dan menekan tombol <b>"Mulai Sesi Stok Opname"</b>. Sistem seketika mengaktifkan sesi pemeriksaan dan memberlakukan penguncian operasional sementara (<i>Freeze Lock</i>) pada terminal kasir toko dan fitur belanja daring, sehingga tidak ada transaksi masuk atau keluar yang dapat mengubah jumlah persediaan selama proses penghitungan berlangsung. Bersamaan dengan itu, sistem menyediakan lembar formulir penghitungan fisik yang sengaja tidak menampilkan angka stok sistem, agar staf dapat menghitung barang secara mandiri dan objektif.
+                            Proses dimulai ketika Superadmin membuka menu Stok Opname dan menekan tombol <b>"Mulai Sesi Stok Opname Baru"</b>. Sistem seketika mengaktifkan sesi pemeriksaan, mengambil snapshot 111 entitas fisik, dan memberlakukan penguncian operasional sementara (<i>Freeze Lock</i>) pada terminal kasir POS dan fitur belanja daring, sehingga tidak ada transaksi masuk atau keluar yang dapat mengubah saldo persediaan selama proses pemeriksaan fisik berlangsung. Saat kasir masuk ke sistem, akses POS otomatis dialihkan ke antarmuka <b>Input Fisik Stok Opname (Blind Count)</b> tanpa menampilkan angka stok sistem maupun jumlah pesanan yang direservasi. Kasir melakukan pencacahan fisik rak secara objektif dengan memasukkan kuantitas ke dalam 3 kolom kondisi fisik: <b>Kondisi Baik</b>, <b>Kondisi Rusak</b>, dan <b>Kondisi Expired</b> (batch yang telah melewati tanggal kedaluwarsa otomatis terkunci pada kolom Baik). Data hitungan fisik dapat disimpan secara berkala (parsial) ke pangkalan data.
 
                         </p>
 
                         <p class="text-justify indent-8 mb-4">
 
-                            Selanjutnya, Admin melakukan penghitungan fisik barang secara langsung di area etalase dan gudang, memasukkan hasil hitungan ke dalam formulir di sistem, lalu menyimpan data hitungan setiap produk. Sistem secara otomatis menghitung selisih antara hasil hitungan fisik dengan catatan stok di sistem. Alur kemudian mengevaluasi kondisi apakah terdapat selisih kurang atau lebih: apabila ditemukan selisih, Admin memilih atau memasukkan identitas barang yang selisih (Nomor Batch obat atau Nomor Seri alkes) serta memberikan keterangan alasan terjadinya selisih, kemudian sistem mencatat penyesuaian tersebut ke dalam riwayat Kartu Stok sebelum sesi ditutup. Sebaliknya, apabila seluruh barang sudah sesuai dan tidak ada selisih, Admin langsung melakukan penutupan sesi opname.
+                            Setelah seluruh baris selesai dihitung oleh tim kasir, Admin Toko membuka tahap <b>Verifikasi Selisih</b>. Pada tahap ini, sistem secara otomatis menyaring tampilan: sebanyak 105 barang yang cocok (0 selisih) disembunyikan agar Admin langsung fokus pada barang yang berselisih. Admin mengevaluasi selisih fisik dan mengeksekusi mutasi penyesuaian melalui dialog konfirmasi kategori mutasi (Barang Rusak, Barang Kedaluwarsa, Barang Hilang, atau Kelebihan Kirim Supplier dengan beban kerugian Rp 0) serta memilih nomor seri fisik yang terdampak pada komoditas Alkes SN. Sistem mencatatkan mutasi tersebut secara otomatis ke dalam buku besar Kartu Stok dan memperbarui status unit serial.
 
                         </p>
 
                         <p class="text-justify indent-8 mb-4">
 
-                            Setelah sesi ditutup, sistem mencabut status penguncian sementara sehingga layanan kasir toko fisik dan belanja daring dapat kembali melayani transaksi secara normal. Alur diakhiri dengan sistem menerbitkan dokumen resmi <b>Berita Acara Stok Opname</b> berformat PDF sebagai bukti pertanggungjawaban hasil pemeriksaan fisik persediaan. Alur ini divisualisasikan secara lengkap pada Gambar 3.17.
+                            Setelah seluruh anomali selesai direkonsiliasi, Superadmin menekan tombol <b>"Selesaikan Sesi (Buka Kunci Server)"</b> untuk resmi mengakhiri sesi stok opname. Sistem mencabut status penguncian sementara sehingga transaksi kasir POS dan pemesanan daring kembali aktif melayani pembeli. Alur diakhiri dengan penerbitan dokumen resmi <b>Berita Acara Hasil Pemeriksaan Fisik (Stok Opname)</b> berformat formal yang menampilkan seluruh 111 barang dengan bingkai merah tegas pada baris-baris yang mengalami selisih fisik beserta lembar tanda tangan pengesahan oleh Pengelola Stok dan Pemilik Toko. Alur ini divisualisasikan secara lengkap pada Gambar 3.17.
 
                         </p>
 
@@ -2914,7 +2914,7 @@
 
                             </div>
 
-                            <p class="text-xs text-slate-500 font-sans mt-2"><b>Gambar 3.17</b> Activity Diagram Kelola Stok Opname &amp; Audit Fisik (Kunci Kasir &amp; Berita Acara)</p>
+                            <p class="text-xs text-slate-500 font-sans mt-2"><b>Gambar 3.17</b> Activity Diagram Kelola Stok Opname (Freeze Lock, Input Fisik Kasir, Verifikasi Selisih Admin, &amp; Berita Acara)</p>
 
                         </div>
 
@@ -2976,7 +2976,7 @@
 
                 <p class="text-justify indent-8 mb-4">
 
-                    Seluruh pergerakan barang bermuara pada <code>kartu_stok</code> sebagai buku besar mutasi yang mencatat riwayat pergerakan fisik dan saldo berjalan secara permanen. Pengendalian mutu operasional diperkuat oleh <code>histori_konversi</code> untuk rekam jejak pembongkaran kemasan dus ke eceran secara otomatis saat persediaan rak habis, serta <code>log_anomali_fefo</code> untuk mendokumentasikan deviasi pemilihan nomor batch di kasir demi kebutuhan audit kepatuhan. Pengendalian intern berkala didukung modul stok opname yang mencakup <code>sesi_opname</code> (pembekuan transaksi kasir sementara), <code>detail_opname_batch</code> (lembar hitung fisik obat dan kalkulasi selisih), <code>detail_opname_sn</code> (verifikasi alkes berseri), serta <code>riwayat_hitung_opname</code> (rekam jejak koreksi hitungan). Sebagai pelengkap, entitas mandiri <code>pengaturan_web</code> mengelola informasi portal publik tanpa mencampuri relasi logistik. Struktur relasional ke-20 entitas tabel disajikan pada Gambar 3.18.
+                    Seluruh pergerakan barang bermuara pada <code>kartu_stok</code> sebagai buku besar mutasi yang mencatat riwayat pergerakan fisik dan saldo berjalan secara permanen. Pengendalian mutu operasional diperkuat oleh <code>histori_konversi</code> untuk rekam jejak pembongkaran kemasan dus ke eceran secara otomatis saat persediaan rak habis, serta <code>log_anomali_fefo</code> untuk mendokumentasikan deviasi pemilihan nomor batch di kasir demi kebutuhan pemantauan kepatuhan logistik. Pengendalian intern berkala didukung modul stok opname yang mencakup <code>sesi_opname</code> (pembekuan transaksi kasir sementara), <code>detail_opname_batch</code> (lembar hitung fisik obat dan kalkulasi selisih), <code>detail_opname_sn</code> (verifikasi alkes berseri), serta <code>riwayat_hitung_opname</code> (rekam jejak koreksi hitungan). Sebagai pelengkap, entitas mandiri <code>pengaturan_web</code> mengelola informasi portal publik tanpa mencampuri relasi logistik. Struktur relasional ke-20 entitas tabel disajikan pada Gambar 3.18.
 
                 </p>
 
@@ -3038,7 +3038,7 @@
 
                 <p class="text-justify indent-8 mb-4">
 
-                    Kamus data disusun untuk mendokumentasikan secara rinci struktur fisik setiap entitas tabel, penetapan kunci utama (<i>Primary Key</i>), keterkaitan relasi kunci tamu (<i>Foreign Key</i>), serta spesifikasi teknis atribut kolom yang digunakan dalam basis data Sistem Informasi Inventori Omnichannel ZenCare Medical. Perancangan basis data terintegrasi ini mencakup <b>20 entitas tabel</b> yang merefleksikan seluruh kebutuhan alur operasional inventori medis, transaksi penjualan omnichannel, dan modul audit persediaan secara presisi sebagai berikut:
+                    Kamus data disusun untuk mendokumentasikan secara rinci struktur fisik setiap entitas tabel, penetapan kunci utama (<i>Primary Key</i>), keterkaitan relasi kunci tamu (<i>Foreign Key</i>), serta spesifikasi teknis atribut kolom yang digunakan dalam basis data Sistem Informasi Inventori Omnichannel ZenCare Medical. Perancangan basis data terintegrasi ini mencakup <b>20 entitas tabel</b> yang merefleksikan seluruh kebutuhan alur operasional inventori medis, transaksi penjualan omnichannel, dan modul pemeriksaan persediaan secara presisi sebagai berikut:
 
                 </p>
 
@@ -4230,7 +4230,7 @@
 
                         <p><b>Foreign Key:</b> id_variasi, id_penjualan</p>
 
-                        <p class="text-justify"><b>Fungsi:</b> Tabel logistik spesifik komoditas Alat Kesehatan. Entitas ini mengelola pelacakan aset berharga secara individual berdasarkan nomor seri (Serial Number / SN) unik cetakan pabrik guna mendukung audit ketersediaan unit tunggal dan validasi klaim masa garansi.</p>
+                        <p class="text-justify"><b>Fungsi:</b> Tabel logistik spesifik komoditas Alat Kesehatan. Entitas ini mengelola pelacakan aset berharga secara individual berdasarkan nomor seri (Serial Number / SN) unik cetakan pabrik guna mendukung pemantauan ketersediaan unit tunggal dan validasi klaim masa garansi.</p>
 
                     </div>
 
@@ -5430,7 +5430,7 @@
 
                         <p><b>Foreign Key:</b> id_variasi, dibuat_oleh</p>
 
-                        <p class="text-justify"><b>Fungsi:</b> Buku besar persediaan yang bertugas merekam jejak audit (audit trail) secara permanen. Tabel ini merangkum pergerakan kuantitas masuk, keluar, dan penyesuaian fisik beserta saldo berjalan guna menghasilkan pertanggungjawaban persediaan yang transparan dan akuntabel.</p>
+                        <p class="text-justify"><b>Fungsi:</b> Buku besar persediaan yang bertugas merekam riwayat mutasi persediaan secara permanen. Tabel ini merangkum pergerakan kuantitas masuk, keluar, dan penyesuaian fisik beserta saldo berjalan guna menghasilkan pertanggungjawaban persediaan yang transparan dan akuntabel.</p>
 
                     </div>
 
@@ -5830,7 +5830,7 @@
 
                         <p><b>Foreign Key:</b> id_penjualan, id_user, id_variasi</p>
 
-                        <p class="text-justify"><b>Fungsi:</b> Entitas baru yang mendokumentasikan deviasi kasir saat mengambil nomor batch obat yang berbeda dari rekomendasi sistem FEFO. Catatan ini memuat nomor batch yang diambil, batch seharusnya, kuantitas, dan alasan operasional untuk keperluan audit kepatuhan manajerial.</p>
+                        <p class="text-justify"><b>Fungsi:</b> Entitas baru yang mendokumentasikan deviasi kasir saat mengambil nomor batch obat yang berbeda dari rekomendasi sistem FEFO. Catatan ini memuat nomor batch yang diambil, batch seharusnya, kuantitas, dan alasan operasional untuk keperluan evaluasi kepatuhan manajerial.</p>
 
                     </div>
 
@@ -6047,487 +6047,296 @@
                 </div>
 
                 <!-- 3.5.17 Tabel sesi_opname -->
-
                 <div class="mb-8" id="sec_sesi_opname">
-
                     <h4 class="text-sm font-bold font-serif mb-2">3.5.17 Tabel sesi_opname</h4>
-
                     <div class="text-xs mb-3 space-y-1 font-serif leading-relaxed">
-
                         <p><b>Primary Key:</b> id_sesi_opname</p>
-
-                        <p><b>Foreign Key:</b> dibekukan_oleh, dibuka_oleh</p>
-
-                        <p class="text-justify"><b>Fungsi:</b> Entitas baru yang mengelola jadwal dan siklus pelaksanaan audit fisik stok opname berkala. Tabel ini mencatat status pembekuan transaksi sementara (freeze lock) pada kasir POS dan e-commerce guna menjamin keabsahan angka cacahan fisik.</p>
-
+                        <p><b>Foreign Key:</b> dibekukan_oleh, ditutup_hitung_oleh, dibuka_oleh</p>
+                        <p class="text-justify"><b>Fungsi:</b> Entitas yang mengelola jadwal dan siklus pelaksanaan pemeriksaan fisik stok opname berkala. Tabel ini mencatat status pembekuan transaksi sementara (freeze lock) pada kasir POS dan penjualan daring, pembagian wewenang tahapan hitung dan verifikasi, serta otorisasi penutupan sesi.</p>
                     </div>
-
                     <p class="text-xs font-bold font-serif mb-1">Tabel 3.17 Tabel sesi_opname</p>
-
                     <table class="w-full text-xs border-collapse border border-black mb-6 font-serif">
-
                         <thead>
-
                             <tr class="bg-slate-100 text-black">
-
                                 <th class="border border-black px-2 py-1.5 text-center font-bold" style="width: 6%;">No</th>
-
                                 <th class="border border-black px-2 py-1.5 text-left font-bold" style="width: 25%;">Nama Field</th>
-
                                 <th class="border border-black px-2 py-1.5 text-left font-bold" style="width: 17%;">Tipe Data</th>
-
                                 <th class="border border-black px-2 py-1.5 text-center font-bold" style="width: 12%;">Panjang</th>
-
                                 <th class="border border-black px-2 py-1.5 text-left font-bold" style="width: 40%;">Keterangan / Deskripsi</th>
-
                             </tr>
-
                         </thead>
-
                         <tbody>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">1</td>
-
                                 <td class="border border-black px-2 py-1 font-mono font-semibold">id_sesi_opname <span class="text-red-700 font-bold font-sans text-[10px]">(PK)</span></td>
-
                                 <td class="border border-black px-2 py-1">Integer</td>
-
                                 <td class="border border-black px-2 py-1 text-center">11</td>
-
                                 <td class="border border-black px-2 py-1">Primary Key, Auto Increment. ID unik sesi pelaksanaan stok opname.</td>
-
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">2</td>
-
                                 <td class="border border-black px-2 py-1 font-mono font-semibold">kode_sesi</td>
-
                                 <td class="border border-black px-2 py-1">Varchar</td>
-
                                 <td class="border border-black px-2 py-1 text-center">50</td>
-
-                                <td class="border border-black px-2 py-1">Kode dokumen resmi sesi audit opname (OPN-YYYYMMDD-XX).</td>
-
+                                <td class="border border-black px-2 py-1">Kode dokumen resmi sesi stok opname (OPN-YYYYMMDD-XX).</td>
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">3</td>
-
                                 <td class="border border-black px-2 py-1 font-mono font-semibold">status</td>
-
                                 <td class="border border-black px-2 py-1">Enum</td>
-
                                 <td class="border border-black px-2 py-1 text-center">-</td>
-
-                                <td class="border border-black px-2 py-1">Tahapan siklus sesi audit ('Aktif', 'Selesai', 'Dibatalkan').</td>
-
+                                <td class="border border-black px-2 py-1">Status sesi pemeriksaan persediaan ('Aktif', 'Selesai', 'Dibatalkan').</td>
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">4</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">dibekukan_oleh <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
-
-                                <td class="border border-black px-2 py-1">Integer</td>
-
-                                <td class="border border-black px-2 py-1 text-center">11</td>
-
-                                <td class="border border-black px-2 py-1">Foreign Key ke users.id_user (Superadmin pembeku sistem operasional).</td>
-
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">tahap</td>
+                                <td class="border border-black px-2 py-1">Enum</td>
+                                <td class="border border-black px-2 py-1 text-center">-</td>
+                                <td class="border border-black px-2 py-1">Tahapan operasional aktif ('Penghitungan', 'Verifikasi', 'Selesai').</td>
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">5</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">dibekukan_pada</td>
-
-                                <td class="border border-black px-2 py-1">Timestamp</td>
-
-                                <td class="border border-black px-2 py-1 text-center">-</td>
-
-                                <td class="border border-black px-2 py-1">Waktu dimulainya pembekuan transaksi operasional sementara.</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">6</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">dibuka_oleh <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
-
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">dibekukan_oleh <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
                                 <td class="border border-black px-2 py-1">Integer</td>
-
                                 <td class="border border-black px-2 py-1 text-center">11</td>
-
-                                <td class="border border-black px-2 py-1">Foreign Key ke users.id_user (Superadmin pembuka kunci operasional).</td>
-
+                                <td class="border border-black px-2 py-1">Foreign Key ke users.id_user (Superadmin pengotorisasi freeze lock).</td>
                             </tr>
-
                             <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">7</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">dibuka_pada</td>
-
+                                <td class="border border-black px-2 py-1 text-center font-bold">6</td>
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">dibekukan_pada</td>
                                 <td class="border border-black px-2 py-1">Timestamp</td>
-
                                 <td class="border border-black px-2 py-1 text-center">-</td>
-
-                                <td class="border border-black px-2 py-1">Waktu pembukaan kembali operasional kasir dan e-commerce.</td>
-
+                                <td class="border border-black px-2 py-1">Waktu pembekuan sistem transaksi kasir dan pesanan daring dieksekusi.</td>
                             </tr>
-
                             <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">8</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">catatan</td>
-
-                                <td class="border border-black px-2 py-1">Text</td>
-
-                                <td class="border border-black px-2 py-1 text-center">-</td>
-
-                                <td class="border border-black px-2 py-1">Catatan manajerial mengenai ruang lingkup pelaksanaan audit.</td>
-
+                                <td class="border border-black px-2 py-1 text-center font-bold">7</td>
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">ditutup_hitung_oleh <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
+                                <td class="border border-black px-2 py-1">Integer</td>
+                                <td class="border border-black px-2 py-1 text-center">11</td>
+                                <td class="border border-black px-2 py-1">Foreign Key ke users.id_user (Kasir penutup sesi hitung fisik rak).</td>
                             </tr>
-
+                            <tr>
+                                <td class="border border-black px-2 py-1 text-center font-bold">8</td>
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">ditutup_hitung_pada</td>
+                                <td class="border border-black px-2 py-1">Timestamp</td>
+                                <td class="border border-black px-2 py-1 text-center">-</td>
+                                <td class="border border-black px-2 py-1">Waktu penguncian lembar hitung fisik kasir dan pembukaan tahap verifikasi selisih.</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-black px-2 py-1 text-center font-bold">9</td>
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">dibuka_oleh <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
+                                <td class="border border-black px-2 py-1">Integer</td>
+                                <td class="border border-black px-2 py-1 text-center">11</td>
+                                <td class="border border-black px-2 py-1">Foreign Key ke users.id_user (Superadmin penutup sesi opname dan pelepas freeze lock).</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-black px-2 py-1 text-center font-bold">10</td>
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">dibuka_pada</td>
+                                <td class="border border-black px-2 py-1">Timestamp</td>
+                                <td class="border border-black px-2 py-1 text-center">-</td>
+                                <td class="border border-black px-2 py-1">Waktu normalisasi sistem transaksi diaktifkan kembali oleh Superadmin.</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-black px-2 py-1 text-center font-bold">11</td>
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">catatan</td>
+                                <td class="border border-black px-2 py-1">Text</td>
+                                <td class="border border-black px-2 py-1 text-center">-</td>
+                                <td class="border border-black px-2 py-1">Catatan manajerial mengenai ruang lingkup pelaksanaan stok opname.</td>
+                            </tr>
                         </tbody>
-
                     </table>
-
                 </div>
 
                 <!-- 3.5.18 Tabel detail_opname_batch -->
-
                 <div class="mb-8" id="sec_detail_opname_batch">
-
                     <h4 class="text-sm font-bold font-serif mb-2">3.5.18 Tabel detail_opname_batch</h4>
-
                     <div class="text-xs mb-3 space-y-1 font-serif leading-relaxed">
-
                         <p><b>Primary Key:</b> id_detail_opname</p>
-
-                        <p><b>Foreign Key:</b> id_sesi, id_batch, id_variasi, dihitung_oleh, dimutasi_oleh</p>
-
-                        <p class="text-justify"><b>Fungsi:</b> Entitas baru yang bertindak sebagai lembar kerja pencacahan fisik obat per nomor batch. Tabel ini menampung hasil hitung mandiri staf tanpa melihat angka buku sistem (blind count), mengkalkulasi selisih secara otomatis, dan mengeksekusi penyesuaian saldo.</p>
-
+                        <p><b>Foreign Key:</b> id_sesi, id_batch, id_variasi, id_kartu_stok, dihitung_oleh, dimutasi_oleh</p>
+                        <p class="text-justify"><b>Fungsi:</b> Lembar kerja pencatatan fisik persediaan per nomor batch/produk. Tabel ini menampung hasil hitungan fisik 3 kondisi (Baik, Rusak, Expired) oleh kasir secara objektif (blind count), memfasilitasi simpan bertahap, menghitung total selisih, dan mencatat mutasi penyesuaian oleh admin.</p>
                     </div>
-
                     <p class="text-xs font-bold font-serif mb-1">Tabel 3.18 Tabel detail_opname_batch</p>
-
                     <table class="w-full text-xs border-collapse border border-black mb-6 font-serif">
-
                         <thead>
-
                             <tr class="bg-slate-100 text-black">
-
                                 <th class="border border-black px-2 py-1.5 text-center font-bold" style="width: 6%;">No</th>
-
                                 <th class="border border-black px-2 py-1.5 text-left font-bold" style="width: 25%;">Nama Field</th>
-
                                 <th class="border border-black px-2 py-1.5 text-left font-bold" style="width: 17%;">Tipe Data</th>
-
                                 <th class="border border-black px-2 py-1.5 text-center font-bold" style="width: 12%;">Panjang</th>
-
                                 <th class="border border-black px-2 py-1.5 text-left font-bold" style="width: 40%;">Keterangan / Deskripsi</th>
-
                             </tr>
-
                         </thead>
-
                         <tbody>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">1</td>
-
                                 <td class="border border-black px-2 py-1 font-mono font-semibold">id_detail_opname <span class="text-red-700 font-bold font-sans text-[10px]">(PK)</span></td>
-
                                 <td class="border border-black px-2 py-1">Integer</td>
-
                                 <td class="border border-black px-2 py-1 text-center">11</td>
-
                                 <td class="border border-black px-2 py-1">Primary Key, Auto Increment. ID lembar kerja pencacahan per batch.</td>
-
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">2</td>
-
                                 <td class="border border-black px-2 py-1 font-mono font-semibold">id_sesi <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
-
                                 <td class="border border-black px-2 py-1">Integer</td>
-
                                 <td class="border border-black px-2 py-1 text-center">11</td>
-
                                 <td class="border border-black px-2 py-1">Foreign Key merujuk ke dokumen sesi_opname.id_sesi_opname.</td>
-
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">3</td>
-
                                 <td class="border border-black px-2 py-1 font-mono font-semibold">id_batch <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
-
                                 <td class="border border-black px-2 py-1">Integer</td>
-
                                 <td class="border border-black px-2 py-1 text-center">11</td>
-
                                 <td class="border border-black px-2 py-1">Foreign Key merujuk ke stok_batch.id_stok_batch yang dicacah fisiknya.</td>
-
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">4</td>
-
                                 <td class="border border-black px-2 py-1 font-mono font-semibold">id_variasi <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
-
                                 <td class="border border-black px-2 py-1">Integer</td>
-
                                 <td class="border border-black px-2 py-1 text-center">11</td>
-
                                 <td class="border border-black px-2 py-1">Foreign Key merujuk ke tabel produk_variasi.id_variasi.</td>
-
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">5</td>
-
                                 <td class="border border-black px-2 py-1 font-mono font-semibold">jenis_komoditas</td>
-
                                 <td class="border border-black px-2 py-1">Enum</td>
-
                                 <td class="border border-black px-2 py-1 text-center">-</td>
-
                                 <td class="border border-black px-2 py-1">Klasifikasi jenis komoditas ('Obat', 'Alkes').</td>
-
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">6</td>
-
                                 <td class="border border-black px-2 py-1 font-mono font-semibold">satuan_tipe</td>
-
                                 <td class="border border-black px-2 py-1">Enum</td>
-
                                 <td class="border border-black px-2 py-1 text-center">-</td>
-
                                 <td class="border border-black px-2 py-1">Tipe satuan pemeriksaan persediaan ('besar', 'kecil').</td>
-
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">7</td>
-
                                 <td class="border border-black px-2 py-1 font-mono font-semibold">nama_satuan</td>
-
                                 <td class="border border-black px-2 py-1">Varchar</td>
-
                                 <td class="border border-black px-2 py-1 text-center">50</td>
-
-                                <td class="border border-black px-2 py-1">Label satuan fisik barang yang dihitung (Pcs, Box, Strip).</td>
-
+                                <td class="border border-black px-2 py-1">Label satuan fisik barang yang dihitung (Pcs, Box, Strip, Tube, Unit).</td>
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">8</td>
-
                                 <td class="border border-black px-2 py-1 font-mono font-semibold">stok_tersedia_sistem</td>
-
                                 <td class="border border-black px-2 py-1">Integer</td>
-
                                 <td class="border border-black px-2 py-1 text-center">11</td>
-
                                 <td class="border border-black px-2 py-1">Saldo persediaan aktif bebas menurut catatan buku sistem.</td>
-
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">9</td>
-
                                 <td class="border border-black px-2 py-1 font-mono font-semibold">stok_reserved</td>
-
                                 <td class="border border-black px-2 py-1">Integer</td>
-
                                 <td class="border border-black px-2 py-1 text-center">11</td>
-
                                 <td class="border border-black px-2 py-1">Kuantitas persediaan yang sedang terkunci pesanan daring.</td>
-
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">10</td>
-
                                 <td class="border border-black px-2 py-1 font-mono font-semibold">stok_sistem_fisik</td>
-
                                 <td class="border border-black px-2 py-1">Integer</td>
-
                                 <td class="border border-black px-2 py-1 text-center">11</td>
-
-                                <td class="border border-black px-2 py-1">Total saldo buku fisik yang harus ditemukan di rak toko.</td>
-
+                                <td class="border border-black px-2 py-1">Total saldo buku fisik yang harus ditemukan di rak toko (snapshot sistem).</td>
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">11</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">hitung_fisik</td>
-
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">fisik_baik</td>
                                 <td class="border border-black px-2 py-1">Integer</td>
-
                                 <td class="border border-black px-2 py-1 text-center">11</td>
-
-                                <td class="border border-black px-2 py-1">Angka kuantitas nyata hasil pencacahan staf di rak toko.</td>
-
+                                <td class="border border-black px-2 py-1">Kuantitas fisik riil di rak yang ditemukan dalam kondisi baik (layak jual).</td>
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">12</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">selisih</td>
-
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">fisik_rusak</td>
                                 <td class="border border-black px-2 py-1">Integer</td>
-
                                 <td class="border border-black px-2 py-1 text-center">11</td>
-
-                                <td class="border border-black px-2 py-1">Selisih kuantitas antara hitung fisik dengan stok buku sistem.</td>
-
+                                <td class="border border-black px-2 py-1">Kuantitas fisik riil di rak yang ditemukan dalam kondisi rusak / cacat kemasan.</td>
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">13</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">status_mutasi</td>
-
-                                <td class="border border-black px-2 py-1">Enum</td>
-
-                                <td class="border border-black px-2 py-1 text-center">-</td>
-
-                                <td class="border border-black px-2 py-1">Status eksekusi mutasi ('Belum Dimutasi', 'Sudah Dimutasi', 'Sesuai').</td>
-
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">fisik_expired</td>
+                                <td class="border border-black px-2 py-1">Integer</td>
+                                <td class="border border-black px-2 py-1 text-center">11</td>
+                                <td class="border border-black px-2 py-1">Kuantitas fisik riil di rak yang telah melewati tanggal kedaluwarsa.</td>
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">14</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">alasan_mutasi</td>
-
-                                <td class="border border-black px-2 py-1">Varchar</td>
-
-                                <td class="border border-black px-2 py-1 text-center">255</td>
-
-                                <td class="border border-black px-2 py-1">Alasan penetapan mutasi penyesuaian (Selisih Kurang/Lebih).</td>
-
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">status_hitung</td>
+                                <td class="border border-black px-2 py-1">Enum</td>
+                                <td class="border border-black px-2 py-1 text-center">-</td>
+                                <td class="border border-black px-2 py-1">Status progres hitung fisik ('Belum', 'Sudah') untuk mendukung simpan bertahap.</td>
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">15</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">keterangan_mutasi</td>
-
-                                <td class="border border-black px-2 py-1">Text</td>
-
-                                <td class="border border-black px-2 py-1 text-center">-</td>
-
-                                <td class="border border-black px-2 py-1">Catatan penjelasan detail mengenai selisih fisik yang terjadi.</td>
-
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">hitung_fisik</td>
+                                <td class="border border-black px-2 py-1">Integer</td>
+                                <td class="border border-black px-2 py-1 text-center">11</td>
+                                <td class="border border-black px-2 py-1">Total hitungan riil (kalkulasi otomatis: fisik_baik + fisik_rusak + fisik_expired).</td>
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">16</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">id_kartu_stok</td>
-
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">selisih</td>
                                 <td class="border border-black px-2 py-1">Integer</td>
-
                                 <td class="border border-black px-2 py-1 text-center">11</td>
-
-                                <td class="border border-black px-2 py-1">Foreign Key ke kartu_stok.id_kartu_stok yang terbentuk dari penyesuaian.</td>
-
+                                <td class="border border-black px-2 py-1">Selisih kuantitas antara hitung fisik dengan stok sistem fisik.</td>
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">17</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">dihitung_oleh <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
-
-                                <td class="border border-black px-2 py-1">Integer</td>
-
-                                <td class="border border-black px-2 py-1 text-center">11</td>
-
-                                <td class="border border-black px-2 py-1">Foreign Key ke users.id_user (staf pelaksana pencacahan fisik).</td>
-
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">status_mutasi</td>
+                                <td class="border border-black px-2 py-1">Enum</td>
+                                <td class="border border-black px-2 py-1 text-center">-</td>
+                                <td class="border border-black px-2 py-1">Status eksekusi mutasi penyesuaian ('Belum Dimutasi', 'Sudah Dimutasi', 'Sesuai').</td>
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">18</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">waktu_hitung</td>
-
-                                <td class="border border-black px-2 py-1">Timestamp</td>
-
-                                <td class="border border-black px-2 py-1 text-center">-</td>
-
-                                <td class="border border-black px-2 py-1">Waktu staf mengunggah angka hitungan fisik ke sistem.</td>
-
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">alasan_mutasi</td>
+                                <td class="border border-black px-2 py-1">Varchar</td>
+                                <td class="border border-black px-2 py-1 text-center">255</td>
+                                <td class="border border-black px-2 py-1">Alasan penetapan mutasi penyesuaian (Selisih Kurang/Lebih).</td>
                             </tr>
-
                             <tr>
-
                                 <td class="border border-black px-2 py-1 text-center font-bold">19</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">dimutasi_oleh <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
-
-                                <td class="border border-black px-2 py-1">Integer</td>
-
-                                <td class="border border-black px-2 py-1 text-center">11</td>
-
-                                <td class="border border-black px-2 py-1">Foreign Key ke users.id_user (pejabat penyetuju mutasi saldo).</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">20</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">waktu_mutasi</td>
-
-                                <td class="border border-black px-2 py-1">Timestamp</td>
-
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">keterangan_mutasi</td>
+                                <td class="border border-black px-2 py-1">Text</td>
                                 <td class="border border-black px-2 py-1 text-center">-</td>
-
-                                <td class="border border-black px-2 py-1">Waktu pembukuan penyesuaian saldo persediaan dieksekusi.</td>
-
+                                <td class="border border-black px-2 py-1">Catatan penjelasan detail mengenai rekonsiliasi selisih fisik yang terjadi.</td>
                             </tr>
-
+                            <tr>
+                                <td class="border border-black px-2 py-1 text-center font-bold">20</td>
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">id_kartu_stok <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
+                                <td class="border border-black px-2 py-1">Integer</td>
+                                <td class="border border-black px-2 py-1 text-center">11</td>
+                                <td class="border border-black px-2 py-1">Foreign Key ke kartu_stok.id_kartu_stok yang terbentuk dari mutasi penyesuaian.</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-black px-2 py-1 text-center font-bold">21</td>
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">dihitung_oleh <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
+                                <td class="border border-black px-2 py-1">Integer</td>
+                                <td class="border border-black px-2 py-1 text-center">11</td>
+                                <td class="border border-black px-2 py-1">Foreign Key ke users.id_user (Kasir pelaksana pencacahan fisik rak toko).</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-black px-2 py-1 text-center font-bold">22</td>
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">waktu_hitung</td>
+                                <td class="border border-black px-2 py-1">Timestamp</td>
+                                <td class="border border-black px-2 py-1 text-center">-</td>
+                                <td class="border border-black px-2 py-1">Waktu staf kasir mengunggah dan menyimpan angka hitungan fisik ke sistem.</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-black px-2 py-1 text-center font-bold">23</td>
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">dimutasi_oleh <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
+                                <td class="border border-black px-2 py-1">Integer</td>
+                                <td class="border border-black px-2 py-1 text-center">11</td>
+                                <td class="border border-black px-2 py-1">Foreign Key ke users.id_user (Admin Toko / Superadmin verifikator mutasi selisih).</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-black px-2 py-1 text-center font-bold">24</td>
+                                <td class="border border-black px-2 py-1 font-mono font-semibold">waktu_mutasi</td>
+                                <td class="border border-black px-2 py-1">Timestamp</td>
+                                <td class="border border-black px-2 py-1 text-center">-</td>
+                                <td class="border border-black px-2 py-1">Waktu pembukuan penyesuaian saldo persediaan dieksekusi.</td>
+                            </tr>
                         </tbody>
-
                     </table>
-
                 </div>
 
                 <!-- 3.5.19 Tabel detail_opname_sn -->
@@ -6622,7 +6431,7 @@
 
                                 <td class="border border-black px-2 py-1 text-center">100</td>
 
-                                <td class="border border-black px-2 py-1">Nomor seri fisik alat kesehatan yang dipindai saat audit.</td>
+                                <td class="border border-black px-2 py-1">Nomor seri fisik alat kesehatan yang dipindai saat stok opname.</td>
 
                             </tr>
 
@@ -6672,7 +6481,7 @@
 
                         <p><b>Foreign Key:</b> id_detail_opname, dihitung_oleh</p>
 
-                        <p class="text-justify"><b>Fungsi:</b> Entitas baru yang merekam riwayat koreksi atau perhitungan ulang fisik selama sesi audit aktif berlangsung beserta alasan perubahannya guna mencegah manipulasi angka persediaan dan menjaga integritas hasil audit.</p>
+                        <p class="text-justify"><b>Fungsi:</b> Entitas baru yang merekam riwayat koreksi atau perhitungan ulang fisik selama sesi opname aktif berlangsung beserta alasan perubahannya guna mencegah manipulasi angka persediaan dan menjaga integritas hasil stok opname.</p>
 
                     </div>
 
@@ -6837,7 +6646,7 @@
             <div id="sec_3_6">
                 <h3 class="text-base font-bold mb-3 font-serif">3.6 Wireframe</h3>
                 <p class="text-justify indent-8 mb-4">
-                    Perancangan wireframe merupakan tahap penerjemahan kebutuhan fungsional dan arsitektur informasi ke dalam tata letak visual dasar antarmuka pengguna tanpa terdistraksi oleh unsur tipografi dekoratif atau palet warna estetika. Pendekatan ini memastikan perancangan murni berfokus pada hierarki navigasi, efisiensi alur operasional kasir, kepatuhan audit logistik kesehatan, serta kenyamanan pengalaman berbelanja pelanggan. Perancangan antarmuka pada sistem ZenCare Medical dirancang ke dalam 27 (dua puluh tujuh) rancangan wireframe yang mencakup seluruh gerbang autentikasi, panel operasional kasir dan inventori, panel audit manajerial, hingga portal belanja mandiri pelanggan e-commerce.
+                    Perancangan wireframe merupakan tahap penerjemahan kebutuhan fungsional dan arsitektur informasi ke dalam tata letak visual dasar antarmuka pengguna tanpa terdistraksi oleh unsur tipografi dekoratif atau palet warna estetika. Pendekatan ini memastikan perancangan murni berfokus pada hierarki navigasi, efisiensi alur operasional kasir, kepatuhan pengendalian logistik kesehatan, serta kenyamanan pengalaman berbelanja pelanggan. Perancangan antarmuka pada sistem ZenCare Medical dirancang ke dalam 27 (dua puluh tujuh) rancangan wireframe yang mencakup seluruh gerbang autentikasi, panel operasional kasir dan inventori, panel pengawasan manajerial, hingga portal belanja mandiri pelanggan e-commerce.
                 </p>
     
 
@@ -7030,40 +6839,40 @@
 
                 <div class="mt-4 mb-2">
                     <h5 class="text-xs font-bold font-serif text-slate-800 italic">
-                        9. Kartu Stok Audit
+                        9. Kartu Stok Persediaan
                     </h5>
                 </div>
             
 
                 <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                     <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
-                        <img src="../lain/File PPT/Wireframe/Kartu Stok.png" alt="Wireframe Antarmuka Kartu Stok Audit" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                        <img src="../lain/File PPT/Wireframe/Kartu Stok.png" alt="Wireframe Antarmuka Kartu Stok Persediaan" class="w-full h-auto object-contain mx-auto" loading="lazy">
                     </div>
                     <p class="text-xs font-bold font-serif text-slate-900 mt-2">
-                        Gambar 3.28 Wireframe Antarmuka Kartu Stok Audit
+                        Gambar 3.28 Wireframe Antarmuka Kartu Stok Persediaan
                     </p>
                     <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
-                        Buku besar kronologis persediaan yang mencatat jejak setiap mutasi masuk, keluar, dan sisa stok fisik. Antarmuka dilengkapi bilah filter rentang tanggal, filter produk, filter jenis mutasi, serta kolom penanggung jawab operasional guna menjamin keterlacakan audit persediaan barang secara transparan.
+                        Buku besar kronologis persediaan yang mencatat jejak setiap mutasi masuk, keluar, dan sisa stok fisik. Antarmuka dilengkapi bilah filter rentang tanggal, filter produk, filter jenis mutasi, serta kolom penanggung jawab operasional guna menjamin keterlacakan mutasi persediaan barang secara transparan.
                     </p>
                 </div>
         
 
                 <div class="mt-4 mb-2">
                     <h5 class="text-xs font-bold font-serif text-slate-800 italic">
-                        10. Stok Opname & Audit Fisik
+                        10. Stok Opname Persediaan
                     </h5>
                 </div>
             
 
                 <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                     <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
-                        <img src="../lain/File PPT/Wireframe/Stok Opname.png" alt="Wireframe Antarmuka Stok Opname & Audit Fisik" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                        <img src="../lain/File PPT/Wireframe/Stok Opname.png" alt="Wireframe Antarmuka Stok Opname Persediaan" class="w-full h-auto object-contain mx-auto" loading="lazy">
                     </div>
                     <p class="text-xs font-bold font-serif text-slate-900 mt-2">
-                        Gambar 3.29 Wireframe Antarmuka Stok Opname & Audit Fisik
+                        Gambar 3.29 Wireframe Antarmuka Stok Opname Persediaan
                     </p>
                     <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
-                        Antarmuka audit fisik persediaan berkala dengan metode perhitungan buta (blind count). Saat sesi audit aktif, sistem menampilkan kartu metrik progres dan spanduk pembekuan transaksi sementara (freeze lock). Kolom stok buku pada tabel lapangan disembunyikan bagi petugas lapangan guna mencegah manipulasi data. Dilengkapi tab pencocokan nomor seri fisik alat kesehatan serta modul persetujuan penyesuaian selisih oleh manajerial.
+                        Antarmuka pelaksanaan stok opname fisik persediaan berkala dengan segregasi peran operasional: form kasir menggunakan metode pencacahan buta (<i>blind count</i>) tanpa menampilkan saldo buku sistem yang dilengkapi 3 kolom kondisi fisik (Baik, Rusak, Expired) serta tombol simpan parsial bertahap; antarmuka verifikasi Admin Toko menampilkan ringkasan metrik rekonsiliasi, penyaringan status hitung, modul eksekusi mutasi selisih (rusak, expired, hilang, kelebihan kirim), serta verifikasi nomor seri fisik alat kesehatan; sedangkan Superadmin berwenang menginisiasi pembekuan transaksi sementara (<i>freeze lock</i>) pada kasir POS dan penjualan daring, pembukaan kembali sesi operasional, serta penerbitan dokumen resmi Berita Acara Opname.
                     </p>
                 </div>
         
@@ -7190,7 +6999,7 @@
                         Gambar 3.35 Wireframe Antarmuka Laporan Penerimaan Barang
                     </p>
                     <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
-                        Laporan eksekutif yang merekapitulasi seluruh pengiriman barang medis dari distributor resmi (PBF / rekanan). Antarmuka memuat bilah filter rentang tanggal terima, pilihan distributor, dan status penerimaan (sempurna atau retur parsial). Bagian ringkasan menyajikan kartu metrik total faktur inbound, nominal belanja persediaan, total dus diterima, serta kuantitas barang rusak atau diretur. Tabel data memuat nomor referensi surat jalan, tanggal terima, nama distributor, variasi produk, nomor batch pabrikan, tanggal kedaluwarsa, kuantitas pesan dan terima, harga beli, status penerimaan, dan identitas staf penerima guna memastikan transparansi pengadaan sebelum pembayaran disetujui.
+                        Laporan eksekutif yang merekapitulasi seluruh pengiriman barang medis dari distributor resmi (PBF / rekanan). Antarmuka memuat bilah filter rentang tanggal terima, pilihan distributor, dan status penerimaan (diterima penuh atau retur parsial). Bagian ringkasan menyajikan kartu metrik total faktur inbound, nominal belanja persediaan, total dus diterima, serta kuantitas barang rusak atau diretur. Tabel data memuat nomor referensi surat jalan, tanggal terima, nama distributor, variasi produk, nomor batch pabrikan, tanggal kedaluwarsa, kuantitas pesan dan terima, harga beli, status penerimaan, dan identitas staf penerima guna memastikan transparansi pengadaan sebelum pembayaran disetujui.
                     </p>
                 </div>
         
@@ -7210,27 +7019,27 @@
                         Gambar 3.36 Wireframe Antarmuka Laporan Mutasi & Konversi Satuan
                     </p>
                     <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
-                        Pusat audit manajerial yang menyatukan dua modul pergerakan persediaan non-transaksional melalui navigasi tab interaktif. Tab Konversi Satuan memantau pembongkaran kemasan dus besar menjadi satuan eceran (strip atau pcs), menyajikan nomor batch asal, nomor sub-batch eceran baru yang terbentuk, rasio pengali, jumlah dus yang dibongkar, kuantitas eceran yang dihasilkan, dan sisa dus di rak gudang. Tab Mutasi Stok memantau penyesuaian fisik persediaan di luar transaksi (seperti barang rusak, kedaluwarsa, atau selisih opname fisik) lengkap dengan nomor referensi dokumen, jenis mutasi, kuantitas penyesuaian, dan alasan operasional staf.
+                        Pusat pengawasan manajerial yang menyatukan dua modul pergerakan persediaan non-transaksional melalui navigasi tab interaktif. Tab Konversi Satuan memantau pembongkaran kemasan dus besar menjadi satuan eceran (strip atau pcs), menyajikan nomor batch asal, nomor sub-batch eceran baru yang terbentuk, rasio pengali, jumlah dus yang dibongkar, kuantitas eceran yang dihasilkan, dan sisa dus di rak gudang. Tab Mutasi Stok memantau penyesuaian fisik persediaan di luar transaksi (seperti barang rusak, kedaluwarsa, atau selisih opname fisik) lengkap dengan nomor referensi dokumen, jenis mutasi, kuantitas penyesuaian, dan alasan operasional staf.
                     </p>
                 </div>
         
 
                 <div class="mt-4 mb-2">
                     <h5 class="text-xs font-bold font-serif text-slate-800 italic">
-                        7. Laporan Audit Anomali FEFO
+                        7. Laporan Anomali FEFO
                     </h5>
                 </div>
             
 
                 <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                     <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
-                        <img src="../lain/File PPT/Wireframe/Laporan Anomali FEFO.png" alt="Wireframe Antarmuka Laporan Audit Anomali FEFO" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                        <img src="../lain/File PPT/Wireframe/Laporan Anomali FEFO.png" alt="Wireframe Antarmuka Laporan Anomali FEFO" class="w-full h-auto object-contain mx-auto" loading="lazy">
                     </div>
                     <p class="text-xs font-bold font-serif text-slate-900 mt-2">
-                        Gambar 3.37 Wireframe Antarmuka Laporan Audit Anomali FEFO
+                        Gambar 3.37 Wireframe Antarmuka Laporan Anomali FEFO
                     </p>
                     <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
-                        Laporan audit kepatuhan kasir yang mencatat setiap kejadian ketika petugas kasir mengambil nomor batch obat yang berbeda dari anjuran kedaluwarsa terdekat pada sistem. Menampilkan filter rentang tanggal, tabel daftar kejadian (tanggal, nomor faktur, nama kasir, nomor batch yang diambil, nomor batch anjuran sistem, selisih hari kedaluwarsa, alasan kasir, dan status verifikasi) guna memastikan mutu obat tetap terjaga dan mencegah obat kedaluwarsa tertinggal di rak.
+                        Laporan evaluasi kepatuhan kasir yang mencatat setiap kejadian ketika petugas kasir mengambil nomor batch obat yang berbeda dari anjuran kedaluwarsa terdekat pada sistem. Menampilkan filter rentang tanggal, tabel daftar kejadian (tanggal, nomor faktur, nama kasir, nomor batch yang diambil, nomor batch anjuran sistem, selisih hari kedaluwarsa, alasan kasir, dan status verifikasi) guna memastikan mutu obat tetap terjaga dan mencegah obat kedaluwarsa tertinggal di rak.
                     </p>
                 </div>
         
@@ -7636,10 +7445,10 @@
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
-                                <img src="../lain/File PPT/UI_UX_Asli/10_Kartu_Stok.png" alt="Tampilan Antarmuka Halaman Kartu Stok Audit" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                                <img src="../lain/File PPT/UI_UX_Asli/10_Kartu_Stok.png" alt="Tampilan Antarmuka Halaman Kartu Stok Persediaan" class="w-full h-auto object-contain mx-auto" loading="lazy">
                             </div>
                             <p class="text-xs font-bold font-serif text-slate-900 mt-2">
-                                Gambar 4.10 Tampilan Antarmuka Halaman Kartu Stok Audit
+                                Gambar 4.10 Tampilan Antarmuka Halaman Kartu Stok Persediaan
                             </p>
                             <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
                                 Halaman pemantauan buku besar mutasi persediaan (inventory ledger) yang merekam jejak audit kronologis setiap komoditas medis. Menampilkan tabel catatan pergerakan barang yang mencakup stempel waktu kejadian, nomor dokumen referensi transaksi, saluran aktivitas terkait, jenis aksi mutasi, nomor batch produk, kuantitas barang masuk, kuantitas barang keluar, dan sisa saldo stok akhir yang terverifikasi. Dilengkapi dengan penyaring pilihan produk variasi dan rentang waktu pengamatan, modul ini menjadi rujukan utama bagi auditor internal untuk menelusuri keabsahan saldo fisik pada tabel kartu_stok.
@@ -7655,13 +7464,13 @@
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
-                                <img src="../lain/File PPT/UI_UX_Asli/11_Stok_Opname.png" alt="Tampilan Antarmuka Halaman Stok Opname dan Audit Fisik" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                                <img src="../lain/File PPT/UI_UX_Asli/11_Stok_Opname.png" alt="Tampilan Antarmuka Halaman Stok Opname Persediaan" class="w-full h-auto object-contain mx-auto" loading="lazy">
                             </div>
                             <p class="text-xs font-bold font-serif text-slate-900 mt-2">
-                                Gambar 4.11 Tampilan Antarmuka Halaman Stok Opname dan Audit Fisik
+                                Gambar 4.11 Tampilan Antarmuka Halaman Stok Opname Persediaan
                             </p>
                             <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
-                                Modul pelaksanaan kegiatan audit fisik persediaan (stok opname) berkala untuk membandingkan kuantitas persediaan di rak dengan saldo pembukuan sistem. Menampilkan daftar sesi audit yang sedang berlangsung maupun yang telah dibukukan, fasilitas inisiasi sesi opname baru oleh staf berwenang, formulir pencatatan hitung fisik per batch dan nomor seri, serta kalkulasi otomatis terhadap selisih jumlah barang (discrepancy). Apabila hasil verifikasi fisik disetujui, sistem melakukan penyesuaian saldo secara serentak ke dalam tabel stok_batch, sesi_opname, detail_opname_batch, dan riwayat_hitung_opname.
+                                Modul pelaksanaan kegiatan pemeriksaan fisik persediaan (stok opname) berkala untuk membandingkan kuantitas persediaan di rak dengan saldo pembukuan sistem. Menampilkan daftar sesi audit yang sedang berlangsung maupun yang telah dibukukan, fasilitas inisiasi sesi opname baru oleh staf berwenang, formulir pencatatan hitung fisik per batch dan nomor seri, serta kalkulasi otomatis terhadap selisih jumlah barang (discrepancy). Apabila hasil verifikasi fisik disetujui, sistem melakukan penyesuaian saldo secara serentak ke dalam tabel stok_batch, sesi_opname, detail_opname_batch, dan riwayat_hitung_opname.
                             </p>
                         </div>
         
@@ -7775,7 +7584,7 @@
                                 Gambar 4.17 Tampilan Antarmuka Halaman Laporan Penerimaan Barang Masuk
                             </p>
                             <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
-                                Modul pelaporan audit logistik masuk (inbound) yang merekapitulasi seluruh pasokan barang yang telah diterima dari distributor. Menampilkan tabel komprehensif yang memuat nomor tanda terima penerimaan, nama instansi distributor pengirim, tanggal kedatangan barang di gudang toko fisik ZenCare Medical, nama staf yang menerima, rincian produk variasi, nomor batch kiriman, tanggal kedaluwarsa resmi, kuantitas pasokan yang diterima, serta total nilai nominal pembelian. Dilengkapi fitur pencarian dan penyaring tanggal, laporan ini memudahkan proses pencocokan faktur tagihan dari distributor dengan pencatatan fisik pada tabel penerimaan_stok dan penerimaan_detail.
+                                Modul pelaporan pemantauan logistik masuk (inbound) yang merekapitulasi seluruh pasokan barang yang telah diterima dari distributor. Menampilkan tabel komprehensif yang memuat nomor tanda terima penerimaan, nama instansi distributor pengirim, tanggal kedatangan barang di gudang toko fisik ZenCare Medical, nama staf yang menerima, rincian produk variasi, nomor batch kiriman, tanggal kedaluwarsa resmi, kuantitas pasokan yang diterima, serta total nilai nominal pembelian. Dilengkapi fitur pencarian dan penyaring tanggal, laporan ini memudahkan proses pencocokan faktur tagihan dari distributor dengan pencatatan fisik pada tabel penerimaan_stok dan penerimaan_detail.
                             </p>
                         </div>
         
@@ -7794,26 +7603,26 @@
                                 Gambar 4.18 Tampilan Antarmuka Halaman Laporan Mutasi dan Konversi Satuan
                             </p>
                             <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
-                                Modul rekapitulasi audit pergerakan persediaan non-penjualan yang menyatukan catatan mutasi manual (seperti barang rusak atau koreksi) dan riwayat proses konversi pemecahan satuan (pecah kemasan dus menjadi eceran). Laporan menyajikan stempel waktu kegiatan, nomor referensi dokumen bukti, nama produk variasi medis, nomor batch terkait, kuantitas asal serta kuantitas hasil konversi, penjelasan alasan perubahan, dan identitas staf operasional yang melakukan tindakan. Data ditarik secara konsolidatif dari tabel histori_konversi dan kartu_stok guna menjamin ketertiban tata kelola pergudangan.
+                                Modul rekapitulasi pemantauan pergerakan persediaan non-penjualan yang menyatukan catatan mutasi manual (seperti barang rusak atau koreksi) dan riwayat proses konversi pemecahan satuan (pecah kemasan dus menjadi eceran). Laporan menyajikan stempel waktu kegiatan, nomor referensi dokumen bukti, nama produk variasi medis, nomor batch terkait, kuantitas asal serta kuantitas hasil konversi, penjelasan alasan perubahan, dan identitas staf operasional yang melakukan tindakan. Data ditarik secara konsolidatif dari tabel histori_konversi dan kartu_stok guna menjamin ketertiban tata kelola pergudangan.
                             </p>
                         </div>
         
 
                         <div class="mt-5 mb-2">
                             <h5 class="text-xs font-bold font-serif text-slate-900">
-                                4.1.1.19 Laporan Audit Anomali Pengeluaran FEFO
+                                4.1.1.19 Laporan Anomali Pengeluaran FEFO
                             </h5>
                         </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
-                                <img src="../lain/File PPT/UI_UX_Asli/17_Laporan_Anomali_FEFO.png" alt="Tampilan Antarmuka Halaman Laporan Audit Anomali Pengeluaran FEFO" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                                <img src="../lain/File PPT/UI_UX_Asli/17_Laporan_Anomali_FEFO.png" alt="Tampilan Antarmuka Halaman Laporan Anomali Pengeluaran FEFO" class="w-full h-auto object-contain mx-auto" loading="lazy">
                             </div>
                             <p class="text-xs font-bold font-serif text-slate-900 mt-2">
-                                Gambar 4.19 Tampilan Antarmuka Halaman Laporan Audit Anomali Pengeluaran FEFO
+                                Gambar 4.19 Tampilan Antarmuka Halaman Laporan Anomali Pengeluaran FEFO
                             </p>
                             <p class="text-xs font-serif text-slate-700 text-justify mt-2 indent-8 leading-relaxed px-2">
-                                Panel audit kepatuhan protokol logistik medis yang memantau setiap kejadian penyimpangan dalam pengeluaran barang di kasir maupun gudang. Apabila terjadi pengeluaran batch produk yang masa kedaluwarsanya lebih panjang mendahului batch produk yang masa kedaluwarsanya lebih dekat, sistem mendeteksi insiden tersebut secara otomatis sebagai indikasi anomali. Halaman ini menyajikan tabel audit yang memuat tanggal kejadian, nomor faktur penjualan, nomor batch yang terambil, nomor batch yang semestinya dikeluarkan menurut aturan baku FEFO, jumlah kuantitas barang, serta status verifikasi penanganan pada tabel log_anomali_fefo guna mempertahankan standar mutu pengelolaan obat.
+                                Panel pemantauan kepatuhan protokol logistik medis yang memantau setiap kejadian penyimpangan dalam pengeluaran barang di kasir maupun gudang. Apabila terjadi pengeluaran batch produk yang masa kedaluwarsanya lebih panjang mendahului batch produk yang masa kedaluwarsanya lebih dekat, sistem mendeteksi insiden tersebut secara otomatis sebagai indikasi anomali. Halaman ini menyajikan tabel audit yang memuat tanggal kejadian, nomor faktur penjualan, nomor batch yang terambil, nomor batch yang semestinya dikeluarkan menurut aturan baku FEFO, jumlah kuantitas barang, serta status verifikasi penanganan pada tabel log_anomali_fefo guna mempertahankan standar mutu pengelolaan obat.
                             </p>
                         </div>
         

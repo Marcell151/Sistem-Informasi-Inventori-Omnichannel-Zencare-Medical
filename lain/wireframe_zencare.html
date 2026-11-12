@@ -555,23 +555,23 @@
     "id": "kartu_stok",
     "category": "B. Antarmuka Admin & Kasir",
     "fig": "Gambar 3.28",
-    "title": "Wireframe Antarmuka Kartu Stok Audit",
+    "title": "Wireframe Antarmuka Kartu Stok Persediaan",
     "sub": "Buku besar kronologis mutasi & transparansi riwayat fisik",
     "role": "Admin / Superadmin",
     "png": "File PPT/Wireframe/Kartu Stok.png",
     "tabel": "kartu_stok",
-    "desc": "Buku besar kronologis persediaan yang mencatat jejak setiap mutasi masuk, keluar, dan sisa stok fisik. Antarmuka dilengkapi bilah filter rentang tanggal, filter produk, filter jenis mutasi, serta kolom penanggung jawab operasional guna menjamin keterlacakan audit persediaan barang secara transparan."
+    "desc": "Buku besar kronologis persediaan yang mencatat jejak setiap mutasi masuk, keluar, dan sisa stok fisik. Antarmuka dilengkapi bilah filter rentang tanggal, filter produk, filter jenis mutasi, serta kolom penanggung jawab operasional guna menjamin keterlacakan persediaan barang secara transparan."
   },
   {
     "id": "stok_opname",
     "category": "B. Antarmuka Admin & Kasir",
     "fig": "Gambar 3.29",
-    "title": "Wireframe Antarmuka Stok Opname & Audit Fisik Persediaan",
-    "sub": "Pencacahan fisik berkala & pembekuan transaksi (Freeze Lock)",
-    "role": "Admin / Gudang",
+    "title": "Wireframe Antarmuka Stok Opname Persediaan",
+    "sub": "Pencacahan fisik 3 kondisi, simpan bertahap, dan verifikasi selisih",
+    "role": "Superadmin, Admin Toko, Kasir",
     "png": "File PPT/Wireframe/Stok Opname.png",
     "tabel": "sesi_opname, detail_opname_batch, detail_opname_sn, riwayat_hitung_opname",
-    "desc": "Panel pelaksanaan pemeriksaan persediaan fisik berkala guna menyinkronkan catatan sistem dengan kondisi nyata di rak toko. Dilengkapi indikator penguncian transaksi operasional sementara (freeze lock) pada kasir POS dan toko daring, kartu ringkasan status sesi, lembar kerja pencacahan fisik obat tanpa melihat saldo buku sistem (metode blind count) untuk menghindari bias perhitungan, pencacahan nomor seri fisik alat kesehatan, tombol eksekusi penyesuaian selisih ke buku besar, serta tombol cetak Berita Acara Opname resmi."
+    "desc": "Panel pelaksanaan pemeriksaan fisik persediaan berkala dengan segregasi peran operasional: kasir mencatat kuantitas fisik rak secara mandiri menggunakan metode pencacahan buta (blind count) dengan 3 kondisi fisik (Baik, Rusak, Expired) serta fitur simpan parsial bertahap; admin toko memverifikasi selisih dan mengeksekusi mutasi rekonsiliasi; sedangkan superadmin mengelola inisiasi pembekuan operasional (freeze lock) pada kasir POS dan penjualan daring, pembukaan kembali sesi, serta pencetakan Berita Acara Opname resmi."
   },
   {
     "id": "konversi_satuan",
@@ -622,7 +622,7 @@
     "category": "C. Antarmuka Superadmin (Pemilik)",
     "fig": "Gambar 3.34",
     "title": "Wireframe Antarmuka Laporan Logistik Medis",
-    "sub": "Audit masa simpan batch FEFO dan pelacakan serial alkes",
+    "sub": "Pemantauan masa simpan batch FEFO dan pelacakan serial alkes",
     "role": "Superadmin",
     "png": "File PPT/Wireframe/Laporan Logistik Medis.png",
     "tabel": "stok_batch, unit_serial",
@@ -633,33 +633,33 @@
     "category": "C. Antarmuka Superadmin (Pemilik)",
     "fig": "Gambar 3.35",
     "title": "Wireframe Antarmuka Laporan Penerimaan Barang",
-    "sub": "Audit inbound pasokan obat & alat kesehatan dari distributor",
+    "sub": "Pemeriksaan inbound pasokan obat & alat kesehatan dari distributor",
     "role": "Superadmin",
     "png": "File PPT/Wireframe/Laporan Penerimaan Barang.png",
     "tabel": "penerimaan_stok, penerimaan_detail, supplier, stok_batch",
-    "desc": "Laporan eksekutif yang merekapitulasi seluruh pengiriman barang medis dari distributor resmi (PBF / rekanan). Antarmuka memuat bilah filter rentang tanggal terima, pilihan distributor, dan status penerimaan (sempurna atau retur parsial). Bagian ringkasan menyajikan kartu metrik total faktur inbound, nominal belanja persediaan, total dus diterima, serta kuantitas barang rusak atau diretur. Tabel data memuat nomor referensi surat jalan, tanggal terima, nama distributor, variasi produk, nomor batch pabrikan, tanggal kedaluwarsa, kuantitas pesan dan terima, harga beli, status penerimaan, dan identitas staf penerima guna memastikan transparansi pengadaan sebelum pembayaran disetujui."
+    "desc": "Laporan eksekutif yang merekapitulasi seluruh pengiriman barang medis dari distributor resmi (PBF / rekanan). Antarmuka memuat bilah filter rentang tanggal terima, pilihan distributor, dan status penerimaan (diterima penuh atau retur parsial). Bagian ringkasan menyajikan kartu metrik total faktur inbound, nominal belanja persediaan, total dus diterima, serta kuantitas barang rusak atau diretur. Tabel data memuat nomor referensi surat jalan, tanggal terima, nama distributor, variasi produk, nomor batch pabrikan, tanggal kedaluwarsa, kuantitas pesan dan terima, harga beli, status penerimaan, dan identitas staf penerima guna memastikan transparansi pengadaan sebelum pembayaran disetujui."
   },
   {
     "id": "lap_mutasi_konversi",
     "category": "C. Antarmuka Superadmin (Pemilik)",
     "fig": "Gambar 3.36",
     "title": "Wireframe Antarmuka Laporan Mutasi & Konversi Satuan",
-    "sub": "Audit pemecahan dus (UOM) & penyesuaian non-transaksional",
+    "sub": "Pengawasan pemecahan dus (UOM) & penyesuaian non-transaksional",
     "role": "Superadmin",
     "png": "File PPT/Wireframe/Laporan Mutasi & Konversi.png",
     "tabel": "kartu_stok, histori_konversi, produk_variasi, stok_batch",
-    "desc": "Pusat audit manajerial yang menyatukan dua modul pergerakan persediaan non-transaksional melalui navigasi tab interaktif. Tab Konversi Satuan memantau pembongkaran kemasan dus besar menjadi satuan eceran (strip atau pcs), menyajikan nomor batch asal, nomor sub-batch eceran baru yang terbentuk, rasio pengali, jumlah dus yang dibongkar, kuantitas eceran yang dihasilkan, dan sisa dus di rak gudang. Tab Mutasi Stok memantau penyesuaian fisik persediaan di luar transaksi (seperti barang rusak, kedaluwarsa, atau selisih opname fisik) lengkap dengan nomor referensi dokumen, jenis mutasi, kuantitas penyesuaian, dan alasan operasional staf."
+    "desc": "Pusat pengawasan manajerial yang menyatukan dua modul pergerakan persediaan non-transaksional melalui navigasi tab interaktif. Tab Konversi Satuan memantau pembongkaran kemasan dus besar menjadi satuan eceran (strip atau pcs), menyajikan nomor batch asal, nomor sub-batch eceran baru yang terbentuk, rasio pengali, jumlah dus yang dibongkar, kuantitas eceran yang dihasilkan, dan sisa dus di rak gudang. Tab Mutasi Stok memantau penyesuaian fisik persediaan di luar transaksi (seperti barang rusak, kedaluwarsa, atau selisih opname fisik) lengkap dengan nomor referensi dokumen, jenis mutasi, kuantitas penyesuaian, dan alasan operasional staf."
   },
   {
     "id": "lap_anomali_fefo",
     "category": "C. Antarmuka Superadmin (Pemilik)",
     "fig": "Gambar 3.37",
-    "title": "Wireframe Antarmuka Laporan Audit Anomali FEFO",
-    "sub": "Audit kepatuhan kasir & deviasi pengambilan batch obat",
+    "title": "Wireframe Antarmuka Laporan Anomali FEFO",
+    "sub": "Evaluasi kepatuhan kasir & deviasi pengambilan batch obat",
     "role": "Superadmin",
     "png": "File PPT/Wireframe/Laporan Anomali FEFO.png",
     "tabel": "log_anomali_fefo",
-    "desc": "Laporan audit kepatuhan kasir yang mencatat setiap kejadian ketika petugas kasir mengambil nomor batch obat yang berbeda dari anjuran kedaluwarsa terdekat pada sistem. Menampilkan filter rentang tanggal, tabel daftar kejadian (tanggal, nomor faktur, nama kasir, nomor batch yang diambil, nomor batch anjuran sistem, selisih hari kedaluwarsa, alasan kasir, dan status verifikasi) guna memastikan mutu obat tetap terjaga dan mencegah obat kedaluwarsa tertinggal di rak."
+    "desc": "Laporan evaluasi kepatuhan kasir yang mencatat setiap kejadian ketika petugas kasir mengambil nomor batch obat yang berbeda dari anjuran kedaluwarsa terdekat pada sistem. Menampilkan filter rentang tanggal, tabel daftar kejadian (tanggal, nomor faktur, nama kasir, nomor batch yang diambil, nomor batch anjuran sistem, selisih hari kedaluwarsa, alasan kasir, dan status verifikasi) guna memastikan mutu obat tetap terjaga dan mencegah obat kedaluwarsa tertinggal di rak."
   },
   {
     "id": "manajemen_user",
