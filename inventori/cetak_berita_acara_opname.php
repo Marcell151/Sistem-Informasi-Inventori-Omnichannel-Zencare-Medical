@@ -148,7 +148,7 @@ foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
             print-color-adjust: exact;
         }
         @page {
-            size: A4 portrait;
+            size: A4 landscape;
             margin: 12mm 10mm 15mm 10mm;
         }
         @media print {
@@ -249,7 +249,33 @@ foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
             font-size: 8.5pt;
             margin-bottom: 20px;
         }
-        table.data-table th, table.data-table td {
+        thead {
+            display: table-header-group;
+        }
+        tr {
+            page-break-inside: avoid;
+        }
+        tr.row-anomali td {
+            border-top: 2.5px solid #dc2626 !important;
+            border-bottom: 2.5px solid #dc2626 !important;
+            background-color: #fef2f2 !important;
+            font-weight: 600;
+        }
+        tr.row-anomali td:first-child {
+            border-left: 2.5px solid #dc2626 !important;
+        }
+        tr.row-anomali td:last-child {
+            border-right: 2.5px solid #dc2626 !important;
+        }
+        .page-footer-num {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            font-size: 8pt;
+            color: #64748b;
+        }
+        table.data-table th,
+        table.data-table td {
             border: 1px solid #cbd5e1;
             padding: 6px 8px;
             line-height: 1.35;
@@ -261,6 +287,8 @@ foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
             text-align: center;
             font-size: 8pt;
             letter-spacing: 0.3px;
+            display: table-cell;
+            vertical-align: middle;
         }
         .sign-container {
             width: 100%;
@@ -466,7 +494,7 @@ foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
                     $isAnomali = ($sel !== 0 || $fRusakRow > 0 || $fExpRow > 0);
                     $itHasBatch = (!empty($it['id_batch']) || !empty($it['no_batch']));
                 ?>
-                    <tr style="border-bottom: 1px solid #cbd5e1; <?= $isAnomali ? 'background-color: #fff1f2; outline: 2px solid #dc2626; border: 2px solid #dc2626; font-weight: 600;' : '' ?>">
+                    <tr class="<?= $isAnomali ? 'row-anomali' : '' ?>" style="border-bottom: 1px solid #cbd5e1;">
                         <td style="text-align: center; color: #94a3b8; font-size: 8pt; border: 1px solid #cbd5e1;">&gt;</td>
                         <td style="border: 1px solid #cbd5e1; font-size: 8pt; padding: 6px 8px;">
                             <?php if ($itHasBatch): ?>

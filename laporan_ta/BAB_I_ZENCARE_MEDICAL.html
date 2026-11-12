@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAB I PENDAHULUAN - ZenCare Medical</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; padding: 0 !important; }
+            .paper { box-shadow: none !important; border: none !important; padding: 0 !important; }
+        }
+        .paper {
+            background: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+    <script>
+        function copyText(elementId, btnElement) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const plainText = el.innerText || el.textContent;
+            const originalText = btnElement.innerHTML;
+
+            function showSuccess() {
+                btnElement.innerHTML = `<svg class="w-4 h-4 inline mr-1 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Tersalin!`;
+                btnElement.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-300');
+                setTimeout(() => {
+                    btnElement.innerHTML = originalText;
+                    btnElement.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-emerald-300');
+                }, 2000);
+            }
+
+            if (navigator.clipboard && window.ClipboardItem) {
+                const blobHtml = new Blob([el.innerHTML], { type: 'text/html' });
+                const blobText = new Blob([plainText], { type: 'text/plain' });
+                navigator.clipboard.write([
+                    new ClipboardItem({
+                        'text/html': blobHtml,
+                        'text/plain': blobText
+                    })
+                ]).then(showSuccess).catch(() => {
+                    navigator.clipboard.writeText(plainText).then(showSuccess);
+                });
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(plainText).then(showSuccess);
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-100 min-h-screen py-8 px-4 font-sans text-slate-800">
+
+    <!-- Top Action Bar (No Print) -->
+    <div class="max-w-4xl mx-auto mb-4 flex items-center justify-between no-print">
+        <a href="BAB_IV_ZENCARE_MEDICAL.html" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 rounded shadow-xs text-xs font-medium text-slate-700 hover:bg-slate-50 transition">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Kembali ke Bab IV
+        </a>
+        <div class="flex items-center gap-2">
+            <button onclick="window.print()" class="px-3 py-1.5 bg-white border border-slate-300 rounded shadow-xs text-xs font-medium text-slate-700 hover:bg-slate-50 transition flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Cetak Dokumen
+            </button>
+            <button onclick="copyText('full_bab_i_content', this)" class="px-3 py-1.5 bg-blue-600 border border-blue-700 rounded shadow-xs text-xs font-semibold text-white hover:bg-blue-700 transition flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                Salin Bab I Lengkap
+            </button>
+        </div>
+    </div>
+
+    <!-- Paper Sheet Container -->
+    <div id="full_bab_i_content" class="paper max-w-4xl mx-auto border border-slate-300 p-8 sm:p-12 text-slate-900 leading-relaxed font-serif">
+
+        <!-- Header Bab I -->
+        <div class="text-center mb-8 border-b pb-6">
+            <h1 class="text-base font-bold font-serif uppercase tracking-wider text-slate-900 mb-1">
+                BAB I
+            </h1>
+            <h2 class="text-lg font-bold font-serif uppercase tracking-wide text-slate-900">
+                PENDAHULUAN
+            </h2>
+        </div>
+
+        <!-- 1.1 Latar Belakang -->
+        <div class="mb-6">
+            <h3 class="text-sm font-bold font-serif text-slate-900 mb-3 uppercase tracking-wide">
+                1.1 Latar Belakang
+            </h3>
+            <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
+                ZenCare Medical merupakan badan usaha yang bergerak di bidang penyediaan alat kesehatan dan obat-obatan. Dalam operasionalnya, ZenCare menerapkan strategi penjualan ganda, di mana mereka melayani pelanggan eceran dan grosir secara langsung melalui toko fisik, sekaligus melayani pesanan khusus dari pelanggan grosir secara daring (<em>online</em>).
+            </p>
+            <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
+                Untuk menunjang operasional harian di gerai fisik, ZenCare saat ini masih bergantung pada aplikasi kasir berlangganan dari pihak ketiga. Sistem kasir tersebut sebenarnya sudah cukup memadai untuk mencatat penjualan luring, namun sifatnya umum dan tertutup (<em>stand-alone</em>) sehingga tidak memiliki fitur <em>omnichannel</em> yang dapat menghubungkannya dengan saluran penjualan daring. Keterbatasan ini memunculkan kendala operasional yang cukup serius: staf admin gerai terpaksa harus melakukan pencocokan dan penyamaan sisa barang secara manual setiap harinya untuk menghindari selisih data. Akibatnya, risiko pesanan ganda (<em>overselling</em>) menjadi sangat tinggi. Barang yang persediaan fisiknya sudah habis terjual di gerai fisik masih kerap terpajang dan dapat dibeli oleh pelanggan di etalase daring.
+            </p>
+            <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
+                Kerumitan operasional ini semakin bertambah dengan adanya fleksibilitas satuan jual yang dinamis. Penjualan daring di ZenCare difokuskan murni pada pembelian grosir menggunakan satuan kemasan besar (seperti <em>Box</em>), sementara staf kasir di gerai fisik harus melayani transaksi multi-satuan sekaligus, yakni grosir maupun eceran menggunakan satuan terkecil yang bervariasi (seperti <em>Strip</em> untuk obat atau <em>Pcs</em> untuk alat kesehatan). Pembatasan satuan besar pada saluran daring ini pada dasarnya dilatarbelakangi oleh karakteristik komoditas obat-obatan, yang lazim dikemas dalam jumlah besar dari pabrikan sebelum dipecah menjadi satuan eceran saat dijual langsung di gerai fisik. Karakteristik ini berbeda dari sebagian besar alat kesehatan, yang pada umumnya tidak memiliki tingkatan kemasan sehingga satuan pengemasan dan satuan jualnya bernilai sama. Penerapan aturan satuan besar pada saluran daring tidak serta-merta membebani pelanggan alat kesehatan untuk membeli dalam jumlah besar, karena satuan terkecil dari alat kesehatan itu sendiri sudah setara dengan satuan grosirnya. Meskipun aplikasi kasir fisik yang ada memiliki fitur pemotongan stok, ketiadaan integrasi membuat admin harus menghitung rasio konversi dan memotong sisa persediaan satuan terkecil secara manual. Proses kerja ganda semacam ini tidak praktis, rentan terhadap kelalaian manusia (<em>human error</em>), serta menyebabkan peringatan stok kritis tidak merepresentasikan kapasitas riil gerai dalam melayani pesanan grosir.
+            </p>
+            <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
+                Selain masalah sinkronisasi dan konversi, karakteristik produk medis yang diperjualbelikan menuntut ketelitian tinggi. Obat-obatan memiliki batas kedaluwarsa yang kritis, namun pencatatan saat ini belum mendata tanggal kedaluwarsa per gelombang kedatangan barang (<em>batch</em>), sehingga memunculkan risiko keselamatan jika obat yang masa pakainya lebih pendek tidak tersalurkan lebih awal. Ketiadaan pencatatan berbasis nomor <em>batch</em> ini membuat gerai belum dapat menerapkan metode <em>First Expired, First Out</em> (FEFO) secara terkomputerisasi. Di sisi lain, alat kesehatan bernilai tinggi (seperti tensimeter digital) juga belum dicatat berdasarkan nomor seri (<em>serial number</em>), yang berdampak pada sulitnya proses validasi keaslian saat pelanggan mengajukan klaim garansi. Selain itu, ketiadaan label penanda fisik pada barang yang masuk ke gudang maupun kemasan yang telah dipecah menjadi eceran membuat proses pengambilan barang oleh staf menjadi tidak tervalidasi secara sistem, sehingga risiko terjadinya kekeliruan pengambilan fisik barang di rak menjadi tinggi.
+            </p>
+            <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
+                Melihat kendala operasional tersebut, ZenCare Medical membutuhkan sebuah sistem informasi inventori <em>omnichannel</em> mandiri yang dapat bertindak sebagai pusat kendali persediaan tunggal. Mengingat platform lokapasar pihak ketiga memiliki keterbatasan akses untuk dihubungkan secara langsung dengan basis data lokal gerai, maka sistem ini perlu dilengkapi dengan portal toko daring (<em>e-commerce</em>) mandiri. Melalui pendekatan ini, setiap transaksi keluar, baik yang berasal dari kasir di gerai fisik maupun pesanan dari toko daring, dapat langsung memotong persediaan dari satu basis data stok yang sama secara waktu nyata (<em>real-time</em>). Melalui otomatisasi konversi satuan kemasan, pelacakan barang terstruktur, serta penerapan verifikasi ganda berbasis pemindai fisik (pemindaian <em>barcode batch</em> dan verifikasi nomor seri), akar masalah terkait selisih data, kerumitan penyesuaian multi-satuan, hingga pelacakan masa kedaluwarsa aktual dapat diselesaikan secara akurat dan terpadu.
+            </p>
+        </div>
+
+        <!-- 1.2 Identifikasi Masalah -->
+        <div class="mb-6">
+            <h3 class="text-sm font-bold font-serif text-slate-900 mb-3 uppercase tracking-wide">
+                1.2 Identifikasi Masalah
+            </h3>
+            <p class="text-xs font-serif text-slate-800 text-justify mb-3">
+                Berdasarkan latar belakang operasional di atas, permasalahan yang terjadi di ZenCare Medical dapat diidentifikasi sebagai berikut:
+            </p>
+            <ol class="list-decimal pl-6 text-xs font-serif text-slate-800 space-y-2 text-justify">
+                <li>Terjadinya disparitas atau selisih data persediaan barang karena sistem kasir fisik yang digunakan tidak saling terhubung dengan platform penjualan daring.</li>
+                <li>Tingginya risiko pesanan ganda (<em>overselling</em>), di mana komoditas yang fisiknya sudah kosong di gerai masih dapat dipesan secara daring oleh konsumen.</li>
+                <li>Proses konversi pemotongan stok lintas saluran sangat rumit dan rawan kekeliruan, karena sistem harus mampu menangani transaksi multi-satuan secara dinamis pada kasir luring, serta menyinkronkannya dengan penjualan daring tanpa merusak integritas data kemasan utuh.</li>
+                <li>Ketiadaan sistem pelacakan tanggal kedaluwarsa berbasis nomor <em>batch</em> untuk obat-obatan, yang berisiko pada keselamatan produk dan penumpukan barang rusak akibat ketiadaan alur FEFO yang tervalidasi sistem.</li>
+                <li>Belum adanya pencatatan terpusat untuk nomor seri unik (<em>serial number</em>) pada komoditas alat kesehatan, sehingga menyulitkan proses validasi keabsahan unit saat terjadi klaim garansi dari konsumen.</li>
+                <li>Ketiadaan label penanda fisik pada barang yang diterima dari distributor maupun yang dipecah menjadi kemasan eceran, sehingga proses pengambilan barang di gudang tidak dapat divalidasi oleh sistem dan rentan salah ambil fisik.</li>
+            </ol>
+        </div>
+
+        <!-- 1.3 Batasan Masalah -->
+        <div class="mb-6">
+            <h3 class="text-sm font-bold font-serif text-slate-900 mb-3 uppercase tracking-wide">
+                1.3 Batasan Masalah
+            </h3>
+            <p class="text-xs font-serif text-slate-800 text-justify mb-3">
+                Agar ruang lingkup perancangan sistem lebih terarah, fokus, dan realistis untuk diselesaikan, maka ditetapkan batasan masalah sebagai berikut:
+            </p>
+            <ol class="list-decimal pl-6 text-xs font-serif text-slate-800 space-y-2 text-justify">
+                <li>Sistem difokuskan pada sinkronisasi ketersediaan barang lintas saluran (<em>omnichannel</em>) dan pencatatan transaksi kasir fisik (POS), tanpa mencakup pembukuan finansial manajerial (seperti perhitungan laba rugi komprehensif, neraca saldo, serta jurnal piutang dagang) maupun sistem poin penghargaan pelanggan.</li>
+                <li>Pengendalian persediaan secara spesifik menerapkan metode <em>First Expired, First Out</em> (FEFO) berbasis nomor <em>batch</em> untuk obat-obatan, serta pencatatan riwayat nomor seri (<em>serial number</em>) untuk pelacakan garansi alat kesehatan. Sistem mewajibkan validasi kelengkapan data saat penerimaan barang serta saat pemecahan kemasan utuh (konversi satuan), yang dilanjutkan dengan fasilitas cetak stiker label sebagai penanda fisik.</li>
+                <li>Platform toko daring (<em>e-commerce</em>) dibangun secara mandiri tanpa penarikan data integrasi antarmuka pemrograman aplikasi (API) dari lokapasar eksternal. Penggunaan layanan pihak ketiga untuk pembayaran (Midtrans) dan estimasi tarif logistik pengiriman (RajaOngkir) diimplementasikan pada lingkungan pengujian (<em>sandbox</em>).</li>
+                <li>Sistem tidak menyediakan fitur pemesanan tunggu (<em>pre-order</em>) dan pengembalian dana (<em>refund</em>) otomatis. Modul retur pengembalian barang pada sistem ini memfasilitasi retur pembelian dari gerai kepada pihak pemasok (*supplier*) saat penerimaan barang. Penyesuaian stok akibat klaim garansi pelanggan dikelola oleh staf admin melalui modul Mutasi Stok Manual.</li>
+                <li>Modul barang masuk memfasilitasi pencatatan penerimaan fisik pasokan logistik (baik melalui dokumen pemesanan maupun pembelian langsung), tanpa menyertakan otomatisasi pengadaan stok otomatis (<em>auto-replenishment</em>). Sistem menerapkan parameter batas stok pengaman (<em>safety stock</em>) yang disesuaikan dengan tingkatan satuan kemasan barang sebagai indikator peringatan dini persediaan kritis.</li>
+                <li>Implementasi dan evaluasi operasional sistem dibatasi pada satu lokasi pengelolaan secara terpusat, yakni pada gerai ZenCare Medical Muharto.</li>
+            </ol>
+        </div>
+
+        <!-- 1.4 Rumusan Masalah -->
+        <div class="mb-6">
+            <h3 class="text-sm font-bold font-serif text-slate-900 mb-3 uppercase tracking-wide">
+                1.4 Rumusan Masalah
+            </h3>
+            <p class="text-xs font-serif text-slate-800 text-justify indent-8 leading-relaxed">
+                Merujuk pada uraian latar belakang dan batasan masalah yang telah ditetapkan, maka rumusan masalah dalam penelitian ini adalah: Bagaimana merancang dan membangun Sistem Informasi Inventori <em>Omnichannel</em> berbasis web pada ZenCare Medical yang mampu menyinkronkan data ketersediaan stok secara waktu nyata (<em>real-time</em>) antara transaksi kasir fisik dan portal toko daring (<em>e-commerce</em>) mandiri, dengan menerapkan mekanisme konversi multi-satuan kemasan, serta menegakkan kepatuhan pelacakan masa kedaluwarsa (FEFO) melalui validasi label fisik dan pemindai *barcode*?
+            </p>
+        </div>
+
+        <!-- 1.5 Tujuan Penelitian -->
+        <div class="mb-6">
+            <h3 class="text-sm font-bold font-serif text-slate-900 mb-3 uppercase tracking-wide">
+                1.5 Tujuan Penelitian
+            </h3>
+            <p class="text-xs font-serif text-slate-800 text-justify indent-8 leading-relaxed">
+                Penelitian ini bertujuan untuk merancang dan membangun Sistem Informasi Inventori <em>Omnichannel</em> berbasis web di ZenCare Medical yang berfungsi sebagai pusat data tunggal guna menghubungkan operasional transaksi fisik dan toko daring. Sistem ini dirancang untuk mengotomatisasi proses konversi dan pemotongan stok lintas saluran kemasan agar kuantitas persediaan fisik selalu akurat. Selain itu, sistem bertujuan memfasilitasi pelacakan masa kedaluwarsa obat berbasis FEFO melalui pencetakan label fisik dan pengawasan anomali pengeluaran, memvalidasi nomor seri garansi alat kesehatan, serta mengamankan ketersediaan stok melalui konfigurasi batas minimum persediaan pada setiap tingkatan satuan kemasan.
+            </p>
+        </div>
+
+        <!-- 1.6 Manfaat Penelitian -->
+        <div class="mb-6">
+            <h3 class="text-sm font-bold font-serif text-slate-900 mb-3 uppercase tracking-wide">
+                1.6 Manfaat Penelitian
+            </h3>
+            <p class="text-xs font-serif text-slate-800 text-justify mb-3">
+                Pengembangan sistem informasi inventori ini diharapkan dapat memberikan manfaat praktis dan akademis sebagai berikut:
+            </p>
+            <ol class="list-decimal pl-6 text-xs font-serif text-slate-800 space-y-2 text-justify">
+                <li><strong>Bagi ZenCare Medical</strong>: Membantu pihak manajemen dalam meniadakan risiko pesanan ganda (<em>overselling</em>), meminimalisasi kerugian finansial akibat komoditas kedaluwarsa, serta mencegah manipulasi pengeluaran stok di meja kasir. Sistem ini mempercepat alur operasional harian karena perhitungan rasio konversi multi-satuan, validasi fisik, dan pelacakan nomor <em>batch</em> telah diotomatisasi secara terintegrasi.</li>
+                <li><strong>Bagi Penulis</strong>: Memberikan pengalaman praktis dalam menerapkan metodologi rekayasa perangkat lunak, khususnya dalam merancang arsitektur basis data relasional normalisasi guna menangani sinkronisasi inventori <em>omnichannel</em> dan protokol pengendalian FEFO pada proses bisnis medis yang nyata.</li>
+                <li><strong>Bagi Perguruan Tinggi (Universitas Ma Chung)</strong>: Menjadi kontribusi kepustakaan, bahan pengayaan materi pembelajaran, serta rujukan empiris yang aplikatif mengenai implementasi sistem informasi inventori terpadu bagi unit usaha mikro, kecil, dan menengah (UMKM), khususnya di sektor perdagangan komoditas obat-obatan dan alat kesehatan.</li>
+            </ol>
+        </div>
+
+        <!-- 1.7 Luaran Penelitian -->
+        <div class="mb-6">
+            <h3 class="text-sm font-bold font-serif text-slate-900 mb-3 uppercase tracking-wide">
+                1.7 Luaran Penelitian
+            </h3>
+            <p class="text-xs font-serif text-slate-800 text-justify mb-3">
+                Penelitian ini menghasilkan sejumlah luaran nyata yang berfungsi sebagai solusi konkret atas permasalahan operasional di ZenCare Medical:
+            </p>
+            <ol class="list-decimal pl-6 text-xs font-serif text-slate-800 space-y-2 text-justify">
+                <li>Sistem informasi inventori <em>omnichannel</em> berbasis web yang mengintegrasikan modul kasir fisik (POS) dan portal toko daring (<em>e-commerce</em>) dalam satu basis data terpusat.</li>
+                <li>Modul manajemen persediaan yang mampu melakukan konversi satuan kemasan bertingkat secara otomatis, dilengkapi penandaan stiker <em>barcode batch</em> kedaluwarsa (FEFO) dan pelacakan nomor seri unik alat kesehatan.</li>
+                <li>Dokumentasi perancangan sistem yang komprehensif, mencakup diagram alur proses bisnis (<em>activity diagram</em>), pemodelan wewenang (<em>use case diagram</em>), skema relasi basis data (ERD), kamus data, serta purwarupa antarmuka pengguna.</li>
+                <li>Laporan hasil evaluasi pengujian penerimaan pengguna (*User Acceptance Testing* / UAT) yang membuktikan kesesuaian operasional sistem terhadap kebutuhan bisnis riil gerai.</li>
+            </ol>
+        </div>
+
+        <!-- 1.8 Sistematika Penulisan -->
+        <div class="mb-6">
+            <h3 class="text-sm font-bold font-serif text-slate-900 mb-3 uppercase tracking-wide">
+                1.8 Sistematika Penulisan
+            </h3>
+            <p class="text-xs font-serif text-slate-800 text-justify mb-3">
+                Sistematika penulisan laporan tugas akhir ini disusun secara terstruktur untuk memberikan gambaran yang berkesinambungan mengenai seluruh tahapan penelitian:
+            </p>
+            <ul class="list-disc pl-6 text-xs font-serif text-slate-800 space-y-2 text-justify">
+                <li><strong>BAB I PENDAHULUAN</strong>: Memaparkan latar belakang operasional ZenCare Medical, identifikasi permasalahan disparitas stok dan penanganan FEFO, batasan ruang lingkup penelitian, rumusan masalah, tujuan, manfaat, luaran yang dihasilkan, serta sistematika penulisan laporan.</li>
+                <li><strong>BAB II TINJAUAN PUSTAKA</strong>: Menguraikan kajian penelitian terdahulu yang relevan sebagai pembanding celah penelitian, disertai landasan teori penunjang mencakup konsep inventori, integrasi <em>omnichannel</em>, metode FEFO, penanganan nomor seri, batas persediaan pengaman, serta metodologi pengembangan perangkat lunak RAD.</li>
+                <li><strong>BAB III ANALISIS DAN PERANCANGAN SISTEM</strong>: Menjabarkan metodologi penelitian <em>Rapid Application Development</em> (RAD), analisis kebutuhan fungsional dan non-fungsional, perancangan arsitektur basis data relasional 27 tabel, diagram alur sistem, serta rancangan antarmuka pengguna.</li>
+                <li><strong>BAB IV HASIL DAN PEMBAHASAN</strong>: Menyajikan implementasi antarmuka sistem secara utuh mencakup 26 sub-modul operasional (Gambar 4.1 hingga Gambar 4.50), disandingkan dengan hasil pengujian penerimaan pengguna (*User Acceptance Testing*) lintas peran melalui 10 tabel matriks evaluasi dengan persentase capaian 93,75% (Sesuai Kebutuhan).</li>
+                <li><strong>BAB V KESIMPULAN DAN SARAN</strong>: Menyajikan kesimpulan menyeluruh yang menjawab rumusan masalah dan tujuan penelitian berdasarkan capaian implementasi dan evaluasi, disertai saran-saran konstruktif untuk pengembangan sistem pada masa mendatang.</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- Bottom Notification (No Print) -->
+    <div class="max-w-4xl mx-auto mt-6 text-center text-xs text-slate-500 no-print">
+        Dokumen Laporan Tugas Akhir &bull; Marcell Chandra (322310015) &bull; Sistem Informasi Inventori <i>Omnichannel</i> ZenCare Medical
+    </div>
+
+</body>
+</html>
+

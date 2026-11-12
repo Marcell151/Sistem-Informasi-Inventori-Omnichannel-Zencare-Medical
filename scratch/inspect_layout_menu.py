@@ -1,8 +1,6 @@
-with open('config/layout.php', 'r', encoding='utf-8') as f:
-    code = f.read()
+with open(r'c:\xampp\htdocs\inventory_zencare\config\layout.php', 'r', encoding='utf-8') as f:
+    text = f.read()
 
-import re
-matches = re.findall(r'<a[^>]*href=[^>]*>.*?</a>', code, re.DOTALL)
-for m in matches:
-    if any(k in m.lower() for k in ['dokumen', 'testing', 'panduan', 'bimbingan']):
-        print('Found in layout.php:', m.strip())
+for l in text.split('\n'):
+    if 'penerimaan' in l.lower() or 'tambah_stok' in l.lower():
+        print(l.strip())

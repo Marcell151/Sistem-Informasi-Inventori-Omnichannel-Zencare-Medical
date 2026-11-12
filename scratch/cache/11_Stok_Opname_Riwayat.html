@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><base href="http://localhost/inventory_zencare/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stok Opname Fisik – ZenCare Medical</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- jQuery & Select2 for Searchable Dropdowns (Offline Local Assets + CDN Fallback) -->
+<script src="/inventory_zencare/assets/js/jquery-3.7.1.min.js"></script>
+<script>if (typeof jQuery === 'undefined') { document.write('<script src="https://code.jquery.com/jquery-3.7.1.min.js"><\/script>'); }</script>
+<link href="/inventory_zencare/assets/css/select2.min.css" rel="stylesheet" />
+<script src="/inventory_zencare/assets/js/select2.min.js"></script>
+<!-- SweetAlert2 (Offline Local Asset + CDN Fallback) -->
+<script src="/inventory_zencare/assets/js/sweetalert2.all.min.js"></script>
+<script>if (typeof Swal === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"><\/script>'); }</script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ["Inter", "sans-serif"] },
+        colors: {
+          zc:      "#1a75d2",
+          zcNavy:  "#0f2d5a",
+          zcHv:    "#0f2d5a",
+          zcLt:    "#eef6fb",
+          zcRed:   "#c0392b",
+          zcBg:    "#f8fafc",
+          zcCard:  "#ffffff",
+          zcBrd:   "#e2e8f0",
+          zcTxt:   "#0f2d5a",
+          zcMut:   "#64748b",
+          zcEm:    "#059669",
+        }
+      }
+    }
+  }
+</script>
+<style>
+  ::-webkit-scrollbar{width:5px;height:5px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px}
+  body{color:#1e293b;background-color:#f8fafc}
+  .sidebar-link{display:flex;align-items:center;gap:10px;padding:8.5px 12px;border-radius:6px;font-size:13px;font-weight:500;color:#475569;transition:all .15s}
+  .sidebar-link:hover{background:#f1f5f9;color:#0f2d5a}
+  .sidebar-link.active{background:#eef6fb;color:#0f2d5a;font-weight:700;border-left:3px solid #1a75d2;padding-left:9px}
+  .sidebar-link.active svg{color:#1a75d2;opacity:1}
+  .sidebar-link svg{flex-shrink:0;color:#64748b;opacity:.85}
+  .sidebar-section{font-size:10.5px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.07em;padding:16px 12px 6px}
+
+  /* ── Global Readability Upgrade (No Microscopic 9px/10px Text) ────────── */
+  .text-\[9px\], .text-\[10px\] {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+  .text-\[11px\] {
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+  }
+  [style*="font-size:9px"], [style*="font-size: 9px"],
+  [style*="font-size:10px"], [style*="font-size: 10px"] {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+  [style*="font-size:11px"], [style*="font-size: 11px"] {
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* ── Responsive Adaptation for Laptop vs PC Resolutions (1280px–1536px) ─ */
+  @media (max-width: 1536px) {
+    table.min-w-\[900px\], table.min-w-\[920px\], table.min-w-\[950px\],
+    table.min-w-\[1000px\], table.min-w-\[1020px\], table.min-w-\[1050px\],
+    table.min-w-\[1100px\] {
+      min-width: 100% !important;
+    }
+    table th, table td {
+      padding-left: 0.625rem !important;
+      padding-right: 0.625rem !important;
+    }
+  }
+
+  /* ── Harmonize Off-Brand Purple/Indigo AI Accents to ZenCare Logo Palette ── */
+  .bg-indigo-50, .bg-purple-50, .bg-violet-50, .bg-indigo-50\/50, .bg-purple-50\/50 {
+    background-color: #eef6fb !important;
+  }
+  .bg-indigo-100, .bg-purple-100, .bg-violet-100 {
+    background-color: #dbeafe !important;
+  }
+  .text-indigo-600, .text-indigo-700, .text-indigo-800,
+  .text-purple-600, .text-purple-700, .text-purple-800,
+  .text-violet-600, .text-violet-700 {
+    color: #0f2d5a !important;
+  }
+  .border-indigo-100, .border-indigo-200, .border-purple-100, .border-purple-200, .border-violet-200 {
+    border-color: #cbe4f5 !important;
+  }
+  .bg-indigo-600, .bg-purple-600, .bg-violet-600 {
+    background-color: #0f2d5a !important;
+  }
+  .hover\:bg-indigo-700:hover, .hover\:bg-purple-700:hover {
+    background-color: #1a75d2 !important;
+  }
+
+  /* ── Clean Enterprise Table & Card Refinement ─────────────────────────── */
+  table th:not(.text-white):not([class*="text-"]) {
+    letter-spacing: 0.04em;
+    color: #475569;
+  }
+
+  /* ── Modern Minimalist Select2 Theme (Ecommerce-Grade) ────────────────── */
+  .select2-container--default .select2-selection--single {
+    min-height: 40px !important;
+    height: 40px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.75rem !important;
+    padding: 6px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    background-color: #ffffff !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03) !important;
+  }
+  .select2-container--default.select2-container--open .select2-selection--single,
+  .select2-container--default .select2-selection--single:focus {
+    border-color: #1a75d2 !important;
+    box-shadow: 0 0 0 3px rgba(26, 117, 210, 0.12) !important;
+    outline: none !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #1e293b !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    padding-left: 0 !important;
+    padding-right: 20px !important;
+    line-height: normal !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #94a3b8 !important;
+    font-size: 0.8125rem !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 100% !important;
+    right: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #94a3b8 transparent transparent transparent !important;
+    border-width: 5px 4px 0 4px !important;
+  }
+  .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-color: transparent transparent #1a75d2 transparent !important;
+    border-width: 0 4px 5px 4px !important;
+  }
+  .select2-dropdown {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.875rem !important;
+    box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.04) !important;
+    overflow: hidden !important;
+    z-index: 9999 !important;
+    margin-top: 4px !important;
+    background-color: #ffffff !important;
+    padding: 4px !important;
+  }
+  .select2-search--dropdown {
+    padding: 6px !important;
+  }
+  .select2-search--dropdown .select2-search__field {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.5rem !important;
+    padding: 7px 10px !important;
+    font-size: 0.8125rem !important;
+    background-color: #f8fafc !important;
+    color: #1e293b !important;
+    outline: none !important;
+    transition: all 0.15s ease !important;
+  }
+  .select2-search--dropdown .select2-search__field:focus {
+    border-color: #1a75d2 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(26, 117, 210, 0.1) !important;
+  }
+  .select2-results__option {
+    font-size: 0.8125rem !important;
+    padding: 8px 12px !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 2px !important;
+    color: #334155 !important;
+    transition: all 0.1s ease !important;
+  }
+  .select2-results__option--highlighted {
+    background-color: #eff6ff !important;
+    color: #1a75d2 !important;
+    font-weight: 600 !important;
+  }
+  .select2-results__option[aria-selected="true"] {
+    background-color: #1a75d2 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+  }
+  .select2-results__options {
+    max-height: 250px !important;
+    overflow-y: auto !important;
+  }
+  .select2-container--default .select2-results__message {
+    color: #94a3b8 !important;
+    font-size: 0.75rem !important;
+    padding: 12px !important;
+    text-align: center !important;
+  }
+  /* Table context compact select2 */
+  table .select2-container--default .select2-selection--single {
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 4px 8px !important;
+    border-radius: 0.5rem !important;
+  }
+  table .select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-size: 0.75rem !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  table .select2-container--default .select2-selection--single .select2-selection__arrow {
+    right: 6px !important;
+  }
+</style></head><body class="bg-zcBg text-zcTxt font-sans antialiased min-h-screen flex"><aside id="app-sidebar" class="w-[216px] xl:w-[236px] bg-white border-r border-zcBrd flex flex-col shrink-0 min-h-screen sticky top-0 hidden md:flex transition-all duration-200 z-40"><div class="h-16 flex items-center px-4 border-b border-zcBrd gap-3">
+      <div class="w-10 h-10 rounded-full bg-white border border-zcBrd flex items-center justify-center shrink-0 overflow-hidden">
+        <img src="/inventory_zencare/gambar/Logo.png" alt="ZenCare Logo" class="w-full h-full object-contain rounded-full">
+      </div>
+      <div>
+        <div class="text-[14px] font-extrabold leading-tight tracking-tight">
+          <span class="text-[#0f2d5a]">ZenCare</span> <span class="text-[#c0392b]">Medical</span>
+        </div>
+        <span class="text-[11px] text-slate-500 font-medium block">Sistem Inventori &amp; POS</span>
+      </div>
+    </div><nav class="flex-1 px-2 py-3 overflow-y-auto"><p class="sidebar-section">Utama</p><a href="/inventory_zencare/index.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a><p class="sidebar-section">Transaksi</p><a href="/inventory_zencare/admin/pesanan.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg><span>Transaksi</span></a><p class="sidebar-section">Master Data</p><a href="/inventory_zencare/admin/master_produk.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 10-7-7l-10 10a4.95 4.95 0 107 7z"/><line x1="8.5" y1="8.5" x2="15.5" y2="15.5"/></svg><span>Produk</span></a><a href="/inventory_zencare/admin/master_uom.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4M7 12h10"/></svg><span>Satuan & UOM</span></a><a href="/inventory_zencare/admin/master_supplier.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 00-2-2H4a2 2 0 00-2 2v11a1 1 0 001 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 001-1v-3.65a1 1 0 00-.22-.624l-3.48-4.35A1 1 0 0017.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg><span>Supplier</span></a><p class="sidebar-section">Logistik & Inventori</p><a href="/inventory_zencare/inventori/tambah_stok.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span>Penerimaan Barang</span></a><a href="/inventory_zencare/inventori/proses_mutasi.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4"/></svg><span>Mutasi Stok Manual</span></a><a href="/inventory_zencare/inventori/konversi_uom.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4M7 12h10"/></svg><span>Konversi (UOM)</span></a><a href="/inventory_zencare/inventori/histori_konversi.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg><span>Histori Konversi</span></a><a href="/inventory_zencare/inventori/stok_opname.php" class="sidebar-link active"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/><path d="M9 10h6"/></svg><span>Stok Opname</span></a><a href="/inventory_zencare/laporan/kartu_stok.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12l2 2 4-4"/></svg><span>Kartu Stok</span></a><a href="/inventory_zencare/inventori/logistik_medis.php" class="sidebar-link"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><path d="M12 11v6M9 14h6"/></svg><span>Logistik Medis</span></a></nav><div class="px-3 py-3 border-t border-zcBrd">
+      <div class="flex items-center gap-2.5 p-2.5 rounded-lg bg-[#f8fafc] border border-zcBrd mb-2">
+        <div class="w-8 h-8 rounded-full bg-[#0f2d5a] text-white font-bold text-xs flex items-center justify-center shrink-0">A</div>
+        <div class="min-w-0 flex-1">
+          <span class="text-xs font-bold text-[#0f2d5a] truncate block leading-snug">Admin Toko</span>
+          <span class="text-[11px] text-slate-500 font-medium block">Admin</span>
+        </div>
+      </div>
+      <a href="/inventory_zencare/logout.php" class="sidebar-link text-[#c0392b] hover:!bg-rose-50 hover:!text-rose-700 justify-center gap-2 py-2 text-xs font-semibold"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg> <span>Keluar Sistem</span></a>
+    </div></aside><div class="flex-1 flex flex-col min-w-0">
+    <header class="h-16 bg-white border-b border-zcBrd px-5 flex items-center justify-between sticky top-0 z-30 shrink-0">
+      <div>
+        <h1 class="text-base font-bold text-[#0f2d5a] leading-tight">Stok Opname Persediaan</h1><p class="text-xs text-slate-500 mt-0.5">Pencacahan fisik stok (Blind Count), rekonsiliasi anomali, dan berita acara penyesuaian</p>  </div>
+      <div class="flex items-center gap-3 shrink-0"><div class="hidden sm:flex items-center gap-1.5 text-xs bg-[#eef6fb] border border-[#cbe4f5] text-[#0f2d5a] rounded-md px-3 py-1.5 font-semibold">
+        <svg class="w-3.5 h-3.5 text-[#1a75d2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        Pusat (Muharto)
+      </div><div class="flex items-center gap-2.5 border border-zcBrd px-3 py-1.5 rounded-md bg-white">
+          <div class="w-7 h-7 rounded-full bg-[#0f2d5a] text-white font-bold text-xs flex items-center justify-center">A</div>
+          <div>
+            <span class="text-xs font-bold text-[#0f2d5a] block leading-tight">Admin Toko</span>
+            <span class="text-[11px] text-slate-500 block leading-tight">Admin</span>
+          </div>
+        </div>
+      </div>
+    </header><main class="p-3 sm:p-4 xl:p-6 flex-1 min-w-0 overflow-x-hidden">
+<div class="space-y-5 w-full">
+
+    <!-- Notifikasi Pesan -->
+    
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- KONDISI 1: TIDAK ADA SESI AKTIF (Halaman Landing / Riwayat Sesi)   -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+            
+        <div class="bg-white border border-zcBrd rounded-2xl p-6 shadow-sm">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-zcBrd pb-5 mb-5">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                        <h2 class="text-base font-bold text-zcTxt">Status Sistem: Normal (Semua Transaksi Aktif)</h2>
+                    </div>
+                    <p class="text-xs text-zcMut mt-1 leading-relaxed">
+                        Tidak ada sesi opname yang sedang berjalan. Kasir POS offline, toko online e-commerce, dan modul logistik beroperasi normal.
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-2 shrink-0"><span class="px-3.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200">Sistem Berjalan Normal</span></div>
+                </div>
+            </div>
+
+            <!-- Keterangan Penilaian Kerugian Persediaan -->
+            <div class="mb-5 p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 leading-relaxed">
+                <span class="font-bold text-slate-800">Catatan Perhitungan Kerugian:</span>
+                Estimasi nilai kerugian dihitung dari kuantitas selisih kurang (barang rusak, expired, atau hilang) dikalikan harga modal perolehan (Harga Beli). Barang selisih lebih (surplus) tidak dihitung sebagai beban kerugian karena merupakan kelebihan fisik dari pengiriman supplier.
+            </div>
+
+            
+            
+            <!-- Tabel Riwayat Sesi Terdahulu -->
+            <h3 class="text-xs font-bold text-zcTxt uppercase tracking-wider mb-3">Arsip Riwayat Sesi Stok Opname</h3>
+            <div class="border border-zcBrd rounded-xl overflow-x-auto bg-white shadow-2xs">
+                <table class="w-full text-left text-xs border-collapse min-w-[850px]">
+                    <thead class="bg-slate-50 border-b border-zcBrd text-slate-600 font-semibold text-[11px]">
+                        <tr>
+                            <th class="py-2.5 px-3">Kode Sesi</th>
+                            <th class="py-2.5 px-3">Waktu Mulai &amp; Selesai</th>
+                            <th class="py-2.5 px-3">Pelaksana</th>
+                            <th class="py-2.5 px-3 text-center">Status</th>
+                            <th class="py-2.5 px-3 text-center">Rekap Selisih</th>
+                            <th class="py-2.5 px-3 text-right">Estimasi Kerugian</th>
+                            <th class="py-2.5 px-3">Catatan</th>
+                            <th class="py-2.5 px-3 text-center">Dokumen</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                                                    <tr class="hover:bg-slate-50/70 transition">
+                                <td class="py-2.5 px-3 font-mono font-bold text-zcTxt">OPN-20261112-377</td>
+                                <td class="py-2.5 px-3 text-slate-600">
+                                    <div>Mulai: 12/11/2026 16:37</div>
+                                                                    </td>
+                                <td class="py-2.5 px-3 text-slate-700">
+                                    <div>Oleh: SuperAdmin (Pemilik)</div>
+                                                                    </td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                        Selesai                                    </span>
+                                </td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <span class="font-bold text-slate-800">6</span> / 111 item
+                                </td>
+                                <td class="py-2.5 px-3 text-right">
+                                                                            <span class="font-bold text-rose-600 font-mono text-xs">Rp 2.053.000</span>
+                                        <div class="text-[10px] text-rose-500 font-medium">Beban Kerugian</div>
+                                                                    </td>
+                                <td class="py-2.5 px-3 text-[11px] text-slate-600 max-w-xs truncate">Sesi Stok Opname Berkala</td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <a href="cetak_berita_acara_opname.php?id_sesi=40" target="_blank" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-zc hover:text-zc text-slate-700 transition text-[11px] font-semibold bg-white shadow-2xs">
+                                        <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                        <span>Berita Acara</span>
+                                    </a>
+                                </td>
+                            </tr>
+                                                    <tr class="hover:bg-slate-50/70 transition">
+                                <td class="py-2.5 px-3 font-mono font-bold text-zcTxt">OPN-20261101-003</td>
+                                <td class="py-2.5 px-3 text-slate-600">
+                                    <div>Mulai: 03/11/2026 12:47</div>
+                                                                            <div class="text-[10px] text-zcMut">Selesai: 03/11/2026 16:58</div>
+                                                                    </td>
+                                <td class="py-2.5 px-3 text-slate-700">
+                                    <div>Oleh: SuperAdmin (Pemilik)</div>
+                                                                            <div class="text-[10px] text-zcMut">Ditutup: SuperAdmin (Pemilik)</div>
+                                                                    </td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                        Selesai                                    </span>
+                                </td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <span class="font-bold text-slate-800">0</span> / 77 item
+                                </td>
+                                <td class="py-2.5 px-3 text-right">
+                                                                            <span class="text-slate-400 font-mono text-xs">Rp 0</span>
+                                        <div class="text-[10px] text-emerald-600 font-medium">Klop</div>
+                                                                    </td>
+                                <td class="py-2.5 px-3 text-[11px] text-slate-600 max-w-xs truncate">Stok Opname Rutin Awal Bulan - Seluruh fisik obat dan unit alkes sesuai dengan data sistem.</td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <a href="cetak_berita_acara_opname.php?id_sesi=11" target="_blank" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-zc hover:text-zc text-slate-700 transition text-[11px] font-semibold bg-white shadow-2xs">
+                                        <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                        <span>Berita Acara</span>
+                                    </a>
+                                </td>
+                            </tr>
+                                                    <tr class="hover:bg-slate-50/70 transition">
+                                <td class="py-2.5 px-3 font-mono font-bold text-zcTxt">OPN-20261015-001</td>
+                                <td class="py-2.5 px-3 text-slate-600">
+                                    <div>Mulai: 15/10/2026 08:00</div>
+                                                                            <div class="text-[10px] text-zcMut">Selesai: 15/10/2026 11:30</div>
+                                                                    </td>
+                                <td class="py-2.5 px-3 text-slate-700">
+                                    <div>Oleh: SuperAdmin (Pemilik)</div>
+                                                                            <div class="text-[10px] text-zcMut">Ditutup: SuperAdmin (Pemilik)</div>
+                                                                    </td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                        Selesai                                    </span>
+                                </td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <span class="font-bold text-slate-800">3</span> / 79 item
+                                </td>
+                                <td class="py-2.5 px-3 text-right">
+                                                                            <span class="font-bold text-rose-600 font-mono text-xs">Rp 145.567</span>
+                                        <div class="text-[10px] text-rose-500 font-medium">Beban Kerugian</div>
+                                                                    </td>
+                                <td class="py-2.5 px-3 text-[11px] text-slate-600 max-w-xs truncate">Stok Opname Triwulan III - Selesai dengan rekonsiliasi mutasi selisih barang rusak dan hilang.</td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <a href="cetak_berita_acara_opname.php?id_sesi=7" target="_blank" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-zc hover:text-zc text-slate-700 transition text-[11px] font-semibold bg-white shadow-2xs">
+                                        <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                        <span>Berita Acara</span>
+                                    </a>
+                                </td>
+                            </tr>
+                                                    <tr class="hover:bg-slate-50/70 transition">
+                                <td class="py-2.5 px-3 font-mono font-bold text-zcTxt">OPN-20261101-938</td>
+                                <td class="py-2.5 px-3 text-slate-600">
+                                    <div>Mulai: 01/11/2026 10:49</div>
+                                                                            <div class="text-[10px] text-zcMut">Selesai: 01/11/2026 10:49</div>
+                                                                    </td>
+                                <td class="py-2.5 px-3 text-slate-700">
+                                    <div>Oleh: SuperAdmin (Pemilik)</div>
+                                                                            <div class="text-[10px] text-zcMut">Ditutup: SuperAdmin (Pemilik)</div>
+                                                                    </td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
+                                        Dibatalkan                                    </span>
+                                </td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <span class="font-bold text-slate-800">1</span> / 77 item
+                                </td>
+                                <td class="py-2.5 px-3 text-right">
+                                                                            <span class="text-slate-400 font-mono text-xs">Rp 0</span>
+                                        <div class="text-[10px] text-emerald-600 font-medium">Klop</div>
+                                                                    </td>
+                                <td class="py-2.5 px-3 text-[11px] text-slate-600 max-w-xs truncate">Dibatalkan karena penyesuaian jadwal operasional toko.</td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <a href="cetak_berita_acara_opname.php?id_sesi=6" target="_blank" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-zc hover:text-zc text-slate-700 transition text-[11px] font-semibold bg-white shadow-2xs">
+                                        <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                        <span>Berita Acara</span>
+                                    </a>
+                                </td>
+                            </tr>
+                                                    <tr class="hover:bg-slate-50/70 transition">
+                                <td class="py-2.5 px-3 font-mono font-bold text-zcTxt">OPN-20261028-002</td>
+                                <td class="py-2.5 px-3 text-slate-600">
+                                    <div>Mulai: 29/10/2026 20:56</div>
+                                                                            <div class="text-[10px] text-zcMut">Selesai: 01/11/2026 09:43</div>
+                                                                    </td>
+                                <td class="py-2.5 px-3 text-slate-700">
+                                    <div>Oleh: SuperAdmin (Pemilik)</div>
+                                                                            <div class="text-[10px] text-zcMut">Ditutup: SuperAdmin (Pemilik)</div>
+                                                                    </td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
+                                        Dibatalkan                                    </span>
+                                </td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <span class="font-bold text-slate-800">1</span> / 77 item
+                                </td>
+                                <td class="py-2.5 px-3 text-right">
+                                                                            <span class="font-bold text-rose-600 font-mono text-xs">Rp 7.200.000</span>
+                                        <div class="text-[10px] text-rose-500 font-medium">Beban Kerugian</div>
+                                                                    </td>
+                                <td class="py-2.5 px-3 text-[11px] text-slate-600 max-w-xs truncate">Dibatalkan karena gangguan pemadaman listrik dan antrean pelanggan di kasir.</td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <a href="cetak_berita_acara_opname.php?id_sesi=3" target="_blank" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-zc hover:text-zc text-slate-700 transition text-[11px] font-semibold bg-white shadow-2xs">
+                                        <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                        <span>Berita Acara</span>
+                                    </a>
+                                </td>
+                            </tr>
+                                            </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modal Mulai Sesi Opname (Khusus Superadmin) -->
+        <div id="modal_mulai_sesi" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden border border-zcBrd">
+                <div class="px-6 py-4 border-b border-zcBrd flex items-center justify-between bg-white">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-sm text-zcTxt">Mulai Sesi Stok Opname</h3>
+                            <p class="text-[11px] text-zcMut">Pembekuan transaksi operasional terpusat</p>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('modal_mulai_sesi').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center transition">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <form method="POST" class="p-6 space-y-4 text-xs">
+                    <input type="hidden" name="aksi" value="mulai_sesi">
+                    <div class="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl text-amber-900 text-[11px] leading-relaxed flex items-start gap-2.5">
+                        <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <div>
+                            <strong>PENTING:</strong> Begitu sesi dimulai, server akan <strong>mengunci seluruh transaksi</strong> kasir POS, checkout e-commerce, konversi UOM, dan penerimaan logistik hingga sesi diselesaikan.
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zcTxt mb-1.5">Catatan / Keterangan Sesi:</label>
+                        <textarea name="catatan" rows="3" class="w-full border border-zcBrd rounded-xl p-3 text-xs focus:ring-1 focus:ring-zc" placeholder="Contoh: Stok opname triwulan penutupan bulan Oktober..."></textarea>
+                    </div>
+                    <div class="flex items-center justify-end gap-2.5 pt-2">
+                        <button type="button" onclick="document.getElementById('modal_mulai_sesi').classList.add('hidden')" class="px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-600 hover:bg-slate-50 transition">Batal</button>
+                        <button type="submit" class="px-5 py-2 bg-zc hover:bg-zcHv text-white rounded-xl font-bold transition shadow-sm">Ya, Mulai Sesi &amp; Bekukan Transaksi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <!-- KONDISI 2: SESI OPNAME AKTIF (FREEZE & PENGHITUNGAN BERJALAN)       -->
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        
+    </div>
+
+<script>
+// Alias untuk kompatibilitas
+window.isiCepatAngkaDemo = function() { isiOtomatisAngkaDemo(); };
+
+// Fungsi Simpan Satu Baris Fisik
+function simpanSatuBaris(idDetail) {
+    let inputEl = document.getElementById('input_fisik_' + idDetail);
+    if (!inputEl || inputEl.value === '' || inputEl.value === null) {
+        alert('Harap masukkan angka hitung fisik!');
+        if (inputEl) inputEl.focus();
+        return;
+    }
+
+    let valFisik = parseInt(inputEl.value, 10);
+    let valSistem = parseInt(inputEl.dataset.sistem, 10);
+    let isKasir = false;
+
+    // Untuk Kasir: Strict Blind Count (TIDAK BOLEH memunculkan popup selisih atau angka sistem!)
+    if (isKasir || isNaN(valSistem)) {
+        document.getElementById('single_save_id').value = idDetail;
+        document.getElementById('single_save_val').value = valFisik;
+        document.getElementById('form_single_save').submit();
+        return;
+    }
+
+    // Untuk Admin / Superadmin: Jika terdeteksi selisih fisik vs sistem, berikan konfirmasi langsung
+    if (valFisik !== valSistem) {
+        let sel = valFisik - valSistem;
+        let selText = (sel > 0 ? '+' + sel : sel);
+        let defText = (sel < 0 ? 'Defisit / Berkurang' : 'Surplus / Bertambah');
+        
+        Swal.fire({
+            title: 'Terdeteksi Selisih Fisik: ' + selText + ' Unit',
+            html: `
+                <div class="text-left text-xs text-slate-700 space-y-2">
+                    <p>Hitung Fisik: <strong class="font-mono text-sm">${valFisik}</strong> | Stok Sistem: <strong class="font-mono text-sm">${valSistem}</strong></p>
+                    <div class="p-2.5 rounded-xl ${sel < 0 ? 'bg-rose-50 border border-rose-200 text-rose-900' : 'bg-blue-50 border border-blue-200 text-blue-900'} font-bold">
+                        Status: ${defText} (${selText} unit)
+                    </div>
+                    <p class="text-[11px] text-slate-500">
+                        Hasil hitung fisik akan disimpan dan sistem akan langsung membuka formulir penyesuaian untuk memilih alasan selisih (Rusak, Hilang, Expired, atau Salah Catat) dan alokasi batch terkait.
+                    </p>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Simpan & Lanjut Penyesuaian',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#1a75d2',
+            cancelButtonColor: '#64748b',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-xl font-bold text-xs px-4 py-2',
+                cancelButton: 'rounded-xl font-bold text-xs px-4 py-2'
+            }
+        }).then((res) => {
+            if (res.isConfirmed) {
+                document.getElementById('single_save_id').value = idDetail;
+                document.getElementById('single_save_val').value = valFisik;
+                document.getElementById('form_single_save').submit();
+            }
+        });
+        return;
+    }
+
+    document.getElementById('single_save_id').value = idDetail;
+    document.getElementById('single_save_val').value = inputEl.value;
+    document.getElementById('form_single_save').submit();
+}
+
+function openModalKoreksiSuperadmin(item) {
+    document.getElementById('koreksi_id_detail').value = item.id;
+    document.getElementById('koreksi_nama_produk').innerText = item.nama_produk + ' — ' + item.nama_variasi;
+    document.getElementById('koreksi_batch_info').innerText = 'Batch: ' + (item.no_batch || 'SN Tracker') + ' | Satuan: ' + (item.nama_satuan || 'Unit');
+    document.getElementById('koreksi_fisik_baik').value = item.fisik_baik || 0;
+    document.getElementById('koreksi_fisik_rusak').value = item.fisik_rusak || 0;
+    document.getElementById('koreksi_fisik_expired').value = item.fisik_expired || 0;
+    document.getElementById('modal_koreksi_superadmin').classList.remove('hidden');
+}
+
+function openModalRecount(idDetail, hitungLama, namaProduk) {
+    document.getElementById('recount_id_detail').value = idDetail;
+    document.getElementById('recount_nama_produk').innerText = namaProduk;
+    document.getElementById('recount_hitung_baru').value = hitungLama;
+    document.getElementById('modal_recount').classList.remove('hidden');
+}
+
+let currentOpnameItem = null;
+let currentAbsSelisih = 0;
+
+function updateAllocationStatus() {
+    let r = parseInt(document.getElementById('alokasi_rusak')?.value, 10) || 0;
+    let h = parseInt(document.getElementById('alokasi_hilang')?.value, 10) || 0;
+    let e = parseInt(document.getElementById('alokasi_expired')?.value, 10) || 0;
+    let s = parseInt(document.getElementById('alokasi_salah_catat')?.value, 10) || 0;
+    let l = parseInt(document.getElementById('alokasi_lainnya')?.value, 10) || 0;
+    let sum = r + h + e + s + l;
+    let target = currentAbsSelisih;
+    let satuan = currentOpnameItem ? (currentOpnameItem.nama_satuan || 'Unit') : 'Unit';
+
+    // Munculkan input teks alasan lainnya jika kuantitas lainnya diisi > 0
+    let boxTeksLainnya = document.getElementById('box_teks_alasan_lainnya');
+    if (boxTeksLainnya) {
+        if (l > 0) {
+            boxTeksLainnya.classList.remove('hidden');
+        } else {
+            boxTeksLainnya.classList.add('hidden');
+        }
+    }
+
+    let counterBadge = document.getElementById('badge_alokasi_counter');
+    let btnSubmit = document.getElementById('btn_submit_mutasi');
+
+    if (counterBadge) {
+        if (sum === target && target > 0) {
+            counterBadge.className = 'px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
+            counterBadge.innerText = `Sesuai: ${sum}/${target} ${satuan}`;
+            if (btnSubmit) btnSubmit.disabled = false;
+        } else if (sum < target) {
+            let sisa = target - sum;
+            counterBadge.className = 'px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-300';
+            counterBadge.innerText = `Kurang: ${sum}/${target} (Sisa ${sisa})`;
+            if (btnSubmit) btnSubmit.disabled = true;
+        } else {
+            let lebih = sum - target;
+            counterBadge.className = 'px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-rose-100 text-rose-800 border border-rose-300';
+            counterBadge.innerText = `Lebih: ${sum}/${target} (+${lebih})`;
+            if (btnSubmit) btnSubmit.disabled = true;
+        }
+    }
+}
+
+let currentSelectedKategori = 'rusak';
+
+function selectKategoriCard(kat) {
+    currentSelectedKategori = kat;
+    
+    // Update Radio Check
+    let radios = document.querySelectorAll('input[name="kategori_beban_radio"]');
+    radios.forEach(r => {
+        r.checked = (r.value === kat);
+    });
+
+    // Update Card Styling
+    let allCards = ['rusak', 'hilang', 'expired', 'salah_catat', 'lainnya'];
+    allCards.forEach(c => {
+        let cardEl = document.getElementById('card_kat_' + c);
+        if (cardEl) {
+            if (c === kat) {
+                cardEl.classList.add('border-slate-900', 'bg-slate-50', 'ring-1', 'ring-slate-900');
+                cardEl.classList.remove('border-slate-200', 'bg-white');
+            } else {
+                cardEl.classList.remove('border-slate-900', 'bg-slate-50', 'ring-1', 'ring-slate-900');
+                cardEl.classList.add('border-slate-200', 'bg-white');
+            }
+        }
+    });
+
+    // Handle Teks Alasan Lainnya & Kewajiban Keterangan pada Mutasi Hilang
+    let boxTeks = document.getElementById('box_teks_alasan_lainnya');
+    let inputTeks = document.getElementById('teks_alasan_lainnya');
+    if (boxTeks) {
+        if (kat === 'lainnya') {
+            boxTeks.classList.remove('hidden');
+            if (inputTeks) inputTeks.focus();
+        } else {
+            boxTeks.classList.add('hidden');
+        }
+    }
+
+    let ketMutasi = document.getElementById('keterangan_mutasi');
+    let lblKetMutasi = document.getElementById('label_keterangan_mutasi');
+    if (ketMutasi && lblKetMutasi) {
+        if (kat === 'hilang') {
+            ketMutasi.required = true;
+            lblKetMutasi.innerText = 'Catatan / Keterangan Mutasi (Wajib diisi untuk Mutasi Hilang):';
+            lblKetMutasi.className = 'block font-bold text-rose-800 mb-1';
+            if (!ketMutasi.value.trim()) {
+                ketMutasi.value = 'Selisih kurang ditemukan saat pengecekan fisik rak etalase';
+            }
+        } else {
+            ketMutasi.required = false;
+            lblKetMutasi.innerText = 'Catatan / Keterangan Mutasi (Opsional):';
+            lblKetMutasi.className = 'block font-bold text-zcTxt mb-1';
+        }
+    }
+
+    let isSplit = document.getElementById('toggle_split_kategori')?.checked || false;
+    let satuan = currentOpnameItem ? (currentOpnameItem.nama_satuan || 'Unit') : 'Unit';
+
+    if (!isSplit) {
+        // Alokasi 100% langsung ke kategori terpilih
+        allCards.forEach(c => {
+            let el = document.getElementById('alokasi_' + c);
+            if (el) el.value = (c === kat) ? currentAbsSelisih : 0;
+        });
+
+        let names = {
+            'rusak': 'Mutasi Barang Rusak',
+            'hilang': 'Mutasi Barang Hilang',
+            'expired': 'Mutasi Barang Kedaluwarsa',
+            'salah_catat': 'Koreksi Salah Catat Administrasi',
+            'lainnya': 'Alasan Lainnya (Kustom)'
+        };
+
+        let teksPenuh = document.getElementById('teks_alokasi_penuh');
+        let badgeQty = document.getElementById('badge_alokasi_penuh_qty');
+        if (teksPenuh) teksPenuh.innerText = '100% dialokasikan ke ' + (names[kat] || kat);
+        if (badgeQty) badgeQty.innerText = currentAbsSelisih + ' ' + satuan;
+
+        let btnSubmit = document.getElementById('btn_submit_mutasi');
+        if (btnSubmit) btnSubmit.disabled = false;
+    }
+
+    updateAllocationStatus();
+}
+
+function toggleSplitKategoriMode(isSplit) {
+    let boxSplit = document.getElementById('box_split_kuantitas');
+    let bannerPenuh = document.getElementById('banner_alokasi_penuh');
+
+    if (isSplit) {
+        if (boxSplit) boxSplit.classList.remove('hidden');
+        if (bannerPenuh) bannerPenuh.classList.add('hidden');
+    } else {
+        if (boxSplit) boxSplit.classList.add('hidden');
+        if (bannerPenuh) bannerPenuh.classList.remove('hidden');
+        // Reset kembali ke 100% pada kartu terpilih
+        selectKategoriCard(currentSelectedKategori);
+    }
+    updateAllocationStatus();
+}
+
+function quickFillReason(type) {
+    selectKategoriCard(type);
+}
+
+function applyKategoriBeban(kat) {
+    selectKategoriCard(kat);
+}
+
+function toggleSurplusCustomText(val) {
+    let box = document.getElementById('box_surplus_teks_lainnya');
+    if (box) {
+        if (val === 'Lainnya') {
+            box.classList.remove('hidden');
+            document.getElementById('teks_surplus_lainnya')?.focus();
+        } else {
+            box.classList.add('hidden');
+        }
+    }
+}
+
+function toggleSnCustomInput(selectEl, snId) {
+    let customInput = document.getElementById('sn_custom_input_' + snId);
+    if (customInput) {
+        if (selectEl.value === 'Lainnya') {
+            customInput.classList.remove('hidden');
+            customInput.focus();
+        } else {
+            customInput.classList.add('hidden');
+        }
+    }
+}
+
+function openModalMutasi(item) {
+    currentOpnameItem = item;
+    let selisih = parseInt(item.selisih) || 0;
+    let isMinus = (selisih < 0);
+    let absSel = Math.abs(selisih);
+    currentAbsSelisih = absSel;
+
+    document.getElementById('mutasi_id_detail').value = item.id;
+    document.getElementById('mutasi_id_batch_target').value = item.id_batch || '';
+    document.getElementById('mutasi_nama_produk').innerText = item.nama_produk + ' — ' + item.nama_variasi;
+    
+    let katProduk = item.kategori || (item.jenis_komoditas === 'Obat' ? 'Obat' : 'Alat Kesehatan');
+    let isAlkesSN = (item.jenis_komoditas === 'Alkes');
+    let isAlkesBMHP = (katProduk === 'Alat Kesehatan' && !isAlkesSN);
+    let badgeText = katProduk;
+    if (isAlkesSN) badgeText += ' (Serial Number)';
+    else if (isAlkesBMHP) badgeText += ' (BMHP / Batch)';
+    let badgeEl = document.getElementById('mutasi_komoditas_badge');
+    if (badgeEl) {
+        badgeEl.innerText = badgeText;
+        badgeEl.className = (katProduk === 'Obat') ? 'font-bold text-blue-700' : 'font-bold text-teal-700';
+    }
+
+    let selBadge = document.getElementById('mutasi_selisih_badge');
+    selBadge.innerText = (selisih > 0 ? '+' + selisih : selisih) + ' ' + (item.nama_satuan || 'Unit');
+    selBadge.className = isMinus ? 'font-extrabold text-sm text-rose-600' : 'font-extrabold text-sm text-blue-600';
+
+    let containerObat = document.getElementById('container_obat_batch');
+    let containerAlkes = document.getElementById('container_alkes_sn');
+    let containerDefisit = document.getElementById('container_alokasi_defisit');
+    let containerSurplus = document.getElementById('container_alokasi_surplus');
+    let cardExpired = document.getElementById('card_kat_expired');
+    let rowExpired = document.getElementById('row_alokasi_expired');
+    let btnSubmit = document.getElementById('btn_submit_mutasi');
+
+    let isBatchTracked = (item.id_batch !== null && item.id_batch !== undefined && item.id_batch !== '' && item.id_batch != 0);
+
+    if (isBatchTracked) {
+        containerObat.classList.remove('hidden');
+        containerAlkes.classList.add('hidden');
+        document.getElementById('mutasi_batch_display_no').innerText = item.no_batch || 'Batch Terdaftar';
+        document.getElementById('mutasi_batch_display_exp').innerText = item.tgl_exp ? item.tgl_exp : '-';
+        document.getElementById('mutasi_batch_satuan_label').innerText = item.nama_satuan || 'Satuan';
+        if (cardExpired) {
+            if (item.tgl_exp) cardExpired.classList.remove('hidden');
+            else cardExpired.classList.add('hidden');
+        }
+        if (rowExpired) {
+            if (item.tgl_exp) rowExpired.classList.remove('hidden');
+            else rowExpired.classList.add('hidden');
+        }
+    } else {
+        containerObat.classList.add('hidden');
+        if (cardExpired) cardExpired.classList.add('hidden');
+        if (rowExpired) rowExpired.classList.add('hidden');
+    }
+
+    if (isMinus) {
+        if (isBatchTracked) {
+            containerDefisit.classList.remove('hidden');
+            containerAlkes.classList.add('hidden');
+            containerSurplus.classList.add('hidden');
+
+            // Reset Split toggle
+            let toggleSplit = document.getElementById('toggle_split_kategori');
+            if (toggleSplit) toggleSplit.checked = false;
+            toggleSplitKategoriMode(false);
+
+            // Evaluasi apakah tanggal kedaluwarsa sudah terlewati atau ada rusak tercatat
+            let defaultKat = 'hilang';
+            if (parseInt(item.fisik_rusak) > 0) {
+                defaultKat = 'rusak';
+            } else if (parseInt(item.fisik_expired) > 0) {
+                defaultKat = 'expired';
+            } else if (item.tgl_exp) {
+                let expD = new Date(item.tgl_exp);
+                let today = new Date();
+                today.setHours(0,0,0,0);
+                if (expD <= today) defaultKat = 'expired';
+            }
+
+            selectKategoriCard(defaultKat);
+
+            ['rusak', 'hilang', 'expired', 'salah_catat', 'lainnya'].forEach(f => {
+                let el = document.getElementById('alokasi_' + f);
+                if (el) {
+                    el.max = absSel;
+                    el.oninput = updateAllocationStatus;
+                }
+            });
+
+            updateAllocationStatus();
+        } else {
+            containerDefisit.classList.add('hidden');
+            containerAlkes.classList.remove('hidden');
+            containerSurplus.classList.add('hidden');
+            let minusBox = document.getElementById('alkes_minus_sn_box');
+            let plusBox = document.getElementById('alkes_plus_sn_box');
+            minusBox.classList.remove('hidden');
+            plusBox.classList.add('hidden');
+            document.getElementById('count_sn_needed').innerText = absSel;
+            if (btnSubmit) btnSubmit.disabled = true;
+
+            let snListContainer = document.getElementById('alkes_sn_checkbox_list');
+            snListContainer.innerHTML = '<div class="text-xs text-slate-400 py-2 text-center">Memuat Serial Number aktif...</div>';
+
+            fetch('../api/get_batch_sn.php?action=get_available_sns&id_variasi=' + item.id_variasi)
+                .then(r => r.json())
+                .then(data => {
+                    let sns = data.sns || data.items || [];
+                    if (!sns.length) {
+                        snListContainer.innerHTML = '<div class="text-xs text-rose-600 p-2">Tidak ada SN berstatus Tersedia di database.</div>';
+                        return;
+                    }
+                    let html = '';
+                    let defaultSnReason = (parseInt(item.fisik_rusak) > 0) ? 'Barang Rusak' : 'Barang Hilang';
+                    sns.forEach(s => {
+                        html += `
+                            <div class="sn-item-card p-2.5 border border-slate-200 rounded-lg bg-white space-y-2 shadow-2xs">
+                                <div class="flex items-center justify-between">
+                                    <label class="sn-item-label flex items-center gap-2 cursor-pointer select-none">
+                                        <input type="checkbox" name="selected_sn_ids[]" value="${s.id}" class="rounded border-slate-300 text-zc focus:ring-zc sn-checkbox cursor-pointer" onchange="toggleSnItemReason(this, ${s.id})">
+                                        <span class="font-mono text-xs font-bold text-slate-900">${s.serial_number}</span>
+                                    </label>
+                                    <span class="text-[10px] text-slate-400 font-medium">Status: ${s.status}</span>
+                                </div>
+                                <div id="sn_reason_box_${s.id}" class="hidden pt-2 border-t border-slate-100 space-y-1.5">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-[11px] text-slate-700 font-semibold">Kategori Status SN:</span>
+                                        <select name="sn_reason[${s.id}]" class="border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-semibold bg-white focus:ring-1 focus:ring-zc text-slate-800" onchange="toggleSnCustomInput(this, ${s.id})">
+                                            <option value="Barang Rusak" ${defaultSnReason === 'Barang Rusak' ? 'selected' : ''}>Barang Rusak (Cacat Fisik / Fungsi)</option>
+                                            <option value="Barang Hilang" ${defaultSnReason === 'Barang Hilang' ? 'selected' : ''}>Barang Hilang (Tidak Ditemukan di Rak)</option>
+                                            <option value="Koreksi Salah Catat / Ditemukan">Koreksi Salah Catat Administrasi</option>
+                                            <option value="Lainnya">Alasan Lainnya (Kustom)...</option>
+                                        </select>
+                                    </div>
+                                    <input type="text" name="sn_custom_reason[${s.id}]" id="sn_custom_input_${s.id}" placeholder="Tuliskan penyebab spesifik untuk SN ini..." class="hidden w-full border border-slate-300 rounded px-2 py-1 text-xs bg-slate-50 focus:bg-white text-slate-700">
+                                </div>
+                            </div>
+                        `;
+                    });
+                    snListContainer.innerHTML = html;
+                    updateAlkesSnCheckboxes();
+                })
+                .catch(() => {
+                    snListContainer.innerHTML = '<div class="text-xs text-rose-600 p-2">Gagal memuat SN.</div>';
+                });
+        }
+    } else {
+        containerDefisit.classList.add('hidden');
+        containerSurplus.classList.remove('hidden');
+        let selSurplus = document.getElementById('alasan_mutasi_surplus');
+        if (selSurplus) selSurplus.value = 'Koreksi Salah Catat / Ditemukan';
+        toggleSurplusCustomText('Koreksi Salah Catat / Ditemukan');
+        if (btnSubmit) btnSubmit.disabled = false;
+
+        if (!isBatchTracked) {
+            containerAlkes.classList.remove('hidden');
+            let minusBox = document.getElementById('alkes_minus_sn_box');
+            let plusBox = document.getElementById('alkes_plus_sn_box');
+            minusBox.classList.add('hidden');
+            plusBox.classList.remove('hidden');
+        }
+    }
+
+    document.getElementById('modal_mutasi').classList.remove('hidden');
+}
+
+// Fungsi toggle dropdown alasan untuk masing-masing item Serial Number
+function toggleSnItemReason(checkbox, snId) {
+    let box = document.getElementById('sn_reason_box_' + snId);
+    if (box) {
+        if (checkbox.checked) {
+            box.classList.remove('hidden');
+        } else {
+            box.classList.add('hidden');
+        }
+    }
+    updateAlkesSnCheckboxes();
+}
+
+// Fungsi pembatasan pemilihan Serial Number agar tidak bisa memilih melebihi kuantitas selisih
+function updateAlkesSnCheckboxes() {
+    let needed = parseInt(document.getElementById('count_sn_needed')?.innerText, 10) || 0;
+    let allCheckboxes = document.querySelectorAll('.sn-checkbox');
+    let checkedBoxes = document.querySelectorAll('.sn-checkbox:checked');
+    let countChecked = checkedBoxes.length;
+
+    let infoStatus = document.getElementById('sn_selection_status');
+    if (infoStatus) {
+        if (countChecked >= needed && needed > 0) {
+            infoStatus.innerHTML = `<span class="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded text-[10px]">${countChecked}/${needed} Dipilih (Lengkap)</span>`;
+        } else {
+            infoStatus.innerHTML = `<span class="inline-flex items-center gap-1 font-semibold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded text-[10px]">${countChecked}/${needed} Dipilih</span>`;
+        }
+    }
+
+    let btnSubmit = document.getElementById('btn_submit_mutasi');
+    if (btnSubmit && currentOpnameItem && currentOpnameItem.jenis_komoditas !== 'Obat') {
+        btnSubmit.disabled = (countChecked !== needed);
+    }
+
+    allCheckboxes.forEach(cb => {
+        let card = cb.closest('.sn-item-card') || cb.closest('.sn-item-label');
+        if (!cb.checked) {
+            if (countChecked >= needed) {
+                cb.disabled = true;
+                cb.classList.remove('cursor-pointer');
+                cb.classList.add('cursor-not-allowed');
+                if (card) {
+                    card.classList.add('opacity-40', 'cursor-not-allowed', 'bg-slate-100');
+                    card.classList.remove('border-emerald-300', 'bg-emerald-50/50');
+                }
+            } else {
+                cb.disabled = false;
+                cb.classList.add('cursor-pointer');
+                cb.classList.remove('cursor-not-allowed');
+                if (card) {
+                    card.classList.remove('opacity-40', 'cursor-not-allowed', 'bg-slate-100', 'bg-emerald-50/50');
+                }
+            }
+        } else {
+            cb.disabled = false;
+            cb.classList.add('cursor-pointer');
+            cb.classList.remove('cursor-not-allowed');
+            if (card) {
+                card.classList.remove('opacity-40', 'cursor-not-allowed', 'bg-slate-100');
+                card.classList.add('bg-emerald-50/50', 'border-emerald-400');
+            }
+        }
+    });
+}
+
+// Event delegation untuk perubahan checkbox SN
+document.getElementById('alkes_sn_checkbox_list')?.addEventListener('change', function(e) {
+    if (e.target && e.target.classList.contains('sn-checkbox')) {
+        updateAlkesSnCheckboxes();
+    }
+});
+
+// Validasi checkbox SN saat form mutasi Alkes minus disubmit
+document.getElementById('form_mutasi_selisih')?.addEventListener('submit', function(e) {
+    let minusBox = document.getElementById('alkes_minus_sn_box');
+    if (!minusBox.classList.contains('hidden') && !document.getElementById('container_alkes_sn').classList.contains('hidden')) {
+        let needed = parseInt(document.getElementById('count_sn_needed').innerText, 10);
+        let checked = document.querySelectorAll('.sn-checkbox:checked').length;
+        if (checked !== needed) {
+            e.preventDefault();
+            alert('Harap pilih tepat ' + needed + ' nomor Serial Number yang rusak/hilang! (Saat ini dipilih: ' + checked + ')');
+        }
+    }
+});
+
+// Pemindai Barcode / Fast Locator untuk Pencacahan Fisik Rak
+function handleBarcodeScan() {
+    let input = document.getElementById('barcode_scan_input');
+    let q = (input ? input.value : '').trim().toLowerCase();
+    if (!q) return;
+
+    let rows = document.querySelectorAll('tr[data-barcode-search]');
+    let matchedRow = null;
+
+    rows.forEach(r => {
+        let str = (r.getAttribute('data-barcode-search') || '').toLowerCase();
+        if (str.includes(q) && !matchedRow) {
+            matchedRow = r;
+        }
+    });
+
+    if (matchedRow) {
+        matchedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        matchedRow.classList.add('bg-amber-100', 'ring-2', 'ring-amber-500');
+        setTimeout(() => {
+            matchedRow.classList.remove('bg-amber-100', 'ring-2', 'ring-amber-500');
+        }, 3000);
+
+        let inputFisik = matchedRow.querySelector('.input-hitung-fisik');
+        if (inputFisik) {
+            inputFisik.focus();
+            inputFisik.select();
+        }
+        input.value = '';
+    } else {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Barang Tidak Ditemukan',
+                text: 'Barcode / SKU / Batch "' + q + '" tidak ditemukan dalam daftar opname ini.',
+                icon: 'warning',
+                timer: 2500,
+                showConfirmButton: false
+            });
+        } else {
+            alert('Barcode / SKU / Batch "' + q + '" tidak ditemukan!');
+        }
+    }
+}
+
+document.getElementById('barcode_scan_input')?.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        handleBarcodeScan();
+    }
+});
+
+// Fungsi Cepat Pengisian Angka Fisik Demo / Uji Coba Sesuai 5 Skenario
+async function isiOtomatisAngkaDemo() {
+    let btn = document.querySelector('button[onclick="isiOtomatisAngkaDemo()"]');
+    let origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>Mengisi Angka...</span>';
+    }
+
+    try {
+        let res = await fetch('stok_opname.php?ajax=get_demo_counts');
+        let json = await res.json();
+
+        if (json.status !== 'success' || !json.data) {
+            alert('Gagal mengambil data simulasi pengujian: ' + (json.message || 'Respons server tidak valid.'));
+            if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+            return;
+        }
+
+        let countFilled = 0;
+        let anomaliCount = 0;
+
+        json.data.forEach(item => {
+            let tr = document.querySelector('tr[data-id="' + item.id + '"]');
+            let inBaik = document.getElementById('input_baik_' + item.id);
+            let inRusak = document.getElementById('input_rusak_' + item.id);
+            let inExp = document.getElementById('input_exp_' + item.id);
+
+            if (inBaik && inBaik.type !== 'hidden') {
+                inBaik.value = item.baik;
+            }
+            if (inRusak) {
+                inRusak.value = item.rusak;
+            }
+            if (inExp) {
+                inExp.value = item.exp;
+            }
+
+            if (tr) {
+                tr.classList.remove('bg-rose-50/70', 'bg-amber-50/70', 'bg-blue-50/70');
+                if (item.jenis === 'rusak') {
+                    tr.classList.add('bg-amber-50/70');
+                    anomaliCount++;
+                } else if (item.jenis === 'expired' || item.jenis === 'hilang') {
+                    tr.classList.add('bg-rose-50/70');
+                    anomaliCount++;
+                } else if (item.jenis === 'surplus') {
+                    tr.classList.add('bg-blue-50/70');
+                    anomaliCount++;
+                }
+            }
+            countFilled++;
+        });
+
+        if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+
+        let msgAnomali = 'Berhasil mengisi ' + countFilled + ' baris kuantitas fisik di layar sesuai skenario pengujian:\n' +
+            '• Cefadroxil (Obat): 2 Strip Rusak (di kolom Kondisi Rusak)\n' +
+            '• Sanmol Sirup (Obat): Kedaluwarsa (di kolom Kondisi Expired)\n' +
+            '• Amoxicillin (Obat): Hilang/Kurang 2 Strip (Fisik 6 dari Sistem 8)\n' +
+            '• Tensimeter Omron (Alkes): Hilang 1 Unit (Fisik 7 dari Sistem 8)\n' +
+            '• Termometer Omron (Alkes): 1 Unit Rusak Fisik (di kolom Kondisi Rusak)\n' +
+            '• Betadine Solution (Obat): Surplus +2 Botol (Fisik 14 dari Sistem 12)\n' +
+            '• 105 Item lainnya: Klop / Sesuai persis dengan data sistem.\n\n' +
+            'Silakan tinjau angka di kolom fisik lalu tekan tombol "Simpan Hasil Hitung" untuk menyimpan data ke server.';
+        alert(msgAnomali);
+
+    } catch (err) {
+        if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+        alert('Terjadi kendala koneksi saat mengisi angka uji coba: ' + err.message);
+    }
+}
+
+// Fungsi Validasi & Submit Form Bulk Simpan
+function validateBulkFormBeforeSubmit() {
+    let form = document.getElementById('form_bulk_simpan');
+    if (!form) return false;
+
+    let inputs = form.querySelectorAll('input[type="number"]');
+    let hasValue = false;
+    inputs.forEach(inp => {
+        let val = (inp.value || '').trim();
+        if (val !== '') {
+            hasValue = true;
+        }
+    });
+
+    // Jika di halaman HANYA tersisa baris barang kedaluwarsa (semua baris non-expired sudah dihitung),
+    // izinkan submit meskipun input dikosongkan agar otomatis dialokasikan ke kondisi Expired.
+    let expRowsCount = form.querySelectorAll('tr[data-is-exp="1"]').length;
+    let nonExpRowsCount = form.querySelectorAll('tr[data-is-exp="0"]').length;
+    let onlyExpRowsRemaining = (expRowsCount > 0 && nonExpRowsCount === 0);
+
+    if (!hasValue && !onlyExpRowsRemaining) {
+        alert('Perhatian: Anda belum memasukkan angka hitungan fisik pada baris mana pun.\n\nSilakan ketik kuantitas fisik rak terlebih dahulu pada minimal 1 barang sebelum menekan tombol simpan.');
+        return false;
+    }
+    return true;
+}
+
+function submitBulkCountingForm() {
+    let form = document.getElementById('form_bulk_simpan');
+    if (!form) return;
+
+    if (!validateBulkFormBeforeSubmit()) return;
+
+    if (confirm('Simpan hasil hitung fisik yang telah diinput ke server?')) {
+        form.submit();
+    }
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</main></div>
+    <script>
+      $(document).ready(function() {
+          $("select.select2:not(.select2-hidden-accessible)").each(function() {
+              $(this).select2({ width: "100%" });
+              $(this).on("select2:select", function(e) {
+                  this.dispatchEvent(new Event("change", { bubbles: true }));
+              });
+          });
+      });
+    </script>
+    </body></html>

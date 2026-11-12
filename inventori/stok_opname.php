@@ -27,26 +27,157 @@ $msg = ''; $msgType = '';
 $activeSession = cekSesiOpnameAktif($pdo);
 $currentTahap = $activeSession['tahap'] ?? 'Penghitungan';
 
+// --- AJAX: AMBIL DATA ANGKA HITUNG DEMO UNTUK PENGISIAN CEPAT (TANPA MEMBOCORKAN STOK DI HTML BLIND COUNT) ---
+if (isset($_GET['ajax']) && $_GET['ajax'] === 'get_demo_counts') {
+    header('Content-Type: application/json; charset=utf-8');
+    if (!$activeSession) {
+        echo json_encode(['status' => 'error', 'message' => 'Tidak ada sesi opname aktif.']);
+        exit;
+    }
+    
+    $idSesi = $activeSession['id'];
+    $stmtRows = $pdo->prepare("
+        SELECT dob.id, dob.jenis_komoditas, dob.satuan_tipe, dob.stok_sistem_fisik,
+               pi.nama_produk, pv.nama_variasi, sb.no_batch, sb.tgl_exp
+        FROM detail_opname_batch dob
+        JOIN produk_variasi pv ON dob.id_variasi = pv.id
+        JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+        LEFT JOIN stok_batch sb ON dob.id_batch = sb.id
+        WHERE dob.id_sesi = ?
+        ORDER BY dob.id ASC
+    ");
+    $stmtRows->execute([$idSesi]);
+    $allRows = $stmtRows->fetchAll(PDO::FETCH_ASSOC);
+
+    $doneCef = false;
+    $doneSanmol = false;
+    $doneAmox = false;
+    $doneOmron = false;
+    $doneTermo = false;
+    $doneBeta = false;
+
+    $results = [];
+    foreach ($allRows as $uRow) {
+        $sistem = intval($uRow['stok_sistem_fisik']);
+        $fBaik = $sistem;
+        $fRusak = 0;
+        $fExp = 0;
+        $anomaliType = '';
+
+        // 1. Cefadroxil 500mg (Satuan Kecil) -> Rusak 2 Strip
+        if (!$doneCef && stripos($uRow['nama_produk'], 'Cefadroxil') !== false && $uRow['satuan_tipe'] === 'kecil') {
+            $fBaik = max(0, $sistem - 2);
+            $fRusak = 2;
+            $fExp = 0;
+            $doneCef = true;
+            $anomaliType = 'rusak';
+        }
+        // 2. Sanmol Sirup 60ml -> Expired
+        elseif (!$doneSanmol && stripos($uRow['nama_produk'], 'Sanmol') !== false && !empty($uRow['tgl_exp']) && strtotime($uRow['tgl_exp']) < strtotime(date('Y-m-d'))) {
+            $fBaik = 0;
+            $fRusak = 0;
+            $fExp = $sistem;
+            $doneSanmol = true;
+            $anomaliType = 'expired';
+        }
+        // 3. Amoxicillin 500mg (Satuan Kecil) -> Hilang 2 Strip
+        elseif (!$doneAmox && stripos($uRow['nama_produk'], 'Amoxicillin') !== false && $uRow['satuan_tipe'] === 'kecil') {
+            $fBaik = max(0, $sistem - 2);
+            $doneAmox = true;
+            $anomaliType = 'hilang';
+        }
+        // 4. Tensimeter Digital Omron -> Hilang 1 Unit
+        elseif (!$doneOmron && stripos($uRow['nama_produk'], 'Tensimeter') !== false) {
+            $fBaik = max(0, $sistem - 1);
+            $doneOmron = true;
+            $anomaliType = 'hilang';
+        }
+        // 5. Termometer Digital Omron -> Rusak 1 Unit
+        elseif (!$doneTermo && stripos($uRow['nama_produk'], 'Termometer Digital') !== false) {
+            $fBaik = max(0, $sistem - 1);
+            $fRusak = 1;
+            $doneTermo = true;
+            $anomaliType = 'rusak';
+        }
+        // 6. Betadine Solution 15ml (Satuan Kecil) -> Surplus +2 Botol
+        elseif (!$doneBeta && stripos($uRow['nama_produk'], 'Betadine') !== false && $uRow['satuan_tipe'] === 'kecil') {
+            $fBaik = $sistem + 2;
+            $doneBeta = true;
+            $anomaliType = 'surplus';
+        }
+
+        $results[] = [
+            'id' => $uRow['id'],
+            'baik' => $fBaik,
+            'rusak' => $fRusak,
+            'exp' => $fExp,
+            'anomali' => ($anomaliType !== ''),
+            'jenis' => $anomaliType
+        ];
+    }
+
+    echo json_encode(['status' => 'success', 'data' => $results]);
+    exit;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // PROSES AKSI POST / REQUEST
 // ─────────────────────────────────────────────────────────────────────────────
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $aksi = $_POST['aksi'] ?? '';
 
-    // --- RESET DATABASE KE BASELINE AWAL (Khusus Superadmin / Pengujian Demo) ---
+    // --- RESET DATABASE KE BASELINE AWAL DENGAN CADANGAN OTOMATIS (UTILITAS DEMO) ---
     if ($aksi === 'reset_database_demo') {
         if (!$canVerify) {
-            $msg = "Akses ditolak! Utilitas reset database pengujian hanya dapat diakses oleh Admin atau Superadmin.";
+            $msg = "Akses ditolak! Utilitas reset pangkalan data pengujian hanya dapat diakses oleh Admin atau Superadmin.";
             $msgType = 'error';
         } else {
             try {
-                require_once __DIR__ . '/../scratch/restore_baseline.php';
-                restoreBaselineInventory($pdo);
+                $backupDir = 'C:\\xampp\\backup_data';
+                if (!is_dir($backupDir)) {
+                    mkdir($backupDir, 0777, true);
+                }
+                
+                $dbName = defined('DB_NAME') ? DB_NAME : 'db_inventory';
+                $dbUser = defined('DB_USER') ? DB_USER : 'root';
+                $passArg = (defined('DB_PASS') && DB_PASS !== '') ? "-p\"" . DB_PASS . "\"" : "";
+                
+                // 1. Cadangan otomatis sebelum menimpa data
+                $backupFile = $backupDir . '\\backup_sebelum_reset_' . date('Ymd_His') . '.sql';
+                $mysqldumpPath = 'C:\\xampp\\mysql\\bin\\mysqldump.exe';
+                if (file_exists($mysqldumpPath)) {
+                    exec("\"$mysqldumpPath\" -u $dbUser $passArg $dbName > \"$backupFile\" 2>&1");
+                }
+                
+                // 2. Pulihkan pangkalan data dari berkas dump bersih di luar folder web publik
+                $cleanDump = $backupDir . '\\Demo_Bersih.sql';
+                if (!file_exists($cleanDump)) {
+                    $cleanDump = __DIR__ . '/../Demo_Bersih.sql';
+                }
+                
+                $mysqlPath = 'C:\\xampp\\mysql\\bin\\mysql.exe';
+                $restored = false;
+                if (file_exists($mysqlPath) && file_exists($cleanDump)) {
+                    $cleanDumpEscaped = str_replace('\\', '/', $cleanDump);
+                    $cmd = "\"$mysqlPath\" -u $dbUser $passArg $dbName -e \"source $cleanDumpEscaped\" 2>&1";
+                    $out = [];
+                    $ret = 0;
+                    exec($cmd, $out, $ret);
+                    if ($ret === 0) {
+                        $restored = true;
+                    }
+                }
+                
+                if (!$restored) {
+                    require_once __DIR__ . '/../scratch/restore_baseline.php';
+                    restoreBaselineInventory($pdo);
+                }
+                
                 cekSesiOpnameAktif($pdo, true);
-                $msg = "Database inventori berhasil di-reset ke kondisi bersih awal (Baseline Clean State)! Seluruh sesi uji coba dan mutasi sementara telah dibersihkan.";
-                $msgType = 'success';
+                header("Location: /inventory_zencare/inventori/stok_opname.php?msg=" . urlencode("Pangkalan data berhasil dipulihkan ke kondisi awal (Demo_Bersih.sql). Sesi simulasi telah dibersihkan dan cadangan tersimpan di backup_data.") . "&type=success");
+                exit;
             } catch (Exception $e) {
-                $msg = "Gagal mereset database: " . $e->getMessage();
+                $msg = "Gagal memulihkan data: " . $e->getMessage();
                 $msgType = 'error';
             }
         }
@@ -1749,7 +1880,7 @@ if ($isKasir) {
                         </form>
 
                         <!-- Tombol [Utilitas Demo] Reset Data Demo (Admin & Superadmin) -->
-                        <form method="POST" onsubmit="return confirm('Khusus keperluan demo: Apakah Anda yakin ingin memulihkan database inventori ke kondisi awal bersih (Demo_Bersih.sql)?');" class="inline">
+                        <form method="POST" action="/inventory_zencare/inventori/stok_opname.php" onsubmit="return confirm('Khusus keperluan demo: Apakah Anda yakin ingin memulihkan database inventori ke kondisi awal bersih (Demo_Bersih.sql)?');" class="inline">
                             <input type="hidden" name="aksi" value="reset_database_demo">
                             <button type="submit" class="h-9 px-3.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer" title="Khusus keperluan demo pengujian: Memulihkan database ke kondisi awal bersih (Demo_Bersih.sql)">
                                 <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
@@ -2232,7 +2363,7 @@ if ($isKasir) {
 
                             <!-- Tombol [Utilitas Demo] Reset Data Demo (Admin & Superadmin) -->
                             <form method="POST" onsubmit="return confirm('Khusus keperluan demo: Apakah Anda yakin ingin memulihkan seluruh database inventori ke kondisi awal bersih (Demo_Bersih.sql)?');" class="inline">
-                                <input type="hidden" name="aksi" value="reset_database">
+                                <input type="hidden" name="aksi" value="reset_database_demo">
                                 <button type="submit" class="h-9 px-3.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Khusus keperluan demo pengujian: Memulihkan database ke kondisi awal bersih (Demo_Bersih.sql)">
                                     <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                                     <span>[Utilitas Demo] Reset Data Demo</span>
@@ -2543,17 +2674,17 @@ if ($isKasir) {
                 <!-- Tab Pemfilteran Progres Hitung Kasir (Belum vs Sudah Dihitung) -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
                     <div class="flex items-center gap-1.5">
-                        <a href="?komoditas=<?= urlencode($filterKom) ?>&status_eval=belum_hitung&q=<?= urlencode($searchQ) ?>" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 <?= $filterSts === 'belum_hitung' ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
+                        <a href="?komoditas=<?= urlencode($filterKom) ?>&status_eval=belum_hitung&q=<?= urlencode($searchQ) ?>" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 <?= $filterSts === 'belum_hitung' ? 'bg-slate-800 text-white shadow-2xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' ?>">
                             <span>Belum Dihitung</span>
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono <?= $filterSts === 'belum_hitung' ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-700' ?>"><?= $stats['belum_hitung'] ?></span>
+                            <span class="px-1.5 py-0.2 rounded text-[10px] font-mono <?= $filterSts === 'belum_hitung' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600' ?>"><?= $stats['belum_hitung'] ?></span>
                         </a>
-                        <a href="?komoditas=<?= urlencode($filterKom) ?>&status_eval=sudah_hitung&q=<?= urlencode($searchQ) ?>" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 <?= $filterSts === 'sudah_hitung' ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
+                        <a href="?komoditas=<?= urlencode($filterKom) ?>&status_eval=sudah_hitung&q=<?= urlencode($searchQ) ?>" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 <?= $filterSts === 'sudah_hitung' ? 'bg-slate-800 text-white shadow-2xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' ?>">
                             <span>Sudah Dihitung (Tersimpan)</span>
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono <?= $filterSts === 'sudah_hitung' ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-700' ?>"><?= $stats['sudah_hitung'] ?></span>
+                            <span class="px-1.5 py-0.2 rounded text-[10px] font-mono <?= $filterSts === 'sudah_hitung' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600' ?>"><?= $stats['sudah_hitung'] ?></span>
                         </a>
-                        <a href="?komoditas=<?= urlencode($filterKom) ?>&status_eval=semua&q=<?= urlencode($searchQ) ?>" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 <?= $filterSts === 'semua' ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
+                        <a href="?komoditas=<?= urlencode($filterKom) ?>&status_eval=semua&q=<?= urlencode($searchQ) ?>" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 <?= $filterSts === 'semua' ? 'bg-slate-800 text-white shadow-2xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' ?>">
                             <span>Semua Item</span>
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono <?= $filterSts === 'semua' ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-700' ?>"><?= $stats['total'] ?></span>
+                            <span class="px-1.5 py-0.2 rounded text-[10px] font-mono <?= $filterSts === 'semua' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600' ?>"><?= $stats['total'] ?></span>
                         </a>
                     </div>
                     <div class="text-[11px] text-slate-500 hidden sm:block">
@@ -2652,7 +2783,7 @@ if ($isKasir) {
                                             $hasBatchInfo = (!empty($it['id_batch']) || !empty($it['no_batch']));
                                             $isAlkesSN = ($it['jenis_komoditas'] === 'Alkes' && !$hasBatchInfo);
                                         ?>
-                                        <tr class="hover:bg-slate-50/70 transition" data-barcode-search="<?= $searchableStr ?>" data-id="<?= $it['id'] ?>" data-nama="<?= htmlspecialchars($it['nama_produk']) ?>" data-satuan-tipe="<?= $it['satuan_tipe'] ?>" data-stok-sistem="<?= $it['stok_sistem_fisik'] ?>" data-is-exp="<?= $isObatExp ? '1' : '0' ?>" data-komoditas="<?= $it['jenis_komoditas'] ?>">
+                                        <tr class="hover:bg-slate-50/70 transition" data-barcode-search="<?= $searchableStr ?>" data-id="<?= $it['id'] ?>" data-nama="<?= htmlspecialchars($it['nama_produk']) ?>" data-satuan-tipe="<?= $it['satuan_tipe'] ?>" data-is-exp="<?= $isObatExp ? '1' : '0' ?>" data-komoditas="<?= $it['jenis_komoditas'] ?>">
                                             <td class="py-3 px-3 text-center text-slate-400 font-mono text-xs">
                                                 <input type="hidden" name="bulk_item_ids[]" value="<?= $it['id'] ?>">
                                                 &gt;
@@ -2747,82 +2878,52 @@ if ($isKasir) {
             <!-- JIKA TAHAP 2: VERIFIKASI (ADMIN & SUPERADMIN) -> TABEL FOKUS ANOMALI & 1-KLIK MUTASI -->
             <?php else: ?>
 
-                <!-- NAVIGASI TAHAP 2 VERIFIKASI -->
-                <?php if ($isSuperadmin): ?>
-                    <!-- TAB NAVIGASI VERIFIKASI KHUSUS SUPERADMIN (PEMILIK TOKO) -->
-                    <div class="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3 overflow-x-auto text-xs">
+                <!-- NAVIGASI FILTER TAB TAHAP 2 VERIFIKASI (ADMIN & SUPERADMIN) -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3 mb-4">
+                    <!-- Tab Filter: Perlu Mutasi, Sesuai, Sudah Dimutasi, Semua Item -->
+                    <div class="flex items-center gap-1.5 overflow-x-auto text-xs">
                         <!-- Tab 1: Perlu Mutasi (Berselisih) -->
                         <a href="?komoditas=<?= urlencode($filterKom) ?>&status_eval=berselisih&q=<?= urlencode($searchQ) ?>" 
-                           class="px-3.5 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition <?= ($filterSts === 'berselisih' || $filterSts === 'berselisih_belum_mutasi') ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' ?>" title="Fokus verifikasi pada barang yang berselisih">
+                           class="px-3.5 py-1.5 rounded-lg font-semibold flex items-center gap-2 transition <?= ($filterSts === 'berselisih' || $filterSts === 'berselisih_belum_mutasi') ? 'bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' ?>" title="Fokus verifikasi pada barang yang berselisih">
                             <span>Perlu Mutasi (Berselisih)</span>
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono <?= ($filterSts === 'berselisih' || $filterSts === 'berselisih_belum_mutasi') ? 'bg-rose-500 text-white' : 'bg-slate-200 text-slate-700' ?>">
+                            <span class="px-1.5 py-0.2 rounded text-[10px] font-mono <?= ($filterSts === 'berselisih' || $filterSts === 'berselisih_belum_mutasi') ? 'bg-rose-200 text-rose-800 font-bold' : 'bg-slate-100 text-slate-600' ?>">
                                 <?= max(0, $stats['berselisih'] - $stats['sudah_dimutasi']) ?>
                             </span>
                         </a>
 
                         <!-- Tab 2: Sesuai / Pas (Klop) -->
                         <a href="?komoditas=<?= urlencode($filterKom) ?>&status_eval=sesuai&q=<?= urlencode($searchQ) ?>" 
-                           class="px-3.5 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition <?= $filterSts === 'sesuai' ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' ?>" title="Daftar barang yang jumlah fisiknya cocok dengan sistem">
+                           class="px-3.5 py-1.5 rounded-lg font-semibold flex items-center gap-2 transition <?= $filterSts === 'sesuai' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' ?>" title="Daftar barang yang jumlah fisiknya cocok dengan sistem">
                             <span>Sesuai (Klop)</span>
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono <?= $filterSts === 'sesuai' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-700' ?>">
+                            <span class="px-1.5 py-0.2 rounded text-[10px] font-mono <?= $filterSts === 'sesuai' ? 'bg-emerald-200 text-emerald-800 font-bold' : 'bg-slate-100 text-slate-600' ?>">
                                 <?= $stats['sesuai'] ?>
                             </span>
                         </a>
 
                         <!-- Tab 3: Sudah Dimutasi -->
                         <a href="?komoditas=<?= urlencode($filterKom) ?>&status_eval=sudah_dimutasi&q=<?= urlencode($searchQ) ?>" 
-                           class="px-3.5 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition <?= $filterSts === 'sudah_dimutasi' ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' ?>" title="Barang yang sudah selesai direkonsiliasi dan dicatat ke kartu stok">
+                           class="px-3.5 py-1.5 rounded-lg font-semibold flex items-center gap-2 transition <?= $filterSts === 'sudah_dimutasi' ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' ?>" title="Barang yang sudah selesai direkonsiliasi dan dicatat ke kartu stok">
                             <span>Sudah Dimutasi</span>
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono <?= $filterSts === 'sudah_dimutasi' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700' ?>">
+                            <span class="px-1.5 py-0.2 rounded text-[10px] font-mono <?= $filterSts === 'sudah_dimutasi' ? 'bg-blue-200 text-blue-800 font-bold' : 'bg-slate-100 text-slate-600' ?>">
                                 <?= $stats['sudah_dimutasi'] ?>
                             </span>
                         </a>
 
-                        <!-- Tab 4: Semua Item (Pemeriksaan Menyeluruh) -->
+                        <!-- Tab 4: Semua Item -->
                         <a href="?komoditas=<?= urlencode($filterKom) ?>&status_eval=semua&q=<?= urlencode($searchQ) ?>" 
-                           class="px-3.5 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition <?= $filterSts === 'semua' ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' ?>" title="Tampilkan seluruh entitas persediaan">
+                           class="px-3.5 py-1.5 rounded-lg font-semibold flex items-center gap-2 transition <?= $filterSts === 'semua' ? 'bg-slate-100 text-slate-800 border border-slate-300 shadow-2xs' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' ?>" title="Tampilkan seluruh entitas persediaan">
                             <span>Semua Item</span>
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono <?= $filterSts === 'semua' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700' ?>">
+                            <span class="px-1.5 py-0.2 rounded text-[10px] font-mono <?= $filterSts === 'semua' ? 'bg-slate-200 text-slate-800 font-bold' : 'bg-slate-100 text-slate-600' ?>">
                                 <?= $stats['total'] ?>
                             </span>
                         </a>
                     </div>
-                <?php else: ?>
-                    <!-- ADMIN TOKO: FOKUS ANOMALI (TANPA TAB) -->
-                    <div class="p-3 bg-slate-900 text-white rounded-xl flex items-center justify-between text-xs mb-3 shadow-xs">
-                        <div class="flex items-center gap-2.5">
-                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                            <div>
-                                <span class="font-bold">Daftar Rekonsiliasi Selisih Fisik (Admin Toko)</span>
-                                <p class="text-[11px] text-slate-300">Menampilkan <?= count($detailItems) ?> barang yang memiliki selisih fisik di rak. Selesaikan verifikasi mutasi agar sesi opname dapat ditutup.</p>
-                            </div>
-                        </div>
-                        <span class="px-2.5 py-1 rounded-lg bg-rose-500 text-white font-mono font-bold text-xs"><?= count($detailItems) ?> Item Berselisih</span>
-                    </div>
-                <?php endif; ?>
 
-                <!-- Info Keterangan Tab Aktif -->
-                <?php if ($filterSts === 'berselisih' || $filterSts === 'berselisih_belum_mutasi'): ?>
-                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2 text-xs text-slate-800 mb-3">
-                        <span class="w-2.5 h-2.5 rounded-full bg-rose-600 shrink-0"></span>
-                        <span><strong>Fokus Anomali:</strong> Menampilkan <strong><?= count($detailItems) ?> barang dengan selisih fisik</strong>. Sebanyak <strong><?= $stats['sesuai'] ?> barang yang cocok disembunyikan</strong> agar Anda langsung fokus menyelesaikan rekonsiliasi.</span>
+                    <!-- Keterangan Ringkas Jumlah Baris -->
+                    <div class="text-xs text-slate-500 font-medium">
+                        Menampilkan <strong><?= count($detailItems) ?></strong> dari <?= $stats['total'] ?> baris persediaan
                     </div>
-                <?php elseif ($filterSts === 'sesuai'): ?>
-                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2 text-xs text-emerald-800 mb-3">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 shrink-0"></span>
-                        <span><strong>Daftar Barang Sesuai:</strong> Menampilkan <strong><?= count($detailItems) ?> barang yang 100% klop</strong> (stok fisik di rak sama persis dengan stok pembukuan sistem). Tidak memerlukan mutasi.</span>
-                    </div>
-                <?php elseif ($filterSts === 'sudah_dimutasi'): ?>
-                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2 text-xs text-blue-800 mb-3">
-                        <span class="w-2.5 h-2.5 rounded-full bg-blue-600 shrink-0"></span>
-                        <span><strong>Riwayat Selesai Rekonsiliasi:</strong> Menampilkan <strong><?= count($detailItems) ?> barang yang telah selesai dimutasi</strong> dan tersinkronisasi ke kartu stok.</span>
-                    </div>
-                <?php else: ?>
-                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2 text-xs text-slate-700 mb-3">
-                        <span class="w-2.5 h-2.5 rounded-full bg-slate-500 shrink-0"></span>
-                        <span><strong>Semua Item Persediaan:</strong> Menampilkan seluruh <strong><?= count($detailItems) ?> entitas fisik</strong> sesi opname.</span>
-                    </div>
-                <?php endif; ?>
+                </div>
 
                 <!-- Tabel Rekonsiliasi Anomali & Eksekusi Mutasi -->
                 <div class="bg-white border border-zcBrd rounded-2xl shadow-sm overflow-hidden">
@@ -3982,117 +4083,76 @@ document.getElementById('barcode_scan_input')?.addEventListener('keydown', funct
 });
 
 // Fungsi Cepat Pengisian Angka Fisik Demo / Uji Coba Sesuai 5 Skenario
-function isiOtomatisAngkaDemo() {
-    let rows = document.querySelectorAll('tr[data-id]');
-    let countFilled = 0;
-    let anomaliCount = 0;
+async function isiOtomatisAngkaDemo() {
+    let btn = document.querySelector('button[onclick="isiOtomatisAngkaDemo()"]');
+    let origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>Mengisi Angka...</span>';
+    }
 
-    let flagCefadroxil = false;
-    let flagSanmol = false;
-    let flagAmox = false;
-    let flagOmron = false;
-    let flagBetadine = false;
-    let flagTermo = false;
+    try {
+        let res = await fetch('stok_opname.php?ajax=get_demo_counts');
+        let json = await res.json();
 
-    rows.forEach(tr => {
-        let id = tr.getAttribute('data-id');
-        let nama = (tr.getAttribute('data-nama') || '').toLowerCase();
-        let barcodeSearch = (tr.getAttribute('data-barcode-search') || '').toLowerCase();
-        let satuanTipe = tr.getAttribute('data-satuan-tipe') || 'kecil';
-        let sistem = parseInt(tr.getAttribute('data-stok-sistem') || '0', 10);
-        let isExp = tr.getAttribute('data-is-exp') === '1';
+        if (json.status !== 'success' || !json.data) {
+            alert('Gagal mengambil data simulasi pengujian: ' + (json.message || 'Respons server tidak valid.'));
+            if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+            return;
+        }
 
-        let inBaik = document.getElementById('input_baik_' + id);
-        let inRusak = document.getElementById('input_rusak_' + id);
-        let inExp = document.getElementById('input_exp_' + id);
+        let countFilled = 0;
+        let anomaliCount = 0;
 
-        if (!inBaik && !inRusak && !inExp) return;
+        json.data.forEach(item => {
+            let tr = document.querySelector('tr[data-id="' + item.id + '"]');
+            let inBaik = document.getElementById('input_baik_' + item.id);
+            let inRusak = document.getElementById('input_rusak_' + item.id);
+            let inExp = document.getElementById('input_exp_' + item.id);
 
-        // Reset highlight
-        tr.classList.remove('bg-rose-50/70', 'bg-amber-50/70', 'bg-blue-50/70');
-
-        // 1. Cefadroxil 500mg Strip (Satuan Kecil) -> Rusak 2 Strip:
-        if (!flagCefadroxil && nama.includes('cefadroxil') && satuanTipe === 'kecil') {
-            flagCefadroxil = true;
-            anomaliCount++;
-            let rusakQty = Math.min(2, sistem);
-            if (inBaik && inBaik.type !== 'hidden') inBaik.value = Math.max(0, sistem - rusakQty);
-            if (inRusak) inRusak.value = rusakQty;
-            if (inExp) inExp.value = 0;
-            tr.classList.add('bg-amber-50/70');
-        }
-        // 2. Sanmol Sirup Anak 60ml (Expired Batch) -> Kedaluwarsa:
-        else if (!flagSanmol && nama.includes('sanmol') && isExp) {
-            flagSanmol = true;
-            anomaliCount++;
-            let expFisik = sistem; // Seluruh stok batch kedaluwarsa masuk ke kolom Expired
-            if (inBaik && inBaik.type !== 'hidden') inBaik.value = 0;
-            if (inRusak) inRusak.value = 0;
-            if (inExp) inExp.value = expFisik;
-            tr.classList.add('bg-rose-50/70');
-        }
-        // 3. Amoxicillin 500mg Strip (Satuan Kecil) -> Hilang 2 Strip:
-        else if (!flagAmox && nama.includes('amoxicillin') && satuanTipe === 'kecil') {
-            flagAmox = true;
-            anomaliCount++;
-            let hilangQty = Math.min(2, sistem);
-            if (inBaik && inBaik.type !== 'hidden') inBaik.value = Math.max(0, sistem - hilangQty);
-            if (inRusak) inRusak.value = 0;
-            if (inExp) inExp.value = 0;
-            tr.classList.add('bg-rose-50/70');
-        }
-        // 4. Tensimeter Digital Omron (Alkes SN) -> Hilang 1 Unit:
-        else if (!flagOmron && nama.includes('tensimeter') && sistem >= 1) {
-            flagOmron = true;
-            anomaliCount++;
-            if (inBaik && inBaik.type !== 'hidden') inBaik.value = Math.max(0, sistem - 1);
-            if (inRusak) inRusak.value = 0;
-            if (inExp) inExp.value = 0;
-            tr.classList.add('bg-rose-50/70');
-        }
-        // 5. Termometer Digital Omron (Alkes SN) -> Rusak 1 Unit:
-        else if (!flagTermo && nama.includes('termometer digital') && sistem >= 1) {
-            flagTermo = true;
-            anomaliCount++;
-            if (inBaik && inBaik.type !== 'hidden') inBaik.value = Math.max(0, sistem - 1);
-            if (inRusak) inRusak.value = 1; // 1 Unit Rusak Fisik / Cacat Sensor
-            if (inExp) inExp.value = 0;
-            tr.classList.add('bg-amber-50/70');
-        }
-        // 6. Betadine Solution 15ml (Satuan Kecil) -> Surplus +2 Botol:
-        else if (!flagBetadine && nama.includes('betadine') && satuanTipe === 'kecil') {
-            flagBetadine = true;
-            anomaliCount++;
-            if (inBaik && inBaik.type !== 'hidden') inBaik.value = sistem + 2;
-            if (inRusak) inRusak.value = 0;
-            if (inExp) inExp.value = 0;
-            tr.classList.add('bg-blue-50/70');
-        }
-        // 106 Item Normal Lainnya: Sesuai Persis dengan Kuantitas Sistem (Klop)
-        else {
-            if (isExp) {
-                if (inBaik && inBaik.type !== 'hidden') inBaik.value = 0;
-                if (inRusak) inRusak.value = 0;
-                if (inExp) inExp.value = sistem;
-            } else {
-                if (inBaik && inBaik.type !== 'hidden') inBaik.value = sistem;
-                if (inRusak) inRusak.value = 0;
-                if (inExp) inExp.value = 0;
+            if (inBaik && inBaik.type !== 'hidden') {
+                inBaik.value = item.baik;
             }
-        }
-        countFilled++;
-    });
+            if (inRusak) {
+                inRusak.value = item.rusak;
+            }
+            if (inExp) {
+                inExp.value = item.exp;
+            }
 
-    let msgAnomali = 'Berhasil mengisi ' + countFilled + ' baris hitungan fisik di layar sesuai skenario pengujian:\n' +
-        '• Cefadroxil (Obat): 2 Strip Rusak (di kolom Kondisi Rusak)\n' +
-        '• Sanmol Sirup (Obat): Kedaluwarsa (di kolom Kondisi Expired)\n' +
-        '• Amoxicillin (Obat): Hilang/Kurang 2 Strip (Fisik 6 dari Sistem 8)\n' +
-        '• Tensimeter Omron (Alkes): Hilang 1 Unit (Fisik 7 dari Sistem 8)\n' +
-        '• Termometer Omron (Alkes): 1 Unit Rusak Fisik (di kolom Kondisi Rusak)\n' +
-        '• Betadine Solution (Obat): Surplus +2 Botol (Fisik 14 dari Sistem 12)\n' +
-        '• 115 Item lainnya: 100% Klop / Sesuai.\n\n' +
-        'Silakan tekan tombol "Simpan Hasil Hitung" untuk menyimpan data ke server.';
-    alert(msgAnomali);
+            if (tr) {
+                tr.classList.remove('bg-rose-50/70', 'bg-amber-50/70', 'bg-blue-50/70');
+                if (item.jenis === 'rusak') {
+                    tr.classList.add('bg-amber-50/70');
+                    anomaliCount++;
+                } else if (item.jenis === 'expired' || item.jenis === 'hilang') {
+                    tr.classList.add('bg-rose-50/70');
+                    anomaliCount++;
+                } else if (item.jenis === 'surplus') {
+                    tr.classList.add('bg-blue-50/70');
+                    anomaliCount++;
+                }
+            }
+            countFilled++;
+        });
+
+        if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+
+        let msgAnomali = 'Berhasil mengisi ' + countFilled + ' baris kuantitas fisik di layar sesuai skenario pengujian:\n' +
+            '• Cefadroxil (Obat): 2 Strip Rusak (di kolom Kondisi Rusak)\n' +
+            '• Sanmol Sirup (Obat): Kedaluwarsa (di kolom Kondisi Expired)\n' +
+            '• Amoxicillin (Obat): Hilang/Kurang 2 Strip (Fisik 6 dari Sistem 8)\n' +
+            '• Tensimeter Omron (Alkes): Hilang 1 Unit (Fisik 7 dari Sistem 8)\n' +
+            '• Termometer Omron (Alkes): 1 Unit Rusak Fisik (di kolom Kondisi Rusak)\n' +
+            '• Betadine Solution (Obat): Surplus +2 Botol (Fisik 14 dari Sistem 12)\n' +
+            '• 105 Item lainnya: Klop / Sesuai persis dengan data sistem.\n\n' +
+            'Silakan tinjau angka di kolom fisik lalu tekan tombol "Simpan Hasil Hitung" untuk menyimpan data ke server.';
+        alert(msgAnomali);
+
+    } catch (err) {
+        if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+        alert('Terjadi kendala koneksi saat mengisi angka uji coba: ' + err.message);
+    }
 }
 
 // Fungsi Validasi & Submit Form Bulk Simpan

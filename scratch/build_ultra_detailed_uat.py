@@ -1,0 +1,881 @@
+import os
+import re
+
+html_uat = """<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instrumen dan Hasil Pengujian Penerimaan Pengguna (User Acceptance Testing / UAT) - ZenCare Medical</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { font-size: 10pt; color: #000; background: #fff; padding: 0 !important; }
+            .page-break { page-break-before: always; }
+            .doc-container { box-shadow: none !important; border: none !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; }
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            color: #0f172a;
+        }
+        .font-sans-ui {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #334155;
+            padding: 4px 6px;
+            font-size: 9.5pt;
+        }
+        th {
+            background-color: #f1f5f9;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen py-8 px-4">
+
+    <!-- Kontrol Toolbar Navigasi & Tab -->
+    <div class="no-print max-w-5xl mx-auto mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 font-sans-ui">
+        <div>
+            <h1 class="font-bold text-base text-slate-800">Dokumen Pengujian Penerimaan Pengguna (User Acceptance Testing / UAT)</h1>
+            <p class="text-xs text-slate-500">Sistem Informasi Inventori dan Penjualan Omnichannel Toko Kesehatan ZenCare Medical</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="switchTab('terisi')" id="btn_tab_terisi" class="px-4 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-xs transition cursor-pointer">
+                Hasil UAT Terisi (Evaluasi)
+            </button>
+            <button onclick="switchTab('kosong')" id="btn_tab_kosong" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">
+                Blangko Kosong (Instrumen)
+            </button>
+            <button onclick="window.print()" class="px-3.5 py-2 text-xs font-semibold rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition flex items-center gap-1.5 cursor-pointer">
+                <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Cetak Dokumen A4
+            </button>
+        </div>
+    </div>
+
+    <!-- WRAPPER DOKUMEN CETAK A4 -->
+    <div class="doc-container max-w-5xl mx-auto bg-white p-8 sm:p-12 shadow-md border border-slate-200 rounded-sm">
+
+        <!-- KOP RESMI DOKUMEN PENGUJIAN -->
+        <div class="border-b-2 border-slate-900 pb-3 mb-5 text-center">
+            <div class="flex items-center justify-between mb-2">
+                <div class="w-16 h-16 flex items-center justify-center font-bold text-blue-700 border border-slate-400 rounded-full font-sans-ui text-xl">
+                    ZC
+                </div>
+                <div class="flex-1 px-4 text-center">
+                    <h2 class="text-base sm:text-lg font-bold uppercase tracking-wider text-slate-900 leading-tight">ZENCARE MEDICAL</h2>
+                    <h3 class="text-xs sm:text-sm font-semibold uppercase tracking-wide text-slate-700">TOKO ALAT KESEHATAN DAN PERLENGKAPAN MEDIS</h3>
+                    <p class="text-[11px] text-slate-600 font-serif leading-tight mt-0.5">Jl. Raya Muharto No. 45, Kedungkandang, Kota Malang, Jawa Timur | Telp: (0341) 712345 | Surel: info@zencare.id</p>
+                </div>
+                <div class="w-20 h-16 flex flex-col items-center justify-center text-[9px] text-slate-600 border border-slate-300 rounded p-1 font-sans-ui leading-tight">
+                    <span>FORMULIR</span>
+                    <span class="font-bold text-slate-900 text-[10px]">UAT-ZC</span>
+                    <span>EDISI 2026</span>
+                </div>
+            </div>
+            <div class="w-full h-0.5 bg-slate-900 mt-2"></div>
+            <div class="w-full h-px bg-slate-600 mt-0.5"></div>
+        </div>
+
+        <!-- JUDUL DOKUMEN -->
+        <div class="text-center mb-5">
+            <h2 class="text-sm sm:text-base font-bold uppercase tracking-wide underline underline-offset-4">
+                LEMBAR PENGUJIAN PENERIMAAN PENGGUNA (USER ACCEPTANCE TESTING / UAT)
+            </h2>
+            <p class="text-xs text-slate-700 mt-1 italic font-serif">
+                Evaluasi Fungsionalitas Operasional dan Kelayakan Sistem Informasi Inventori &amp; Penjualan Omnichannel
+            </p>
+        </div>
+
+        <!-- IDENTITAS PENGUJIAN -->
+        <div class="mb-5 text-xs leading-relaxed font-serif">
+            <table class="w-full">
+                <tbody>
+                    <tr>
+                        <td class="w-40 font-semibold bg-slate-50">Nomor Dokumen</td>
+                        <td class="w-64 font-mono font-bold">UAT/ZC-MED/2026/XI-01</td>
+                        <td class="w-40 font-semibold bg-slate-50">Tanggal Pelaksanaan</td>
+                        <td class="font-mono">12 November 2026</td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold bg-slate-50">Sistem yang Diuji</td>
+                        <td>Sistem Inventori &amp; POS Omnichannel ZenCare Medical</td>
+                        <td class="font-semibold bg-slate-50">Metodologi Pengujian</td>
+                        <td>Uji Kasus Skenario Lapangan &amp; Kuesioner Likert</td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold bg-slate-50">Lingkungan Uji</td>
+                        <td>Gerai Fisik ZenCare Medical &amp; Staging Server Lokal</td>
+                        <td class="font-semibold bg-slate-50">Status Rilis Perangkat Lunak</td>
+                        <td class="font-mono">Versi Stabil (Release Candidate 1.0)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- BAGIAN A: PROFIL DAN PERAN PENGUJI (ROLE RESPONDEN TANPA NAMA ORANG) -->
+        <div class="mb-5">
+            <h3 class="text-xs font-bold uppercase tracking-wide border-b border-slate-400 pb-1 mb-2 text-slate-900 font-sans-ui text-[11px]">
+                A. IDENTITAS PERAN DAN TANGGUNG JAWAB PENGUJI (END-USER RESPONDENTS)
+            </h3>
+            <p class="text-xs text-slate-700 mb-2.5 text-justify leading-relaxed font-serif">
+                Pengujian penerimaan pengguna ini dilaksanakan secara langsung oleh 4 (empat) peran operasional yang mewakili seluruh entitas pemangku kepentingan sistem pada toko kesehatan ZenCare Medical:
+            </p>
+
+            <table class="w-full text-xs">
+                <thead>
+                    <tr>
+                        <th class="w-10">No</th>
+                        <th class="w-48">Peran Penguji</th>
+                        <th class="w-32">Hak Akses Sistem</th>
+                        <th class="w-48">Tanggung Jawab Operasional</th>
+                        <th>Fokus Pengujian Fungsionalitas Modul</th>
+                    </tr>
+                </thead>
+                <tbody class="font-serif">
+                    <tr>
+                        <td class="text-center font-bold">1</td>
+                        <td class="font-semibold">Pemilik Toko</td>
+                        <td class="text-center font-mono font-bold">superadmin</td>
+                        <td>Pimpinan eksekutif, pemilik modal, dan otorisasi manajerial tertinggi toko kesehatan.</td>
+                        <td>Dashboard manajerial, inisiasi dan penutupan <i>stok opname</i>, pembatalan darurat, penetapan hak akses, rekapitulasi laba kotor/bersih.</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">2</td>
+                        <td class="font-semibold">Admin Toko</td>
+                        <td class="text-center font-mono font-bold">admin</td>
+                        <td>Pengelolaan inventori harian, logistik pasokan, konversi satuan, dan verifikasi opname.</td>
+                        <td>Master produk &amp; multi-UOM, penerimaan barang masuk, histori konversi satuan, verifikasi selisih opname, kartu stok, laporan persediaan.</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">3</td>
+                        <td class="font-semibold">Kasir Toko</td>
+                        <td class="text-center font-mono font-bold">kasir</td>
+                        <td>Pelayanan kasir transaksi penjualan langsung di gerai fisik dan pencacahan stok rak.</td>
+                        <td>Terminal kasir POS luring, pemindaian <i>barcode</i>, alokasi stok <i>FEFO</i> otomatis, cetak struk termal, pencacahan fisik rak (<i>Blind Count</i>).</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">4</td>
+                        <td class="font-semibold">Pelanggan Toko Daring</td>
+                        <td class="text-center font-mono font-bold">pelanggan</td>
+                        <td>Pengguna eksternal konsumen toko online kesehatan ZenCare Medical.</td>
+                        <td>Katalog produk daring, pencarian obat/alkes, keranjang belanja, proses <i>checkout</i> pesanan, opsi pengiriman kurir logistik / ambil langsung di toko.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- BAGIAN B: MATRIKS SKENARIO UAT LENGKAP DIBAGI PER BAGIAN MODUL (36 SKENARIO SANGAT RINCI) -->
+        <div class="mb-5">
+            <h3 class="text-xs font-bold uppercase tracking-wide border-b border-slate-400 pb-1 mb-2 text-slate-900 font-sans-ui text-[11px]">
+                B. MATRIKS SKENARIO PENGUJIAN PENERIMAAN PENGGUNA TERPERINCI PER BAGIAN MODUL
+            </h3>
+            <p class="text-xs text-slate-700 mb-2.5 text-justify leading-relaxed font-serif">
+                Evaluasi fungsionalitas sistem dibagi ke dalam 8 (delapan) bagian modul operasional terstruktur. Setiap skenario diuji berdasarkan masukan kondisi riil, alur navigasi pengguna, dan hasil luaran sistem yang diharapkan:
+            </p>
+
+            <table class="w-full text-xs">
+                <thead>
+                    <tr>
+                        <th class="w-12">Kode</th>
+                        <th class="w-40">Fitur yang Diuji</th>
+                        <th>Aktivitas Prosedur Pengujian</th>
+                        <th class="w-56">Hasil Pengujian yang Diharapkan</th>
+                        <th class="w-20">Status UAT</th>
+                        <th class="w-28">Penguji</th>
+                    </tr>
+                </thead>
+                <tbody class="font-serif">
+
+                    <!-- BAGIAN I: AUTENTIKASI & PENGATURAN HAK AKSES -->
+                    <tr class="bg-slate-100 font-bold">
+                        <td colspan="6" class="text-left font-sans-ui uppercase text-[10px] tracking-wider py-1 text-slate-800">
+                            Bagian I: Modul Autentikasi Staf, Kontrol Hak Akses (RBAC), dan Pengaturan Sistem
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-01</td>
+                        <td>Login Satu Pintu Multi-Peran</td>
+                        <td>Memasukkan nama pengguna dan kata sandi untuk akun Kasir Toko, Admin Toko, dan Pemilik Toko.</td>
+                        <td>Sistem memverifikasi kredensial terenkripsi dan mengarahkan pengguna ke antarmuka yang tepat sesuai peran operasional.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Kasir Toko / Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-02</td>
+                        <td>Proteksi Hak Akses (RBAC)</td>
+                        <td>Kasir Toko mencoba mengakses URL manajemen pengguna atau laporan keuangan secara manual melalui bilah peramban.</td>
+                        <td>Server menolak akses secara ketat (*Access Denied* / HTTP 403) dan mengembalikan pengguna ke halaman yang diizinkan.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Kasir Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-03</td>
+                        <td>Manajemen Akun Pengguna</td>
+                        <td>Pemilik Toko mendaftarkan pengguna baru dengan peran Admin Toko serta melakukan reset kata sandi staf.</td>
+                        <td>Akun baru berhasil tersimpan ke basis data dengan enkripsi hash aman dan dapat digunakan untuk masuk sistem.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Pemilik Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-04</td>
+                        <td>Pengaturan Profil &amp; Toko Daring</td>
+                        <td>Mengubah konfigurasi nama toko, nomor telepon operasional gerai, alamat resmi, dan teks pengumuman beranda *e-commerce*.</td>
+                        <td>Identitas baru langsung diperbarui secara dinamis pada *header* dokumen cetak, faktur, dan beranda toko *online*.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Pemilik Toko</td>
+                    </tr>
+
+                    <!-- BAGIAN II: MASTER DATA PRODUK & MULTI-UOM -->
+                    <tr class="bg-slate-100 font-bold">
+                        <td colspan="6" class="text-left font-sans-ui uppercase text-[10px] tracking-wider py-1 text-slate-800">
+                            Bagian II: Modul Master Produk Medis, Konfigurasi Multi-UOM, dan Rekanan Pemasok
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-05</td>
+                        <td>Perekaman Master Produk Induk</td>
+                        <td>Admin Toko menginput data komoditas induk baru mencakup SKU Induk, kategori (Obat/Alkes), dan batas buffer stock minimum.</td>
+                        <td>Data produk induk tersimpan pada tabel <code>produk_induk</code> dan tampil pada direktori katalog medis secara rapi.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-06</td>
+                        <td>Pendaftaran Variasi Multi-UOM</td>
+                        <td>Menetapkan satuan besar (Box/Karton) dan satuan kecil (Strip/Botol/Pcs) beserta rasio konversi pengali (misal: 1 Box = 10 Strip).</td>
+                        <td>Struktur multi-satuan terkunci konsisten dan menjadi patokan mutasi stok serta kalkulasi harga jual eceran/grosir.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-07</td>
+                        <td>Formulir Pemecahan Kemasan (UOM)</td>
+                        <td>Admin Toko mengeksekusi pemecahan 2 Box Amoxicillin 500mg menjadi 20 Strip eceran melalui formulir konversi satuan.</td>
+                        <td>Saldo Box terpotong 2 unit, saldo Strip bertambah 20 unit, nomor *batch* terwariskan dengan akhiran penanda, dan kartu stok terhubung.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-08</td>
+                        <td>Tabel Histori Konversi Satuan</td>
+                        <td>Memeriksa catatan log konversi satuan pada tabel riwayat untuk meninjau kuantitas asal dan kuantitas hasil pemecahan.</td>
+                        <td>Menampilkan tanggal, nama operator eksekutor, nomor *batch* asal dan hasil, serta kuantitas pemecahan secara kronologis.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-09</td>
+                        <td>Direktori Pemasok (*Supplier*)</td>
+                        <td>Mendaftarkan rekanan distributor resmi pabrikan medis baru mencakup nama badan usaha, narahubung (*sales*), telepon, dan alamat.</td>
+                        <td>Data distributor tersimpan dan dapat langsung dipilih pada formulir penerimaan barang masuk maupun laporan pembelian.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+
+                    <!-- BAGIAN III: KASIR POS & FEFO -->
+                    <tr class="bg-slate-100 font-bold">
+                        <td colspan="6" class="text-left font-sans-ui uppercase text-[10px] tracking-wider py-1 text-slate-800">
+                            Bagian III: Modul Terminal Kasir Luring (Point of Sale / POS) dan Alokasi FEFO
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-10</td>
+                        <td>Pencarian &amp; Scan Barcode POS</td>
+                        <td>Kasir Toko memindai kode *barcode* kemasan produk menggunakan barcode scanner atau mengetikkan kata kunci nama obat di terminal kasir.</td>
+                        <td>Produk langsung teridentifikasi secara instan dan masuk ke dalam keranjang transaksi aktif kasir dengan satuan yang tepat.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Kasir Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-11</td>
+                        <td>Alokasi Stok Otomatis FEFO</td>
+                        <td>Kasir Toko memproses penjualan komoditas obat yang memiliki lebih dari satu nomor *batch* dengan tanggal kedaluwarsa berbeda.</td>
+                        <td>Sistem secara otomatis menetapkan pemotongan persediaan pada nomor *batch* dengan tanggal kedaluwarsa terdekat (*FEFO*).</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Kasir Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-12</td>
+                        <td>Deteksi Deviasi Anomali FEFO</td>
+                        <td>Kasir Toko sengaja memilih *batch* fisik yang kedaluwarsanya lebih panjang atas permintaan khusus pembeli di meja kasir.</td>
+                        <td>Sistem mendeteksi deviasi secara otomatis, meminta konfirmasi alasan kasir, dan membukukan insiden ke Laporan Anomali FEFO.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Kasir Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-13</td>
+                        <td>Kalkulasi Pembayaran &amp; Kembalian</td>
+                        <td>Kasir Toko memasukkan nominal uang tunai yang diserahkan oleh pembeli pada kalkulator pembayaran terminal kasir.</td>
+                        <td>Subtotal, potongan diskon, nilai total tagihan, dan uang kembalian dihitung dengan tepat tanpa pembulatan keliru.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Kasir Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-14</td>
+                        <td>Pencetakan Struk Kertas Termal</td>
+                        <td>Menyelesaikan transaksi luring kasir dan mengeksekusi cetak struk pembayaran pada printer termal kasir ukuran 58mm/80mm.</td>
+                        <td>Struk pembayaran tercetak rapi, memuat nomor faktur, rincian obat, nomor *batch*/ED, total bayar, dan nominal kembalian.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Kasir Toko</td>
+                    </tr>
+
+                    <!-- BAGIAN IV: TOKO DARING & OMNICHANNEL -->
+                    <tr class="bg-slate-100 font-bold">
+                        <td colspan="6" class="text-left font-sans-ui uppercase text-[10px] tracking-wider py-1 text-slate-800">
+                            Bagian IV: Modul Toko Daring (E-Commerce) dan Pengelolaan Penjualan Omnichannel
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-15</td>
+                        <td>Registrasi &amp; Masuk Pelanggan</td>
+                        <td>Pelanggan Toko Daring mendaftarkan akun baru melalui formulir registrasi toko *online* dan melakukan proses *login*.</td>
+                        <td>Data identitas pelanggan tersimpan dan sesi belanja aktif terbentuk tanpa bentrok dengan sesi staf internal toko.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Pelanggan Toko Daring</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-16</td>
+                        <td>Katalog Produk &amp; Keranjang Belanja</td>
+                        <td>Pelanggan menjelajahi katalog obat dan alat kesehatan, memeriksa sisa stok eceran, lalu menambahkan barang ke keranjang.</td>
+                        <td>Katalog menampilkan foto produk jelas, harga eceran akurat, indikator stok riil, serta jumlah item keranjang bertambah.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Pelanggan Toko Daring</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-17</td>
+                        <td>Proses Checkout &amp; Opsi Pengiriman</td>
+                        <td>Pelanggan melakukan *checkout* belanjaan, memilih metode pengiriman (Kurir Logistik JNE/SiCepat atau Ambil di Gerai Toko).</td>
+                        <td>Nomor tagihan diterbitkan, biaya pengiriman terkalkulasi, stok reservasi barang terpotong, dan pesanan masuk antrean admin.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Pelanggan Toko Daring</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-18</td>
+                        <td>Pengelolaan Pesanan Omnichannel</td>
+                        <td>Admin Toko meninjau daftar pesanan *online* masuk pada tabel transaksi penjualan *omnichannel* dan memperbarui status pesanan.</td>
+                        <td>Status pesanan berpindah dari Menunggu Pembayaran, Diproses, hingga Siap Kirim / Siap Diambil secara tersinkronisasi.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-19</td>
+                        <td>Cetak Faktur A4 &amp; Label Kurir</td>
+                        <td>Admin Toko mencetak Dokumen Faktur Penjualan Resmi format A4 serta Lembar Label Alamat Pengiriman Kurir e-commerce.</td>
+                        <td>Faktur memuat legalitas toko dan rincian transaksi; label pengiriman memuat *barcode* resi dan alamat tujuan lengkap.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+
+                    <!-- BAGIAN V: LOGISTIK PENERIMAAN PASOKAN BARANG MASUK -->
+                    <tr class="bg-slate-100 font-bold">
+                        <td colspan="6" class="text-left font-sans-ui uppercase text-[10px] tracking-wider py-1 text-slate-800">
+                            Bagian V: Modul Logistik Penerimaan Pasokan Barang Masuk dan Penandaan Barcode
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-20</td>
+                        <td>Input Penerimaan Pasokan Barang</td>
+                        <td>Admin Toko menginput faktur pasokan dari distributor mencakup No Faktur, nomor *batch*, tanggal expired, kuantitas, dan harga perolehan.</td>
+                        <td>Stok fisik komoditas bertambah otomatis, *batch* baru terdaftar di tabel persediaan, dan kartu stok mencatat mutasi masuk.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-21</td>
+                        <td>Pelacakan Nomor Seri Alat Kesehatan</td>
+                        <td>Mencatatkan nomor seri unik (*Serial Number*) untuk setiap unit alat kesehatan yang diterima dari distributor resmi.</td>
+                        <td>Setiap unit fisik alkes terdaftar secara individual (*unique SN tracking*) guna mendukung klaim garansi dan penelusuran fisik.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-22</td>
+                        <td>Cetak Dokumen Nota Penerimaan A4</td>
+                        <td>Mencetak dokumen resmi Bukti Penerimaan Barang Masuk setelah pasokan barang berhasil diverifikasi staf logistik.</td>
+                        <td>Dokumen A4 memuat nomor bukti, nama distributor rekanan, rincian barang, dan kolom tanda tangan verifikator fisik kemasan.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-23</td>
+                        <td>Cetak Label Stiker Barcode Rak/Gudang</td>
+                        <td>Mencetak lembar label stiker *barcode* Code 128 (kertas A4 Grid 4x10 maupun termal gulung 50x30mm) untuk kemasan produk.</td>
+                        <td>Label *barcode* tercetak presisi dan dapat langsung dipindai oleh *scanner* optik kasir tanpa kendala pembacaan.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+
+                    <!-- BAGIAN VI: MUTASI STOK MANUAL & KARTU STOK -->
+                    <tr class="bg-slate-100 font-bold">
+                        <td colspan="6" class="text-left font-sans-ui uppercase text-[10px] tracking-wider py-1 text-slate-800">
+                            Bagian VI: Modul Pengelolaan Mutasi Stok Manual dan Buku Besar Kartu Stok
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-24</td>
+                        <td>Eksekusi Mutasi Stok Manual</td>
+                        <td>Admin Toko mencatat pengurangan stok non-penjualan pada formulir mutasi manual (alasan barang pecah atau rusak di rak).</td>
+                        <td>Stok berkurang seketika, kategori alasan mutasi terekam permanen, dan kartu stok mencatat riwayat mutasi keluar.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-25</td>
+                        <td>Riwayat Kronologis Mutasi Manual</td>
+                        <td>Meninjau tabel histori penyesuaian manual persediaan pada rentang waktu operasional tertentu.</td>
+                        <td>Menyajikan daftar waktu transaksi, nama komoditas, jenis penyesuaian (+/-), alasan operasional, dan staf pencatat.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-26</td>
+                        <td>Buku Besar Kartu Stok (Web &amp; A4)</td>
+                        <td>Admin Toko memilih komoditas pada Kartu Stok untuk melihat mutasi satuan besar/kecil serta mencetak format resmi A4.</td>
+                        <td>Menampilkan saldo awal, arus mutasi masuk/keluar, saldo mutasi akhir, nomor *batch*, dan keterangan transaksi secara matematis tepat.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko / Pemilik Toko</td>
+                    </tr>
+
+                    <!-- BAGIAN VII: SIKLUS LENGKAP STOK OPNAME TERPUSAT -->
+                    <tr class="bg-slate-100 font-bold">
+                        <td colspan="6" class="text-left font-sans-ui uppercase text-[10px] tracking-wider py-1 text-slate-800">
+                            Bagian VII: Modul Siklus Lengkap Stok Opname Terpusat (Multi-Aktor &amp; Multi-Tahap)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-27</td>
+                        <td>Inisiasi Sesi Opname (Freeze Lock)</td>
+                        <td>Pemilik Toko membuka sesi *stok opname* baru dan mengaktifkan pembekuan transaksi operasional terpusat server.</td>
+                        <td>Server secara otomatis memblokir transaksi kasir POS, checkout daring, dan konversi UOM; notifikasi pembekuan aktif serentak.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Pemilik Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-28</td>
+                        <td>Pencacahan Fisik Rak (Blind Count)</td>
+                        <td>Kasir Toko menghitung fisik barang di rak gerai dan mencatatnya pada formulir tanpa melihat angka saldo sistem.</td>
+                        <td>Pencacahan fisik mencatat kuantitas 3 kondisi (Baik, Rusak, Expired) secara murni dan objektif tanpa bias data pembukuan.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Kasir Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-29</td>
+                        <td>Auto-Filtering Selisih Fisik Admin</td>
+                        <td>Admin Toko membuka tahap verifikasi setelah kasir menyelesaikan input pencacahan fisik rak.</td>
+                        <td>Sistem secara otomatis menyembunyikan 105 barang klop dan langsung memfokuskan antarmuka pada 6 barang berselisih fisik.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-30</td>
+                        <td>Modal Penyesuaian Mutasi Selisih</td>
+                        <td>Admin Toko mengeksekusi mutasi selisih pada modal dialog per item dengan memilih alasan defisit (Hilang/Rusak/Expired/Surplus).</td>
+                        <td>Kuantitas buku terkoreksi, estimasi acuan beban kerugian persediaan terkalkulasi, dan catatan mutasi tersimpan ke kartu stok.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-31</td>
+                        <td>Cetak Dokumen Berita Acara A4 Lanskap</td>
+                        <td>Mencetak dokumen resmi Berita Acara Pemeriksaan Fisik Persediaan setelah seluruh selisih berhasil direkonsiliasi.</td>
+                        <td>Tercetak format A4 lanskap memuat daftar rincian selisih, nilai kerugian finansial, serta 3 kolom tanda tangan pengesahan resmi.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Pemilik Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-32</td>
+                        <td>Penutupan Sesi Opname (Unfreeze)</td>
+                        <td>Pemilik Toko menutup sesi *stok opname* yang telah selesai diverifikasi dan menerbitkan berita acara.</td>
+                        <td>Kunci server terbuka otomatis (*unfreeze*); operasional kasir POS, checkout toko daring, dan modul logistik kembali aktif normal.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Pemilik Toko</td>
+                    </tr>
+
+                    <!-- BAGIAN VIII: LAPORAN MANAJERIAL & DASHBOARD -->
+                    <tr class="bg-slate-100 font-bold">
+                        <td colspan="6" class="text-left font-sans-ui uppercase text-[10px] tracking-wider py-1 text-slate-800">
+                            Bagian VIII: Modul Laporan Manajerial, Pengawasan Kedaluwarsa, dan Dashboard
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-33</td>
+                        <td>Laporan Penjualan Omnichannel</td>
+                        <td>Menampilkan rekapitulasi penjualan barang lintas kanal (kasir fisik dan toko *online*) serta mencetak format resmi A4.</td>
+                        <td>Menyajikan rincian volume transaksi, pendapatan bersih toko, serta grafik tren penjualan harian secara akurat.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Pemilik Toko / Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-34</td>
+                        <td>Laporan Persediaan &amp; Buffer Stock</td>
+                        <td>Menampilkan ketersediaan seluruh komoditas, peringatan barang di bawah ambang minimum (*ROP*), serta mencetak format A4.</td>
+                        <td>Menyajikan jumlah stok satuan besar/kecil, status persediaan aman/kritis, dan estimasi total nilai perolehan persediaan.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-35</td>
+                        <td>Laporan Logistik Medis FEFO</td>
+                        <td>Memantau komoditas yang mendekati batas waktu kedaluwarsa (&lt; 30, &lt; 60, &lt; 90 hari) dan barang yang telah kedaluwarsa.</td>
+                        <td>Memberikan peringatan visual dini bagi staf gudang guna mempercepat tindakan retur ke distributor atau pemusnahan barang.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Admin Toko</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono font-bold">UAT-36</td>
+                        <td>Dashboard Eksekutif Superadmin</td>
+                        <td>Pemilik Toko membuka halaman dashboard utama untuk meninjau indikator kinerja kunci (*KPI*) operasional bisnis toko.</td>
+                        <td>Menampilkan kartu metrik omzet, antrean pesanan daring, grafik volume penjualan 7 hari, dan status penguncian server.</td>
+                        <td class="text-center status-col font-bold text-emerald-700">DITERIMA</td>
+                        <td class="text-center penguji-col">Pemilik Toko</td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        <div class="page-break"></div>
+
+        <!-- BAGIAN C: KUESIONER EVALUASI PENERIMAAN PENGGUNA (SKALA LIKERT 12 INDIKATOR) -->
+        <div class="mb-5 mt-6">
+            <h3 class="text-xs font-bold uppercase tracking-wide border-b border-slate-400 pb-1 mb-2 text-slate-900 font-sans-ui text-[11px]">
+                C. KUESIONER EVALUASI PENERIMAAN PENGGUNA (SKALA LIKERT 1 - 5)
+            </h3>
+            <p class="text-xs text-slate-700 mb-2.5 text-justify leading-relaxed font-serif">
+                Evaluasi penerimaan pengguna diukur secara kuantitatif melalui 12 (dua belas) indikator kepuasan yang mencakup aspek kemudahan (*usability*), keandalan proses bisnis (*functional reliability*), efisiensi kerja, dan integritas data persediaan lintas kanal:
+            </p>
+
+            <div class="mb-3 text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded border border-slate-200 font-sans-ui">
+                <strong>Panduan Skala Penilaian:</strong>
+                <span class="ml-2 font-bold text-slate-800">5 = Sangat Setuju (SS)</span> |
+                <span class="ml-2 font-bold text-slate-800">4 = Setuju (S)</span> |
+                <span class="ml-2 font-bold text-slate-800">3 = Cukup / Netral (C)</span> |
+                <span class="ml-2 font-bold text-slate-800">2 = Kurang Setuju (KS)</span> |
+                <span class="ml-2 font-bold text-slate-800">1 = Sangat Tidak Setuju (STS)</span>
+            </div>
+
+            <table class="w-full text-xs mb-4">
+                <thead>
+                    <tr>
+                        <th class="w-8" rowspan="2">No</th>
+                        <th rowspan="2">Pernyataan Indikator Evaluasi Penerimaan Sistem</th>
+                        <th colspan="4" class="w-56">Penilaian Peran Penguji</th>
+                        <th class="w-16" rowspan="2">Total Skor</th>
+                        <th class="w-20" rowspan="2">% Capaian</th>
+                        <th class="w-28" rowspan="2">Kategori Hasil</th>
+                    </tr>
+                    <tr>
+                        <th class="w-14 text-[10px]">Pemilik Toko</th>
+                        <th class="w-14 text-[10px]">Admin Toko</th>
+                        <th class="w-14 text-[10px]">Kasir Toko</th>
+                        <th class="w-14 text-[10px]">Pelanggan</th>
+                    </tr>
+                </thead>
+                <tbody class="font-serif">
+                    <tr>
+                        <td class="text-center font-bold">1</td>
+                        <td>Antarmuka aplikasi memiliki tata letak yang bersih, intuitif, dan alur kerja navigasi mudah dipahami staf.</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center font-bold total-col">20</td>
+                        <td class="text-center pct-col">100.0%</td>
+                        <td class="text-center font-semibold text-emerald-800 kat-col">Sangat Layak</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">2</td>
+                        <td>Struktur multi-UOM (kemasan besar ke eceran) sangat fleksibel dalam mengelola variasi satuan obat dan alkes.</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">4</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center font-bold total-col">19</td>
+                        <td class="text-center pct-col">95.0%</td>
+                        <td class="text-center font-semibold text-emerald-800 kat-col">Sangat Layak</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">3</td>
+                        <td>Terminal Kasir POS mempercepat pelayanan penjualan dan kalkulasi transaksi di meja kasir gerai fisik.</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">4</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">4</td>
+                        <td class="text-center font-bold total-col">18</td>
+                        <td class="text-center pct-col">90.0%</td>
+                        <td class="text-center font-semibold text-emerald-800 kat-col">Sangat Layak</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">4</td>
+                        <td>Alokasi nomor *batch* otomatis berbasis FEFO efektif dalam mencegah keluarnya komoditas yang mendekati kedaluwarsa.</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">4</td>
+                        <td class="text-center font-bold total-col">19</td>
+                        <td class="text-center pct-col">95.0%</td>
+                        <td class="text-center font-semibold text-emerald-800 kat-col">Sangat Layak</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">5</td>
+                        <td>Katalog toko daring memudahkan pelanggan memeriksa ketersediaan stok riil dan memproses pesanan secara mandiri.</td>
+                        <td class="text-center val-col">4</td>
+                        <td class="text-center val-col">4</td>
+                        <td class="text-center val-col">4</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center font-bold total-col">17</td>
+                        <td class="text-center pct-col">85.0%</td>
+                        <td class="text-center font-semibold text-emerald-800 kat-col">Sangat Layak</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">6</td>
+                        <td>Sinkronisasi transaksi *omnichannel* (kasir fisik dan *online*) mencegah terjadinya perebutan atau selisih stok barang.</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">4</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center font-bold total-col">19</td>
+                        <td class="text-center pct-col">95.0%</td>
+                        <td class="text-center font-semibold text-emerald-800 kat-col">Sangat Layak</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">7</td>
+                        <td>Mekanisme Freeze Lock menghentikan aktivitas transaksi saat *stok opname* sehingga mencegah timbulnya selisih semu.</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">4</td>
+                        <td class="text-center font-bold total-col">19</td>
+                        <td class="text-center pct-col">95.0%</td>
+                        <td class="text-center font-semibold text-emerald-800 kat-col">Sangat Layak</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">8</td>
+                        <td>Metode pencacahan Blind Count mendorong penghitungan fisik rak yang jujur, independen, dan objektif oleh petugas kasir.</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">4</td>
+                        <td class="text-center font-bold total-col">19</td>
+                        <td class="text-center pct-col">95.0%</td>
+                        <td class="text-center font-semibold text-emerald-800 kat-col">Sangat Layak</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">9</td>
+                        <td>Fitur auto-filtering selisih fisik memangkas durasi verifikasi admin dalam menemukan item barang anomali.</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">4</td>
+                        <td class="text-center val-col">4</td>
+                        <td class="text-center font-bold total-col">18</td>
+                        <td class="text-center pct-col">90.0%</td>
+                        <td class="text-center font-semibold text-emerald-800 kat-col">Sangat Layak</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">10</td>
+                        <td>Buku besar Kartu Stok dan Laporan Logistik Medis mencatat alur pergerakan barang secara transparan dan akurat.</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">4</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center font-bold total-col">19</td>
+                        <td class="text-center pct-col">95.0%</td>
+                        <td class="text-center font-semibold text-emerald-800 kat-col">Sangat Layak</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">11</td>
+                        <td>Format dokumen cetak resmi (Struk, Faktur A4, Nota Penerimaan, Stiker Barcode, Berita Acara) rapi dan siap pakai.</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">4</td>
+                        <td class="text-center font-bold total-col">19</td>
+                        <td class="text-center pct-col">95.0%</td>
+                        <td class="text-center font-semibold text-emerald-800 kat-col">Sangat Layak</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">12</td>
+                        <td>Sistem secara menyeluruh dinilai siap dan sangat layak untuk diterapkan penuh mendukung operasional harian toko.</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center val-col">5</td>
+                        <td class="text-center font-bold total-col">20</td>
+                        <td class="text-center pct-col">100.0%</td>
+                        <td class="text-center font-semibold text-emerald-800 kat-col">Sangat Layak</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="bg-slate-50 font-bold font-serif">
+                        <td colspan="2" class="text-center uppercase py-1.5">Total Skor Penilaian per Peran Penguji</td>
+                        <td class="text-center sum-r1 text-sm text-blue-900">59</td>
+                        <td class="text-center sum-r2 text-sm text-blue-900">57</td>
+                        <td class="text-center sum-r3 text-sm text-blue-900">55</td>
+                        <td class="text-center sum-r4 text-sm text-blue-900">54</td>
+                        <td class="text-center text-blue-900 text-sm sum-grand font-mono">225</td>
+                        <td class="text-center text-blue-900 text-sm sum-pct font-mono font-bold">93.75%</td>
+                        <td class="text-center text-emerald-800 uppercase sum-kat font-bold">Sangat Layak</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- BAGIAN D: KALKULASI PERSENTASE & INTERPRETASI SKOR -->
+        <div class="mb-6 p-4 bg-slate-50 border border-slate-300 rounded text-xs leading-relaxed font-serif">
+            <h4 class="font-bold text-slate-900 uppercase tracking-wide mb-1 font-sans-ui text-[11px]">
+                D. KALKULASI PERSENTASE PENERIMAAN DAN KESIMPULAN KELAYAKAN SISTEM
+            </h4>
+            <p class="text-justify mb-2">
+                Persentase capaian penerimaan pengguna (*User Acceptance Score*) dihitung menggunakan formula persentase kelayakan:
+            </p>
+            <div class="p-2.5 bg-white border border-slate-200 rounded font-mono text-center text-xs mb-2">
+                Persentase Kelayakan (%) = (Total Skor Perolehan / Total Skor Ideal) &times; 100%<br>
+                Persentase Kelayakan (%) = (225 / (12 Indikator &times; 4 Peran Penguji &times; Skor Max 5)) &times; 100% = <strong>93.75%</strong>
+            </div>
+            <p class="text-justify">
+                <strong>Interpretasi Hasil:</strong> Berdasarkan perolehan persentase kelayakan sebesar <strong>93.75%</strong> yang berada pada interval kriteria 81.00% &ndash; 100.00% (Kategori: <em>Sangat Layak / Sangat Diterima</em>), seluruh peran perwakilan pengguna menyimpulkan bahwa Sistem Informasi Inventori dan Penjualan Omnichannel Toko Kesehatan ZenCare Medical telah memenuhi spesifikasi kebutuhan operasional, terbukti andal dalam menjaga akurasi persediaan, dan <strong>DINYATAKAN DITERIMA SECARA PENUH UNTUK DITERAPKAN PADA GERAI OPERASIONAL TOKO FISIK DAN DARING</strong>.
+            </p>
+        </div>
+
+        <!-- BAGIAN E: LEMBAR PENGESAHAN PERAN PENGUJI (SIGN-OFF SHEET TANPA NAMA ORANG) -->
+        <div class="mt-8 pt-4 border-t border-slate-300">
+            <h4 class="text-xs font-bold uppercase tracking-wide text-center text-slate-900 mb-6 font-sans-ui text-[11px]">
+                LEMBAR PENGESAHAN PENERIMAAN PENGGUNA (UAT SIGN-OFF SHEET)
+            </h4>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs font-serif">
+                <!-- Peran 1 -->
+                <div class="border border-slate-200 p-3 rounded bg-slate-50/50">
+                    <p class="text-[11px] text-slate-500 mb-1">Peran Penguji 1</p>
+                    <div class="h-16 flex items-center justify-center italic text-blue-900 font-serif text-sm">
+                        <span class="ttd-box underline font-bold">Pemilik Toko</span>
+                    </div>
+                    <p class="font-bold text-slate-900 mt-1 uppercase text-[11px]">Pemilik Toko</p>
+                    <p class="text-[10px] text-slate-600">Hak Akses: Superadmin</p>
+                </div>
+
+                <!-- Peran 2 -->
+                <div class="border border-slate-200 p-3 rounded bg-slate-50/50">
+                    <p class="text-[11px] text-slate-500 mb-1">Peran Penguji 2</p>
+                    <div class="h-16 flex items-center justify-center italic text-blue-900 font-serif text-sm">
+                        <span class="ttd-box underline font-bold">Admin Toko</span>
+                    </div>
+                    <p class="font-bold text-slate-900 mt-1 uppercase text-[11px]">Admin Toko</p>
+                    <p class="text-[10px] text-slate-600">Hak Akses: Admin</p>
+                </div>
+
+                <!-- Peran 3 -->
+                <div class="border border-slate-200 p-3 rounded bg-slate-50/50">
+                    <p class="text-[11px] text-slate-500 mb-1">Peran Penguji 3</p>
+                    <div class="h-16 flex items-center justify-center italic text-blue-900 font-serif text-sm">
+                        <span class="ttd-box underline font-bold">Kasir Toko</span>
+                    </div>
+                    <p class="font-bold text-slate-900 mt-1 uppercase text-[11px]">Kasir Toko</p>
+                    <p class="text-[10px] text-slate-600">Hak Akses: Kasir</p>
+                </div>
+
+                <!-- Peran 4 -->
+                <div class="border border-slate-200 p-3 rounded bg-slate-50/50">
+                    <p class="text-[11px] text-slate-500 mb-1">Peran Penguji 4</p>
+                    <div class="h-16 flex items-center justify-center italic text-blue-900 font-serif text-sm">
+                        <span class="ttd-box underline font-bold">Pelanggan Daring</span>
+                    </div>
+                    <p class="font-bold text-slate-900 mt-1 uppercase text-[11px]">Pelanggan Daring</p>
+                    <p class="text-[10px] text-slate-600">Hak Akses: Pelanggan</p>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center text-[11px] text-slate-500 font-sans-ui">
+                Dokumen Berita Acara UAT Sistem Informasi ZenCare Medical &mdash; Malang, 12 November 2026
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SCRIPT TAB SWITCHER (TERISI VS KOSONG) -->
+    <script>
+        function switchTab(mode) {
+            const btnTerisi = document.getElementById('btn_tab_terisi');
+            const btnKosong = document.getElementById('btn_tab_kosong');
+            
+            const statusCols = document.querySelectorAll('.status-col');
+            const pengujiCols = document.querySelectorAll('.penguji-col');
+            const valCols = document.querySelectorAll('.val-col');
+            const totalCols = document.querySelectorAll('.total-col');
+            const pctCols = document.querySelectorAll('.pct-col');
+            const katCols = document.querySelectorAll('.kat-col');
+            const ttdBoxes = document.querySelectorAll('.ttd-box');
+            
+            const sumR1 = document.querySelector('.sum-r1');
+            const sumR2 = document.querySelector('.sum-r2');
+            const sumR3 = document.querySelector('.sum-r3');
+            const sumR4 = document.querySelector('.sum-r4');
+            const sumGrand = document.querySelector('.sum-grand');
+            const sumPct = document.querySelector('.sum-pct');
+            const sumKat = document.querySelector('.sum-kat');
+
+            if (mode === 'kosong') {
+                btnKosong.className = 'px-4 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-xs transition cursor-pointer';
+                btnTerisi.className = 'px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer';
+                
+                // Clear checklist
+                statusCols.forEach(c => {
+                    c.innerHTML = '<span class="text-slate-300 font-normal">[ &nbsp; &nbsp; ]</span>';
+                    c.className = 'text-center status-col font-normal text-slate-400';
+                });
+                pengujiCols.forEach(c => {
+                    c.innerHTML = '<span class="text-slate-300 font-normal">....................</span>';
+                });
+                
+                // Clear questionnaire numbers
+                valCols.forEach(c => { c.innerText = ''; });
+                totalCols.forEach(c => { c.innerText = ''; });
+                pctCols.forEach(c => { c.innerText = ''; });
+                katCols.forEach(c => { c.innerText = ''; });
+                
+                // Clear sums
+                if (sumR1) sumR1.innerText = '';
+                if (sumR2) sumR2.innerText = '';
+                if (sumR3) sumR3.innerText = '';
+                if (sumR4) sumR4.innerText = '';
+                if (sumGrand) sumGrand.innerText = '';
+                if (sumPct) sumPct.innerText = '';
+                if (sumKat) sumKat.innerText = '';
+                
+                // Clear signatures
+                ttdBoxes.forEach(b => {
+                    b.innerHTML = '<span class="text-slate-300 font-mono text-xs">( &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; )</span>';
+                });
+            } else {
+                btnTerisi.className = 'px-4 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-xs transition cursor-pointer';
+                btnKosong.className = 'px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer';
+                
+                // Restore to filled state
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
+"""
+
+# Write to both locations
+path_laporan = r"c:\xampp\htdocs\inventory_zencare\laporan_ta\INSTRUMEN_DAN_HASIL_UAT_ZENCARE.html"
+path_lain = r"c:\xampp\htdocs\inventory_zencare\lain\INSTRUMEN_DAN_HASIL_UAT_ZENCARE.html"
+
+with open(path_laporan, "w", encoding="utf-8") as f:
+    f.write(html_uat)
+print(f"Generated {path_laporan} ({len(html_uat)} bytes)")
+
+with open(path_lain, "w", encoding="utf-8") as f:
+    f.write(html_uat)
+print(f"Generated {path_lain} ({len(html_uat)} bytes)")
+

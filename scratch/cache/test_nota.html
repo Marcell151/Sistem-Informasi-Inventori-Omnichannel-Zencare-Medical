@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><base href="http://localhost/inventory_zencare/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bukti Penerimaan Barang #KUL-20261024-CAMPUR-RETUR - ZenCare Medical</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 12mm 15mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #0f172a;
+            background: #f8fafc;
+            margin: 0;
+            padding: 24px;
+            font-size: 11px;
+            line-height: 1.45;
+        }
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 24px 28px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Toolbar Layar (Tidak ikut tercetak) */
+        .screen-toolbar {
+            max-width: 860px;
+            margin: 0 auto 16px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .toolbar-title {
+            font-size: 12.5px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s ease-in-out;
+            border: none;
+        }
+        .btn-print {
+            background: #0f2d5a;
+            color: #ffffff;
+        }
+        .btn-print:hover {
+            background: #1e3a8a;
+        }
+        .btn-back {
+            background: #334155;
+            color: #f1f5f9;
+        }
+        .btn-back:hover {
+            background: #475569;
+        }
+
+        /* Kop Surat Resmi ZenCare Medical */
+        .header-kop {
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-kop-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header-kop-brand img {
+            height: 48px;
+            width: auto;
+            object-fit: contain;
+        }
+        .header-kop-title {
+            font-size: 15pt;
+            font-weight: 800;
+            color: #0f2d5a;
+            margin: 0;
+            line-height: 1.1;
+        }
+        .header-kop-sub {
+            font-size: 8.5pt;
+            color: #475569;
+            margin: 2px 0 0 0;
+            font-weight: 600;
+        }
+        .header-kop-legal {
+            font-size: 8pt;
+            color: #64748b;
+            margin: 2px 0 0 0;
+        }
+        .header-kop-meta {
+            text-align: right;
+            font-size: 8.5pt;
+            color: #475569;
+            line-height: 1.4;
+        }
+        .header-kop-meta strong {
+            color: #0f2d5a;
+            font-size: 10pt;
+            display: block;
+        }
+
+        /* Judul Dokumen */
+        .doc-title-block {
+            text-align: center;
+            margin: 10px 0 14px 0;
+        }
+        .doc-title {
+            font-size: 13pt;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Metadata Info */
+        .meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+            font-size: 10px;
+        }
+        .meta-table td {
+            padding: 3px 6px;
+            vertical-align: top;
+        }
+        .meta-label {
+            color: #64748b;
+            width: 18%;
+        }
+        .meta-val {
+            color: #0f172a;
+            font-weight: 600;
+            width: 32%;
+        }
+
+        /* Tabel Rincian Barang */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+        }
+        .items-table th, .items-table td {
+            border: 1px solid #cbd5e1;
+            padding: 6px 8px;
+            text-align: left;
+            font-size: 10px;
+            vertical-align: middle;
+        }
+        .items-table th {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 9px;
+        }
+        .col-center { text-align: center !important; }
+        .col-right  { text-align: right !important; }
+        .col-mono   { font-family: ui-monospace, SFMono-Regular, monospace; }
+
+        /* Kolom Tanda Tangan */
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 28px;
+            page-break-inside: avoid;
+        }
+        .signature-table td {
+            width: 50%;
+            vertical-align: top;
+            text-align: center;
+            padding: 0 16px;
+        }
+
+        /* Footer Dokumen */
+        .doc-footer {
+            margin-top: 24px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 6px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 7.5pt;
+            color: #94a3b8;
+        }
+
+        /* Media Print Rules */
+        @media print {
+            body {
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .container {
+                max-width: 100% !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                border-radius: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            table {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- TOOLBAR SCREEN ONLY (Tidak ikut tercetak) -->
+<div class="screen-toolbar no-print">
+    <div class="toolbar-title">
+        <svg style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>Pratinjau Bukti Penerimaan Barang</span>
+    </div>
+    <div style="display:flex;gap:8px;">
+        <button type="button" onclick="window.print()" class="btn-action btn-print">
+            <svg style="width:14px;height:14px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            <span>Cetak / PDF (A4)</span>
+        </button>
+        <button type="button" onclick="window.close()" class="btn-action btn-back">
+            <span>Tutup</span>
+        </button>
+    </div>
+</div>
+
+<div class="container">
+    <!-- KOP RESMI ZENCARE MEDICAL -->
+    <div class="header-kop">
+        <div class="header-kop-brand">
+            <img src="/inventory_zencare/gambar/Logo.png" alt="Logo ZenCare" onerror="this.src='../gambar/Logo.png'">
+            <div>
+                <h1 class="header-kop-title">ZENCARE MEDICAL</h1>
+                <p class="header-kop-sub">Distributor Alat Kesehatan dan Obat Omnichannel</p>
+                <p class="header-kop-legal">Izin Toko Alat Kesehatan dan Obat: 445/ITKO/2026 • Jl. Veteran No. 12, Kota Malang</p>
+            </div>
+        </div>
+        <div class="header-kop-meta">
+            <strong>BUKTI PENERIMAAN</strong>
+            <div>No: KUL-20261024-CAMPUR-RETUR</div>
+            <div>Tgl: 24/10/2026</div>
+        </div>
+    </div>
+
+    <!-- JUDUL DOKUMEN -->
+    <div class="doc-title-block">
+        <h2 class="doc-title">BUKTI PENERIMAAN BARANG</h2>
+    </div>
+
+    <!-- METADATA DOKUMEN (BERSIH & RAPI) -->
+    <table class="meta-table">
+        <tr>
+            <td class="meta-label">No. Referensi:</td>
+            <td class="meta-val col-mono">KUL-20261024-CAMPUR-RETUR</td>
+            <td class="meta-label">Supplier / Pengirim:</td>
+            <td class="meta-val">PT Jayamas Medica Industri (OneMed)</td>
+        </tr>
+        <tr>
+            <td class="meta-label">Tanggal Terima:</td>
+            <td class="meta-val">24/10/2026 (22:30 WIB)</td>
+            <td class="meta-label">Kontak Supplier:</td>
+            <td class="meta-val">031-444333 (sales@onemed.co.id)</td>
+        </tr>
+        <tr>
+            <td class="meta-label">Sumber Pengadaan:</td>
+            <td class="meta-val">Pembelian Langsung</td>
+            <td class="meta-label">Diinput Sistem:</td>
+            <td class="meta-val">Kasir (Front Office)</td>
+        </tr>
+    </table>
+
+    <!-- TABEL RINCIAN BARANG -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th class="col-center" style="width: 4%;">No</th>
+                <th style="width: 30%;">Nama Produk</th>
+                <th class="col-center" style="width: 14%;">Batch / Exp / SN</th>
+                <th class="col-center" style="width: 8%;">Pesan</th>
+                <th class="col-center" style="width: 8%;">Diterima</th>
+                <th class="col-center" style="width: 8%;">Rusak</th>
+                <th class="col-right" style="width: 13%;">Harga Satuan</th>
+                <th class="col-right" style="width: 15%;">Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+                        <tr>
+                <td class="col-center col-mono">1</td>
+                <td>
+                    <strong style="color:#0f172a;">Decolgen</strong>
+                    <div style="font-size:9px;color:#64748b;">Strip Isi 4</div>
+                                    </td>
+                <td class="col-center" style="font-size:8.5pt;line-height:1.25;">
+                    B: DCL-GEN-26<br>Exp: 15/10/27                </td>
+                <td class="col-center">10 <span style="font-size:8.5pt;color:#64748b;">Box</span></td>
+                <td class="col-center" style="font-weight:700;">
+                                            8 <span style="font-size:8.5pt;color:#64748b;">Box</span>
+                                    </td>
+                <td class="col-center">
+                                            <strong style="color:#0f172a;">2</strong> <span style="font-size:8.5pt;">Box</span>
+                                                    <div style="font-size:7.5pt;color:#d97706;font-weight:700;">Menunggu</div>
+                                                            </td>
+                <td class="col-right col-mono">Rp 62.000</td>
+                <td class="col-right col-mono" style="font-weight:700;">Rp 496.000</td>
+            </tr>
+                        <tr>
+                <td class="col-center col-mono">2</td>
+                <td>
+                    <strong style="color:#0f172a;">Betadine Solution 15ml</strong>
+                    <div style="font-size:9px;color:#64748b;">Botol 15ml</div>
+                                    </td>
+                <td class="col-center" style="font-size:8.5pt;line-height:1.25;">
+                    B: BET-15-26<br>Exp: 30/11/27                </td>
+                <td class="col-center">15 <span style="font-size:8.5pt;color:#64748b;">Box</span></td>
+                <td class="col-center" style="font-weight:700;">
+                                            15 <span style="font-size:8.5pt;color:#64748b;">Box</span>
+                                    </td>
+                <td class="col-center">
+                                            <span style="color:#94a3b8;">0</span>
+                                    </td>
+                <td class="col-right col-mono">Rp 120.000</td>
+                <td class="col-right col-mono" style="font-weight:700;">Rp 1.800.000</td>
+            </tr>
+                        <tr>
+                <td class="col-center col-mono">3</td>
+                <td>
+                    <strong style="color:#0f172a;">Diapet Kapsul</strong>
+                    <div style="font-size:9px;color:#64748b;">Kapsul Isi 10</div>
+                                    </td>
+                <td class="col-center" style="font-size:8.5pt;line-height:1.25;">
+                    B: DPT-CAP-26<br>Exp: 10/09/27                </td>
+                <td class="col-center">20 <span style="font-size:8.5pt;color:#64748b;">Box</span></td>
+                <td class="col-center" style="font-weight:700;">
+                                            20 <span style="font-size:8.5pt;color:#64748b;">Box</span>
+                                    </td>
+                <td class="col-center">
+                                            <span style="color:#94a3b8;">0</span>
+                                    </td>
+                <td class="col-right col-mono">Rp 90.000</td>
+                <td class="col-right col-mono" style="font-weight:700;">Rp 1.800.000</td>
+            </tr>
+                        <tr>
+                <td class="col-center col-mono">4</td>
+                <td>
+                    <strong style="color:#0f172a;">Tabung Oksigen 1m3</strong>
+                    <div style="font-size:9px;color:#64748b;">Tabung 1m3</div>
+                                    </td>
+                <td class="col-center" style="font-size:8.5pt;line-height:1.25;">
+                    Alkes (SN)                </td>
+                <td class="col-center">5 <span style="font-size:8.5pt;color:#64748b;">Tabung</span></td>
+                <td class="col-center" style="font-weight:700;">
+                                            4 <span style="font-size:8.5pt;color:#64748b;">Tabung</span>
+                                    </td>
+                <td class="col-center">
+                                            <strong style="color:#0f172a;">1</strong> <span style="font-size:8.5pt;">Tabung</span>
+                                                    <div style="font-size:7.5pt;color:#d97706;font-weight:700;">Menunggu</div>
+                                                            </td>
+                <td class="col-right col-mono">Rp 650.000</td>
+                <td class="col-right col-mono" style="font-weight:700;">Rp 2.600.000</td>
+            </tr>
+                        <tr>
+                <td class="col-center col-mono">5</td>
+                <td>
+                    <strong style="color:#0f172a;">Regulator Oksigen</strong>
+                    <div style="font-size:9px;color:#64748b;">Unit Flowmeter</div>
+                                    </td>
+                <td class="col-center" style="font-size:8.5pt;line-height:1.25;">
+                    Alkes (SN)                </td>
+                <td class="col-center">3 <span style="font-size:8.5pt;color:#64748b;">Unit</span></td>
+                <td class="col-center" style="font-weight:700;">
+                                            3 <span style="font-size:8.5pt;color:#64748b;">Unit</span>
+                                    </td>
+                <td class="col-center">
+                                            <span style="color:#94a3b8;">0</span>
+                                    </td>
+                <td class="col-right col-mono">Rp 210.000</td>
+                <td class="col-right col-mono" style="font-weight:700;">Rp 630.000</td>
+            </tr>
+                        <tr>
+                <td class="col-center col-mono">6</td>
+                <td>
+                    <strong style="color:#0f172a;">Kasa Steril Onemed</strong>
+                    <div style="font-size:9px;color:#64748b;">Kotak Isi 10</div>
+                                    </td>
+                <td class="col-center" style="font-size:8.5pt;line-height:1.25;">
+                    Alkes (SN)                </td>
+                <td class="col-center">50 <span style="font-size:8.5pt;color:#64748b;">Kotak</span></td>
+                <td class="col-center" style="font-weight:700;">
+                                            50 <span style="font-size:8.5pt;color:#64748b;">Kotak</span>
+                                    </td>
+                <td class="col-center">
+                                            <span style="color:#94a3b8;">0</span>
+                                    </td>
+                <td class="col-right col-mono">Rp 9.500</td>
+                <td class="col-right col-mono" style="font-weight:700;">Rp 475.000</td>
+            </tr>
+                    </tbody>
+        <tfoot style="background:#f8fafc;font-weight:700;">
+            <tr>
+                <td colspan="3" class="col-right">Total Kuantiti:</td>
+                <td class="col-center">103</td>
+                <td class="col-center">
+                                            100                                    </td>
+                <td class="col-center">3</td>
+                <td class="col-right">Total Fisik:</td>
+                <td class="col-right col-mono" style="font-size:11px;font-weight:800;">Rp 7.801.000</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- CATATAN & RINGKASAN PEMBAYARAN (SEPERTI FAKTUR ASLI) -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10px; margin-bottom: 20px;">
+        <div style="width: 56%; font-size: 9pt; color: #334155;">
+            <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;">Catatan:</div>
+            <div>Kulakan 3 obat &amp; 3 alkes - 2 box Decolgen basah rembes dan 1 Tabung O2 katup bocor. Sedang proses klaim garansi retur ke OneMed (Menunggu Pengganti).</div>
+            
+                            <div style="margin-top: 6px; padding: 6px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 8.5pt;">
+                    <strong style="color: #0f172a;">Keterangan Retur:</strong>
+                    <div style="margin-top: 2px;">
+                        Terdapat 3 unit barang rusak/cacat yang dikembalikan ke pihak supplier.
+                                                    <div style="color: #64748b; margin-top: 2px;">
+                                Menunggu Penggantian: Sedang menunggu pengiriman unit pengganti dari supplier (Saldo klaim: Rp 774.000).
+                            </div>
+                                            </div>
+                </div>
+                    </div>
+        <div style="width: 40%;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 9.5pt;">
+                <tr>
+                    <td style="padding: 3px 0; color: #64748b;">Total Faktur Pesanan:</td>
+                    <td style="padding: 3px 0; text-align: right; font-family: monospace; font-weight: 600;">Rp 8.575.000</td>
+                </tr>
+                                <tr>
+                    <td style="padding: 3px 0; color: #64748b;">Barang Retur Rusak (3 unit):</td>
+                    <td style="padding: 3px 0; text-align: right; font-family: monospace; color: #64748b;">- Rp 774.000</td>
+                </tr>
+                                <tr style="border-top: 1.5px solid #0f172a; font-weight: 800; font-size: 10pt;">
+                    <td style="padding: 6px 0; color: #0f172a;">Total Diterima Fisik (Saat Ini):</td>
+                    <td style="padding: 6px 0; text-align: right; font-family: monospace; color: #0f172a;">Rp 7.801.000</td>
+                </tr>
+                                            </table>
+        </div>
+    </div>
+
+    <!-- TANDA TANGAN DUA PIHAK -->
+    <table class="signature-table">
+        <tr>
+            <td>
+                <div style="font-size: 9pt; color: #64748b; margin-bottom: 2px;">Yang Menyerahkan,</div>
+                <div style="font-size: 9.5pt; font-weight: 700; color: #0f172a; margin-bottom: 50px;">( Pihak Supplier / Pengirim )</div>
+                <div style="border-bottom: 1px solid #0f172a; width: 170px; margin: 0 auto 4px auto;"></div>
+                <div style="font-size: 8.5pt; color: #64748b;">Tanda Tangan &amp; Nama Terang</div>
+            </td>
+            <td>
+                <div style="font-size: 9pt; color: #64748b; margin-bottom: 2px;">Yang Menerima,</div>
+                <div style="font-size: 9.5pt; font-weight: 700; color: #0f172a; margin-bottom: 50px;">ZenCare Medical</div>
+                <div style="border-bottom: 1px solid #0f172a; width: 170px; margin: 0 auto 4px auto;"></div>
+                <div style="font-size: 8.5pt; color: #64748b;">Petugas Gudang / Pemeriksa Fisik</div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- FOOTER INFORMASI DOKUMEN -->
+    <div class="doc-footer">
+        <div>
+            Dokumen Bukti Penerimaan Barang • ZenCare Medical • Diinput Sistem: Kasir (Front Office)        </div>
+        <div>
+            Dicetak: 12/11/2026 13:57 WIB
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

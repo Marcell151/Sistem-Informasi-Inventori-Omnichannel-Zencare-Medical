@@ -1,0 +1,2924 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><base href="http://localhost/inventory_zencare/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cetak Label Stiker Kelompok - ZenCare Medical (82 Label)</title>
+    <!-- JsBarcode untuk barcode Code 128 yang scannable & presisi -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+
+        /* TOOLBAR ATAS (HANYA MUNCUL DI LAYAR MONITOR, TIDAK IKUT TERCETAK) */
+        .no-print-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .toolbar-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .badge-count {
+            background: #10b981;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 9999px;
+        }
+        .toolbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s ease;
+            border: 1px solid transparent;
+        }
+        .btn-primary {
+            background: #0284c7;
+            color: #ffffff;
+        }
+        .btn-primary:hover {
+            background: #0369a1;
+        }
+        .btn-secondary {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #334155;
+        }
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        .btn-active {
+            background: #0f172a !important;
+            color: #ffffff !important;
+            border-color: #0f172a !important;
+        }
+
+        /* PANDUAN PETUNJUK DI MONITOR */
+        .screen-guide {
+            max-width: 1000px;
+            margin: 16px auto 0 auto;
+            padding: 12px 18px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 12px;
+            color: #334155;
+            line-height: 1.5;
+        }
+
+        /* ======================================================== */
+        /* MODE A4: GRID LEMBARAN A4 (4 KOLOM x 10 BARIS = 40 LABEL) */
+        /* ======================================================== */
+        .sheet-container-a4 {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 8mm 6mm;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            /* Formasi 4 kolom presisi */
+            display: grid;
+            grid-template-columns: repeat(4, 48mm);
+            grid-auto-rows: 27mm;
+            gap: 2mm 2mm;
+            justify-content: center;
+            align-content: start;
+        }
+
+        /* 1 STIKER PADA GRID A4 */
+        .sticker-card {
+            width: 48mm;
+            height: 27mm;
+            padding: 1.5mm 2mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            background: #ffffff;
+            /* Garis putus-putus panduan potong gunting/cutter */
+            border: 1px dashed #cbd5e1;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        .sticker-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            font-size: 7.5pt;
+            line-height: 1.1;
+            font-weight: 700;
+            color: #0f172a;
+            max-height: 18px;
+            overflow: hidden;
+        }
+        .sticker-title {
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 38mm;
+        }
+        .sticker-seq {
+            font-size: 6pt;
+            color: #64748b;
+            font-family: monospace;
+            white-space: nowrap;
+        }
+
+        .barcode-area {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0.5mm 0;
+        }
+        .barcode-area svg {
+            width: 100%;
+            max-width: 44mm;
+            height: 14mm;
+        }
+
+        .sticker-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 6.5pt;
+            font-weight: 700;
+            color: #334155;
+            border-top: 0.5px solid #e2e8f0;
+            padding-top: 0.5mm;
+        }
+        .sticker-brand {
+            color: #0369a1;
+            letter-spacing: -0.2px;
+        }
+        .sticker-exp {
+            color: #047857;
+            font-family: monospace;
+        }
+
+        /* ======================================================== */
+        /* MODE THERMAL ROLL: 50mm x 30mm KONTINU                   */
+        /* ======================================================== */
+        .thermal-body .sheet-container-a4 {
+            width: 50mm;
+            min-height: auto;
+            margin: 10px auto;
+            padding: 0;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            gap: 2mm;
+        }
+        .thermal-body .sticker-card {
+            width: 50mm;
+            height: 30mm;
+            border: 1px dashed #e2e8f0;
+            border-radius: 0;
+            padding: 1.5mm;
+            page-break-after: always;
+            break-after: page;
+        }
+        .thermal-body .sticker-header .sticker-title {
+            max-width: 40mm;
+            font-size: 8pt;
+        }
+        .thermal-body .barcode-area svg {
+            max-width: 47mm;
+            height: 16mm;
+        }
+
+        /* ======================================================== */
+        /* ATURAN SAAT DICETAK KE PRINTER (@media print)            */
+        /* ======================================================== */
+        @media print {
+            body {
+                background: #ffffff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .no-print, .no-print-toolbar, .screen-guide {
+                display: none !important;
+            }
+
+            /* Halaman A4 Presisi vs Thermal Presisi */
+            .sheet-container-a4 {
+                width: 100% !important;
+                min-height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .sticker-card {
+                /* Garis putus-putus tipis tetap tercetak sebagai panduan potong gunting */
+                border: 0.5px dashed #94a3b8 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .thermal-body .sheet-container-a4 {
+                width: 50mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .thermal-body .sticker-card {
+                width: 50mm !important;
+                height: 30mm !important;
+                border: none !important;
+                page-break-after: always !important;
+                break-after: page !important;
+            }
+        }
+    </style>
+    <style id="dynamic-print-page">
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 8mm 6mm;
+            }
+        }
+    </style>
+</head>
+<body class="">
+
+    <!-- TOOLBAR LAYAR (KONTROL CETAK & MODE) -->
+    <div class="no-print-toolbar">
+        <div class="toolbar-info">
+            <h1 style="font-size: 15px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Cetak Label Stiker Kelompok
+            </h1>
+            <span class="badge-count">82 Label Terbentuk</span>
+                            <span style="font-size: 12px; color: #64748b; font-weight: 600;">
+                    Ref Dokumen: <strong style="color: #0f172a;">PO-20261015-OBAT5</strong>
+                </span>
+                    </div>
+
+        <div class="toolbar-actions">
+            <!-- Pilihan Format Kertas (Instant Client-side Toggle: Bebas Reset, Data Tetap Utuh) -->
+            <button type="button" id="btn_mode_a4" onclick="setPrintMode('a4')" 
+               class="btn-action btn-active" 
+               title="Format Kertas Stiker HVS A4 Grid 4x10 (Printer Biasa / Laser / Inkjet)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span>Kertas A4 (Grid 4x10)</span>
+            </button>
+            <button type="button" id="btn_mode_thermal" onclick="setPrintMode('thermal')" 
+               class="btn-action btn-secondary" 
+               title="Format Roll Thermal 50x30mm (Printer Barcode Khusus)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6v12M7 6v12M11 6v12M14 6v12M17 6v12M20 6v12"/></svg>
+                <span>Thermal Roll (50x30mm)</span>
+            </button>
+
+            <!-- Tombol Print Dialog -->
+            <button type="button" onclick="window.print()" class="btn-action btn-primary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                <span>Cetak (Print)</span>
+            </button>
+            <button type="button" onclick="window.close()" class="btn-action btn-secondary">
+                Tutup
+            </button>
+        </div>
+    </div>
+
+    <!-- PETUNJUK VISUAL DI LAYAR -->
+    <div class="screen-guide no-print">
+        <p style="font-weight: 700; color: #0f2d5a; display: flex; align-items: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>Panduan Penyesuaian Format Cetak:</span>
+        </p>
+        <ul style="margin-left: 18px; margin-top: 4px;">
+            <li><strong>Kertas Stiker A4:</strong> Stiker disusun berurutan dari <em>kiri ke kanan</em> kemudian baris berikutnya (maksimal 40 stiker per lembar A4). Jika Anda hanya mencetak 1 stiker, stiker akan berada di sudut <strong>kiri atas</strong> sehingga sisa lembaran A4 dapat disimpan dan dipakai kembali.</li>
+            <li><strong>Garis Panduan Potong:</strong> Garis putus-putus tipis (<em>dashed lines</em>) disediakan sebagai batas pemotongan gunting/cutter agar hasil tempelan rapi di kardus/botol obat.</li>
+            <li><strong>Multiple Copies:</strong> Produk dengan kuantitas lebih dari 1 unit otomatis dicetak sejumlah fisik yang diterima dengan barcode & nomor batch yang sama.</li>
+        </ul>
+    </div>
+
+    <!-- CONTAINER GRID STIKER -->
+            <div class="sheet-container-a4">
+                            <div class="sticker-card" id="stk_0">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Amoxicillin 500mg - Tablet 500mg">
+                            Amoxicillin 500mg - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">1/15</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_0"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/12/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_1">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Amoxicillin 500mg - Tablet 500mg">
+                            Amoxicillin 500mg - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">2/15</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_1"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/12/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_2">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Amoxicillin 500mg - Tablet 500mg">
+                            Amoxicillin 500mg - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">3/15</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_2"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/12/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_3">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Amoxicillin 500mg - Tablet 500mg">
+                            Amoxicillin 500mg - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">4/15</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_3"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/12/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_4">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Amoxicillin 500mg - Tablet 500mg">
+                            Amoxicillin 500mg - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">5/15</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_4"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/12/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_5">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Amoxicillin 500mg - Tablet 500mg">
+                            Amoxicillin 500mg - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">6/15</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_5"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/12/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_6">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Amoxicillin 500mg - Tablet 500mg">
+                            Amoxicillin 500mg - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">7/15</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_6"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/12/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_7">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Amoxicillin 500mg - Tablet 500mg">
+                            Amoxicillin 500mg - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">8/15</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_7"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/12/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_8">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Amoxicillin 500mg - Tablet 500mg">
+                            Amoxicillin 500mg - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">9/15</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_8"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/12/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_9">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Amoxicillin 500mg - Tablet 500mg">
+                            Amoxicillin 500mg - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">10/15</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_9"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/12/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_10">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Amoxicillin 500mg - Tablet 500mg">
+                            Amoxicillin 500mg - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">11/15</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_10"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/12/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_11">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Amoxicillin 500mg - Tablet 500mg">
+                            Amoxicillin 500mg - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">12/15</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_11"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/12/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_12">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Amoxicillin 500mg - Tablet 500mg">
+                            Amoxicillin 500mg - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">13/15</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_12"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/12/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_13">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Amoxicillin 500mg - Tablet 500mg">
+                            Amoxicillin 500mg - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">14/15</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_13"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/12/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_14">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Amoxicillin 500mg - Tablet 500mg">
+                            Amoxicillin 500mg - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">15/15</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_14"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/12/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_15">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">1/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_15"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_16">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">2/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_16"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_17">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">3/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_17"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_18">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">4/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_18"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_19">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">5/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_19"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_20">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">6/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_20"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_21">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">7/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_21"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_22">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">8/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_22"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_23">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">9/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_23"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_24">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">10/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_24"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_25">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">11/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_25"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_26">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">12/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_26"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_27">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">13/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_27"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_28">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">14/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_28"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_29">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">15/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_29"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_30">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">16/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_30"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_31">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">17/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_31"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_32">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">18/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_32"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_33">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">19/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_33"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_34">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">20/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_34"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_35">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">21/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_35"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_36">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">22/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_36"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_37">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">23/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_37"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_38">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">24/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_38"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_39">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Paracetamol - Tablet 500mg">
+                            Paracetamol - Tablet 500mg                        </span>
+                                                    <span class="sticker-seq">25/25</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_39"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/11/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_40">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Sanmol Sirup Anak 60ml - Botol 60ml">
+                            Sanmol Sirup Anak 60ml - Botol 60ml                        </span>
+                                                    <span class="sticker-seq">1/12</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_40"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 10/05/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_41">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Sanmol Sirup Anak 60ml - Botol 60ml">
+                            Sanmol Sirup Anak 60ml - Botol 60ml                        </span>
+                                                    <span class="sticker-seq">2/12</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_41"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 10/05/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_42">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Sanmol Sirup Anak 60ml - Botol 60ml">
+                            Sanmol Sirup Anak 60ml - Botol 60ml                        </span>
+                                                    <span class="sticker-seq">3/12</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_42"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 10/05/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_43">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Sanmol Sirup Anak 60ml - Botol 60ml">
+                            Sanmol Sirup Anak 60ml - Botol 60ml                        </span>
+                                                    <span class="sticker-seq">4/12</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_43"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 10/05/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_44">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Sanmol Sirup Anak 60ml - Botol 60ml">
+                            Sanmol Sirup Anak 60ml - Botol 60ml                        </span>
+                                                    <span class="sticker-seq">5/12</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_44"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 10/05/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_45">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Sanmol Sirup Anak 60ml - Botol 60ml">
+                            Sanmol Sirup Anak 60ml - Botol 60ml                        </span>
+                                                    <span class="sticker-seq">6/12</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_45"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 10/05/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_46">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Sanmol Sirup Anak 60ml - Botol 60ml">
+                            Sanmol Sirup Anak 60ml - Botol 60ml                        </span>
+                                                    <span class="sticker-seq">7/12</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_46"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 10/05/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_47">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Sanmol Sirup Anak 60ml - Botol 60ml">
+                            Sanmol Sirup Anak 60ml - Botol 60ml                        </span>
+                                                    <span class="sticker-seq">8/12</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_47"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 10/05/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_48">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Sanmol Sirup Anak 60ml - Botol 60ml">
+                            Sanmol Sirup Anak 60ml - Botol 60ml                        </span>
+                                                    <span class="sticker-seq">9/12</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_48"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 10/05/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_49">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Sanmol Sirup Anak 60ml - Botol 60ml">
+                            Sanmol Sirup Anak 60ml - Botol 60ml                        </span>
+                                                    <span class="sticker-seq">10/12</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_49"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 10/05/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_50">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Sanmol Sirup Anak 60ml - Botol 60ml">
+                            Sanmol Sirup Anak 60ml - Botol 60ml                        </span>
+                                                    <span class="sticker-seq">11/12</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_50"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 10/05/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_51">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Sanmol Sirup Anak 60ml - Botol 60ml">
+                            Sanmol Sirup Anak 60ml - Botol 60ml                        </span>
+                                                    <span class="sticker-seq">12/12</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_51"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 10/05/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_52">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Hufagrip - Hufagrip Merah (TMP)">
+                            Hufagrip - Hufagrip Merah (TMP)                        </span>
+                                                    <span class="sticker-seq">1/10</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_52"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/06/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_53">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Hufagrip - Hufagrip Merah (TMP)">
+                            Hufagrip - Hufagrip Merah (TMP)                        </span>
+                                                    <span class="sticker-seq">2/10</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_53"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/06/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_54">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Hufagrip - Hufagrip Merah (TMP)">
+                            Hufagrip - Hufagrip Merah (TMP)                        </span>
+                                                    <span class="sticker-seq">3/10</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_54"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/06/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_55">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Hufagrip - Hufagrip Merah (TMP)">
+                            Hufagrip - Hufagrip Merah (TMP)                        </span>
+                                                    <span class="sticker-seq">4/10</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_55"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/06/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_56">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Hufagrip - Hufagrip Merah (TMP)">
+                            Hufagrip - Hufagrip Merah (TMP)                        </span>
+                                                    <span class="sticker-seq">5/10</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_56"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/06/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_57">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Hufagrip - Hufagrip Merah (TMP)">
+                            Hufagrip - Hufagrip Merah (TMP)                        </span>
+                                                    <span class="sticker-seq">6/10</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_57"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/06/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_58">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Hufagrip - Hufagrip Merah (TMP)">
+                            Hufagrip - Hufagrip Merah (TMP)                        </span>
+                                                    <span class="sticker-seq">7/10</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_58"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/06/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_59">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Hufagrip - Hufagrip Merah (TMP)">
+                            Hufagrip - Hufagrip Merah (TMP)                        </span>
+                                                    <span class="sticker-seq">8/10</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_59"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/06/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_60">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Hufagrip - Hufagrip Merah (TMP)">
+                            Hufagrip - Hufagrip Merah (TMP)                        </span>
+                                                    <span class="sticker-seq">9/10</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_60"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/06/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_61">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Hufagrip - Hufagrip Merah (TMP)">
+                            Hufagrip - Hufagrip Merah (TMP)                        </span>
+                                                    <span class="sticker-seq">10/10</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_61"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 20/06/2028</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_62">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">1/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_62"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_63">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">2/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_63"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_64">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">3/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_64"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_65">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">4/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_65"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_66">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">5/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_66"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_67">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">6/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_67"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_68">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">7/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_68"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_69">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">8/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_69"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_70">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">9/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_70"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_71">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">10/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_71"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_72">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">11/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_72"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_73">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">12/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_73"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_74">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">13/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_74"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_75">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">14/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_75"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_76">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">15/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_76"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_77">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">16/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_77"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_78">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">17/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_78"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_79">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">18/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_79"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_80">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">19/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_80"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                            <div class="sticker-card" id="stk_81">
+                    <div class="sticker-header">
+                        <span class="sticker-title" title="Imboost Force - Strip Isi 10">
+                            Imboost Force - Strip Isi 10                        </span>
+                                                    <span class="sticker-seq">20/20</span>
+                                            </div>
+
+                    <div class="barcode-area">
+                        <svg id="bc_81"></svg>
+                    </div>
+
+                    <div class="sticker-footer">
+                        <span class="sticker-brand">ZenCare</span>
+                        <span class="sticker-exp">EXP: 15/09/2027</span>
+                    </div>
+                </div>
+                    </div>
+    
+    <script>
+        // Render semua Barcode Code 128 secara presisi
+        document.addEventListener('DOMContentLoaded', function() {
+                        try {
+                JsBarcode("#bc_0", "AMX-2026-01", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_0:", err);
+            }
+                        try {
+                JsBarcode("#bc_1", "AMX-2026-01", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_1:", err);
+            }
+                        try {
+                JsBarcode("#bc_2", "AMX-2026-01", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_2:", err);
+            }
+                        try {
+                JsBarcode("#bc_3", "AMX-2026-01", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_3:", err);
+            }
+                        try {
+                JsBarcode("#bc_4", "AMX-2026-01", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_4:", err);
+            }
+                        try {
+                JsBarcode("#bc_5", "AMX-2026-01", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_5:", err);
+            }
+                        try {
+                JsBarcode("#bc_6", "AMX-2026-01", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_6:", err);
+            }
+                        try {
+                JsBarcode("#bc_7", "AMX-2026-01", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_7:", err);
+            }
+                        try {
+                JsBarcode("#bc_8", "AMX-2026-01", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_8:", err);
+            }
+                        try {
+                JsBarcode("#bc_9", "AMX-2026-01", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_9:", err);
+            }
+                        try {
+                JsBarcode("#bc_10", "AMX-2026-01", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_10:", err);
+            }
+                        try {
+                JsBarcode("#bc_11", "AMX-2026-01", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_11:", err);
+            }
+                        try {
+                JsBarcode("#bc_12", "AMX-2026-01", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_12:", err);
+            }
+                        try {
+                JsBarcode("#bc_13", "AMX-2026-01", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_13:", err);
+            }
+                        try {
+                JsBarcode("#bc_14", "AMX-2026-01", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_14:", err);
+            }
+                        try {
+                JsBarcode("#bc_15", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_15:", err);
+            }
+                        try {
+                JsBarcode("#bc_16", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_16:", err);
+            }
+                        try {
+                JsBarcode("#bc_17", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_17:", err);
+            }
+                        try {
+                JsBarcode("#bc_18", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_18:", err);
+            }
+                        try {
+                JsBarcode("#bc_19", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_19:", err);
+            }
+                        try {
+                JsBarcode("#bc_20", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_20:", err);
+            }
+                        try {
+                JsBarcode("#bc_21", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_21:", err);
+            }
+                        try {
+                JsBarcode("#bc_22", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_22:", err);
+            }
+                        try {
+                JsBarcode("#bc_23", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_23:", err);
+            }
+                        try {
+                JsBarcode("#bc_24", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_24:", err);
+            }
+                        try {
+                JsBarcode("#bc_25", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_25:", err);
+            }
+                        try {
+                JsBarcode("#bc_26", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_26:", err);
+            }
+                        try {
+                JsBarcode("#bc_27", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_27:", err);
+            }
+                        try {
+                JsBarcode("#bc_28", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_28:", err);
+            }
+                        try {
+                JsBarcode("#bc_29", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_29:", err);
+            }
+                        try {
+                JsBarcode("#bc_30", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_30:", err);
+            }
+                        try {
+                JsBarcode("#bc_31", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_31:", err);
+            }
+                        try {
+                JsBarcode("#bc_32", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_32:", err);
+            }
+                        try {
+                JsBarcode("#bc_33", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_33:", err);
+            }
+                        try {
+                JsBarcode("#bc_34", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_34:", err);
+            }
+                        try {
+                JsBarcode("#bc_35", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_35:", err);
+            }
+                        try {
+                JsBarcode("#bc_36", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_36:", err);
+            }
+                        try {
+                JsBarcode("#bc_37", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_37:", err);
+            }
+                        try {
+                JsBarcode("#bc_38", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_38:", err);
+            }
+                        try {
+                JsBarcode("#bc_39", "PCT-500-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_39:", err);
+            }
+                        try {
+                JsBarcode("#bc_40", "SNM-2026-A", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_40:", err);
+            }
+                        try {
+                JsBarcode("#bc_41", "SNM-2026-A", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_41:", err);
+            }
+                        try {
+                JsBarcode("#bc_42", "SNM-2026-A", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_42:", err);
+            }
+                        try {
+                JsBarcode("#bc_43", "SNM-2026-A", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_43:", err);
+            }
+                        try {
+                JsBarcode("#bc_44", "SNM-2026-A", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_44:", err);
+            }
+                        try {
+                JsBarcode("#bc_45", "SNM-2026-A", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_45:", err);
+            }
+                        try {
+                JsBarcode("#bc_46", "SNM-2026-A", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_46:", err);
+            }
+                        try {
+                JsBarcode("#bc_47", "SNM-2026-A", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_47:", err);
+            }
+                        try {
+                JsBarcode("#bc_48", "SNM-2026-A", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_48:", err);
+            }
+                        try {
+                JsBarcode("#bc_49", "SNM-2026-A", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_49:", err);
+            }
+                        try {
+                JsBarcode("#bc_50", "SNM-2026-A", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_50:", err);
+            }
+                        try {
+                JsBarcode("#bc_51", "SNM-2026-A", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_51:", err);
+            }
+                        try {
+                JsBarcode("#bc_52", "HUF-TMP-27", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_52:", err);
+            }
+                        try {
+                JsBarcode("#bc_53", "HUF-TMP-27", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_53:", err);
+            }
+                        try {
+                JsBarcode("#bc_54", "HUF-TMP-27", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_54:", err);
+            }
+                        try {
+                JsBarcode("#bc_55", "HUF-TMP-27", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_55:", err);
+            }
+                        try {
+                JsBarcode("#bc_56", "HUF-TMP-27", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_56:", err);
+            }
+                        try {
+                JsBarcode("#bc_57", "HUF-TMP-27", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_57:", err);
+            }
+                        try {
+                JsBarcode("#bc_58", "HUF-TMP-27", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_58:", err);
+            }
+                        try {
+                JsBarcode("#bc_59", "HUF-TMP-27", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_59:", err);
+            }
+                        try {
+                JsBarcode("#bc_60", "HUF-TMP-27", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_60:", err);
+            }
+                        try {
+                JsBarcode("#bc_61", "HUF-TMP-27", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_61:", err);
+            }
+                        try {
+                JsBarcode("#bc_62", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_62:", err);
+            }
+                        try {
+                JsBarcode("#bc_63", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_63:", err);
+            }
+                        try {
+                JsBarcode("#bc_64", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_64:", err);
+            }
+                        try {
+                JsBarcode("#bc_65", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_65:", err);
+            }
+                        try {
+                JsBarcode("#bc_66", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_66:", err);
+            }
+                        try {
+                JsBarcode("#bc_67", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_67:", err);
+            }
+                        try {
+                JsBarcode("#bc_68", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_68:", err);
+            }
+                        try {
+                JsBarcode("#bc_69", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_69:", err);
+            }
+                        try {
+                JsBarcode("#bc_70", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_70:", err);
+            }
+                        try {
+                JsBarcode("#bc_71", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_71:", err);
+            }
+                        try {
+                JsBarcode("#bc_72", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_72:", err);
+            }
+                        try {
+                JsBarcode("#bc_73", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_73:", err);
+            }
+                        try {
+                JsBarcode("#bc_74", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_74:", err);
+            }
+                        try {
+                JsBarcode("#bc_75", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_75:", err);
+            }
+                        try {
+                JsBarcode("#bc_76", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_76:", err);
+            }
+                        try {
+                JsBarcode("#bc_77", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_77:", err);
+            }
+                        try {
+                JsBarcode("#bc_78", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_78:", err);
+            }
+                        try {
+                JsBarcode("#bc_79", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_79:", err);
+            }
+                        try {
+                JsBarcode("#bc_80", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_80:", err);
+            }
+                        try {
+                JsBarcode("#bc_81", "IMB-FRC-26", {
+                    format: "CODE128",
+                    lineColor: "#000000",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: true,
+                    fontSize: 13,
+                    fontOptions: "bold",
+                    textMargin: 1,
+                    margin: 0
+                });
+            } catch (err) {
+                console.error("Gagal merender barcode #bc_81:", err);
+            }
+                    });
+
+        function setPrintMode(mode) {
+            const dynStyle = document.getElementById('dynamic-print-page');
+            const btnA4 = document.getElementById('btn_mode_a4');
+            const btnThermal = document.getElementById('btn_mode_thermal');
+            
+            if (mode === 'thermal') {
+                document.body.classList.add('thermal-body');
+                if (btnThermal) {
+                    btnThermal.classList.add('btn-active');
+                    btnThermal.classList.remove('btn-secondary');
+                }
+                if (btnA4) {
+                    btnA4.classList.remove('btn-active');
+                    btnA4.classList.add('btn-secondary');
+                }
+                if (dynStyle) {
+                    dynStyle.innerHTML = `@media print { @page { size: 50mm 30mm; margin: 0; } }`;
+                }
+            } else {
+                document.body.classList.remove('thermal-body');
+                if (btnA4) {
+                    btnA4.classList.add('btn-active');
+                    btnA4.classList.remove('btn-secondary');
+                }
+                if (btnThermal) {
+                    btnThermal.classList.remove('btn-active');
+                    btnThermal.classList.add('btn-secondary');
+                }
+                if (dynStyle) {
+                    dynStyle.innerHTML = `@media print { @page { size: A4 portrait; margin: 8mm 6mm; } }`;
+                }
+            }
+            if (window.history && window.history.replaceState) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('mode', mode);
+                window.history.replaceState(null, '', url.toString());
+            }
+        }
+    </script>
+</body>
+</html>

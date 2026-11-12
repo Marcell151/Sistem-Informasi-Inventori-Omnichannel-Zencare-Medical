@@ -1,0 +1,5 @@
+# Proteksi Berkas Sensitif Sistem Inventori ZenCare Medical
+<FilesMatch "\.(sql|json|log|md|bak|env)$">
+    Require all denied
+</FilesMatch>
+

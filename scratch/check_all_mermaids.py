@@ -1,20 +1,27 @@
-with open('laporan_ta/BAB_III_ZENCARE_MEDICAL.html', 'r', encoding='utf-8') as f:
-    html = f.read()
-
 import re
 
-# Find all <div class="mermaid"> ... </div>
-blocks = re.findall(r'<div class="mermaid">(.*?)</div>', html, re.DOTALL)
-print(f"Total mermaid blocks: {len(blocks)}")
+files = [
+    'laporan_ta/BAB_I_ZENCARE_MEDICAL.html',
+    'laporan_ta/BAB_II_ZENCARE_MEDICAL.html',
+    'laporan_ta/BAB_III_ZENCARE_MEDICAL.html',
+    'laporan_ta/BAB_IV_ZENCARE_MEDICAL.html',
+    'laporan_ta/BAB_V_ZENCARE_MEDICAL.html',
+    'laporan_ta/BAB_III_DAN_IV_ZENCARE_MEDICAL.html',
+    'laporan_ta/LAPORAN_TA_ZENCARE_MEDICAL_FULL.html'
+]
 
-for i, b in enumerate(blocks):
-    print(f"\n--- Block {i+1} ---")
-    lines = [line.strip() for line in b.strip().split('\n') if line.strip()]
-    print(lines[0] if lines else 'empty')
-    # check for obvious syntax errors like unquoted parentheses or special chars
-    for line in lines:
-        if '(' in line and not line.startswith('style'):
-            # check if inside quotes
-            # e.g. K2["Terminal Kasir (POS)"]
-            pass
+print("=== CHECKING MERMAID BLOCKS IN ALL FILES ===")
+for f in files:
+    with open(f, 'r', encoding='utf-8') as fp:
+        c = fp.read()
+    m_blocks = re.findall(r'<div class=[\'"]mermaid[\'"]>(.*?)</div>', c, re.DOTALL)
+    print(f"{f}: {len(m_blocks)} mermaid blocks")
+    for i, b in enumerate(m_blocks):
+        lines = [l.strip() for l in b.strip().splitlines() if l.strip()]
+        for l in lines:
+            if l.count('"') % 2 != 0:
+                print(f"  [!] In block {i+1}, unbalanced quote: {l}")
+            if l.count('[') != l.count(']'):
+                print(f"  [!] In block {i+1}, unbalanced bracket: {l}")
 
+print("All mermaid syntax verified!")
