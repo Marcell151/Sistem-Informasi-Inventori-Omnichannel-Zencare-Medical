@@ -178,6 +178,7 @@ try {
         $chkSn->execute([$idVariasi]);
         $hasSn = ($chkSn->fetchColumn() > 0);
 
+        // === LOKASI QUERY LOGIKA FEFO (ALOKASI BATCH CHECKOUT DARING ORDER BY tgl_exp ASC) ===
         // FEFO Logic untuk barang ber-batch (E-Commerce khusus Grosir/Box jika rasio > 1, abaikan Sub-Batch eceran)
         if ($hasBatch) {
             $batchSql = ($rasio > 1) 
@@ -229,6 +230,7 @@ try {
             }
         }
 
+        // === RESERVASI STOK DARING (KUNCIAN STOK E-COMMERCE) ===
         $pdo->prepare("UPDATE stok_toko SET stok = stok - ? WHERE id_variasi = ?")
             ->execute([$qtyPotong, $idVariasi]);
 

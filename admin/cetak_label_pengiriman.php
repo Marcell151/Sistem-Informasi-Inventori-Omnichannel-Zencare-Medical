@@ -141,6 +141,7 @@ $printFormat = (isset($_GET['format']) && $_GET['format'] === 'a4') ? 'a4' : 'th
         }
     </script>
     <style>
+        /* === FORMAT CETAK LABEL PENGIRIMAN (KERTAS THERMAL ROLL 100x150 MM) === */
         <?php if ($printFormat === 'a4'): ?>
         @page {
             size: A4 portrait;

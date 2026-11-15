@@ -592,8 +592,9 @@ foreach ($dosRows->fetchAll(PDO::FETCH_ASSOC) as $dr) {
         </tbody>
         <tfoot>
             <tr style="background: #f8fafc; font-weight: bold; border-top: 2px solid #0f172a; border-bottom: 2px solid #0f172a;">
+                <!-- === ESTIMASI NILAI KERUGIAN OPNAME (BERBASIS HARGA BELI) === -->
                 <td colspan="8" style="text-align: right; padding: 8px 10px; font-size: 8.5pt; text-transform: uppercase;">
-                    Total Estimasi Nilai Acuan Kerugian Persediaan:
+                    Total Keseluruhan (Grand Total) Estimasi Nilai Kerugian Persediaan:
                 </td>
                 <td style="text-align: right; padding: 8px 10px; font-size: 9.5pt; color: #b91c1c; font-family: monospace;">
                     Rp <?= number_format($grandTotalKerugian, 0, ',', '.') ?>

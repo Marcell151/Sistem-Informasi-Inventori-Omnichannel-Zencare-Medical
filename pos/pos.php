@@ -89,6 +89,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['aksi'] ?? '') === 
                 $chkSn->execute([$idVar]);
                 $hasSn = ($chkSn->fetchColumn() > 0);
 
+                // === LOGIKA FEFO / FIFO (ALOKASI BATCH KASIR) ===
                 // FEFO / Batch Logic untuk Obat & Alkes BMHP yang memiliki stok_batch
                 if ($hasBatch) {
                     if (!empty($allocations) && is_array($allocations)) {
@@ -106,6 +107,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['aksi'] ?? '') === 
                             if (!$b || $b['stok_sisa'] < $alQtyPotong) {
                                 throw new Exception("Stok Batch $alBatch tidak mencukupi untuk item ID $idVar. (Dibutuhkan: $alQtyPotong, Tersedia: " . ($b['stok_sisa'] ?? 0) . ")");
                             }
+                            // === KUNCI KOLOM EXPIRED BATCH (BLOKIR KEDALUWARSA KASIR) ===
                             if ($b['tgl_exp'] < date('Y-m-d')) {
                                 throw new Exception("Batch $alBatch sudah KADALUARSA (Expired: {$b['tgl_exp']}). Barang kadaluarsa dilarang dijual!");
                             }
@@ -156,6 +158,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['aksi'] ?? '') === 
                         $pdo->prepare("INSERT INTO pesanan_batch_alokasi (id_penjualan, id_detail_penjualan, id_batch, qty_satuan_kecil) VALUES (?, ?, ?, ?)")
                             ->execute([$idPenjualan, $idDetail, $b['id'], $qtyPotong]);
                     } else {
+                        // === LOKASI QUERY LOGIKA FEFO (AUTO FEFO ORDER BY tgl_exp ASC) ===
                         // Auto FEFO fallback (HANYA batch yang belum expired)
                         $stmtBatch = $pdo->prepare("SELECT id, no_batch, stok_sisa FROM stok_batch WHERE id_variasi = ? AND stok_sisa > 0 AND tgl_exp >= CURDATE() ORDER BY tgl_exp ASC, no_batch ASC FOR UPDATE");
                         $stmtBatch->execute([$idVar]);
@@ -230,6 +233,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['aksi'] ?? '') === 
                     $pdo->prepare("UPDATE detail_penjualan SET catatan_logistik = ? WHERE id = ?")->execute([$catatanStr, $idDetail]);
                 }
 
+                // === PEMOTONGAN STOK KASIR (TRANSAKSI POS & KARTU STOK) ===
                 $pdo->prepare("UPDATE stok_toko SET stok=stok-? WHERE id_variasi=?")->execute([$qtyPotong,$idVar]);
 
                 $sisaQ = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi=?");
@@ -336,6 +340,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['aksi'] ?? '') === 
 }
 }
 
+// === LOKASI QUERY LOGIKA FEFO (KATALOG BATCH POS ORDER BY tgl_exp ASC) ===
 $katalog = $pdo->prepare("
     SELECT v.id, v.sku_variasi, CONCAT(i.nama_produk,' - ',v.nama_variasi) AS nama,
            v.satuan_kecil, v.satuan_besar, v.rasio_konversi, v.harga_jual_kecil, v.harga_jual_besar, COALESCE(sc.stok,0) AS stok, i.kategori, v.gambar,

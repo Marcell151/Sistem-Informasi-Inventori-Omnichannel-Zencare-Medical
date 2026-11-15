@@ -4,6 +4,7 @@
 require_once __DIR__ . '/config.php';
 
 if (!function_exists('batalkanSatuPesananInternal')) {
+    // === PELEPASAN KUNCIAN STOK (PEMBATALAN PESANAN DARING) ===
     /**
      * Membatalkan 1 pesanan dan mengembalikan seluruh reserved stok (stok_toko, stok_batch FEFO, unit_serial).
      * Dibuat idempoten: jika pesanan sudah dibatalkan atau bukan 'Menunggu Pembayaran', proses langsung berhenti tanpa pengembalian ganda.

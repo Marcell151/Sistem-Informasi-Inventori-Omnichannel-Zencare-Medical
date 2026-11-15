@@ -357,6 +357,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         }
     }
 
+    // === SIMPAN BLIND COUNT KASIR (PENCACAHAN FISIK INDIVIDUAL) ===
     // --- 2. SIMPAN HITUNG FISIK BERKONDISI (Hitung Buta: Baik, Rusak, Expired) ---
     elseif ($aksi === 'simpan_hitung_fisik') {
         $idDetail = intval($_POST['id_detail'] ?? 0);
@@ -487,6 +488,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         }
     }
 
+    // === SIMPAN BLIND COUNT KASIR (PENCACAHAN FISIK MASSAL / BULK FIELD) ===
     // --- 2A2. SIMPAN SEMUA HASIL HITUNG FISIK SEKALIGUS (Bulk Save Fisik Kondisi) ---
     elseif ($aksi === 'simpan_semua_hitung_fisik') {
         if (!$canCountPhysical) {
@@ -1857,24 +1859,21 @@ if ($isKasir) {
     <?php if (!$activeSession): ?>
         
         <div class="bg-white border border-zcBrd rounded-2xl p-6 shadow-sm">
-            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-zcBrd pb-5 mb-5">
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
-                        <h2 class="text-base font-bold text-zcTxt">Status Sistem: Normal (Semua Transaksi Aktif)</h2>
-                    </div>
+            <div class="flex flex-col gap-4 border-b border-zcBrd pb-5 mb-5">
+                <div class="min-w-0">
+                    <h2 class="text-base font-bold text-zcTxt">Status Sistem: Normal (Semua Transaksi Aktif)</h2>
                     <p class="text-xs text-zcMut mt-1 leading-relaxed">
                         Tidak ada sesi opname yang sedang berjalan. Kasir POS offline, toko online e-commerce, dan modul logistik beroperasi normal.
                     </p>
                 </div>
 
-                <div class="flex items-center gap-2.5 flex-wrap shrink-0">
+                <div class="flex items-center gap-2.5 flex-wrap">
                     <?php if ($canVerify): ?>
                         <!-- Tombol [Utilitas Demo] Jalankan Uji Coba Testing -->
                         <form method="POST" onsubmit="return confirm('Jalankan skenario uji coba testing otomatis dari awal hingga selesai (Mulai Sesi 111 Item -> Hitung Fisik 3 Kondisi -> Verifikasi & Mutasi 6 Produk Anomali -> Tutup Sesi Opname -> Terbitkan Berita Acara)?');" class="inline">
                             <input type="hidden" name="aksi" value="jalankan_simulasi_demo">
-                            <button type="submit" class="h-9 px-3.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer" title="Khusus keperluan demo pengujian: Jalankan skenario uji coba otomatis dari awal hingga penutupan sesi dan penerbitan Berita Acara">
-                                <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            <button type="submit" class="h-9 px-3.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap" title="Khusus keperluan demo pengujian: Jalankan skenario uji coba otomatis dari awal hingga penutupan sesi dan penerbitan Berita Acara">
+                                <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                 <span>[Utilitas Demo] Jalankan Uji Coba Testing</span>
                             </button>
                         </form>
@@ -1882,32 +1881,32 @@ if ($isKasir) {
                         <!-- Tombol [Utilitas Demo] Reset Data Demo (Admin & Superadmin) -->
                         <form method="POST" action="/inventory_zencare/inventori/stok_opname.php" onsubmit="return confirm('Khusus keperluan demo: Apakah Anda yakin ingin memulihkan database inventori ke kondisi awal bersih (Demo_Bersih.sql)?');" class="inline">
                             <input type="hidden" name="aksi" value="reset_database_demo">
-                            <button type="submit" class="h-9 px-3.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer" title="Khusus keperluan demo pengujian: Memulihkan database ke kondisi awal bersih (Demo_Bersih.sql)">
-                                <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                            <button type="submit" class="h-9 px-3.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap" title="Khusus keperluan demo pengujian: Memulihkan database ke kondisi awal bersih (Demo_Bersih.sql)">
+                                <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                                 <span>[Utilitas Demo] Reset Data Demo</span>
                             </button>
                         </form>
                     <?php endif; ?>
 
                     <!-- Tombol Panduan & Dokumentasi Pengujian Black-Box -->
-                    <a href="dokumentasi_testing.php" target="_blank" class="h-9 px-3.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center justify-center gap-2 shadow-2xs" title="Buka dokumentasi rekaman pengujian black-box modul stok opname">
-                        <svg class="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+                    <a href="dokumentasi_testing.php" target="_blank" class="h-9 px-3.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center justify-center gap-2 shadow-2xs whitespace-nowrap" title="Buka dokumentasi rekaman pengujian black-box modul stok opname">
+                        <svg class="w-4 h-4 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
                         <span>Dokumentasi Pengujian Black-Box</span>
                     </a>
 
                     <?php if ($isSuperadmin): ?>
-                        <button onclick="document.getElementById('modal_mulai_sesi').classList.remove('hidden')" class="h-9 px-4 rounded-xl bg-zc hover:bg-zcHv text-white text-xs font-bold transition shadow-sm flex items-center justify-center gap-2 cursor-pointer">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                        <button onclick="document.getElementById('modal_mulai_sesi').classList.remove('hidden')" class="h-9 px-4 rounded-xl bg-zc hover:bg-zcHv text-white text-xs font-bold transition shadow-sm flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap">
+                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                             <span>Mulai Sesi Stok Opname Baru (Bekukan Transaksi)</span>
                         </button>
                     <?php elseif ($isKasir): ?>
-                        <a href="/inventory_zencare/pos/pos.php" class="h-9 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        <a href="/inventory_zencare/pos/pos.php" class="h-9 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                             <span>Buka Terminal Kasir POS</span>
                         </a>
                     <?php else: ?>
-                        <div class="h-9 px-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 text-xs font-medium flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <div class="h-9 px-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 text-xs font-medium flex items-center gap-1.5 whitespace-nowrap">
+                            <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                             <span>Akses Mulai Sesi: Khusus Superadmin</span>
                         </div>
                     <?php endif; ?>
@@ -1969,17 +1968,17 @@ if ($isKasir) {
             <?php if ($demoSesiData): ?>
                 <!-- PANEL HASIL EKSEKUSI UJI COBA TESTING DARI AWAL HINGGA BERITA ACARA -->
                 <div class="mb-6 border border-slate-200 rounded-2xl bg-white overflow-hidden shadow-xs">
-                    <div class="px-5 py-4 bg-white border-b border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider">Selesai</span>
+                    <div class="px-5 py-4 bg-white border-b border-slate-200 flex flex-col gap-3">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider shrink-0">Selesai</span>
                                 <h3 class="text-sm font-bold text-slate-900">Hasil Uji Coba Stok Opname &amp; Berita Acara (#<?= htmlspecialchars($demoSesiData['kode_sesi']) ?>)</h3>
                             </div>
                             <p class="text-[11px] text-slate-500 mt-1">
                                 Seluruh tahapan mulai dari Pembekuan Sesi (111 Item), Hitung Fisik 3 Kondisi, Verifikasi &amp; Mutasi 6 Produk Anomali, Penutupan Sesi, hingga Penerbitan Berita Acara telah selesai dijalankan.
                             </p>
                         </div>
-                        <div class="flex items-center gap-2 flex-wrap shrink-0">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <a href="cetak_berita_acara_opname.php?id_sesi=<?= $demoSesiData['id'] ?>" target="_blank" class="h-8 px-3.5 rounded-lg bg-zc hover:bg-zcHv text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
                                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                                 <span>Buka Dokumen Berita Acara</span>
@@ -2162,8 +2161,8 @@ if ($isKasir) {
                             </tr>
                         <?php else: foreach ($historiSesi as $hs): ?>
                             <tr class="hover:bg-slate-50/70 transition">
-                                <td class="py-2.5 px-3 font-mono font-bold text-zcTxt"><?= htmlspecialchars($hs['kode_sesi']) ?></td>
-                                <td class="py-2.5 px-3 text-slate-600">
+                                <td class="py-2.5 px-3 font-mono font-bold text-zcTxt whitespace-nowrap"><?= htmlspecialchars($hs['kode_sesi']) ?></td>
+                                <td class="py-2.5 px-3 text-slate-600 whitespace-nowrap">
                                     <div>Mulai: <?= date('d/m/Y H:i', strtotime($hs['dibekukan_pada'])) ?></div>
                                     <?php if ($hs['dibuka_pada']): ?>
                                         <div class="text-[10px] text-zcMut">Selesai: <?= date('d/m/Y H:i', strtotime($hs['dibuka_pada'])) ?></div>
@@ -2175,15 +2174,15 @@ if ($isKasir) {
                                         <div class="text-[10px] text-zcMut">Ditutup: <?= htmlspecialchars($hs['nama_penutup']) ?></div>
                                     <?php endif; ?>
                                 </td>
-                                <td class="py-2.5 px-3 text-center">
+                                <td class="py-2.5 px-3 text-center whitespace-nowrap">
                                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?= $hs['status'] === 'Selesai' ? 'bg-emerald-100 text-emerald-800' : ($hs['status'] === 'Dibatalkan' ? 'bg-rose-100 text-rose-800' : 'bg-blue-100 text-blue-800') ?>">
                                         <?= htmlspecialchars($hs['status']) ?>
                                     </span>
                                 </td>
-                                <td class="py-2.5 px-3 text-center">
+                                <td class="py-2.5 px-3 text-center whitespace-nowrap">
                                     <span class="font-bold text-slate-800"><?= $hs['total_selisih'] ?></span> / <?= $hs['total_item'] ?> item
                                 </td>
-                                <td class="py-2.5 px-3 text-right">
+                                <td class="py-2.5 px-3 text-right whitespace-nowrap">
                                     <?php if (floatval($hs['estimasi_kerugian']) > 0): ?>
                                         <span class="font-bold text-rose-600 font-mono text-xs">Rp <?= number_format($hs['estimasi_kerugian'], 0, ',', '.') ?></span>
                                         <div class="text-[10px] text-rose-500 font-medium">Beban Kerugian</div>
@@ -2193,9 +2192,9 @@ if ($isKasir) {
                                     <?php endif; ?>
                                 </td>
                                 <td class="py-2.5 px-3 text-[11px] text-slate-600 max-w-xs truncate"><?= htmlspecialchars($hs['catatan'] ?: '-') ?></td>
-                                <td class="py-2.5 px-3 text-center">
-                                    <a href="cetak_berita_acara_opname.php?id_sesi=<?= $hs['id'] ?>" target="_blank" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-zc hover:text-zc text-slate-700 transition text-[11px] font-semibold bg-white shadow-2xs">
-                                        <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                <td class="py-2.5 px-3 text-center whitespace-nowrap">
+                                    <a href="cetak_berita_acara_opname.php?id_sesi=<?= $hs['id'] ?>" target="_blank" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-zc hover:text-zc text-slate-700 transition text-[11px] font-semibold bg-white shadow-2xs whitespace-nowrap">
+                                        <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                                         <span>Berita Acara</span>
                                     </a>
                                 </td>
@@ -2302,12 +2301,12 @@ if ($isKasir) {
             <!-- Banner Utama Sesi Aktif (2-Row Clean Stacked Layout - No Narrow Squishing) -->
             <div class="bg-white border border-zcBrd rounded-2xl p-5 shadow-sm space-y-4">
                 <!-- Baris 1: Informasi Status Sesi & Kunci Server (Full Width) -->
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
-                    <div class="flex items-center gap-3">
+                <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+                    <div class="flex items-center gap-3 min-w-0 flex-1">
                         <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center shrink-0">
                             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                         </div>
-                        <div>
+                        <div class="min-w-0">
                             <div class="flex items-center gap-2.5 flex-wrap text-xs text-slate-600">
                                 <span class="font-bold text-slate-900 font-mono tracking-tight text-sm">
                                     Sesi: <?= htmlspecialchars($activeSession['kode_sesi']) ?>
@@ -2843,6 +2842,7 @@ if ($isKasir) {
                                             </td>
 
                                             <!-- INPUT FISIK EXPIRED -->
+                                            <!-- === KUNCI KOLOM EXPIRED BATCH (STOK OPNAME - DISABLE UNTUK ALKES BER-SN) === -->
                                             <td class="py-2.5 px-3 text-center border-r border-slate-100">
                                                 <?php if ($isAlkesSN): ?>
                                                     <span class="text-[10px] text-slate-400 font-mono">-</span>
@@ -3101,6 +3101,21 @@ if ($isKasir) {
                                     <?php endforeach; ?>
                                 <?php endforeach; endif; ?>
                             </tbody>
+                            <!-- === ESTIMASI NILAI KERUGIAN OPNAME (BERBASIS HARGA BELI) === -->
+                            <tfoot class="bg-slate-100 border-t-2 border-slate-300 font-bold text-slate-800">
+                                <tr>
+                                    <td colspan="8" class="py-3 px-4 text-right uppercase tracking-wider text-[11px] font-sans">
+                                        Total Keseluruhan (Grand Total) Estimasi Nilai Kerugian Persediaan:
+                                    </td>
+                                    <td class="py-3 px-3 text-center text-rose-700 font-mono text-xs whitespace-nowrap bg-rose-50/80 border-x border-rose-200">
+                                        <span class="block font-extrabold">Rp <?= number_format($totalEstLoss, 0, ',', '.') ?></span>
+                                        <span class="text-[9px] text-rose-600 font-sans font-medium block">Acuan Harga Beli</span>
+                                    </td>
+                                    <td colspan="2" class="py-3 px-3 text-center text-[10px] text-slate-600 font-sans">
+                                        <?= ($stats['berselisih'] - $stats['sudah_dimutasi']) > 0 ? ($stats['berselisih'] - $stats['sudah_dimutasi']) . ' Item Perlu Rekonsiliasi' : 'Semua Selisih Tuntas Direkonsiliasi' ?>
+                                    </td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
