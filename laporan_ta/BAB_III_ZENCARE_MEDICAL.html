@@ -5135,7 +5135,7 @@
 
                         <p><b><i>Primary Key</i>:</b> <i>id_kartu_stok</i></p>
 
-                        <p><b><i>Foreign Key</i>:</b> <i>id_variasi</i>, <i>dibuat_oleh</i></p>
+                        <p><b><i>Foreign Key</i>:</b> <i>id_variasi</i>, <i>id_batch</i>, <i>dibuat_oleh</i></p>
 
                         <p class="text-justify"><b>Fungsi:</b> Buku besar persediaan yang bertugas merekam riwayat mutasi persediaan secara permanen. Tabel ini merangkum pergerakan kuantitas masuk, keluar, dan penyesuaian fisik beserta saldo berjalan guna menghasilkan pertanggungjawaban persediaan yang transparan dan akuntabel.</p>
 
@@ -5197,7 +5197,7 @@
 
                                 <td class="border border-black px-2 py-1 text-center font-bold">3</td>
 
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>id_batch</i></td>
+                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>id_batch</i> <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
 
                                 <td class="border border-black px-2 py-1">Integer</td>
 
@@ -5535,7 +5535,7 @@
 
                         <p><b><i>Primary Key</i>:</b> <i>id_log_anomali</i></p>
 
-                        <p><b><i>Foreign Key</i>:</b> <i>id_penjualan</i>, <i>id_user</i>, <i>id_variasi</i></p>
+                        <p><b><i>Foreign Key</i>:</b> <i>id_penjualan</i>, <i>id_user</i>, <i>id_variasi</i>, <i>resolved_in_penjualan</i></p>
 
                         <p class="text-justify"><b>Fungsi:</b> Entitas baru yang mendokumentasikan deviasi kasir saat mengambil nomor <i>batch</i> obat yang berbeda dari rekomendasi sistem <i>FEFO</i>. Catatan ini memuat nomor <i>batch</i> yang diambil, <i>batch</i> seharusnya, kuantitas, dan alasan operasional untuk keperluan evaluasi kepatuhan manajerial.</p>
 
@@ -5709,13 +5709,13 @@
 
                                 <td class="border border-black px-2 py-1 text-center font-bold">11</td>
 
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>resolved_in_penjualan</i></td>
+                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>resolved_in_penjualan</i> <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
 
                                 <td class="border border-black px-2 py-1">Integer</td>
 
                                 <td class="border border-black px-2 py-1 text-center">11</td>
 
-                                <td class="border border-black px-2 py-1">ID transaksi penjualan tempat anomali berhasil diselesaikan.</td>
+                                <td class="border border-black px-2 py-1"><i>Foreign Key</i> ke penjualan.<i>id_penjualan</i> tempat anomali berhasil diselesaikan.</td>
 
                             </tr>
 

@@ -4948,7 +4948,7 @@
 
                         <p><b><i>Primary Key</i>:</b> <i>id_kartu_stok</i></p>
 
-                        <p><b><i>Foreign Key</i>:</b> <i>id_variasi</i>, <i>dibuat_oleh</i></p>
+                        <p><b><i>Foreign Key</i>:</b> <i>id_variasi</i>, <i>id_batch</i>, <i>dibuat_oleh</i></p>
 
                         <p class="text-justify"><b>Fungsi:</b> Buku besar persediaan yang bertugas merekam riwayat mutasi persediaan secara permanen. Tabel ini merangkum pergerakan kuantitas masuk, keluar, dan penyesuaian fisik beserta saldo berjalan guna menghasilkan pertanggungjawaban persediaan yang transparan dan akuntabel.</p>
 
@@ -5010,7 +5010,7 @@
 
                                 <td class="border border-black px-2 py-1 text-center font-bold">3</td>
 
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>id_batch</i></td>
+                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>id_batch</i> <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
 
                                 <td class="border border-black px-2 py-1">Integer</td>
 
@@ -5348,7 +5348,7 @@
 
                         <p><b><i>Primary Key</i>:</b> <i>id_log_anomali</i></p>
 
-                        <p><b><i>Foreign Key</i>:</b> <i>id_penjualan</i>, <i>id_user</i>, <i>id_variasi</i></p>
+                        <p><b><i>Foreign Key</i>:</b> <i>id_penjualan</i>, <i>id_user</i>, <i>id_variasi</i>, <i>resolved_in_penjualan</i></p>
 
                         <p class="text-justify"><b>Fungsi:</b> Entitas baru yang mendokumentasikan deviasi kasir saat mengambil nomor <i>batch</i> obat yang berbeda dari rekomendasi sistem <i>FEFO</i>. Catatan ini memuat nomor <i>batch</i> yang diambil, <i>batch</i> seharusnya, kuantitas, dan alasan operasional untuk keperluan evaluasi kepatuhan manajerial.</p>
 
@@ -5522,13 +5522,13 @@
 
                                 <td class="border border-black px-2 py-1 text-center font-bold">11</td>
 
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>resolved_in_penjualan</i></td>
+                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>resolved_in_penjualan</i> <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
 
                                 <td class="border border-black px-2 py-1">Integer</td>
 
                                 <td class="border border-black px-2 py-1 text-center">11</td>
 
-                                <td class="border border-black px-2 py-1">ID transaksi penjualan tempat anomali berhasil diselesaikan.</td>
+                                <td class="border border-black px-2 py-1"><i>Foreign Key</i> ke penjualan.<i>id_penjualan</i> tempat anomali berhasil diselesaikan.</td>
 
                             </tr>
 
@@ -6787,7 +6787,7 @@
                     <div id="subbab_411_content">
 
                         <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
-                            Implementasi sistem merupakan tahap perwujudan dari rancangan logika basis data, alur proses bisnis, dan tata letak antarmuka pengguna yang telah dirumuskan pada Bab III ke dalam bentuk modul-modul fungsional perangkat lunak yang beroperasi secara utuh. Guna menyajikan gambaran operasional yang terstruktur, padu, dan mudah dipahami, dokumentasi implementasi sistem dikelompokkan ke dalam 26 (dua puluh enam) subbab fungsional yang berurutan sesuai alur kerja nyata: mulai dari autentikasi staf, operasional kasir dan transaksi penjualan <i>omnichannel</i>, manajemen master data dan logistik persediaan, siklus lengkap pemeriksaan fisik persediaan (<i>stok opname</i>), <i>dashboard</i> eksekutif dan seluruh lembar cetak laporan manajerial resmi, konfigurasi sistem, hingga portal toko daring (<i>e-commerce</i>) pelanggan. Pada setiap subbab, tampilan antarmuka interaktif disandingkan secara langsung dengan dokumen cetak fisik atau formulir operasional terkait agar alur kerja sistem terdokumentasi secara utuh dan terpadu. Rincian implementasi sistem diuraikan sebagai berikut:
+                            Implementasi sistem merupakan tahap perwujudan dari rancangan logika basis data, alur proses bisnis, dan tata letak antarmuka pengguna yang telah dirumuskan pada Bab III ke dalam bentuk modul-modul fungsional perangkat lunak yang beroperasi secara utuh. Guna menyajikan gambaran operasional yang terstruktur, padu, dan mudah dipahami, dokumentasi implementasi sistem dikelompokkan ke dalam 26 (dua puluh enam) subbab fungsional yang berurutan sesuai alur kerja nyata: mulai dari autentikasi staf, operasional kasir dan transaksi penjualan <i>omnichannel</i>, manajemen master data dan logistik persediaan, siklus lengkap pemeriksaan fisik persediaan (<i>stok opname</i>), <i>dashboard</i> eksekutif dan seluruh lembar cetak laporan manajerial resmi, konfigurasi sistem, hingga portal toko daring (<i>e-commerce</i>) pelanggan. Pada setiap subbab, setiap tampilan antarmuka interaktif beserta dokumen cetak fisik atau formulir operasional terkait diuraikan secara berurutan agar fungsi masing-masing layar terdokumentasi secara utuh dan terpadu. Rincian implementasi sistem diuraikan sebagai berikut:
                         </p>
 
 
@@ -6807,7 +6807,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Halaman autentikasi utama satu pintu bagi seluruh staf internal toko kesehatan ZenCare Medical yang mencakup peran Superadmin, Admin, dan Kasir. Antarmuka menerapkan formulir masukan nama pengguna (<i>username</i>) dan kata sandi (<i>password</i>), identitas visual resmi ZenCare Medical, serta indikator verifikasi kredensial. Pada sisi <i>backend</i>, sistem memvalidasi kredensial terhadap tabel <i>users</i> menggunakan pencocokan <i>hash</i> terenkripsi. Berdasarkan nilai atribut peran (<i>role</i>), sistem secara otomatis mengarahkan alur kerja ke antarmuka yang tepat: Kasir diarahkan langsung menuju Terminal Kasir guna mempercepat transaksi penjualan luring di gerai fisik, Admin diarahkan ke <i>dashboard</i> operasional toko dan pengelolaan logistik, sedangkan Superadmin diarahkan ke <i>dashboard</i> eksekutif dan konfigurasi manajerial. Gerbang ini terproteksi ketat dari akses luar, di mana akun Pelanggan toko <i>online</i> dicegah masuk melalui formulir staf ini.
+                            Halaman autentikasi satu pintu (Gambar 4.1) digunakan oleh seluruh staf internal ZenCare Medical, yaitu Superadmin, Admin, dan Kasir. Layar ini menyediakan kolom nama pengguna (<i>username</i>), kata sandi (<i>password</i>), serta identitas toko untuk memverifikasi hak akses sebelum masuk ke sistem. Pada sisi <i>backend</i>, sistem mencocokkan data masukan terhadap tabel <i>users</i> menggunakan enkripsi kata sandi dan mengarahkan setiap pengguna sesuai perannya: Kasir langsung diarahkan ke Terminal Kasir, Admin menuju halaman operasional toko dan logistik, sedangkan Superadmin masuk ke halaman ringkasan manajerial. Akun pelanggan toko daring dibatasi agar tidak dapat masuk melalui gerbang staf ini.
                         </p>
                     </div>
 
@@ -6827,7 +6827,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Pusat kendali operasional harian bagi staf Admin yang menyajikan ringkasan indikator kinerja toko fisik secara langsung. Antarmuka memuat kartu metrik ringkas yang menampilkan jumlah total produk aktif, total transaksi penjualan hari ini, peringatan jumlah persediaan barang yang menipis di bawah ambang batas minimum (<i>buffer stock</i>), serta notifikasi dini bagi komoditas yang mendekati batas waktu kedaluwarsa. Terdapat tombol akses cepat menuju terminal kasir (<i>Point of Sale</i>) dan formulir penerimaan logistik barang masuk. Antarmuka juga menyediakan grafik tren volume transaksi harian serta tabel rekapitulasi pesanan terbaru yang memerlukan pemrosesan segera. Seluruh metrik dihimpun secara dinamis dari tabel <i>penjualan</i>, <i>produk_variasi</i>, dan <i>stok_batch</i>.
+                            Halaman <i>Dashboard</i> Operasional Admin (Gambar 4.2) menyajikan ringkasan kondisi toko harian bagi staf Admin. Pada bagian atas terdapat kartu indikator jumlah katalog produk, stok satuan besar dan kecil, item stok menipis di bawah batas minimum (<i>buffer stock</i>), barang mendekati kedaluwarsa, pesanan daring baru, anomali pengeluaran <i>FEFO</i>, serta status retur pemasok. Di bawahnya tersedia pintasan cepat menuju penerimaan stok baru, pengelolaan pesanan, dan etalase toko daring, diikuti daftar peringatan stok menipis, barang hampir kedaluwarsa, serta log pergerakan terbaru dari tabel <i>kartu_stok</i>.
                         </p>
                     </div>
 
@@ -6845,6 +6845,11 @@
                                 Gambar 4.3 Tampilan Antarmuka Terminal Kasir (<i>Point of Sale</i> / <i>POS</i>)
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Transaksi penjualan langsung di meja kasir dilayani melalui halaman Terminal Kasir (Gambar 4.3) yang disusun dalam dua panel utama agar proses pelayanan berlangsung cepat. Panel kiri memuat bilah pencarian nama maupun pemindai kode batang (<i>barcode</i>), filter kategori obat atau alat kesehatan, serta kartu produk berisi harga jual dan sisa stok siap jual. Panel kanan menampilkan daftar barang di keranjang belanja, pilihan metode pembayaran (Tunai, QRIS, Kartu Debit, atau Transfer), perhitungan uang kembalian otomatis untuk transaksi tunai, dan tombol penyelesaian pembayaran.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -6856,7 +6861,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Antarmuka pelayanan transaksi penjualan luring di gerai fisik toko yang dioperasikan oleh staf Kasir menggunakan tata letak dua panel terpadu guna mempercepat alur transaksi di meja kasir. Panel kiri menyajikan bilah pencarian obat dan alat kesehatan berbasis nama maupun pemindaian kode batang (<i>barcode</i>), penyaring kategori komoditas, serta kartu produk interaktif yang memuat informasi harga satuan eceran dan sisa stok fisik siap jual. Panel kanan memuat keranjang belanja, kalkulasi otomatis diskon, pilihan metode pembayaran tunai maupun non-tunai (QRIS/debit), perhitungan uang kembali, serta tombol penyelesaian transaksi.<br><br>Saat pembayaran disahkan, sistem secara otomatis mengeksekusi algoritma pengeluaran stok berbasis tanggal kedaluwarsa terdekat (<i>FEFO</i>) melalui alokasi tabel <i>pesanan_batch_alokasi</i>, mencatat nomor seri unit alat kesehatan pada <i>unit_serial</i> (jika barang bernomor seri), memperbarui saldo <i>kartu_stok</i>, serta mencetak lembar bukti belanja konsumen berupa Struk Kasir <i>POS</i> (Gambar 4.4). Struk dicetak menggunakan mesin pencetak kertas termal (<i>thermal slip</i>) ukuran 80mm atau 58mm, mencantumkan identitas resmi ZenCare Medical, nomor faktur <i>POS</i> yang unik, waktu transaksi, kasir yang bertugas, rincian produk medis beserta nomor <i>batch</i> dan <i>serial number</i>, harga satuan, subtotal, potongan harga, total bayar, nominal uang tunai, dan nominal kembalian.
+                            Setelah pembayaran kasir dikonfirmasi, sistem langsung memotong stok berdasarkan tanggal kedaluwarsa terdekat (<i>FEFO</i>) melalui tabel <i>pesanan_batch_alokasi</i>, menandai nomor seri alat kesehatan pada tabel <i>unit_serial</i> bila produk bernomor seri, mencatat mutasi ke <i>kartu_stok</i>, lalu menerbitkan Struk Kasir <i>POS</i> (Gambar 4.4). Tata letak struk diatur khusus untuk kertas gulung termal ukuran 80mm atau 58mm, memuat nama dan alamat toko ZenCare Medical, nomor faktur, waktu transaksi, nama petugas kasir, rincian barang beserta nomor <i>batch</i> atau nomor seri, subtotal, total pembayaran, serta nominal uang bayar dan kembalian.
                         </p>
                     </div>
 
@@ -6874,6 +6879,11 @@
                                 Gambar 4.5 Tampilan Antarmuka Pengelolaan Transaksi Penjualan <i>Omnichannel</i>
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Halaman Pengelolaan Transaksi Penjualan <i>Omnichannel</i> (Gambar 4.5) menyatukan pemantauan pesanan dari kasir toko fisik (<i>POS</i>) maupun toko daring (<i>E-Commerce</i>) dalam satu tampilan. Admin dapat mencari nomor pesanan dan menyaring daftar transaksi menurut statusnya, mulai dari Menunggu Pembayaran, Diproses, Siap Diambil, Dikirim, Selesai, hingga Dibatalkan. Apabila terdapat pesanan daring yang belum dibayar atau dibatalkan, Admin dapat mengeksekusi pembatalan dari halaman ini sehingga stok kuncian pada alokasi <i>batch</i> otomatis dilepaskan kembali ke stok aktif.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -6883,6 +6893,11 @@
                                 Gambar 4.6 Tampilan Cetak Faktur Penjualan Resmi Toko ZenCare Medical Format A4
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Untuk keperluan arsip transaksi maupun bukti pembelian pelanggan, Admin dapat mencetak Faktur Penjualan Resmi Format A4 (Gambar 4.6) langsung dari daftar pesanan. Dokumen ini menampilkan identitas resmi ZenCare Medical, nomor faktur, data penerima, rincian produk beserta kode <i>SKU</i>, nomor <i>batch</i> atau nomor seri yang dialokasikan, harga satuan, ongkos kirim, total tagihan, serta kolom tanda tangan pengesahan petugas.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -6894,7 +6909,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Pusat pengelolaan dan sinkronisasi seluruh pesanan pelanggan yang masuk secara serentak dari kanal kasir toko fisik (<i>POS</i>) maupun kanal belanja daring (<i>E-Commerce</i>). Antarmuka menyediakan penyaring status pemrosesan pesanan (Menunggu Pembayaran, Diproses Gudang, Siap Dikirim, dan Selesai), bilah pencarian nomor pesanan, serta tabel daftar transaksi komprehensif.<br><br>Untuk pesanan daring yang memerlukan pengiriman ekspedisi, sistem menyediakan fitur satu klik untuk mencetak Faktur Penjualan Resmi Toko format A4 (Gambar 4.6) dan Label Pengiriman Kurir Logistik (Gambar 4.7). Faktur penjualan diformat dalam standar lembar A4 dengan kop surat resmi ZenCare Medical, nomor faktur, identitas lengkap pembeli, daftar komoditas obat dan alkes beserta kode <i>SKU</i>, nomor <i>batch</i>, tanggal kedaluwarsa, harga satuan, tarif ongkos kirim, kalkulasi perpajakan bila berlaku, dan kolom pengesahan administrasi penjualan. Sementara itu, Label Pengiriman didesain presisi untuk ditempelkan pada kemasan paket logistik, memuat <i>barcode</i> nomor resi, identitas penerima dan nomor kontak, alamat tujuan lengkap, nama ekspedisi, serta instruksi penanganan paket barang medis rapuh/khusus.
+                            Pesanan daring yang akan diserahkan ke kurir ekspedisi dilengkapi fitur cetak Label Pengiriman (Gambar 4.7) dengan aturan CSS cetak khusus ukuran stiker termal 100mm x 150mm agar proporsional ditempel pada paket dan tidak mengikuti kertas A4. Label tersebut memuat kode batang (<i>barcode</i>) nomor faktur, badge layanan kurir, informasi pengirim dan penerima beserta alamat tujuan, tabel isi paket lengkap dengan alokasi <i>batch</i> <i>FEFO</i> atau nomor seri, status pembayaran, serta jumlah total unit kiriman.
                         </p>
                     </div>
 
@@ -6912,6 +6927,11 @@
                                 Gambar 4.8 Tampilan Antarmuka Direktori Master Produk dan Katalog Medis
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Halaman Direktori Master Produk (Gambar 4.8) digunakan untuk mengelola seluruh daftar obat dan alat kesehatan ZenCare Medical yang tersusun dalam relasi dua tingkat antara <i>produk_induk</i> dan <i>produk_variasi</i>. Setiap baris direktori menampilkan foto produk, kode <i>SKU</i> induk, nama komoditas, kategori, batas hari peringatan kedaluwarsa, serta daftar variasi kemasan yang berada di bawahnya.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -6921,6 +6941,11 @@
                                 Gambar 4.9 Tampilan Formulir Input Master Produk Induk Baru
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Penambahan barang baru dimulai melalui Formulir Input Master Produk Induk (Gambar 4.9). Pada tahap ini Admin mengisi atribut umum komoditas, meliputi kode <i>SKU</i> induk, nama produk, kategori (Obat atau Alat Kesehatan), batas hari peringatan dini kedaluwarsa, deskripsi produk, serta foto produk.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -6932,7 +6957,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Modul pengelolaan katalog terpadu untuk seluruh komoditas obat dan alat kesehatan yang diperjualbelikan pada ekosistem ZenCare Medical, mengadopsi arsitektur relasional bertingkat antara entitas <i>produk_induk</i> dan <i>produk_variasi</i>. Antarmuka direktori master produk (Gambar 4.8) menyajikan kartu katalog interaktif yang merinci foto fisik, kode <i>SKU</i> Induk, nama produk, klasifikasi medis, ambang batas hari peringatan kedaluwarsa, serta daftar variasi kemasan terdaftar.<br><br>Alur penambahan komoditas baru diawali dengan membuka Formulir Input Master Produk Induk Baru (Gambar 4.9), di mana staf mendefinisikan atribut induk mencakup <i>SKU</i> induk unik, nama resmi komoditas medis, kategori produk, batas waktu peringatan dini kedaluwarsa (dalam satuan hari), deskripsi indikasi atau spesifikasi teknis, serta unggahan berkas foto produk. Setelah produk induk tersimpan, staf melanjutkan konfigurasi satuan kemasan bertingkat melalui Formulir Konfigurasi Produk Variasi dan <i>Multi-UOM</i> (Gambar 4.10). Pada formulir variasi ini, sistem memfasilitasi penetapan <i>SKU</i> variasi spesifik, nama variasi kemasan, satuan kemasan kecil/eceran (seperti Strip, Botol, atau Pcs), satuan kemasan besar/grosir (seperti Box, Dus, atau Karton), rasio konversi matematis baku antar-satuan (misalnya 1 Box = 10 Strip), harga beli perolehan acuan, harga jual kemasan besar, harga jual eceran kemasan kecil, serta batas minimum persediaan (<i>buffer stock</i>) masing-masing tingkat satuan. Sistem memvalidasi integritas data masukan secara ketat guna memastikan keutuhan kalkulasi stok multi-satuan di seluruh modul operasional.
+                            Setelah produk induk dibuat, Admin menambahkan rincian kemasan pada Formulir Produk Variasi dan <i>Multi-UOM</i> (Gambar 4.10). Formulir ini mencatat <i>SKU</i> variasi, nama variasi, satuan besar (seperti Box atau Dus), satuan kecil eceran (seperti Strip, Botol, atau Pcs), rasio konversi isi per kemasan (misalnya 1 Box = 10 Strip), berat pengiriman produk, pengaturan tampil di toko daring, harga jual satuan besar dan satuan kecil, serta batas stok minimum untuk masing-masing tingkat satuan agar perhitungan stok lintas modul selalu konsisten.
                         </p>
                     </div>
 
@@ -6950,6 +6975,11 @@
                                 Gambar 4.11 Tampilan Antarmuka Konfigurasi Satuan dan <i>Multi-UOM</i>
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Halaman Konfigurasi Satuan (<i>UOM</i>) (Gambar 4.11) menyimpan daftar standar nama satuan kemasan seperti Dus, Box, Strip, Botol, Tablet, Tube, Pcs, dan Unit. Penyeragaman daftar satuan ini menjaga agar nama satuan yang dipilih saat penerimaan barang, penjualan kasir, maupun konversi kemasan selalu seragam.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -6959,6 +6989,11 @@
                                 Gambar 4.12 Tampilan Formulir Eksekusi Konversi Satuan <i>Multi-UOM</i> (Terisi Data)
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Ketika stok eceran di etalase menipis sedangkan kemasan grosir masih tersedia di gudang, staf menggunakan Formulir Eksekusi Konversi Satuan (Gambar 4.12) untuk membuka kemasan besar. Pada contoh data uji yang terisi di layar, pengguna memilih obat <i>Amoxicillin 500mg</i> dan <i>batch</i> AMX-2026-01 (sisa 4 Box), memasukkan 1 Box untuk dibongkar, lalu sistem menghitung pratinjau penambahan +10 Strip eceran beserta kode sub-<i>batch</i> baru sebelum konversi dijalankan.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -6970,7 +7005,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Modul pengelolaan aturan satuan ukuran dan pelaksanaan pemecahan kemasan logistik di gerai fisik. Antarmuka Konfigurasi Satuan (Gambar 4.11) memuat tabel master satuan pengukuran (Dus, Box, Strip, Botol, Tablet, Tube, Pcs, Unit) yang menjadi fondasi penetapan <i>multi-UOM</i>. Untuk memenuhi permintaan konsumen eceran di toko fisik, staf operasional menggunakan Formulir Eksekusi Konversi Satuan (Gambar 4.12) guna memecah kemasan besar ke kemasan kecil. Seperti ditunjukkan pada formulir aktif yang telah terisi data uji riil, pengguna memilih komoditas obat (Amoxicillin 500mg), memilih <i>batch</i> asal (AMX-2026-01 dengan sisa saldo 4 Box), memasukkan jumlah dus yang dipecah (1 Box), serta melihat kalkulasi otomatis penambahan saldo eceran (+10 Strip) dan notifikasi penerbitan sub-<i>batch</i> baru.<br><br>Sistem mengeksekusi operasi konversi secara atomik: memotong saldo kemasan besar, menambahkan saldo kemasan kecil, mereplikasi nomor <i>batch</i> dan tanggal kedaluwarsa yang identik ke unit eceran, serta mencatat nomor bukti mutasi ke tabel <i>konversi_satuan</i> dan <i>kartu_stok</i>. Seluruh rekam jejak pemecahan kemasan tersaji secara kronologis pada Antarmuka Histori Konversi Satuan (Gambar 4.13), merinci waktu transaksi, nama produk, nomor <i>batch</i>, kuantitas kemasan asal yang dikurangi, serta kuantitas kemasan tujuan yang ditambahkan.
+                            Setiap pembongkaran kemasan mengurangi saldo kemasan besar, menambah saldo eceran dengan nomor <i>batch</i> dan tanggal kedaluwarsa yang sama, lalu mencatat buktinya ke tabel <i>histori_konversi</i> serta <i>kartu_stok</i>. Catatan riwayat konversi tersebut ditampilkan berurutan pada halaman Histori Konversi Satuan (Gambar 4.13), lengkap dengan waktu eksekusi, nama produk, nomor <i>batch</i>, jumlah kemasan besar yang dibongkar, dan jumlah eceran yang dihasilkan.
                         </p>
                     </div>
 
@@ -6988,6 +7023,11 @@
                                 Gambar 4.14 Tampilan Antarmuka Direktori Rekanan Pemasok (Supplier)
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Halaman Direktori Rekanan Pemasok (Gambar 4.14) digunakan untuk mengelola data mitra distributor resmi yang memasok produk obat dan alat kesehatan ke ZenCare Medical. Pada tabel direktori ini tersimpan profil badan usaha pemasok, nama perwakilan pemasok, nomor kontak, alamat operasional, serta status keaktifan kemitraan.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -6999,7 +7039,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Modul pengelolaan data master rekanan pemasok resmi yang menjadi rantai pengadaan komoditas obat dan alat kesehatan bagi ZenCare Medical. Antarmuka Direktori Supplier (Gambar 4.14) mendokumentasikan profil rekanan distributor medis, nama penanggung jawab (sales representative), nomor kontak telepon, alamat kantor operasional, dan status kemitraan aktif.<br><br>Pendaftaran mitra logistik baru dilakukan melalui Formulir Pendaftaran Rekanan Pemasok Baru (Gambar 4.15). Formulir <i>modal</i> ini memfasilitasi perekaman legalitas distributor mencakup nama badan usaha distributor pasokan medis, narahubung resmi, saluran komunikasi WhatsApp/telepon, alamat surat elektronik, serta alamat kantor pusat dan pergudangan distributor.
+                            Saat menjalin kerja sama dengan distributor baru, Admin mencatat datanya melalui Formulir Pendaftaran Rekanan Pemasok Baru (Gambar 4.15). Kotak dialog ini merekam nama perusahaan pemasok, narahubung resmi, nomor telepon atau WhatsApp, alamat surel, serta alamat gudang distributor untuk disimpan ke dalam tabel <i>supplier</i>.
                         </p>
                     </div>
 
@@ -7017,6 +7057,11 @@
                                 Gambar 4.16 Tampilan Formulir Input Penerimaan Logistik Pasokan Barang Masuk
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Pencatatan barang masuk dari distributor dilakukan melalui Formulir Penerimaan Barang (Gambar 4.16). Petugas memilih distributor pengirim, menuliskan nomor faktur pembelian, mencatat nomor <i>batch</i> pabrikan dan tanggal kedaluwarsa (<i>expired date</i>), mengisi kuantitas yang diterima beserta harga beli perolehan, serta memasukkan nomor seri unik apabila produk berupa alat kesehatan.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -7026,6 +7071,11 @@
                                 Gambar 4.17 Tampilan Cetak Dokumen Nota Bukti Penerimaan Logistik Format A4
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Begitu penerimaan barang disimpan, sistem menambahkan saldo persediaan ke <i>stok_batch</i> dan <i>kartu_stok</i>, lalu menyediakan Nota Bukti Penerimaan Logistik Format A4 (Gambar 4.17). Dokumen cetak ini berisi nomor referensi penerimaan internal, nomor faktur distributor, daftar barang beserta nomor <i>batch</i> dan tanggal kedaluwarsanya, serta kolom paraf pemeriksaan fisik oleh kepala logistik.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -7037,7 +7087,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Modul penerimaan pasokan barang fisik dari distributor ke gerai fisik ZenCare Medical. Alur dimulai melalui Formulir Input Penerimaan Logistik Pasokan Barang Masuk (Gambar 4.16), di mana staf gudang memilih distributor rekanan pengirim, memasukkan nomor faktur distributor, mencatat tanggal kedaluwarsa (expired date), nomor <i>batch</i> pabrikan, kuantitas kemasan besar/kecil yang diterima, harga beli perolehan, dan nomor seri unik alat kesehatan.<br><br>Setelah data penerimaan diverifikasi dan disimpan, sistem secara otomatis membukukan mutasi masuk ke kartu stok dan mencetak Dokumen Nota Bukti Penerimaan Logistik Format A4 (Gambar 4.17) yang memuat nomor bukti internal, nomor faktur distributor, rincian produk, nomor <i>batch</i>/ED, serta kolom tanda tangan paraf verifikasi kondisi fisik segel kemasan oleh kepala logistik.<br><br>Selanjutnya, staf logistik mencetak label penandaan fisik barang melalui antarmuka Cetak Label Stiker <i>Barcode</i> <i>Batch</i> & <i>Serial Number</i> (Gambar 4.18) dalam format lembar stiker A4 (<i>Grid</i> 4x10) maupun kertas termal gulung 50x30mm. Label <i>barcode</i> Code 128 ini ditempelkan langsung pada kemasan produk medis guna mendukung pemindaian cepat di meja kasir <i>POS</i> dan pelacakan dan pemeriksaan rak gudang.
+                            Setelah barang diterima, petugas dapat mencetak penandaan fisik kemasan melalui halaman Cetak Label Stiker <i>Barcode</i> <i>Batch</i> &amp; <i>Serial Number</i> (Gambar 4.18). Label <i>barcode</i> Code 128 ini tersedia dalam tata letak lembar stiker A4 maupun kertas gulung termal 50x30mm untuk ditempelkan pada produk, sehingga mempermudah pemindaian di kasir maupun pemeriksaan stok di rak gudang.
                         </p>
                     </div>
 
@@ -7055,6 +7105,11 @@
                                 Gambar 4.19 Tampilan Antarmuka Daftar Mutasi Stok Persediaan
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Halaman Daftar Mutasi Stok Persediaan (Gambar 4.19) menghimpun seluruh catatan penyesuaian stok manual yang dilakukan staf di luar transaksi kasir dan penerimaan barang. Tabel riwayat menampilkan nomor referensi mutasi, waktu pencatatan, nama produk, jenis penyesuaian (Masuk atau Keluar), kuantitas, alasan penyesuaian, serta nama petugas yang mencatat.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -7066,7 +7121,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Modul penyesuaian saldo persediaan secara langsung oleh staf berwenang di luar transaksi kasir maupun penerimaan barang. Antarmuka Daftar Mutasi Stok (Gambar 4.19) menyajikan tabel log kronologis penyesuaian saldo barang, memuat nomor referensi mutasi, waktu peristiwa, nama komoditas obat atau alkes, arah mutasi (Masuk atau Keluar), kuantitas, alasan kategorisasi, dan identitas staf pencatat.<br><br>Formulir Penyesuaian Mutasi Stok Manual (Gambar 4.20) digunakan saat terjadi kejadian operasional khusus seperti kerusakan kemasan di etalase, barang kedaluwarsa yang ditarik dari rak, pemakaian internal gerai, atau koreksi selisih administratif. Seperti ditunjukkan pada formulir yang telah terisi data uji riil, pengguna memilih produk variasi yang disesuaikan (misalnya: <em>Amoxicillin 500mg — Tablet 500mg</em>), memilih arah mutasi (<em>Pengurangan Stok (-)</em>), menentukan nomor angkatan <i>batch</i> terkait (<em>Batch AMX-2026-01</em>), memasukkan kuantitas (<em>2 Strip</em>), memilih alasan kategorisasi baku (<em>Barang Rusak / Kemasan Cacat</em>), serta menuliskan kronologi penyesuaian pada kolom catatan (<em>Penarikan fisik dari rak etalase depan karena kemasan strip penyok saat penataan</em>). Tindakan ini secara atomik memotong saldo fisik pada <i>batch</i> yang bersangkutan dan mencatatkan log mutasi manual secara akuntabel.
+                            Penyesuaian stok secara manual dijalankan melalui Formulir Mutasi Stok Manual (Gambar 4.20) saat terjadi kerusakan kemasan, penarikan barang kedaluwarsa, pemakaian internal gerai, atau koreksi hitung. Pada contoh pengisian yang ditampilkan, pengguna memilih produk <i>Amoxicillin 500mg — Tablet 500mg</i>, menentukan arah <i>Pengurangan Stok (-)</i> pada <i>Batch AMX-2026-01</i> sebanyak 2 Strip dengan alasan <i>Barang Rusak / Kemasan Cacat</i> beserta catatan kronologinya agar pengurangan stok tercatat dengan jelas pada sistem.
                         </p>
                     </div>
 
@@ -7084,6 +7139,11 @@
                                 Gambar 4.21 Tampilan Antarmuka Kartu Stok Persediaan (<i>Inventory Ledger</i>)
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Seluruh keluar masuk barang terekam dalam antarmuka Kartu Stok Persediaan (Gambar 4.21) yang berfungsi sebagai buku besar mutasi per item. Pengelola dapat memilih produk variasi dan rentang tanggal untuk meninjau saldo stok terkini beserta rincian tanggal, nomor bukti, jenis sumber mutasi (penjualan <i>POS</i>, pesanan daring, penerimaan barang, konversi kemasan, atau mutasi manual), jumlah masuk atau keluar, dan saldo akhir berjalan.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -7095,7 +7155,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Buku besar persediaan (<i>inventory ledger</i>) komprehensif yang melacak mutasi setiap komoditas obat dan alat kesehatan secara mendalam. Antarmuka Web Kartu Stok (Gambar 4.21) menyajikan penyaring produk variasi dan rentang tanggal, ringkasan saldo fisik terkini, serta tabel mutasi yang merinci tanggal transaksi, nomor bukti referensi, jenis transaksi (Penjualan <i>POS</i>, Pesanan <i>E-Commerce</i>, Penerimaan Logistik, Konversi Kemasan, atau Mutasi Manual), kuantitas masuk, kuantitas keluar, dan saldo akhir berjalan.<br><br>Untuk keperluan pertanggungjawaban persediaan dan verifikasi administratif berkala, sistem menyediakan Cetak Kartu Riwayat Mutasi Stok Format A4 (Gambar 4.22). Dokumen cetak memuat kop surat resmi ZenCare Medical, informasi spesifikasi produk, saldo awal periode, tabel mutasi lengkap beserta kanal pergerakan dan identitas petugas yang melakukan pengesahan, serta kolom tanda tangan penanggung jawab logistik.
+                            Apabila diperlukan dokumen fisik untuk pengecekan berkala, Kartu Riwayat Mutasi Stok dapat dicetak dalam format A4 (Gambar 4.22). Lembar cetak ini menyertakan kop resmi toko, identitas produk, saldo awal, tabel mutasi lengkap beserta nama petugas pencatatnya, dan kolom tanda tangan penanggung jawab logistik.
                         </p>
                     </div>
 
@@ -7113,6 +7173,11 @@
                                 Gambar 4.23 Tampilan Antarmuka Beranda Riwayat Sesi <i>Stok Opname</i>
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Pemeriksaan fisik persediaan berkala (<i>stok opname</i>) dijalankan melalui enam tampilan terpadu, dimulai dari Beranda Riwayat Sesi <i>Stok Opname</i> (Gambar 4.23). Layar ini menampilkan status kelancaran transaksi toko terkini dan daftar seluruh sesi opname sebelumnya beserta kode sesi, pelaksana, status tahapan (Sedang Dihitung, Tahap Verifikasi, atau Selesai), rekap selisih item, serta total nilai estimasi kerugian barang.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -7122,6 +7187,11 @@
                                 Gambar 4.24 Tampilan Antarmuka Tahap 1: Inisiasi Sesi dan Pembekuan Transaksi (Superadmin)
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Pada Tahap 1 melalui layar Inisiasi Sesi (Gambar 4.24) yang hanya dapat diakses oleh Superadmin, sistem membuka sesi opname baru sekaligus mengaktifkan fitur pembekuan transaksi (<i>Freeze Lock</i>) di tingkat <i>server</i>. Selama sesi berlangsung, transaksi kasir <i>POS</i>, <i>checkout</i> toko daring, konversi satuan, dan penerimaan barang ditahan sementara agar angka stok pembukuan tidak berubah saat penghitungan fisik dilakukan.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -7131,15 +7201,25 @@
                                 Gambar 4.25 Tampilan Antarmuka Tahap 2: Formulir Pencacahan Fisik Rak <i>Blind Count</i> (Kasir)
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Pada Tahap 2 melalui Formulir Pencacahan Fisik Rak <i>Blind Count</i> (Gambar 4.25), Kasir memasukkan hasil hitungan fisik barang di rak tanpa melihat jumlah stok sistem. Formulir menyediakan tiga kolom pengisian kondisi fisik, yaitu Fisik Baik, Fisik Rusak, dan Fisik Kedaluwarsa, dengan pengaman otomatis yang menonaktifkan kolom Fisik Kedaluwarsa apabila tanggal kedaluwarsa <i>batch</i> belum lewat sehingga barang cacat dicatat pada kolom Fisik Rusak.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
                                 <img src="../lain/File PPT/UI_UX_Asli/32_Stok_Opname_Verifikasi_Admin.png" alt="Tahap 3 Rekonsiliasi Admin" class="w-full h-auto object-contain mx-auto" loading="lazy">
                             </div>
-                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                            <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
                                 Gambar 4.26 Tampilan Antarmuka Tahap 3: Verifikasi dan Rekonsiliasi Anomali Selisih (Admin)
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Pada Tahap 3 melalui antarmuka Verifikasi dan Rekonsiliasi Anomali Selisih (Gambar 4.26), Admin membandingkan hasil hitungan kasir dengan data stok sistem. Sistem menyaring dan hanya menyoroti barang yang berselisih, menghitung nilai kerugian memakai harga beli perolehan melalui rumus (<i>Jumlah Rusak + Jumlah Expired + Jumlah Hilang</i>) &times; <i>Harga Beli (Satuan Terkecil)</i>, serta menampilkan baris <i>Grand Total</i> Estimasi Nilai Kerugian Persediaan di bagian paling bawah tabel.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -7149,6 +7229,11 @@
                                 Gambar 4.27 Tampilan Antarmuka Tahap 3 (Lanjutan): <i>Modal</i> Penyesuaian Mutasi Selisih Per Item
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Sebagai kelanjutan Tahap 3, setiap barang yang berselisih diselesaikan melalui <i>Modal</i> Penyesuaian Mutasi Selisih Per Item (Gambar 4.27). Di dalam kotak dialog ini, Admin memeriksa rincian selisih dan nominal kerugiannya (seperti pengurangan -2 Strip <i>Amoxicillin 500mg</i> senilai Rp 8.000), memilih alasan penyesuaian baku, lalu memutasi stok sistem hingga baris item berstatus Telah Dimutasi.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -7160,7 +7245,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Dokumentasi siklus utuh pemeriksaan fisik berkala persediaan persediaan (<i>stok opname</i>) yang dirancang untuk mencegah kecurangan dan memastikan kebenaran saldo buku terhadap kondisi fisik rak nyata melalui 6 (enam) tampilan antarmuka terpadu:<br><br><strong>1. Beranda Riwayat Sesi (Gambar 4.23):</strong> Menampilkan tabel histori seluruh sesi opname yang pernah dilaksanakan, status sesi (Sedang Dihitung, Tahap Verifikasi, atau Selesai), tanggal pelaksanaan, dan nilai acuan estimasi kerugian.<br><br><strong>2. Tahap 1: Inisiasi Sesi & Pembekuan <i>Server</i> (Gambar 4.24):</strong> Hak akses khusus Superadmin. Saat sesi baru dibuka, sistem mengaktifkan mekanisme <i>Freeze Lock</i> di tingkat <i>server</i> yang membekukan transaksi kasir <i>POS</i>, <i>checkout</i> toko daring, pemecahan kemasan konversi, dan penerimaan logistik guna mencegah terjadinya kondisi <i>race condition</i>.<br><br><strong>3. Tahap 2: Pencacahan Fisik <i>Blind Count</i> Kasir (Gambar 4.25):</strong> Kasir lapangan mencatat kuantitas fisik di rak tanpa dapat melihat angka saldo pembukuan sistem (<i>Blind Count</i>). Kasir hanya disajikan daftar barang dan 3 (tiga) kolom kondisi fisik riil: Fisik Baik, Fisik Rusak, dan Fisik Kedaluwarsa. Sistem menerapkan validasi otomatis: kolom 'Fisik Kedaluwarsa' dinonaktifkan untuk nomor <i>batch</i> yang belum melewati tanggal kedaluwarsa, sehingga barang cacat wajib dicatat sebagai 'Fisik Rusak'.<br><br><strong>4. Tahap 3: Verifikasi & Rekonsiliasi Selisih Admin (Gambar 4.26):</strong> Admin toko memverifikasi hasil hitungan fisik terhadap data buku sistem. Sistem secara otomatis menyembunyikan barang yang sesuai (klop) dan hanya menyoroti barang yang terdeteksi anomali selisih (misalnya: terdeteksi 6 komoditas berselisih fisik). Sistem menghitung estimasi nilai acuan kerugian persediaan dari kuantitas fisik yang tercatat Rusak, Expired, dan Hilang berdasarkan rumus baku: (Jumlah Rusak + Jumlah Expired + Jumlah Hilang) &times; Harga Beli (Satuan Terkecil).<br><br><strong>5. Tahap 3 (Lanjutan): <i>Modal</i> Eksekusi Mutasi Selisih (Gambar 4.27):</strong> Untuk setiap barang yang berselisih, Admin membuka kotak dialog mutasi penyesuaian (misalnya: penyesuaian barang hilang selisih -2 Strip Amoxicillin 500mg dengan beban kerugian Rp 8.000). Admin mengonfirmasi alasan penyesuaian, sistem melakukan mutasi atomik, dan menandai status baris menjadi 'Telah Dimutasi'.<br><br><strong>6. Tahap 4: Dokumen Berita Acara A4 Lanskap (Gambar 4.28):</strong> Setelah rekonsiliasi selesai, sistem menerbitkan Berita Acara <i>Stok Opname</i> resmi dalam tata letak A4 Lanskap 10 kolom data: No, Identitas Komoditas & Nama Produk, Tingkat Satuan (Kemasan Besar / Kemasan Kecil), Nomor <i>Batch</i> / <i>Serial Number</i>, Satuan, Stok Sistem, Hitung Fisik, Selisih, Nilai Kerugian, dan Tindakan Mutasi. Bagian bawah lembar memuat 3 (tiga) kolom tanda tangan pengesahan berjenjang: Petugas Pencacah Fisik (Kasir), Petugas Verifikator (Admin Toko), dan Pimpinan Toko (Superadmin).
+                            Pada Tahap 4 setelah seluruh selisih selesai disesuaikan, sistem menghasilkan Berita Acara Pemeriksaan Fisik <i>Stok Opname</i> Format A4 Lanskap (Gambar 4.28). Dokumen ini memuat sepuluh kolom rincian hasil pemeriksaan, baris ringkasan <i>Grand Total</i> Estimasi Nilai Kerugian Persediaan di bagian bawah tabel, serta kolom tanda tangan pengesahan oleh Petugas Pencacah Fisik (Kasir), Petugas Verifikator (Admin Toko), dan Pimpinan Toko (Superadmin).
                         </p>
                     </div>
 
@@ -7180,7 +7265,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Pusat kendali level tertinggi bagi pemilik toko (Superadmin) untuk memantau kesehatan bisnis dan integritas inventori ZenCare Medical secara menyeluruh. Antarmuka memuat widget metrik strategis: total pendapatan kotor dan bersih gabungan (<i>POS</i> luring dan <i>e-commerce</i> daring), total valuasi aset persediaan di gudang, ringkasan efektivitas <i>FEFO</i>, tombol kendali pembekuan <i>server</i> (<i>Freeze Lock</i>) darurat, serta grafik komparasi performa penjualan bulanan. <i>Dashboard</i> ini memberikan visibilitas penuh bagi pengambil keputusan strategis.
+                            Pemilik toko (Superadmin) memantau kondisi persediaan dan pergerakan unit melalui halaman <i>Dashboard</i> Eksekutif Superadmin (Gambar 4.29). Layar ini berfokus pada pemantauan kuantitas fisik tanpa menampilkan nominal Rupiah, memuat kartu ringkasan katalog produk, stok satuan besar dan kecil, item stok menipis, peringatan kedaluwarsa, antrean pesanan daring, anomali pengeluaran <i>FEFO</i>, serta status retur pemasok. Di bagian tengah tersaji tabel rekapitulasi kuantitas penjualan <i>POS</i> dan <i>E-Commerce</i> selama tujuh hari terakhir beserta daftar peringatan stok minimum, barang mendekati kedaluwarsa, log <i>kartu_stok</i>, dan riwayat penerimaan pasokan terbaru.
                         </p>
                     </div>
 
@@ -7198,6 +7283,11 @@
                                 Gambar 4.30 Tampilan Antarmuka Laporan Penjualan Barang <i>Omnichannel</i>
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Rekapitulasi penjualan gabungan dari kasir fisik dan toko daring dapat ditinjau melalui halaman Laporan Penjualan Barang <i>Omnichannel</i> (Gambar 4.30). Halaman ini menyediakan penyaring rentang tanggal, kanal penjualan (<i>POS</i> atau <i>E-Commerce</i>), dan pencarian produk, lalu menampilkan tabel rincian transaksi lengkap mulai dari nomor faktur, nama produk dan variasi, kode <i>SKU</i>, nomor <i>batch</i> atau nomor seri yang keluar, satuan penjualan, kuantitas terjual, hingga ekuivalen unit fisiknya.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -7209,7 +7299,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Modul analitik pendapatan yang mengonsolidasikan transaksi dari gerai kasir fisik dan toko <i>online</i>. Antarmuka web (Gambar 4.30) dilengkapi penyaring rentang tanggal, filter kanal penjualan, grafik batang perbandingan harian, serta tabel transaksi terperinci.<br><br>Tombol cetak menghasilkan Laporan Penjualan Format A4 (Gambar 4.31) yang memuat kop surat resmi ZenCare Medical, ringkasan total omzet kotor, total potongan harga, total pendapatan bersih, kuantitas produk terjual, tabel rincian transaksi kronologis, serta kolom tanda tangan pengesahan pimpinan toko.
+                            Data penjualan yang telah disaring dapat dicetak menjadi Dokumen Resmi Laporan Penjualan Barang Format A4 (Gambar 4.31). Lembar cetak tersebut memuat kop resmi ZenCare Medical, periode laporan, ringkasan kuantitas penjualan lintas kanal, tabel riwayat penjualan sesuai urutan tanggal, serta kolom tanda tangan pengesahan pimpinan toko.
                         </p>
                     </div>
 
@@ -7227,6 +7317,11 @@
                                 Gambar 4.32 Tampilan Antarmuka Laporan Persediaan dan Ketersediaan Barang
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Kondisi ketersediaan stok tiap variasi produk dipantau pada halaman Laporan Persediaan dan Ketersediaan Barang (Gambar 4.32). Pengelola dapat menyaring daftar barang menurut kategori, status ketersediaan (Aman, Menipis, Kritis, atau Habis), serta memantau rincian saldo satuan besar yang belum dikonversi, satuan kecil eceran yang sudah dibuka, total stok fisik, dan informasi <i>batch</i> maupun nomor seri aktif.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -7238,7 +7333,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Modul pelaporan status fisik barang di gudang dan etalase toko. Antarmuka web (Gambar 4.32) menampilkan kartu ringkasan total jenis barang, total nilai aset persediaan berdasarkan harga beli, filter status stok (Aman, Menipis, Habis), serta tabel rincian per produk variasi.<br><br>Lembar Cetak Laporan Persediaan Format A4 (Gambar 4.33) menyajikan dokumen resmi rekapitulasi persediaan barang, merinci kode barang, nama produk, satuan kemasan, saldo fisik, harga pokok perolehan, total nilai aset, serta kolom tanda tangan pengesahan kepala logistik.
+                            Untuk kebutuhan arsip fisik gudang, sistem menyediakan Dokumen Resmi Laporan Persediaan Barang Format A4 (Gambar 4.33). Dokumen ini merangkum nama produk induk dan variasi, kode <i>SKU</i>, nomor <i>batch</i> atau nomor seri, rasio satuan kemasan, jumlah stok satuan besar dan satuan kecil, total stok fisik, serta kolom tanda tangan penanggung jawab logistik.
                         </p>
                     </div>
 
@@ -7256,6 +7351,11 @@
                                 Gambar 4.34 Tampilan Antarmuka Laporan Logistik Medis dan Pengendalian Kedaluwarsa
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Pengawasan masa simpan obat dan rekam jejak unit alat kesehatan disajikan pada halaman Laporan Logistik Medis (Gambar 4.34). Layar ini mengelompokkan daftar <i>batch</i> obat berdasarkan sisa masa simpan menggunakan indikator status (Kritis, Peringatan, Aman, hingga Habis/Kedaluwarsa) dan menampilkan pelacakan nomor seri (<i>Serial Number</i>) unit alat kesehatan untuk mendukung penarikan stok atau pengajuan retur ke distributor.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -7267,7 +7367,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Modul pengawasan masa simpan obat dan alat kesehatan berbasis algoritma <i>First Expired First Out</i>. Antarmuka web (Gambar 4.34) mengelompokkan barang ke dalam 3 (tiga) <i>tab</i> visual: Kedaluwarsa Kritis (&le; 30 hari), Peringatan Dini (&le; 90 hari), dan Aman (&gt; 90 hari), dilengkapi indikator sisa hari masa simpan.<br><br>Lembar Cetak Laporan Logistik Medis <i>FEFO</i> Format A4 (Gambar 4.35) menyajikan dokumen resmi evaluasi masa kedaluwarsa, memuat nama produk medis, nomor <i>batch</i> pabrikan, tanggal kedaluwarsa, jumlah stok tersisa, status risiko, rekomendasi tindakan (retur ke distributor atau diskon cuci gudang), serta kolom tanda tangan pengesahan penanggung jawab teknis gerai.
+                            Sebagai tindak lanjut pengendalian masa simpan, hasil pemantauan tersebut dapat dicetak ke dalam Dokumen Resmi Laporan Logistik Medis <i>FEFO</i> Format A4 (Gambar 4.35). Cetakan ini memuat daftar nama produk obat dan rincian <i>batch</i>, kode <i>SKU</i>, tanggal kedaluwarsa, sisa hari masa simpan, jumlah stok tersisa, status kedaluwarsa, rekap jejak nomor seri alat kesehatan, serta kolom pengesahan pimpinan toko.
                         </p>
                     </div>
 
@@ -7285,6 +7385,11 @@
                                 Gambar 4.36 Tampilan Antarmuka Laporan Penerimaan Pasokan Barang Masuk
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Riwayat pengadaan stok dari distributor rekanan dihimpun pada halaman Laporan Penerimaan Barang Masuk (Gambar 4.36). Melalui penyaring tanggal dan distributor, pengelola dapat memeriksa rincian barang yang dipesan, jumlah barang diterima dalam kondisi baik, jumlah retur barang rusak, nomor <i>batch</i> dan tanggal kedaluwarsa, serta harga beli dan subtotalnya.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -7296,7 +7401,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Modul rekapitulasi pengadaan barang dari distributor rekanan. Antarmuka web (Gambar 4.36) memuat penyaring tanggal dan distributor, ringkasan total nilai pasokan yang diterima dalam periode tertentu, serta tabel riwayat penerimaan barang.<br><br>Lembar Cetak Laporan Penerimaan Barang Masuk Format A4 (Gambar 4.37) menyajikan dokumen resmi rekapitulasi pasokan masuk, memuat nomor faktur distributor, waktu penerimaan di gudang, nama staf penerima, rincian produk yang dipasok, nomor <i>batch</i>/ED, harga beli perolehan, dan kolom tanda tangan pengesahan bagian pengadaan logistik.
+                            Apabila diperlukan laporan pengadaan untuk arsip manajemen, halaman tersebut menyediakan Dokumen Resmi Laporan Penerimaan Barang Format A4 (Gambar 4.37). Lembar cetak ini merinci nomor faktur, tanggal penerimaan, nama produk dan variasi, nomor <i>batch</i> beserta tanggal kedaluwarsanya, distributor pengirim, kuantitas penerimaan dan retur parsial, harga beli perolehan, serta kolom tanda tangan pengesahan.
                         </p>
                     </div>
 
@@ -7314,6 +7419,11 @@
                                 Gambar 4.38 Tampilan Antarmuka Laporan Mutasi Stok dan Konversi Satuan
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Seluruh pergerakan stok internal di luar penjualan tercatat pada halaman Laporan Mutasi Stok dan Konversi Satuan (Gambar 4.38). Tampilan ini memisahkan catatan pemecahan kemasan <i>multi-UOM</i> (menampilkan <i>batch</i> asal, jumlah dus yang dibongkar, rasio konversi, sub-<i>batch</i> eceran, dan sisa kemasan) dengan catatan penyesuaian mutasi manual beserta alasan perubahan saldonya.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -7325,7 +7435,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Modul evaluasi pergerakan internal barang, mencakup penyesuaian manual (barang rusak, kedaluwarsa, koreksi hitung) dan pemecahan kemasan <i>multi-UOM</i>. Antarmuka web (Gambar 4.38) menyajikan <i>tab</i> pemisah antara mutasi manual dan konversi satuan, filter rentang waktu, serta rincian alasan perubahan saldo.<br><br>Lembar Cetak Laporan Mutasi & Konversi Format A4 (Gambar 4.39) mencetak dokumen resmi rekapitulasi pergerakan internal, merinci tanggal peristiwa, kode barang, nama produk, kuantitas mutasi, alasan pembebanan, rasio konversi yang diterapkan, identitas petugas pencatat, serta kolom tanda tangan pimpinan.
+                            Catatan internal tersebut selanjutnya dapat diterbitkan ke dalam Dokumen Resmi Laporan Mutasi &amp; Konversi Format A4 (Gambar 4.39). Dokumen cetak ini menyajikan waktu dan nomor referensi kejadian, nama petugas pencatat, identitas produk dan <i>SKU</i>, satuan, rincian jumlah maupun alasan mutasi serta konversi satuan, dilengkapi kolom pengesahan pimpinan toko.
                         </p>
                     </div>
 
@@ -7343,6 +7453,11 @@
                                 Gambar 4.40 Tampilan Antarmuka Laporan Deteksi Anomali Pengeluaran <i>FEFO</i>
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Kepatuhan penerapan aturan <i>FEFO</i> diawasi melalui halaman Laporan Deteksi Anomali Pengeluaran <i>FEFO</i> (Gambar 4.40). Apabila terjadi pengeluaran <i>batch</i> dengan tanggal kedaluwarsa lebih jauh sementara <i>batch</i> terdekat masih tersisa, sistem merekam kejadian tersebut sebagai anomali dan menampilkan waktu transaksi, petugas kasir, nama produk obat, <i>batch</i> yang seharusnya keluar, <i>batch</i> yang diambil, selisih hari kedaluwarsa, kuantitas, serta status tindak lanjutnya.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -7354,7 +7469,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Fitur pengawasan mutakhir yang memantau kepatuhan kasir terhadap rekomendasi <i>batch</i> terdekat (<i>FEFO</i>). Jika kasir mengeluarkan <i>batch</i> yang tanggal kedaluwarsanya lebih jauh sementara <i>batch</i> terdekat masih tersedia, sistem mencatat peristiwa tersebut sebagai anomali. Antarmuka web (Gambar 4.40) menyajikan daftar pelanggaran <i>FEFO</i>, alasan petugas saat override di kasir, dan tingkat kepatuhan.<br><br>Lembar Cetak Laporan Deteksi Anomali <i>FEFO</i> Format A4 (Gambar 4.41) mencetak lembar evaluasi resmi yang merinci nomor transaksi, kasir yang bertugas, nama obat yang mengalami loncatan angkatan, nomor <i>batch</i> yang seharusnya dikeluarkan menurut aturan <i>FEFO</i>, nomor <i>batch</i> yang diambil di lapangan, alasan petugas (misalnya permintaan kemasan khusus konsumen), serta kolom tanda tangan evaluasi oleh penanggung jawab teknis gerai.
+                            Untuk evaluasi kedisiplinan pengeluaran stok di kasir, hasil pencatatan anomali dicetak ke dalam Dokumen Resmi Laporan Deteksi Anomali <i>FEFO</i> Format A4 (Gambar 4.41). Lembar evaluasi ini merinci waktu dan kanal transaksi, nama petugas kasir, produk dan variasi, perbandingan nomor <i>batch</i> seharusnya terhadap nomor <i>batch</i> yang diambil beserta status penanganannya, serta kolom tanda tangan pimpinan.
                         </p>
                     </div>
 
@@ -7372,6 +7487,11 @@
                                 Gambar 4.42 Tampilan Antarmuka Manajemen Pengguna dan Hak Akses
                             </p>
                         </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Pengelolaan akun pengguna sistem dilakukan pada halaman Manajemen Pengguna dan Hak Akses (Gambar 4.42). Layar ini menampilkan tabel akun terdaftar untuk peran Superadmin, Admin, Kasir, dan Pelanggan beserta status keaktifan serta tanggal pendaftarannya.
+                        </p>
+                    </div>
 
                         <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
                             <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
@@ -7383,7 +7503,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Modul tata kelola akun staf internal dan pengguna eksternal sistem ZenCare Medical. Antarmuka direktori pengguna (Gambar 4.42) menyajikan tabel seluruh akun pengguna terdaftar yang mencakup peran Superadmin, Admin, Kasir, dan Pelanggan, status keaktifan akun, serta tanggal registrasi.<br><br>Penambahan akun operasional baru dilakukan melalui Formulir Pendaftaran Pengguna Baru dan Penetapan Hak Akses <i>Role</i> <i>RBAC</i> (Gambar 4.43). Formulir ini memfasilitasi perekaman nama pengguna (<i>username</i> unik), nama lengkap staf, alamat <i>email</i> dinas, kata sandi terenkripsi, serta penetapan hak akses peran berbasis <i>Role-Based Access Control</i> (<i>RBAC</i>). Mekanisme ini memastikan isolasi wewenang yang ketat: Kasir hanya diizinkan mengakses terminal penjualan, Admin berwenang mengelola persediaan dan logistik, sedangkan Superadmin memegang kendali penuh terhadap konfigurasi sistem, pembekuan <i>server</i>, dan persetujuan penyesuaian inventori.
+                            Pembuatan akun staf baru dikerjakan melalui Formulir Pendaftaran Pengguna Baru (Gambar 4.43). Admin mengisi nama pengguna (<i>username</i>), nama lengkap, alamat surel, kata sandi terenkripsi, serta peran <i>Role-Based Access Control</i> (<i>RBAC</i>) yang membatasi Kasir pada terminal kasir dan pencacahan fisik, Admin pada operasional logistik dan pesanan, serta Superadmin pada konfigurasi sistem, pelaporan, dan pembukaan sesi <i>stok opname</i>.
                         </p>
                     </div>
 
@@ -7403,7 +7523,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Modul konfigurasi identitas visual dan operasional toko <i>online</i> ZenCare Medical. Admin dapat mengubah nama toko, logo resmi, favicon peramban, banner promosi karusel beranda, nomor kontak WhatsApp layanan pelanggan, alamat <i>email</i>, serta syarat dan ketentuan transaksi. Perubahan pada halaman ini langsung terefleksi secara langsung pada etalase toko daring yang diakses oleh pelanggan publik.
+                            Identitas tampilan toko daring dikelola pada halaman Pengaturan Toko Daring dan Konten Web (Gambar 4.44). Melalui formulir ini, pengelola dapat memperbarui nama toko, alamat surel layanan pelanggan, nomor telepon, nomor WhatsApp, alamat toko, deskripsi singkat, berkas logo resmi, serta spanduk promosi yang akan tampil pada etalase publik.
                         </p>
                     </div>
 
@@ -7423,7 +7543,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Gerbang autentikasi khusus konsumen toko daring ZenCare Medical yang terpisah dari halaman <i>login</i> staf internal. Antarmuka menyediakan formulir pendaftaran akun baru (nama lengkap, nomor telepon, alamat <i>email</i>, kata sandi) serta formulir masuk akun terdaftar. Sistem menerapkan validasi kata sandi dan proteksi sesi guna melindungi privasi riwayat pesanan serta data profil medis pelanggan.
+                            Pelanggan toko daring mengakses layanan belanja melalui halaman Pendaftaran dan Masuk Akun Pelanggan (Gambar 4.45) yang terpisah dari halaman masuk staf internal. Konsumen dapat mendaftarkan akun baru menggunakan nama lengkap, nomor telepon, alamat surel, dan kata sandi, lalu masuk memakai kredensial tersebut untuk melakukan pemesanan.
                         </p>
                     </div>
 
@@ -7443,7 +7563,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Portal mandiri pelanggan yang menampilkan informasi biodata pengguna, alamat pengiriman <i>default</i>, serta riwayat seluruh transaksi daring yang pernah dilakukan. Pelanggan dapat memantau status pesanan (Menunggu Pembayaran, Dikemas, Dikirim, Selesai), melacak nomor resi kurir, serta melihat kembali rincian komoditas medis yang dibeli secara transparan.
+                            Pada halaman Profil dan Pemantauan Pesanan Pelanggan (Gambar 4.46), konsumen dapat memperbarui biodata, nomor telepon, dan alamat pengiriman utama serta melihat daftar transaksi daringnya. Riwayat pesanan menampilkan perubahan status mulai dari Menunggu Pembayaran, Diproses, Siap Diambil, Dikirim, Selesai, hingga Dibatalkan, disertai opsi pembatalan sebelum pembayaran agar stok kuncian dilepaskan kembali ke stok siap jual.
                         </p>
                     </div>
 
@@ -7463,7 +7583,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Halaman muka etalase publik toko <i>online</i> ZenCare Medical yang menyajikan katalog produk obat bebas, alat kesehatan, dan bahan medis habis pakai. Antarmuka dilengkapi banner promosi dinamis, bilah pencarian cepat, navigasi kategori, sorotan produk terlaris, serta indikator stok ketersediaan fisik yang disinkronkan secara langsung dengan saldo gudang toko fisik.
+                            Etalase utama toko daring ditampilkan melalui halaman Beranda <i>E-Commerce</i> (Gambar 4.47) yang menyajikan katalog produk obat dan alat kesehatan dalam kemasan satuan besar utuh. Pengunjung dapat menelusuri spanduk promosi, menyaring barang berdasarkan kategori dan produk induk, mencari nama produk lewat bilah pencarian, serta melihat status ketersediaan stok yang langsung mengikuti saldo gudang toko fisik.
                         </p>
                     </div>
 
@@ -7483,7 +7603,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Halaman produk spesifik yang menyajikan informasi detail komoditas medis: galeri foto multi-sudut, deskripsi indikasi obat, nomor izin edar Kemenkes/BPOM, petunjuk dosis penggunaan, batas tanggal kedaluwarsa terdekat yang dijamin, pilihan variasi kemasan (eceran/grosir), harga satuan, jumlah pembelian, serta tombol 'Tambah ke Keranjang'.
+                            Ketika pelanggan memilih salah satu produk, sistem membuka halaman Rincian Informasi Produk (Gambar 4.48). Halaman ini menampilkan galeri foto produk, harga jual per kemasan besar beserta referensi harga eceran, status ketersediaan stok, deskripsi produk, tab spesifikasi teknis (kategori, <i>SKU</i> variasi, satuan penjualan, isi kemasan, serta berat pengiriman), ketentuan pengiriman, pilihan variasi kemasan lain, pengaturan jumlah pembelian, serta tombol Tambah ke Keranjang dan Beli Sekarang.
                         </p>
                     </div>
 
@@ -7503,7 +7623,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Antarmuka penampung sementara produk-produk yang dipilih konsumen sebelum melanjutkan ke tahap pembayaran. Panel menyajikan daftar barang, foto, satuan kemasan yang dipilih, kuantitas yang dapat disesuaikan langsung, subtotal harga, serta kalkulasi ringkasan estimasi total belanja.
+                            Produk yang dipilih pelanggan ditampung sementara pada halaman Keranjang Belanja (Gambar 4.49) sebelum masuk ke tahap pembayaran. Pada halaman ini pembeli dapat melihat foto dan satuan kemasan barang, mengubah jumlah pembelian atau menghapus item, serta memeriksa ringkasan subtotal belanja.
                         </p>
                     </div>
 
@@ -7523,7 +7643,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Tahapan akhir transaksi belanja daring di mana pelanggan memasukkan alamat pengiriman lengkap, memilih opsi layanan kurir ekspedisi logistik, meninjau rincian biaya (subtotal belanja ditambah ongkos kirim), serta memilih gerbang metode pembayaran daring (Transfer Bank, Virtual Account, E-Wallet, atau QRIS). Saat pesanan dikonfirmasi, sistem secara otomatis mereservasi stok produk pada tabel <i>pesanan_batch_alokasi</i> menggunakan prinsip <i>FEFO</i>.
+                            Tahap penyelesaian belanja daring berlangsung pada halaman Pembayaran dan Pengiriman (<i>Checkout</i>) (Gambar 4.50). Pelanggan mengisi data penerima dan menentukan titik alamat pengiriman melalui peta interaktif, memilih layanan kurir ekspedisi atau opsi ambil langsung di toko, memeriksa rincian total berat serta ongkos kirim, lalu melakukan pembayaran melalui gerbang <i>Midtrans Payment Gateway</i> yang menyediakan kanal QRIS, Virtual Account (BCA, Mandiri, BNI, BRI), dan dompet digital (GoPay/ShopeePay). Begitu pesanan dibuat, sistem langsung mengunci stok berdasarkan tanggal kedaluwarsa terdekat (<i>FEFO</i>) ke dalam tabel <i>pesanan_batch_alokasi</i> selama batas waktu pembayaran dua jam.
                         </p>
                     </div>
                     </div> <!-- Closes subbab_411_content -->

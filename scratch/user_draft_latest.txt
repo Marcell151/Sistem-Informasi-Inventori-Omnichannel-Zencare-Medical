@@ -1,0 +1,423 @@
+<USER_REQUEST>
+nha coba anda lihat apakah sudah sesuai
+Bab ini memaparkan hasil dari implementasi sistem informasi inventori dan penjualan omnichannel pada toko kesehatan ZenCare Medical yang telah dibangun berdasarkan analisis kebutuhan serta spesifikasi rancangan pada bab sebelumnya. Implementasi sistem ini mencakup perwujudan antarmuka pengguna sistem (user interface), pengoperasian alur transaksi kasir toko fisik (Point of Sale), pengelolaan persediaan obat dan alat kesehatan multi-satuan dengan kendali kedaluwarsa berbasis FEFO (First Expired, First Out), integrasi etalase toko daring (E-Commerce), hingga penyajian laporan eksekutif terpadu untuk mendukung transparansi operasional dan pengambilan keputusan bisnis.
+4.1	Implementasi Sistem
+Implementasi sistem merupakan tahap perwujudan dari rancangan logika basis data, alur proses bisnis, dan tata letak antarmuka pengguna yang telah dirumuskan pada Bab III ke dalam bentuk modul-modul fungsional perangkat lunak yang beroperasi secara utuh. Mulai dari autentikasi staf, operasional kasir dan transaksi penjualan omnichannel, manajemen master data dan logistik persediaan, siklus lengkap pemeriksaan fisik persediaan (stok opname), dashboard eksekutif dan seluruh lembar cetak laporan manajerial resmi, konfigurasi sistem, hingga portal toko daring (e-commerce) pelanggan. Pada setiap subbab, tampilan antarmuka interaktif disandingkan secara langsung dengan dokumen cetak fisik atau formulir operasional terkait agar alur kerja sistem terdokumentasi secara utuh dan terpadu. Rincian implementasi sistem diuraikan sebagai berikut:
+
+
+
+
+
+
+
+
+
+4.1.1	Halaman Login Staf
+Halaman autentikasi satu pintu (Gambar 4.1) digunakan oleh seluruh staf internal ZenCare Medical, yaitu Superadmin, Admin, dan Kasir. Layar ini menyediakan kolom nama pengguna (username), kata sandi (password), serta identitas toko untuk memverifikasi hak akses sebelum masuk ke sistem. Pada sisi backend, sistem mencocokkan data masukan terhadap tabel users menggunakan enkripsi kata sandi dan mengarahkan setiap pengguna sesuai perannya: Kasir langsung diarahkan ke Terminal Kasir, Admin menuju halaman operasional toko dan logistik, sedangkan Superadmin masuk ke halaman ringkasan manajerial. Akun pelanggan toko daring dibatasi agar tidak dapat masuk melalui gerbang staf ini.
+4.1.2	Dashboard Operasional Admin
+Halaman Dashboard Operasional Admin (Gambar 4.2) menyajikan ringkasan kondisi toko harian bagi staf Admin. Pada bagian atas terdapat kartu indikator jumlah katalog produk, stok satuan besar dan kecil, item stok menipis di bawah batas minimum, barang mendekati kedaluwarsa, pesanan daring baru, anomali pengeluaran FEFO, serta status retur pemasok. Di bawahnya tersedia pintasan cepat menuju penerimaan stok baru, pengelolaan pesanan, dan etalase toko daring, diikuti daftar peringatan stok menipis, barang hampir kedaluwarsa, serta log pergerakan terbaru dari tabel kartu_stok.
+
+4.1.3	Terminal Kasir (Point of Sale / POS) Dan Struk
+Transaksi penjualan langsung di meja kasir dilayani melalui halaman Terminal Kasir (Gambar 4.3) yang disusun dalam dua panel utama agar proses pelayanan berlangsung cepat. Panel kiri memuat bilah pencarian nama maupun pemindai kode batang (barcode), filter kategori obat atau alat kesehatan, serta kartu produk berisi harga jual dan sisa stok siap jual. Panel kanan menampilkan daftar barang di keranjang belanja, pilihan metode pembayaran (Tunai, QRIS, Kartu Debit, atau Transfer), perhitungan uang kembalian otomatis untuk transaksi tunai, dan tombol penyelesaian pembayaran.
+
+
+
+
+
+ Setelah pembayaran kasir dikonfirmasi, sistem langsung memotong stok berdasarkan tanggal kedaluwarsa terdekat (FEFO) melalui tabel pesanan_batch_alokasi, menandai nomor seri alat kesehatan pada tabel unit_serial bila produk bernomor seri, mencatat mutasi ke kartu_stok, lalu menerbitkan Struk Kasir POS (Gambar 4.4). Tata letak struk diatur khusus untuk kertas gulung termal, memuat nama dan alamat toko ZenCare Medical, nomor faktur, waktu transaksi, nama petugas kasir, rincian barang beserta nomor batch atau nomor seri, subtotal, total pembayaran, serta nominal uang bayar dan kembalian.
+
+
+
+
+
+
+4.1.4	Pengelolaan Transaksi Penjualan Omnichannel
+Halaman Pengelolaan Transaksi Penjualan Omnichannel (Gambar 4.5) menyatukan pemantauan pesanan dari kasir toko fisik (POS) maupun toko daring (E-Commerce) dalam satu tampilan. Admin dapat mencari nomor pesanan dan menyaring daftar transaksi menurut statusnya, mulai dari Menunggu Pembayaran, Diproses, Siap Diambil, Dikirim, Selesai, hingga Dibatalkan. Apabila terdapat pesanan daring yang belum dibayar atau dibatalkan, Admin dapat mengeksekusi pembatalan dari halaman ini sehingga stok kuncian pada alokasi batch otomatis dilepaskan kembali ke stok aktif.
+ Untuk keperluan arsip transaksi maupun bukti pembelian pelanggan, Admin dapat mencetak Faktur Penjualan Resmi Format A4 (Gambar 4.6) langsung dari daftar pesanan. Dokumen ini menampilkan identitas resmi ZenCare Medical, nomor faktur, data penerima, rincian produk beserta kode SKU, nomor batch atau nomor seri yang dialokasikan, harga satuan, ongkos kirim, total tagihan, serta kolom tanda tangan pengesahan petugas.
+
+
+
+
+ Pesanan daring yang akan diserahkan ke kurir ekspedisi dilengkapi fitur cetak Label Pengiriman (Gambar 4.7) dengan aturan CSS cetak khusus ukuran stiker termal agar proporsional ditempel pada paket dan tidak mengikuti kertas A4. Label tersebut memuat kode batang (barcode) nomor faktur, badge layanan kurir, informasi pengirim dan penerima beserta alamat tujuan, tabel isi paket lengkap dengan alokasi batch FEFO atau nomor seri, status pembayaran, serta jumlah total unit kiriman.
+
+
+
+
+
+
+
+
+
+
+4.1.5	Pengelolaan Master Produk
+Halaman Direktori Master Produk (Gambar 4.8) digunakan untuk mengelola seluruh daftar obat dan alat kesehatan ZenCare Medical yang tersusun dalam relasi dua tingkat antara produk_induk dan produk_variasi. Setiap baris direktori menampilkan foto produk, kode SKU induk, nama komoditas, kategori, batas hari peringatan kedaluwarsa, serta daftar variasi kemasan yang berada di bawahnya.
+
+
+
+
+
+Penambahan barang baru dimulai melalui Formulir Input Master Produk Induk (Gambar 4.9). Pada tahap ini Admin mengisi atribut umum komoditas, meliputi kode SKU induk, nama produk, kategori (Obat atau Alat Kesehatan), batas hari peringatan dini kedaluwarsa, deskripsi produk, serta foto produk.
+
+
+
+
+
+
+
+
+
+
+
+Setelah produk induk dibuat, Admin menambahkan rincian kemasan pada Formulir Produk Variasi dan Multi-UOM (Gambar 4.10). Formulir ini mencatat SKU variasi, nama variasi, satuan besar (seperti Box atau Dus), satuan kecil eceran (seperti Strip, Botol, atau Pcs), rasio konversi isi per kemasan (misalnya 1 Box = 10 Strip), harga beli perolehan, harga jual satuan besar dan satuan kecil, serta batas stok minimum untuk masing-masing tingkat satuan agar perhitungan stok lintas modul selalu konsisten.
+4.1.6	Konfigurasi Satuan dan Multi-UOM
+Halaman Konfigurasi Satuan (UOM) (Gambar 4.11) menyimpan daftar standar nama satuan kemasan seperti Dus, Box, Strip, Botol, Tablet, Tube, Pcs, dan Unit. Penyeragaman daftar satuan ini menjaga agar nama satuan yang dipilih saat penerimaan barang, penjualan kasir, maupun konversi kemasan selalu seragam.
+ Ketika stok eceran di etalase menipis sedangkan kemasan grosir masih tersedia di gudang, staf menggunakan Formulir Eksekusi Konversi Satuan (Gambar 4.12) untuk membuka kemasan besar. Pada contoh data uji yang terisi di layar, pengguna memilih obat Amoxicillin 500mg dan batch AMX-2026-01 (sisa 4 Box), memasukkan 1 Box untuk dibongkar, lalu sistem menghitung pratinjau penambahan +10 Strip eceran beserta kode sub-batch baru sebelum konversi dijalankan.
+
+
+
+
+
+
+
+
+
+ Setiap pembongkaran kemasan mengurangi saldo kemasan besar, menambah saldo eceran dengan nomor batch dan tanggal kedaluwarsa yang sama, lalu mencatat buktinya ke tabel histori_konversi serta kartu_stok. Catatan riwayat konversi tersebut ditampilkan berurutan pada halaman Histori Konversi Satuan (Gambar 4.13), lengkap dengan waktu eksekusi, nama produk, nomor batch, jumlah kemasan besar yang dibongkar, dan jumlah eceran yang dihasilkan.
+
+
+
+
+
+
+
+
+4.1.7	Master Data Supplier
+Halaman Direktori Rekanan Pemasok (Gambar 4.14) digunakan untuk mengelola data mitra distributor resmi yang memasok produk obat dan alat kesehatan ke ZenCare Medical. Pada tabel direktori ini tersimpan profil badan usaha pemasok, nama perwakilan pemasok, nomor kontak, alamat operasional, serta status keaktifan kemitraan.
+
+
+
+
+
+
+
+
+
+
+
+
+ Saat menjalin kerja sama dengan distributor baru, Admin mencatat datanya melalui Formulir Pendaftaran Rekanan Pemasok Baru (Gambar 4.15). Kotak dialog ini merekam nama perusahaan pemasok, narahubung resmi, nomor telepon atau WhatsApp, alamat email, serta alamat gudang distributor untuk disimpan ke dalam tabel supplier.
+
+
+
+
+
+
+
+
+
+
+
+4.1.8	Penerimaan Barang Masuk
+Pencatatan barang masuk dari distributor dilakukan melalui Formulir Penerimaan Barang (Gambar 4.16). Petugas memilih distributor pengirim, menuliskan nomor faktur pembelian, mencatat nomor batch pabrikan dan tanggal kedaluwarsa (expired date), mengisi kuantitas yang diterima beserta harga beli perolehan, serta memasukkan nomor seri unik apabila produk berupa alat kesehatan.
+
+
+
+
+Begitu penerimaan barang disimpan, sistem menambahkan saldo persediaan ke stok_batch dan kartu_stok, lalu menyediakan Nota Bukti Penerimaan Logistik Format A4 (Gambar 4.17). Dokumen cetak ini berisi nomor referensi penerimaan internal, nomor faktur distributor, daftar barang beserta nomor batch dan tanggal kedaluwarsanya, serta kolom paraf pemeriksaan fisik oleh kepala logistik.
+
+
+
+
+
+
+ Setelah barang diterima, petugas dapat mencetak penandaan fisik kemasan melalui halaman Cetak Label Stiker Barcode Batch & Serial Number (Gambar 4.18). Label barcode ini tersedia dalam tata letak lembar stiker A4 maupun kertas gulung termal untuk ditempelkan pada produk, sehingga mempermudah pemindaian di kasir maupun pemeriksaan stok di rak gudang.
+
+
+4.1.9	Mutasi Stok
+Halaman Daftar Mutasi Stok Persediaan (Gambar 4.19) menghimpun seluruh catatan penyesuaian stok manual yang dilakukan staf di luar transaksi kasir dan penerimaan barang. Tabel riwayat menampilkan nomor referensi mutasi, waktu pencatatan, nama produk, jenis penyesuaian (Masuk atau Keluar), kuantitas, alasan penyesuaian, serta nama petugas yang mencatat.
+
+
+
+
+
+
+ Penyesuaian stok secara manual dijalankan melalui Formulir Mutasi Stok Manual (Gambar 4.20) saat terjadi kerusakan kemasan, penarikan barang kedaluwarsa, pemakaian internal gerai, atau koreksi hitung. Pada contoh pengisian yang ditampilkan, pengguna memilih produk Amoxicillin 500mg — Tablet 500mg, menentukan arah Pengurangan Stok (-) pada Batch AMX-2026-01 sebanyak 2 Strip dengan alasan Barang Rusak / Kemasan Cacat beserta catatan kronologinya agar pengurangan stok tercatat dengan jelas pada sistem.
+4.1.10	Kartu Stok
+Seluruh keluar masuk barang terekam dalam antarmuka Kartu Stok Persediaan (Gambar 4.21) yang berfungsi sebagai buku besar mutasi per item. Pengelola dapat memilih produk variasi dan rentang tanggal untuk meninjau saldo stok terkini beserta rincian tanggal, nomor bukti, jenis sumber mutasi (penjualan POS, pesanan daring, penerimaan barang, konversi kemasan, atau mutasi manual), jumlah masuk atau keluar, dan saldo akhir berjalan.
+
+
+
+
+
+
+
+ Apabila diperlukan dokumen fisik untuk pengecekan berkala, Kartu Riwayat Mutasi Stok dapat dicetak dalam format A4 (Gambar 4.22). Lembar cetak ini menyertakan kop resmi toko, identitas produk, saldo awal, tabel mutasi lengkap beserta nama petugas pencatatnya, dan kolom tanda tangan penanggung jawab logistik.
+
+
+
+4.1.11	Stok Opname
+Pemeriksaan fisik persediaan berkala (stok opname) dijalankan melalui enam tampilan terpadu, dimulai dari Beranda Riwayat Sesi Stok Opname (Gambar 4.23). Layar ini menampilkan status kelancaran transaksi toko terkini dan daftar seluruh sesi opname sebelumnya beserta kode sesi, pelaksana, status tahapan (Sedang Dihitung, Tahap Verifikasi, atau Selesai), rekap selisih item, serta total nilai estimasi kerugian barang.
+
+
+
+
+
+
+
+Pada Tahap satu melalui layar Inisiasi Sesi (Gambar 4.24) yang hanya dapat diakses oleh Superadmin, sistem membuka sesi opname baru sekaligus mengaktifkan fitur pembekuan transaksi (Freeze Lock) di tingkat server. Selama sesi berlangsung, transaksi kasir POS, checkout toko daring, konversi satuan, dan penerimaan barang ditahan sementara agar angka stok pembukuan tidak berubah saat penghitungan fisik dilakukan.
+
+
+
+
+
+
+
+
+
+
+
+Pada Tahap dua melalui Formulir Pencacahan Fisik Rak Blind Count (Gambar 4.25), Kasir memasukkan hasil hitungan fisik barang di rak tanpa melihat jumlah stok sistem. Formulir menyediakan tiga kolom pengisian kondisi fisik, yaitu Fisik Baik, Fisik Rusak, dan Fisik Kedaluwarsa, dengan pengaman otomatis yang menonaktifkan kolom Fisik Kedaluwarsa apabila tanggal kedaluwarsa batch belum lewat sehingga barang cacat dicatat pada kolom Fisik Rusak.
+
+
+
+
+ Pada Tahap tiga  melalui antarmuka Verifikasi dan Rekonsiliasi Anomali Selisih (Gambar 4.26), Admin membandingkan hasil hitungan kasir dengan data stok sistem. Sistem menyaring dan hanya menyoroti barang yang berselisih, menghitung nilai kerugian memakai harga beli perolehan melalui rumus (Jumlah Rusak + Jumlah Expired + Jumlah Hilang) × Harga Beli (Satuan Terkecil), serta menampilkan baris Grand Total Estimasi Nilai Kerugian Persediaan di bagian paling bawah tabel.
+
+
+
+
+
+
+
+Sebagai kelanjutan Tahap tiga, setiap barang yang berselisih diselesaikan melalui Modal Penyesuaian Mutasi Selisih Per Item (Gambar 4.27). Di dalam kotak dialog ini, Admin memeriksa rincian selisih dan nominal kerugiannya (seperti pengurangan -2 Strip Amoxicillin 500mg senilai Rp 8.000), memilih alasan penyesuaian baku, lalu memutasi stok sistem hingga baris item berstatus Telah Dimutasi.
+
+
+
+
+ Pada Tahap 4 setelah seluruh selisih selesai disesuaikan, sistem menghasilkan Berita Acara Pemeriksaan Fisik Stok Opname Format Lanskap (Gambar 4.28). Dokumen ini memuat sepuluh kolom rincian hasil pemeriksaan, baris ringkasan Grand Total Estimasi Nilai Kerugian Persediaan di bagian bawah tabel, serta kolom tanda tangan pengesahan oleh Petugas Pencacah Fisik (Kasir), Petugas Verifikator (Admin Toko), dan Pimpinan Toko (Superadmin).
+
+
+
+
+
+
+
+
+4.1.12	Dashboard Eksekutif 
+Pemilik toko (Superadmin) memantau kondisi persediaan dan pergerakan unit melalui halaman Dashboard Eksekutif Superadmin (Gambar 4.29). Layar ini berfokus pada pemantauan kuantitas fisik tanpa menampilkan nominal Rupiah, memuat kartu ringkasan katalog produk, stok satuan besar dan kecil, item stok menipis, peringatan kedaluwarsa, antrean pesanan daring, anomali pengeluaran FEFO, serta status retur pemasok. Di bagian tengah tersaji tabel rekapitulasi kuantitas penjualan POS dan E-Commerce selama tujuh hari terakhir beserta daftar peringatan stok minimum, barang mendekati kedaluwarsa, log kartu_stok, dan riwayat penerimaan pasokan terbaru.
+
+
+4.1.13	Laporan Penjualan Omnichannel
+Rekapitulasi penjualan gabungan dari kasir fisik dan toko daring dapat ditinjau melalui halaman Laporan Penjualan Barang Omnichannel (Gambar 4.30). Halaman ini menyediakan penyaring rentang tanggal, kanal penjualan (POS atau E-Commerce), dan pencarian produk, lalu menampilkan tabel rincian transaksi lengkap mulai dari nomor faktur, nama produk dan variasi, kode SKU, nomor batch atau nomor seri yang keluar, satuan penjualan, kuantitas terjual, hingga ekuivalen unit fisiknya.
+
+
+
+
+
+
+
+
+Data penjualan yang telah disaring dapat dicetak menjadi Dokumen Resmi Laporan Penjualan Barang Format A4 (Gambar 4.31). Lembar cetak tersebut memuat kop resmi ZenCare Medical, periode laporan, ringkasan kuantitas penjualan lintas kanal, tabel riwayat penjualan sesuai urutan tanggal, serta kolom tanda tangan pengesahan pimpinan toko.
+
+
+
+
+
+
+
+4.1.14	Laporan Persediaan
+Kondisi ketersediaan stok tiap variasi produk dipantau pada halaman Laporan Persediaan dan Ketersediaan Barang (Gambar 4.32). Pengelola dapat menyaring daftar barang menurut kategori, status ketersediaan (Aman, Menipis, Kritis, atau Habis), serta memantau rincian saldo satuan besar yang belum dikonversi, satuan kecil eceran yang sudah dibuka, total stok fisik, dan informasi batch maupun nomor seri aktif.
+
+
+
+
+
+
+ Untuk kebutuhan arsip fisik gudang, sistem menyediakan Dokumen Resmi Laporan Persediaan Barang Format A4 (Gambar 4.33). Dokumen ini merangkum nama produk induk dan variasi, kode SKU, nomor batch atau nomor seri, rasio satuan kemasan, jumlah stok satuan besar dan satuan kecil, total stok fisik, serta kolom tanda tangan penanggung jawab logistik.
+
+
+
+
+
+
+4.1.15	Laporan Logistik Medis 
+Pengawasan masa simpan obat dan rekam jejak unit alat kesehatan disajikan pada halaman Laporan Logistik Medis (Gambar 4.34). Layar ini mengelompokkan daftar batch obat berdasarkan sisa masa simpan menggunakan indikator status (Kritis, Peringatan, Aman, hingga Habis/Kedaluwarsa) dan menampilkan pelacakan nomor seri (Serial Number) unit alat kesehatan untuk mendukung penarikan stok atau pengajuan retur ke distributor.
+
+
+
+
+
+
+
+
+
+
+Sebagai tindak lanjut pengendalian masa simpan, hasil pemantauan tersebut dapat dicetak ke dalam Dokumen Resmi Laporan Logistik Medis FEFO Format A4 (Gambar 4.35). Cetakan ini memuat daftar nama produk obat dan rincian batch, kode SKU, tanggal kedaluwarsa, sisa hari masa simpan, jumlah stok tersisa, status kedaluwarsa, rekap jejak nomor seri alat kesehatan, serta kolom pengesahan pimpinan toko.
+
+
+
+
+4.1.16	Laporan Penerimaan Barang Masuk
+Riwayat pengadaan stok dari distributor rekanan dihimpun pada halaman Laporan Penerimaan Barang Masuk (Gambar 4.36). Melalui penyaring tanggal dan distributor, pengelola dapat memeriksa rincian barang yang dipesan, jumlah barang diterima dalam kondisi baik, jumlah retur barang rusak, nomor batch dan tanggal kedaluwarsa, serta harga beli dan subtotalnya.
+
+
+
+
+
+
+
+
+
+ Apabila diperlukan laporan pengadaan untuk arsip manajemen, halaman tersebut menyediakan Dokumen Resmi Laporan Penerimaan Barang Format A4 (Gambar 4.37). Lembar cetak ini merinci nomor faktur, tanggal penerimaan, nama produk dan variasi, nomor batch beserta tanggal kedaluwarsanya, distributor pengirim, kuantitas penerimaan dan retur parsial, harga beli perolehan, serta kolom tanda tangan pengesahan.
+
+
+
+
+
+4.1.17	Laporan Mutasi dan Konversi Satuan
+Seluruh pergerakan stok internal di luar penjualan tercatat pada halaman Laporan Mutasi Stok dan Konversi Satuan (Gambar 4.38). Tampilan ini memisahkan catatan pemecahan kemasan multi-UOM (menampilkan batch asal, jumlah dus yang dibongkar, rasio konversi, sub-batch eceran, dan sisa kemasan) dengan catatan penyesuaian mutasi manual beserta alasan perubahan saldonya.
+
+
+
+
+
+
+
+
+
+
+Catatan internal tersebut selanjutnya dapat diterbitkan ke dalam Dokumen Resmi Laporan Mutasi & Konversi Format A4 (Gambar 4.39). Dokumen cetak ini menyajikan waktu dan nomor referensi kejadian, nama petugas pencatat, identitas produk dan SKU, satuan, rincian jumlah maupun alasan mutasi serta konversi satuan, dilengkapi kolom pengesahan pimpinan toko.
+
+
+
+
+
+
+
+
+
+4.1.18	Laporan Anomali Pengeluaran FEFO
+
+Kepatuhan penerapan aturan FEFO diawasi melalui halaman Laporan Deteksi Anomali Pengeluaran FEFO (Gambar 4.40). Apabila terjadi pengeluaran batch dengan tanggal kedaluwarsa lebih jauh sementara batch terdekat masih tersisa, sistem merekam kejadian tersebut sebagai anomali dan menampilkan waktu transaksi, petugas kasir, nama produk obat, batch yang seharusnya keluar, batch yang diambil, selisih hari kedaluwarsa, kuantitas, serta status tindak lanjutnya.
+
+
+
+
+
+ Untuk evaluasi kedisiplinan pengeluaran stok di kasir, hasil pencatatan anomali dicetak ke dalam Dokumen Resmi Laporan Deteksi Anomali FEFO Format A4 (Gambar 4.41). Lembar evaluasi ini merinci waktu dan kanal transaksi, nama petugas kasir, produk dan variasi, perbandingan nomor batch seharusnya terhadap nomor batch yang diambil beserta status penanganannya, serta kolom tanda tangan pimpinan.
+
+
+
+
+
+
+
+
+
+
+
+
+
+4.1.19	Manajemen Pengguna Sistem
+Pengelolaan akun pengguna sistem dilakukan pada halaman Manajemen Pengguna dan Hak Akses (Gambar 4.42). Layar ini menampilkan tabel akun terdaftar untuk peran Superadmin, Admin, Kasir, dan Pelanggan beserta status keaktifan serta tanggal pendaftarannya.
+
+
+
+
+
+
+
+
+
+
+
+Pembuatan akun staf baru dikerjakan melalui Formulir Pendaftaran Pengguna Baru (Gambar 4.43). Admin mengisi nama pengguna (username), nama lengkap, alamat email, kata sandi terenkripsi, serta peran Role-Based Access Control (RBAC) yang membatasi Kasir pada terminal kasir dan pencacahan fisik, Admin pada operasional logistik dan pesanan, serta Superadmin pada konfigurasi sistem, pelaporan, dan pembukaan sesi stok opname.
+
+
+
+
+4.1.20	Pengaturan Toko Daring
+Identitas tampilan toko daring dikelola pada halaman Pengaturan Toko Daring dan Konten Web (Gambar 4.44). Melalui formulir ini, pengelola dapat memperbarui nama toko, alamat emai  layanan pelanggan, nomor telepon, nomor WhatsApp, alamat toko, deskripsi singkat, berkas logo resmi, serta spanduk promosi yang akan tampil pada etalase publik.
+
+
+
+
+
+
+
+
+
+
+4.1.21	Pendaftaran dan Masuk Akun Pelanggan
+Pelanggan toko daring mengakses layanan belanja melalui halaman Pendaftaran dan Masuk Akun Pelanggan (Gambar 4.45) yang terpisah dari halaman masuk staf internal. Konsumen dapat mendaftarkan akun baru menggunakan nama lengkap, nomor telepon, alamat email, dan kata sandi, lalu masuk memakai kredensial tersebut untuk melakukan pemesanan.
+
+
+
+
+
+
+
+
+
+
+4.1.22	Profil dan Pemantauan Pesanan Pelanggan
+Pada halaman Profil dan Pemantauan Pesanan Pelanggan (Gambar 4.46), konsumen dapat memperbarui biodata, nomor telepon, dan alamat pengiriman utama serta melihat daftar transaksi daringnya. Riwayat pesanan menampilkan perubahan status mulai dari Menunggu Pembayaran, Diproses, Siap Diambil, Dikirim, Selesai, hingga Dibatalkan, disertai opsi pembatalan sebelum pembayaran agar stok kuncian dilepaskan kembali ke stok siap jual.
+
+
+
+
+
+
+
+
+
+4.1.23	Beranda Toko Daring (E-Commerce)
+Etalase utama toko daring ditampilkan melalui halaman Beranda E-Commerce (Gambar 4.47) yang menyajikan katalog produk obat dan alat kesehatan dalam kemasan satuan besar utuh. Pengunjung dapat menelusuri spanduk promosi, menyaring barang berdasarkan kategori dan produk induk, mencari nama produk lewat bilah pencarian, serta melihat status ketersediaan stok yang langsung mengikuti saldo gudang toko fisik.
+
+
+
+
+
+
+
+
+
+4.1.24	Rincian Informasi Produk (Detail Produk)
+Ketika pelanggan memilih salah satu produk, sistem membuka halaman Rincian Informasi Produk (Gambar 4.48). Halaman ini menampilkan galeri foto produk, harga jual per kemasan besar beserta referensi harga eceran, status ketersediaan stok, deskripsi produk, tab spesifikasi teknis (kategori, SKU variasi, satuan penjualan, isi kemasan, serta berat pengiriman), ketentuan pengiriman, pilihan variasi kemasan lain, pengaturan jumlah pembelian, serta tombol Tambah ke Keranjang dan Beli Sekarang.
+
+
+
+
+
+
+
+
+4.1.25	Panel Keranjang Belanja
+Produk yang dipilih pelanggan ditampung sementara pada halaman Keranjang Belanja (Gambar 4.49) sebelum masuk ke tahap pembayaran. Pada halaman ini pembeli dapat melihat foto dan satuan kemasan barang, mengubah jumlah pembelian atau menghapus item, serta memeriksa ringkasan subtotal belanja.
+
+
+
+
+
+
+
+
+
+
+
+4.1.26	Pembayaran dan Pengiriman Pesanan (Checkout)
+Tahap penyelesaian belanja daring berlangsung pada halaman Pembayaran dan Pengiriman (Checkout) (Gambar 4.50). Pelanggan mengisi data penerima dan menentukan titik alamat pengiriman melalui peta interaktif, memilih layanan kurir ekspedisi atau opsi ambil langsung di toko, memeriksa rincian total berat serta ongkos kirim, lalu melakukan pembayaran melalui gerbang Midtrans Payment Gateway. Begitu pesanan dibuat, sistem langsung mengunci stok berdasarkan tanggal kedaluwarsa terdekat (FEFO) ke dalam tabel pesanan_batch_alokasi selama batas waktu pembayaran.
+coba nad lihat
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-11-15T14:35:13+07:00.
+
+The user's current state is as follows:
+Active Document: c:\xampp\htdocs\inventory_zencare\config\order_helper.php (LANGUAGE_UNSPECIFIED)
+Cursor is on line: 1
+Other open documents:
+- c:\xampp\htdocs\inventory_zencare\inventori\stok_opname.php (LANGUAGE_UNSPECIFIED)
+- c:\xampp\htdocs\inventory_zencare\config\config.php (LANGUAGE_UNSPECIFIED)
+- c:\xampp\htdocs\inventory_zencare\config\env_loader.php (LANGUAGE_UNSPECIFIED)
+- c:\xampp\htdocs\inventory_zencare\scratch\sitemap_vertical.html (LANGUAGE_UNSPECIFIED)
+- c:\xampp\htdocs\inventory_zencare\scratch\update_modul_1_2.php (LANGUAGE_UNSPECIFIED)
+</ADDITIONAL_METADATA>
