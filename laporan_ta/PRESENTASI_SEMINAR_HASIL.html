@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presentasi Seminar Hasil TA (Ringkas &amp; Fokus Demo) - ZenCare Medical</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..800;1,9..40,400..700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'DM Sans', sans-serif; }
+        .font-display { font-family: 'Merriweather', Georgia, serif; }
+        .slide-canvas {
+            aspect-ratio: 16 / 9;
+            background: radial-gradient(circle at 8% 12%, #f0f9ff 0%, #ffffff 42%, #f8fafc 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        @media print {
+            @page { size: A4 landscape; margin: 0; }
+            .no-print { display: none !important; }
+            body { background: #ffffff !important; padding: 0 !important; margin: 0 !important; }
+            .slide-wrapper { page-break-after: always; break-after: page; margin: 0 !important; box-shadow: none !important; border: none !important; }
+            .slide-canvas { width: 100vw; height: 100vh; }
+        }
+    </style>
+</head>
+<body class="bg-slate-200 min-h-screen py-6 px-4 text-slate-800">
+
+    <!-- Top Sticky Bar -->
+    <div class="no-print max-w-6xl mx-auto mb-6 bg-white/95 backdrop-blur border border-slate-300 rounded-xl shadow-sm p-4 flex flex-wrap items-center justify-between gap-3 sticky top-3 z-50">
+        <div class="flex items-center gap-3">
+            <a href="LAPORAN_TA_ZENCARE_MEDICAL_FULL.html" class="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-300 transition">
+                &larr; Laporan TA Lengkap
+            </a>
+            <div>
+                <h1 class="text-sm font-extrabold text-[#005088]">Presentasi Seminar Hasil TA (11 Slide Inti + 11 Lampiran)</h1>
+                <p class="text-[11px] text-slate-500">Ringkas, tanpa teori/profil berulang: Fokus Masalah, Tujuan-Manfaat-Batasan, RAD, Use Case 4 Aktor, ERD 20 Tabel, Demo Langsung, UAT 93,75%, &amp; Kesimpulan</p>
+            </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="../lain/PPT/Seminar Hasil TA Final.pptx" download="Seminar_Hasil_TA_Final_ZenCare_Medical.pptx"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-[#005088] hover:bg-[#0f2d5a] text-white text-xs font-bold rounded-lg shadow transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Download PPTX (Template Asli)
+            </a>
+            <button type="button" onclick="generateDynamicPptx(this)"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow transition cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Generate &amp; Download via Browser (.pptx)
+            </button>
+            <button type="button" onclick="window.print()"
+               class="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition cursor-pointer">
+                Cetak / PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Slides Container -->
+    <div id="slides-root" class="max-w-6xl mx-auto space-y-6"></div>
+
+    <script>
+    const IMG = {
+        logo: '../lain/PPT/Diagram_Seminar_Hasil/tpl_image2.png',
+        novelty: '../lain/PPT/Diagram_Seminar_Hasil/tpl_image9.png',
+        wfKeluarOld: '../lain/File PPT/Workflow/Workflow Barang Keluar (Berjalan).png',
+        wfKeluarNew: '../lain/File PPT/Workflow/Workflow Barang Keluar (Sistem Usulan).png',
+        wfMasukOld: '../lain/File PPT/Workflow/Workflow Barang Masuk (Berjalan).png',
+        wfMasukNew: '../lain/File PPT/Workflow/Workflow Barang Masuk & Logistik (Sistem Usulan).png',
+        smPelanggan: '../lain/PPT/Diagram_Seminar_Hasil/sitemap_3_5.png',
+        smKasir: '../lain/PPT/Diagram_Seminar_Hasil/sitemap_3_6.png',
+        smAdmin: '../lain/PPT/Diagram_Seminar_Hasil/sitemap_3_7.png',
+        smSuper: '../lain/PPT/Diagram_Seminar_Hasil/sitemap_3_8.png',
+        useCase: '../lain/PPT/Diagram_Seminar_Hasil/use_case.png',
+        actTerima: '../lain/PPT/Diagram_Seminar_Hasil/act_penerimaan.png',
+        actPos: '../lain/PPT/Diagram_Seminar_Hasil/act_pos.png',
+        actEcom: '../lain/PPT/Diagram_Seminar_Hasil/act_ecommerce.png',
+        actOpname: '../lain/PPT/Diagram_Seminar_Hasil/act_opname.png',
+        erd: '../lain/Gambar_3.18_Logical_Database_Model.png',
+        uiVerifOpname: '../lain/Katalog_UI_UX_ZenCare_Medical/04_Stok_Opname_Terpusat/Gambar_4_26_32_Stok_Opname_Verifikasi_Admin.png',
+        uiStruk: '../lain/Katalog_UI_UX_ZenCare_Medical/02_Kasir_dan_Transaksi/Gambar_4_4_26_Cetak_Struk_Kasir.png',
+        uiResi: '../lain/Katalog_UI_UX_ZenCare_Medical/02_Kasir_dan_Transaksi/Gambar_4_7_28_Cetak_Label_Pengiriman.png',
+        uiBa: '../lain/Katalog_UI_UX_ZenCare_Medical/04_Stok_Opname_Terpusat/Gambar_4_28_33_Cetak_Berita_Acara_Opname.png',
+        foto1: '../lain/PPT/Diagram_Seminar_Hasil/tpl_image29.png',
+        foto2: '../lain/PPT/Diagram_Seminar_Hasil/tpl_image28.jpeg',
+        foto3: '../lain/PPT/Diagram_Seminar_Hasil/tpl_image30.jpeg',
+        foto4: '../lain/PPT/Diagram_Seminar_Hasil/tpl_image31.jpeg',
+        foto5: '../lain/PPT/Diagram_Seminar_Hasil/tpl_image32.jpeg',
+    };
+
+    const TOC_ITEMS = [
+        ['01', 'Latar Belakang Masalah', 'Kendala stok terpisah, Multi-UOM, & ketiadaan FEFO/SN/label'],
+        ['02', 'Tujuan, Manfaat, & Batasan', 'Target capaian sistem, manfaat mitra, & ruang lingkup penelitian'],
+        ['03', 'Metodologi, Peran, & Logika Inti', 'Realisasi 4 fase RAD, Use Case 4 aktor, FEFO & anti-race condition'],
+        ['04', 'Arsitektur Basis Data (ERD)', 'Logical Database 20 tabel relasional terintegrasi (Fokus Utama)'],
+        ['05', 'Demo Sistem & Hasil Evaluasi', 'Demonstrasi langsung fitur kunci & pengujian UAT (93,75%)'],
+        ['06', 'Kesimpulan & Saran', 'Rangkuman capaian hasil & rekomendasi pengembangan mendatang'],
+    ];
+
+    const UAT_ROWS = [
+        ['1', 'Autentikasi Staf & Kontrol Hak Akses (RBAC)', '38 / 40', '95,00%', 'Sesuai'],
+        ['2', 'Master Produk, Multi-UOM, & Pemasok', '37 / 40', '92,50%', 'Sesuai'],
+        ['3', 'Terminal Kasir POS & Alokasi FEFO', '38 / 40', '95,00%', 'Sesuai'],
+        ['4', 'Toko Daring & Sinkronisasi Omnichannel', '37 / 40', '92,50%', 'Sesuai'],
+        ['5', 'Penerimaan Pasokan Barang & Label Barcode', '38 / 40', '95,00%', 'Sesuai'],
+        ['6', 'Mutasi Stok Manual & Kartu Stok', '37 / 40', '92,50%', 'Sesuai'],
+        ['7', 'Siklus Pengawasan Stok Opname Terpusat', '38 / 40', '95,00%', 'Sesuai'],
+        ['8', 'Laporan Manajerial & Dasbor Eksekutif', '37 / 40', '92,50%', 'Sesuai'],
+    ];
+
+    function slideChrome(num, title, bodyHtml, isHero = false, tag = 'Slide Inti') {
+        return `
+        <div class="slide-wrapper bg-white border border-slate-300 rounded-xl shadow-md overflow-hidden">
+            <div class="slide-canvas p-8 flex flex-col justify-between">
+                <div class="flex items-start justify-between shrink-0">
+                    <img src="${IMG.logo}" alt="ZenCare Medical" class="h-11 object-contain">
+                    <div class="text-right">
+                        <span class="text-xs font-extrabold tracking-widest text-[#005088]">SEMINAR HASIL TA</span>
+                        <span class="no-print block text-[10px] ${tag === 'Lampiran' ? 'text-amber-600 font-bold' : 'text-slate-400'}">${tag} &bull; ${num} / 22</span>
+                    </div>
+                </div>
+                ${isHero ? `<div class="flex-1 flex flex-col justify-center">${bodyHtml}</div>` : `
+                <div class="mt-2 mb-3 shrink-0">
+                    <h2 class="font-display text-2xl font-bold text-[#005088]">${title}</h2>
+                    <div class="h-0.5 w-full bg-slate-200 mt-1.5"><div class="h-0.5 w-48 bg-[#11CAA0]"></div></div>
+                </div>
+                <div class="flex-1 min-h-0 flex flex-col justify-center">${bodyHtml}</div>
+                `}
+                <div class="flex items-center justify-between text-[10px] text-slate-400 pt-2 shrink-0">
+                    <span>Marcell Chandra Kenchana (322310015) &bull; Sistem Informasi Inventori Omnichannel ZenCare Medical</span>
+                    <span class="font-bold text-[#005088]">Universitas Ma Chung</span>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    function renderSlides() {
+        const root = document.getElementById('slides-root');
+        const htmls = [];
+
+        // 1. Cover
+        htmls.push(slideChrome(1, '', `
+            <div class="text-center max-w-4xl mx-auto space-y-4">
+                <h1 class="font-display text-3xl font-bold text-[#005088] leading-snug">
+                    RANCANG BANGUN SISTEM INFORMASI INVENTORY OMNICHANNEL ALAT KESEHATAN DAN OBAT
+                </h1>
+                <p class="text-xl font-bold text-[#0f2d5a]">(STUDI KASUS ZENCARE MEDICAL)</p>
+                <div class="w-48 h-1 bg-[#11CAA0] mx-auto my-3"></div>
+                <p class="text-lg font-extrabold text-slate-800">Marcell Chandra Kenchana</p>
+                <p class="text-sm font-semibold text-slate-600">NIM: 322310015 &bull; Program Studi Sistem Informasi &bull; Universitas Ma Chung</p>
+                <div class="grid grid-cols-3 gap-4 pt-4 text-xs text-slate-600 bg-slate-50/90 border border-slate-200 rounded-lg p-3">
+                    <div><span class="block text-slate-400">Ketua Penguji</span><strong class="text-[#005088]">Meme Susilowati, S.Kom., MMSI.</strong></div>
+                    <div><span class="block text-slate-400">Dosen Penguji I</span><strong class="text-[#005088]">Rudy Setiawan, S.Si., MT.</strong></div>
+                    <div><span class="block text-slate-400">Dosen Penguji II</span><strong class="text-[#005088]">Dr. Soetam Rizky Wicaksono, S.Kom., MM.</strong></div>
+                </div>
+            </div>
+        `, true));
+
+        // 2. Daftar Isi (6 items ringkas)
+        htmls.push(slideChrome(2, 'Daftar Isi', `
+            <div class="grid grid-cols-2 gap-4">
+                ${TOC_ITEMS.map(([n, t, d]) => `
+                    <div class="bg-[#F1F5F9] border border-slate-200 rounded-xl p-4 flex items-center gap-3.5">
+                        <div class="w-12 h-12 rounded-lg bg-[#005088] text-white font-display font-bold text-xl flex items-center justify-center shrink-0">${n}</div>
+                        <div class="min-w-0">
+                            <h3 class="text-sm font-extrabold text-[#005088]">${t}</h3>
+                            <p class="text-xs text-slate-600 leading-snug mt-0.5">${d}</p>
+                        </div>
+                    </div>`).join('')}
+            </div>
+        `));
+
+        // 3. Latar Belakang
+        htmls.push(slideChrome(3, 'Latar Belakang Masalah', `
+            <div class="grid grid-cols-3 gap-4 mb-4">
+                <div class="bg-[#F1F5F9] border border-slate-200 rounded-xl p-4">
+                    <h3 class="font-bold text-sm text-[#005088] mb-2">1. Disparitas Stok &amp; Risiko Overselling</h3>
+                    <p class="text-xs text-slate-700 leading-relaxed">Aplikasi kasir pihak ketiga (<i>stand-alone</i>) belum terhubung dengan penjualan daring, sehingga staf harus mencocokkan stok manual setiap hari dan barang kosong tetap berisiko terpesan daring (<i>overselling</i>).</p>
+                </div>
+                <div class="bg-[#F1F5F9] border border-slate-200 rounded-xl p-4">
+                    <h3 class="font-bold text-sm text-[#005088] mb-2">2. Kompleksitas Multi-UOM Lintas Saluran</h3>
+                    <p class="text-xs text-slate-700 leading-relaxed">Toko daring melayani kemasan besar (<i>Box</i>) sedangkan gerai fisik melayani eceran (<i>Strip/Pcs</i>) dan grosir. Ketiadaan integrasi memaksa konversi manual yang rawan <i>human error</i> serta mengaburkan batas stok kritis.</p>
+                </div>
+                <div class="bg-[#F1F5F9] border border-slate-200 rounded-xl p-4">
+                    <h3 class="font-bold text-sm text-[#005088] mb-2">3. Ketiadaan FEFO, Garansi SN &amp; Label</h3>
+                    <p class="text-xs text-slate-700 leading-relaxed">Obat belum didata berdasarkan nomor <i>Batch</i> dan kedaluwarsa (FEFO), alat kesehatan belum memiliki rekam <i>Serial Number</i> untuk klaim garansi, serta kemasan pecah eceran belum berlabel <i>barcode</i> fisik di rak.</p>
+                </div>
+            </div>
+            <div class="bg-rose-50 border border-rose-200 rounded-xl p-4">
+                <h4 class="text-xs font-extrabold uppercase tracking-wider text-[#9F1239] mb-1">Masalah Utama</h4>
+                <p class="text-xs text-slate-800 leading-relaxed">Terpisahnya sistem kasir fisik dan penjualan daring menimbulkan selisih stok serta pesanan ganda (<i>overselling</i>), kerumitan konversi multi-satuan secara manual, serta ketiadaan kendali FEFO, pelacakan nomor seri garansi alat kesehatan, dan validasi label <i>barcode</i> fisik di gudang.</p>
+            </div>
+        `));
+
+        // 4. Tujuan, Manfaat, & Batasan Sistem (1 Slide Padat)
+        htmls.push(slideChrome(4, 'Tujuan, Manfaat, dan Batasan Sistem', `
+            <div class="grid grid-cols-12 gap-4 h-full">
+                <div class="col-span-6 bg-white border-2 border-[#005088] rounded-xl overflow-hidden flex flex-col">
+                    <div class="bg-[#005088] text-white font-bold text-xs px-4 py-2">TUJUAN PENELITIAN (BAB I 1.5)</div>
+                    <div class="p-4 text-xs space-y-2.5 text-slate-700 leading-relaxed">
+                        <p><strong class="text-[#005088]">1. Pusat Data Omnichannel Tunggal:</strong> Menyinkronkan ketersediaan stok kasir fisik (POS) dan portal toko daring (e-commerce) mandiri dalam satu basis data secara waktu nyata (<i>real-time</i>).</p>
+                        <p><strong class="text-[#005088]">2. Otomatisasi Multi-UOM:</strong> Mengotomatisasi konversi pemotongan persediaan lintas satuan kemasan (Box &harr; Strip/Pcs) agar saldo fisik dan stok pengaman selalu akurat.</p>
+                        <p><strong class="text-[#005088]">3. Kepatuhan FEFO &amp; Garansi SN:</strong> Memfasilitasi pengendalian masa kedaluwarsa obat melalui label <i>barcode</i> fisik &amp; deteksi anomali kasir, serta validasi nomor seri alat kesehatan.</p>
+                    </div>
+                </div>
+                <div class="col-span-6 flex flex-col gap-3">
+                    <div class="bg-[#F1F5F9] border border-slate-200 rounded-xl p-3.5 text-xs space-y-1.5">
+                        <h3 class="font-extrabold text-[#005088]">MANFAAT PENELITIAN (BAB I 1.6):</h3>
+                        <p>&bull; <strong class="text-[#005088]">Bagi ZenCare Medical:</strong> Meniadakan <i>overselling</i>, menekan kerugian kedaluwarsa, mencegah deviasi kasir, &amp; mempercepat operasional.</p>
+                        <p>&bull; <strong class="text-[#005088]">Bagi Penulis &amp; Universitas Ma Chung:</strong> Penerapan metode RAD pada logistik medis nyata &amp; rujukan sistem inventori <i>omnichannel</i> UMKM.</p>
+                    </div>
+                    <div class="bg-white border border-slate-300 rounded-xl p-3.5 text-[11.5px] space-y-1 flex-1">
+                        <h3 class="font-extrabold text-[#0f2d5a]">BATASAN RUANG LINGKUP (BAB I 1.3):</h3>
+                        <p>&bull; Terpusat pada gerai <b>ZenCare Medical Muharto</b>; tanpa pembukuan finansial (laba rugi/neraca/piutang) maupun poin pelanggan.</p>
+                        <p>&bull; Kendali FEFO (Batch) &amp; Serial Number disertai cetak label fisik &amp; Stok Opname; tanpa <i>repacking</i>, <i>pre-order</i>, atau <i>refund</i> otomatis.</p>
+                        <p>&bull; Pembayaran <b>Midtrans</b> &amp; estimasi ongkir <b>RajaOngkir</b> berjalan pada mode <i>sandbox</i>.</p>
+                    </div>
+                </div>
+            </div>
+        `));
+
+        // 5. Metodologi RAD (Realisasi) & Teknologi
+        htmls.push(slideChrome(5, 'Metodologi Penelitian (RAD) & Teknologi Sistem', `
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div class="bg-[#F1F5F9] border-l-4 border-[#005088] rounded-r-xl p-3 text-xs">
+                    <strong class="text-[#005088] block mb-1">01. Requirements Planning</strong>
+                    Observasi gerai ZenCare Medical Muharto, wawancara operasional, &amp; identifikasi kendala <i>overselling</i>, konversi Multi-UOM, FEFO, dan garansi SN.
+                </div>
+                <div class="bg-[#F1F5F9] border-l-4 border-[#005088] rounded-r-xl p-3 text-xs">
+                    <strong class="text-[#005088] block mb-1">02. User Design</strong>
+                    Pemodelan Workflow, Sitemap 4 peran, Use Case Diagram (4 aktor), Activity Diagram, skema Logical Database 20 tabel, &amp; perancangan UI.
+                </div>
+                <div class="bg-[#F1F5F9] border-l-4 border-[#005088] rounded-r-xl p-3 text-xs">
+                    <strong class="text-[#005088] block mb-1">03. Construction</strong>
+                    Pembangunan sistem web menggunakan PHP &amp; MySQL InnoDB (POS, E-Commerce, Logistik, Stok Opname) dengan row locking <code>SELECT ... FOR UPDATE</code>.
+                </div>
+                <div class="bg-[#F1F5F9] border-l-4 border-[#005088] rounded-r-xl p-3 text-xs">
+                    <strong class="text-[#005088] block mb-1">04. Implementation &amp; UAT</strong>
+                    Pengujian alur stok lintas saluran, barcode scanner, cetak termal/A4, serta User Acceptance Testing 4 peran pengguna (<b>Skor: 93,75% Sesuai</b>).
+                </div>
+            </div>
+            <div class="bg-white border-2 border-[#005088] rounded-xl p-3 text-xs">
+                <strong class="text-[#005088] block mb-1">Teknologi &amp; Infrastruktur Pembangun Sistem:</strong>
+                <b>Backend &amp; DB:</b> PHP 8 &amp; MySQL InnoDB (<code>SELECT ... FOR UPDATE</code>) &nbsp;|&nbsp;
+                <b>Integrasi:</b> Midtrans Snap, RajaOngkir, &amp; Leaflet Maps &nbsp;|&nbsp;
+                <b>Hardware &amp; Cetak:</b> Barcode Scanner &amp; CSS Thermal Print (<code>50x30mm</code>, <code>58/80mm</code>, <code>100x150mm</code>, A4)
+            </div>
+        `));
+
+        // 6. Use Case 4 Aktor & Logika Inti
+        htmls.push(slideChrome(6, 'Peran Pengguna (Use Case 4 Aktor) & Logika Inti', `
+            <div class="grid grid-cols-12 gap-4 items-stretch">
+                <div class="col-span-6 bg-white border border-slate-200 rounded-xl p-2 flex justify-center">
+                    <img src="${IMG.useCase}" class="max-h-96 object-contain">
+                </div>
+                <div class="col-span-6 flex flex-col justify-between gap-2.5">
+                    <div class="bg-[#F1F5F9] border border-slate-200 rounded-xl p-3 space-y-1.5 text-[11px]">
+                        <div><strong class="text-[#005088]">Pelanggan (E-Commerce):</strong> Katalog stok aktual kemasan utuh, checkout (kuncian 2 jam + Midtrans), riwayat &amp; pengajuan batal.</div>
+                        <div><strong class="text-[#005088]">Kasir (POS &amp; Opname):</strong> Penjualan luring scanner barcode, Dual-UOM (Bongkar Box), FEFO, struk termal, &amp; Blind Count saat Opname.</div>
+                        <div><strong class="text-[#005088]">Admin (Logistik &amp; Pesanan):</strong> Penerimaan (Batch/SN + stiker), kelola pesanan &amp; resi/batal, konversi UOM, mutasi, &amp; verifikasi selisih Opname.</div>
+                        <div><strong class="text-[#005088]">Superadmin (Pemilik):</strong> Master Data &amp; harga, akun RBAC, kendali sesi Freeze Lock Stok Opname, dasbor, &amp; 6 laporan A4.</div>
+                    </div>
+                    <div class="bg-white border-2 border-[#005088] rounded-xl p-3 space-y-1 text-[11px]">
+                        <strong class="block text-[#005088]">3 Logika Inti yang Diterapkan:</strong>
+                        <p><b>1. FEFO &amp; Anomali:</b> <code>ORDER BY tgl_exp ASC FOR UPDATE</code>; blokir kedaluwarsa &amp; rekam deviasi kasir ke <code>log_anomali_fefo</code>.</p>
+                        <p><b>2. Multi-UOM Atomik:</b> Daring fokus Box utuh (<code>NOT LIKE '%.%'</code>); kasir POS melayani eceran &amp; grosir dari 1 saldo stok.</p>
+                        <p><b>3. Anti-Race Condition:</b> Keranjang non-blocking + <code>SELECT ... FOR UPDATE</code> saat Bayar Sekarang menolak checkout saat stok habis di POS.</p>
+                    </div>
+                </div>
+            </div>
+        `));
+
+        // 7. ERD 20 Tabel (Fokus Utama)
+        htmls.push(slideChrome(7, 'Arsitektur Basis Data: Logical Database (20 Tabel)', `
+            <div class="grid grid-cols-12 gap-4 items-center">
+                <div class="col-span-4 bg-[#F1F5F9] border border-slate-200 rounded-xl p-3 space-y-2 text-[11px]">
+                    <div><strong class="text-[#005088]">1. Master &amp; Multi-UOM:</strong> produk_induk, produk_variasi, stok_toko, supplier, users, pengaturan_web.</div>
+                    <div><strong class="text-[#005088]">2. Logistik Masuk &amp; Pelacakan:</strong> penerimaan_stok, penerimaan_detail, stok_batch, unit_serial, histori_konversi.</div>
+                    <div><strong class="text-[#005088]">3. Omnichannel &amp; FEFO:</strong> penjualan, detail_penjualan, pesanan_batch_alokasi, log_anomali_fefo, kartu_stok.</div>
+                    <div><strong class="text-[#005088]">4. Siklus Stok Opname:</strong> sesi_opname, detail_opname_batch, detail_opname_sn, riwayat_hitung_opname.</div>
+                </div>
+                <div class="col-span-8 bg-white border border-slate-200 rounded-xl p-2 flex justify-center">
+                    <img src="${IMG.erd}" class="max-h-96 object-contain">
+                </div>
+            </div>
+        `));
+
+        // 8. DEMO SISTEM
+        htmls.push(slideChrome(8, '', `
+            <div class="max-w-4xl mx-auto w-full">
+                <div class="text-center mb-4">
+                    <h1 class="font-display text-4xl font-bold text-[#005088]">DEMO SISTEM</h1>
+                    <div class="w-32 h-1 bg-[#11CAA0] mx-auto my-2"></div>
+                    <p class="text-xs font-bold text-slate-500">Demonstrasi Langsung Integrasi Omnichannel, Logika FEFO, &amp; Perangkat Barcode</p>
+                </div>
+                <div class="space-y-2 text-xs">
+                    <div class="bg-white border border-slate-200 rounded-lg p-2.5"><strong class="text-[#005088]">1. Penerimaan &amp; Label Fisik:</strong> Input pasokan Batch/Exp/SN + Harga Beli, cetak Stiker Barcode Batch (50x30mm / A4) untuk ditempel ke barang contoh.</div>
+                    <div class="bg-white border border-slate-200 rounded-lg p-2.5"><strong class="text-[#005088]">2. Kasir POS, Scanner &amp; FEFO:</strong> Pindai barcode dengan scanner, uji peringatan Anomali FEFO, dan cetak Struk Termal POS (80/58mm).</div>
+                    <div class="bg-white border border-slate-200 rounded-lg p-2.5"><strong class="text-[#005088]">3. Rebutan Stok (Race Condition):</strong> Tambah keranjang E-Commerce &rarr; beli habis di POS &rarr; klik Bayar Sekarang &rarr; ditolak sebelum Midtrans.</div>
+                    <div class="bg-white border border-slate-200 rounded-lg p-2.5"><strong class="text-[#005088]">4. Pembatalan &amp; Label Kurir:</strong> Uji status Dibatalkan melepaskan kuncian stok kembali aktif, lalu cetak Label Pengiriman (100x150mm / A6).</div>
+                    <div class="bg-white border border-slate-200 rounded-lg p-2.5"><strong class="text-[#005088]">5. Stok Opname &amp; Kode FEFO:</strong> Tunjukkan Freeze Lock, Blind Count, Total Kerugian Harga Beli, serta kode FEFO di <code>pos/pos.php</code> (161) &amp; <code>api/checkout.php</code> (181).</div>
+                </div>
+            </div>
+        `, true));
+
+        // 9. Hasil UAT 93,75%
+        htmls.push(slideChrome(9, 'Hasil Evaluasi & Pengujian Sistem (UAT)', `
+            <div class="grid grid-cols-12 gap-4 items-stretch">
+                <div class="col-span-8">
+                    <table class="w-full text-[11px] border border-slate-300">
+                        <thead class="bg-[#005088] text-white">
+                            <tr>
+                                <th class="p-1.5 border border-slate-300">No</th>
+                                <th class="p-1.5 border border-slate-300 text-left">Bagian Modul Pengujian (12 Nov 2026)</th>
+                                <th class="p-1.5 border border-slate-300">Skor</th>
+                                <th class="p-1.5 border border-slate-300">Capaian</th>
+                                <th class="p-1.5 border border-slate-300">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${UAT_ROWS.map((r, i) => `
+                                <tr class="${i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}">
+                                    <td class="p-1.5 border border-slate-200 text-center font-bold">${r[0]}</td>
+                                    <td class="p-1.5 border border-slate-200">${r[1]}</td>
+                                    <td class="p-1.5 border border-slate-200 text-center font-mono">${r[2]}</td>
+                                    <td class="p-1.5 border border-slate-200 text-center font-bold text-emerald-700">${r[3]}</td>
+                                    <td class="p-1.5 border border-slate-200 text-center font-semibold text-emerald-700">${r[4]}</td>
+                                </tr>`).join('')}
+                            <tr class="bg-emerald-50 font-extrabold text-emerald-900">
+                                <td colspan="2" class="p-1.5 border border-slate-300 text-right">TOTAL (4 Peran, 16 Indikator)</td>
+                                <td class="p-1.5 border border-slate-300 text-center">300 / 320</td>
+                                <td class="p-1.5 border border-slate-300 text-center">93,75%</td>
+                                <td class="p-1.5 border border-slate-300 text-center">SESUAI</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-span-4 flex flex-col gap-3">
+                    <div class="bg-emerald-50 border-2 border-emerald-700 rounded-xl p-3 text-center">
+                        <span class="text-[10px] font-extrabold text-emerald-800 uppercase">Skor Kelayakan UAT</span>
+                        <div class="font-display text-4xl font-black text-emerald-800 my-1">93,75%</div>
+                        <span class="text-[11px] font-bold text-slate-700">Status: Sesuai Kebutuhan (300/320)</span>
+                    </div>
+                    <div class="bg-[#F1F5F9] border border-slate-200 rounded-xl p-3 text-[11px] space-y-1.5 flex-1">
+                        <strong class="block text-[#005088]">Ringkasan Evaluasi &amp; Temuan:</strong>
+                        <p>&bull; Cakupan: Pemilik, Admin, Kasir, &amp; Pelanggan Daring.</p>
+                        <p>&bull; Scanner &amp; FEFO memangkas risiko barang kedaluwarsa.</p>
+                        <p>&bull; Freeze Lock &amp; Blind Count menjaga ketertiban stok opname.</p>
+                        <p>&bull; E-Commerce sinkron real-time &amp; menolak checkout saat stok habis.</p>
+                    </div>
+                </div>
+            </div>
+        `));
+
+        // 10. Kesimpulan & Saran
+        htmls.push(slideChrome(10, 'Kesimpulan dan Saran', `
+            <div class="grid grid-cols-2 gap-4 h-full">
+                <div class="bg-white border-2 border-[#005088] rounded-xl overflow-hidden flex flex-col">
+                    <div class="bg-[#005088] text-white font-bold text-xs px-4 py-2">KESIMPULAN HASIL PENELITIAN (BAB V)</div>
+                    <div class="p-4 text-xs space-y-2.5 text-slate-700 leading-relaxed">
+                        <p><strong class="text-[#005088]">1. Sinkronisasi Omnichannel Real-Time:</strong> Berhasil menyinkronkan POS fisik dan e-commerce mandiri secara waktu nyata, menghilangkan selisih data dan mencegah <i>overselling</i>.</p>
+                        <p><strong class="text-[#005088]">2. Otomatisasi Multi-UOM, FEFO &amp; SN:</strong> Konversi grosir ke eceran berjalan atomik, sedangkan kepatuhan FEFO dan pelacakan <i>Serial Number</i> ditegakkan lewat pemindai barcode dan label fisik.</p>
+                        <p><strong class="text-[#005088]">3. Validasi Pengguna:</strong> Siklus Stok Opname berbasis Freeze Lock, Blind Count, dan kerugian Harga Beli teruji tertib dengan skor UAT <b>93,75% (Sesuai)</b>.</p>
+                    </div>
+                </div>
+                <div class="bg-[#F1F5F9] border border-slate-300 rounded-xl overflow-hidden flex flex-col">
+                    <div class="bg-[#0f2d5a] text-white font-bold text-xs px-4 py-2">SARAN PENGEMBANGAN MENDATANG</div>
+                    <div class="p-4 text-xs space-y-2.5 text-slate-700 leading-relaxed">
+                        <p><strong class="text-[#005088]">1. Transisi ke Live Production:</strong> Meningkatkan integrasi pembayaran Midtrans dan API kurir RajaOngkir dari mode <i>sandbox</i> ke operasional penuh beserta pelacakan resi otomatis.</p>
+                        <p><strong class="text-[#005088]">2. Notifikasi Pesan Instan Otomatis:</strong> Menambahkan peringatan proaktif ke staf ketika persediaan menyentuh batas minimum (<i>reorder point</i>) atau mendekati tanggal kedaluwarsa.</p>
+                        <p><strong class="text-[#005088]">3. Aplikasi Mobile Opname:</strong> Mengembangkan antarmuka bergerak nirkabel untuk mempercepat pencacahan fisik di rak gudang.</p>
+                    </div>
+                </div>
+            </div>
+        `));
+
+        // 11. Terima Kasih
+        htmls.push(slideChrome(11, '', `
+            <div class="text-center space-y-3">
+                <h1 class="font-display text-6xl font-bold text-[#005088]">Terima Kasih</h1>
+                <p class="text-lg font-bold text-slate-500">Sesi Tanya Jawab &amp; Diskusi</p>
+                <div class="w-24 h-1 bg-[#11CAA0] mx-auto my-2"></div>
+                <p class="text-lg font-extrabold text-[#005088]">Marcell Chandra Kenchana - 322310015</p>
+            </div>
+        `, true));
+
+        // Divider Banner for Lampiran (HTML visual cue only)
+        htmls.push(`<div class="no-print py-3 px-4 bg-amber-50 border border-amber-300 rounded-xl text-center text-xs font-bold text-amber-900">
+            BATAS PRESENTASI INTI (SLIDE 1&ndash;11) &mdash; DI BAWAH INI ADALAH SLIDE LAMPIRAN (SLIDE 12&ndash;22, DIBUKA HANYA JIKA DITANYA PENGUJI)
+        </div>`);
+
+        // 12-13 Workflows
+        htmls.push(slideChrome(12, 'Lampiran 1: Workflow Barang Keluar (Berjalan vs Usulan)', `
+            <div class="grid grid-cols-12 gap-4 h-full items-stretch">
+                <div class="col-span-5 bg-white border border-slate-200 rounded-xl p-3 flex flex-col">
+                    <span class="text-xs font-bold text-slate-700 text-center mb-1">Workflow Barang Keluar (Berjalan)</span>
+                    <img src="${IMG.wfKeluarOld}" class="flex-1 max-h-60 object-contain mx-auto">
+                    <p class="text-[11px] text-slate-600 mt-2"><b>Sistem Berjalan:</b> POS dan e-commerce berdiri sendiri; pemotongan manual memicu <i>overselling</i>.</p>
+                </div>
+                <div class="col-span-7 bg-white border border-slate-200 rounded-xl p-3 flex flex-col">
+                    <span class="text-xs font-bold text-[#005088] text-center mb-1">Workflow Barang Keluar (Sistem Usulan)</span>
+                    <img src="${IMG.wfKeluarNew}" class="flex-1 max-h-60 object-contain mx-auto">
+                    <p class="text-[11px] text-slate-700 mt-2"><b>Sistem Usulan (Omnichannel Terpusat):</b> Basis data tunggal memproses transaksi secara <i>real-time</i>, mengonversi Multi-UOM otomatis, dan mengunci stok seketika.</p>
+                </div>
+            </div>
+        `, false, 'Lampiran'));
+
+        htmls.push(slideChrome(13, 'Lampiran 2: Workflow Barang Masuk (Berjalan vs Usulan)', `
+            <div class="grid grid-cols-2 gap-4 h-full">
+                <div class="bg-white border border-slate-200 rounded-xl p-3 flex flex-col">
+                    <span class="text-xs font-bold text-slate-700 text-center mb-1">Workflow Barang Masuk (Berjalan)</span>
+                    <img src="${IMG.wfMasukOld}" class="flex-1 max-h-60 object-contain mx-auto">
+                    <p class="text-[11px] text-slate-600 mt-2"><b>Sistem Berjalan:</b> Pencatatan faktur masuk tanpa validasi atribut medis membuat tanggal kedaluwarsa dan garansi sulit terlacak.</p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-3 flex flex-col">
+                    <span class="text-xs font-bold text-[#005088] text-center mb-1">Workflow Barang Masuk &amp; Logistik (Sistem Usulan)</span>
+                    <img src="${IMG.wfMasukNew}" class="flex-1 max-h-60 object-contain mx-auto">
+                    <p class="text-[11px] text-slate-700 mt-2"><b>Sistem Usulan (Validasi Gatekeeper):</b> Admin wajib menginput Nomor Batch, Tanggal Kedaluwarsa / Serial Number, dan Harga Beli sebelum stok diperbarui.</p>
+                </div>
+            </div>
+        `, false, 'Lampiran'));
+
+        // 14-15 Sitemaps
+        htmls.push(slideChrome(14, 'Lampiran 3: Sitemap (Pelanggan & Kasir POS)', `
+            <div class="grid grid-cols-2 gap-4 h-full">
+                <div class="bg-white border border-slate-200 rounded-xl p-3 flex flex-col">
+                    <span class="text-xs font-bold text-[#005088] mb-1">Sitemap Pelanggan (Gambar 3.5)</span>
+                    <img src="${IMG.smPelanggan}" class="flex-1 max-h-64 object-contain mx-auto">
+                    <p class="text-[11px] text-slate-600 mt-2">Katalog kemasan utuh, visibilitas stok waktu nyata, keranjang belanja, checkout Midtrans, &amp; pembatalan pesanan.</p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-3 flex flex-col">
+                    <span class="text-xs font-bold text-[#005088] mb-1">Sitemap Kasir POS &amp; Opname (Gambar 3.6)</span>
+                    <img src="${IMG.smKasir}" class="flex-1 max-h-64 object-contain mx-auto">
+                    <p class="text-[11px] text-slate-600 mt-2">Terminal Kasir POS (scan <i>barcode</i>, Dual-UOM, FEFO/SN, anomali) &amp; Input Fisik Blind Count saat Sesi Opname.</p>
+                </div>
+            </div>
+        `, false, 'Lampiran'));
+
+        htmls.push(slideChrome(15, 'Lampiran 4: Sitemap (Admin Toko & Superadmin)', `
+            <div class="grid grid-cols-2 gap-4 h-full">
+                <div class="bg-white border border-slate-200 rounded-xl p-3 flex flex-col">
+                    <span class="text-xs font-bold text-[#005088] mb-1">Sitemap Admin Toko (Gambar 3.7)</span>
+                    <img src="${IMG.smAdmin}" class="flex-1 max-h-64 object-contain mx-auto">
+                    <p class="text-[11px] text-slate-600 mt-2">Penerimaan barang (Batch/SN + stiker), pesanan omnichannel + resi &amp; batal, konversi UOM, kartu stok, &amp; verifikasi Opname.</p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-3 flex flex-col">
+                    <span class="text-xs font-bold text-[#005088] mb-1">Sitemap Superadmin (Gambar 3.8)</span>
+                    <img src="${IMG.smSuper}" class="flex-1 max-h-64 object-contain mx-auto">
+                    <p class="text-[11px] text-slate-600 mt-2">Master Harga &amp; Multi-UOM, akun RBAC, konfigurasi API &amp; web, Freeze Lock Opname, &amp; 6 laporan resmi A4.</p>
+                </div>
+            </div>
+        `, false, 'Lampiran'));
+
+        // 16-19 Activities
+        const actCard = (num, title, img, pts, tables) => slideChrome(num, title, `
+            <div class="grid grid-cols-12 gap-4 items-stretch">
+                <div class="col-span-6 bg-white border border-slate-200 rounded-xl p-2 flex justify-center">
+                    <img src="${img}" class="max-h-96 object-contain">
+                </div>
+                <div class="col-span-6 flex flex-col justify-between gap-3">
+                    <div class="bg-[#F1F5F9] border border-slate-200 rounded-xl p-4 space-y-2 text-xs flex-1">
+                        ${pts.map(p => `<p><strong class="text-[#005088]">${p[0]}</strong> ${p[1]}</p>`).join('')}
+                    </div>
+                    <div class="bg-white border-2 border-[#005088] rounded-xl p-3 text-xs">
+                        <span class="block font-extrabold text-[#005088] mb-1">Tabel Basis Data Aktual Terkait:</span>
+                        <span class="font-bold italic text-[#0f2d5a]">${tables.join(' &bull; ')}</span>
+                    </div>
+                </div>
+            </div>
+        `, false, 'Lampiran');
+
+        htmls.push(actCard(16, 'Lampiran 5: Activity Penerimaan Barang & Validasi Logistik', IMG.actTerima, [
+            ['Gatekeeper Logistik:', 'Admin menginput kuantitas terima/rusak, Harga Beli perolehan, nomor Batch, Tanggal Kedaluwarsa, serta Serial Number.'],
+            ['Penolakan Data Tidak Lengkap:', 'Sistem menolak simpan jika atribut medis wajib atau nomor seri belum lengkap.'],
+            ['Label Fisik & Buku Besar:', 'Memperbarui stok_toko, stok_batch/unit_serial, mencatat kartu_stok, serta mencetak Nota A4 dan Stiker Barcode (50x30mm / A4).']
+        ], ['penerimaan_stok', 'penerimaan_detail', 'stok_batch', 'unit_serial', 'stok_toko', 'kartu_stok']));
+
+        htmls.push(actCard(17, 'Lampiran 6: Activity Barang Keluar Kasir POS & FEFO', IMG.actPos, [
+            ['Transaksi Cepat & Dual-UOM:', 'Kasir memindai barcode atau memilih satuan kecil/besar; Bongkar Box otomatis memecah grosir ke eceran.'],
+            ['Alokasi FEFO & Blokir Kedaluwarsa:', 'Query ORDER BY tgl_exp ASC FOR UPDATE di pos/pos.php (baris 161) dan blokir item kedaluwarsa.'],
+            ['Pengawasan Anomali Kasir:', 'Pengambilan batch berbeda memicu alasan wajib ke log_anomali_fefo lalu menerbitkan Struk Termal (58/80mm).']
+        ], ['penjualan', 'detail_penjualan', 'pesanan_batch_alokasi', 'stok_batch', 'log_anomali_fefo', 'kartu_stok']));
+
+        htmls.push(actCard(18, 'Lampiran 7: Activity E-Commerce & Anti-Race Condition', IMG.actEcom, [
+            ['Keranjang Real-Time & Checkout:', 'Keranjang belum memotong DB; cek_stok_keranjang.php otomatis menyesuaikan atau menghapus item jika stok habis.'],
+            ['Anti-Race Condition & Kuncian FEFO:', 'Saat klik Bayar Sekarang (api/checkout.php baris 181), SELECT ... FOR UPDATE mengunci baris sebelum Midtrans.'],
+            ['Pembatalan & Resi Pengiriman:', 'Status Dibatalkan melepas stok kuncian ke stok aktif; pesanan siap kirim dicetak label termal (100x150mm).']
+        ], ['penjualan', 'detail_penjualan', 'pesanan_batch_alokasi', 'stok_batch', 'stok_toko', 'unit_serial']));
+
+        htmls.push(actCard(19, 'Lampiran 8: Activity Siklus Stok Opname & Kartu Stok', IMG.actOpname, [
+            ['Tahap 1 — Freeze Lock:', 'Superadmin memulai sesi opname; server membekukan sementara POS, checkout daring, konversi UOM, dan penerimaan barang.'],
+            ['Tahap 2 — Blind Count 3 Kondisi:', 'Kasir menghitung fisik rak (Baik, Rusak, Kedaluwarsa) tanpa melihat angka stok buku sistem.'],
+            ['Tahap 3 & 4 — Harga Beli & Berita Acara:', 'Admin memverifikasi selisih, menghitung Total Kerugian memakai Harga Beli perolehan, & menerbitkan Berita Acara A4 Lanskap.']
+        ], ['sesi_opname', 'detail_opname_batch', 'detail_opname_sn', 'riwayat_hitung_opname', 'kartu_stok']));
+
+        // 20 Novelty & Output Cetakan
+        htmls.push(slideChrome(20, 'Lampiran 9: Pembaruan (Novelty) & Output Cetakan Sistem', `
+            <div class="grid grid-cols-12 gap-4 items-stretch">
+                <div class="col-span-7 bg-white border border-slate-200 rounded-xl p-3 flex flex-col justify-between">
+                    <span class="text-xs font-extrabold text-[#005088] mb-1">Pembaruan terhadap Studi &amp; Sistem Sebelumnya (Novelty):</span>
+                    <img src="${IMG.novelty}" class="max-h-56 w-full object-contain">
+                    <p class="text-[11px] text-slate-700 mt-2 bg-slate-50 border border-slate-200 rounded p-2">
+                        Ditambah siklus Stok Opname (<i>Freeze Lock</i>, <i>Blind Count</i>, Harga Beli), pemindai <i>barcode</i>, &amp; proteksi <code>SELECT ... FOR UPDATE</code>.
+                    </p>
+                </div>
+                <div class="col-span-5 grid grid-cols-2 gap-2.5">
+                    ${[['Struk Kasir (58/80mm)', IMG.uiStruk], ['Label Resi (100x150mm)', IMG.uiResi], ['Verifikasi Opname', IMG.uiVerifOpname], ['Berita Acara A4', IMG.uiBa]].map(([lbl, im]) => `
+                        <div class="bg-white border border-slate-200 rounded-lg p-2 text-center flex flex-col">
+                            <img src="${im}" class="h-28 w-full object-contain bg-slate-50 rounded">
+                            <span class="text-[10.5px] font-bold text-[#005088] mt-1">${lbl}</span>
+                        </div>`).join('')}
+                </div>
+            </div>
+        `, false, 'Lampiran'));
+
+        // 21-22 Foto Gerai & Produk
+        htmls.push(slideChrome(21, 'Lampiran 10: Dokumentasi Gerai ZenCare Medical', `
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white border border-slate-200 rounded-xl p-3 text-center">
+                    <img src="${IMG.foto1}" class="h-64 mx-auto object-contain">
+                    <span class="block text-xs font-bold text-slate-700 mt-2">Tampak Depan ZenCare Medical</span>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-3 text-center">
+                    <img src="${IMG.foto2}" class="h-64 mx-auto object-contain">
+                    <span class="block text-xs font-bold text-slate-700 mt-2">Area Dalam Toko &amp; Etalase</span>
+                </div>
+            </div>
+        `, false, 'Lampiran'));
+
+        htmls.push(slideChrome(22, 'Lampiran 11: Dokumentasi Produk & Rak Gerai', `
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-white border border-slate-200 rounded-xl p-3 text-center">
+                    <img src="${IMG.foto3}" class="h-64 mx-auto object-contain">
+                    <span class="block text-xs font-bold text-slate-700 mt-2">Jenis-Jenis Produk</span>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-3 text-center">
+                    <img src="${IMG.foto4}" class="h-64 mx-auto object-contain">
+                    <span class="block text-xs font-bold text-slate-700 mt-2">Rak Produk</span>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-3 text-center">
+                    <img src="${IMG.foto5}" class="h-64 mx-auto object-contain">
+                    <span class="block text-xs font-bold text-slate-700 mt-2">Produk Datang</span>
+                </div>
+            </div>
+        `, false, 'Lampiran'));
+
+        root.innerHTML = htmls.join('');
+    }
+
+    async function loadAsDataUrl(url) {
+        try {
+            const resp = await fetch(url);
+            const blob = await resp.blob();
+            return await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+            });
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async function generateDynamicPptx(btn) {
+        if (typeof PptxGenJS === 'undefined') {
+            alert('Library PptxGenJS gagal dimuat. Gunakan tombol Download PPTX (Template Asli).');
+            return;
+        }
+        const origText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'Membuat .pptx...';
+        try {
+            const pptx = new PptxGenJS();
+            pptx.layout = 'LAYOUT_WIDE';
+            pptx.author = 'Marcell Chandra Kenchana';
+            pptx.title = 'Seminar Hasil TA Final - ZenCare Medical';
+
+            const NAVY = '005088', TEAL = '11CAA0', SLATE = '334155', LIGHT = 'F1F5F9', BORDER = 'CFD7E7';
+            const logoData = await loadAsDataUrl(IMG.logo);
+
+            function addChrome(titleText, isHero = false) {
+                const s = pptx.addSlide();
+                s.background = { color: 'F8FAFC' };
+                if (logoData) s.addImage({ data: logoData, x: 0.35, y: 0.25, w: 3.1, h: 0.64 });
+                s.addText('SEMINAR HASIL TA', { x: 9.8, y: 0.35, w: 3.1, h: 0.35, align: 'right', fontSize: 13, bold: true, color: NAVY });
+                s.addText('Marcell Chandra Kenchana (322310015) • Universitas Ma Chung', { x: 0.4, y: 7.12, w: 12.5, h: 0.25, fontSize: 9, color: '64748B' });
+                if (!isHero && titleText) {
+                    s.addText(titleText, { x: 0.65, y: 1.15, w: 12.0, h: 0.5, fontFace: 'Georgia', fontSize: 22, bold: true, color: NAVY });
+                    s.addShape(pptx.ShapeType.rect, { x: 0.65, y: 1.68, w: 12.0, h: 0.03, fill: { color: 'CBD5E1' } });
+                    s.addShape(pptx.ShapeType.rect, { x: 0.65, y: 1.68, w: 2.2, h: 0.04, fill: { color: TEAL } });
+                }
+                return s;
+            }
+
+            async function addImgFit(s, url, x, y, w, h) {
+                const data = await loadAsDataUrl(url);
+                if (!data) return;
+                s.addImage({ data, x, y, w, h, sizing: { type: 'contain', w, h } });
+            }
+
+            // 1. Cover
+            let s = addChrome('', true);
+            s.addText('RANCANG BANGUN SISTEM INFORMASI INVENTORY OMNICHANNEL ALAT KESEHATAN DAN OBAT\n(STUDI KASUS ZENCARE MEDICAL)',
+                { x: 1.1, y: 1.6, w: 11.1, h: 1.6, align: 'center', fontFace: 'Georgia', fontSize: 22, bold: true, color: NAVY });
+            s.addShape(pptx.ShapeType.rect, { x: 5.5, y: 3.3, w: 2.3, h: 0.06, fill: { color: TEAL } });
+            s.addText('Marcell Chandra Kenchana — NIM: 322310015\nProgram Studi Sistem Informasi • Universitas Ma Chung',
+                { x: 1.5, y: 3.6, w: 10.3, h: 0.9, align: 'center', fontSize: 15, bold: true, color: SLATE });
+            s.addText('Ketua Penguji: Meme Susilowati, S.Kom., MMSI.\nDosen Penguji I: Rudy Setiawan, S.Si., MT.  |  Dosen Penguji II: Dr. Soetam Rizky Wicaksono, S.Kom., MM.',
+                { x: 1.2, y: 5.0, w: 10.9, h: 1.1, align: 'center', fontSize: 12, color: NAVY, fill: { color: LIGHT }, line: { color: BORDER } });
+
+            // 2. Daftar Isi
+            s = addChrome('Daftar Isi');
+            TOC_ITEMS.forEach(([num, tt, td], idx) => {
+                const col = Math.floor(idx / 3), row = idx % 3;
+                const cx = 0.65 + col * 6.15, cy = 2.0 + row * 1.55;
+                s.addShape(pptx.ShapeType.roundRect, { x: cx, y: cy, w: 5.85, h: 1.32, fill: { color: LIGHT }, line: { color: BORDER } });
+                s.addShape(pptx.ShapeType.roundRect, { x: cx + 0.16, y: cy + 0.22, w: 0.85, h: 0.85, fill: { color: NAVY } });
+                s.addText(num, { x: cx + 0.16, y: cy + 0.36, w: 0.85, h: 0.55, align: 'center', fontFace: 'Georgia', fontSize: 18, bold: true, color: 'FFFFFF' });
+                s.addText(tt, { x: cx + 1.15, y: cy + 0.22, w: 4.55, h: 0.4, fontSize: 13.5, bold: true, color: NAVY });
+                s.addText(td, { x: cx + 1.15, y: cy + 0.65, w: 4.55, h: 0.52, fontSize: 10.5, color: SLATE });
+            });
+
+            // 3. Latar Belakang
+            s = addChrome('Latar Belakang Masalah');
+            [
+                ['1. Disparitas Stok & Risiko Overselling', 'Aplikasi kasir pihak ketiga (stand-alone) belum terhubung dengan penjualan daring, sehingga staf harus mencocokkan stok manual setiap hari dan barang kosong tetap berisiko terpesan daring (overselling).'],
+                ['2. Kompleksitas Multi-UOM Lintas Saluran', 'Toko daring melayani kemasan besar (Box) sedangkan gerai fisik melayani eceran (Strip/Pcs) dan grosir; ketiadaan integrasi memaksa konversi manual yang rawan human error.'],
+                ['3. Ketiadaan FEFO, Garansi SN & Label', 'Obat belum didata berdasarkan nomor Batch dan kedaluwarsa (FEFO), alat kesehatan belum memiliki rekam Serial Number untuk klaim garansi, serta kemasan pecah eceran belum berlabel barcode fisik.']
+            ].forEach((c, idx) => {
+                const cx = 0.65 + idx * 4.1;
+                s.addShape(pptx.ShapeType.roundRect, { x: cx, y: 1.9, w: 3.85, h: 3.1, fill: { color: LIGHT }, line: { color: BORDER } });
+                s.addText(c[0], { x: cx + 0.18, y: 2.08, w: 3.5, h: 0.45, fontSize: 13, bold: true, color: NAVY });
+                s.addText(c[1], { x: cx + 0.18, y: 2.6, w: 3.5, h: 2.2, fontSize: 11.5, color: SLATE, valign: 'top' });
+            });
+            s.addShape(pptx.ShapeType.roundRect, { x: 0.65, y: 5.25, w: 12.0, h: 1.45, fill: { color: 'FFF1F2' }, line: { color: 'FECDD3' } });
+            s.addText('Masalah Utama:', { x: 0.9, y: 5.38, w: 11.5, h: 0.35, fontSize: 13, bold: true, color: '9F1239' });
+            s.addText('Terpisahnya sistem kasir fisik dan penjualan daring menimbulkan selisih stok serta pesanan ganda (overselling), kerumitan konversi multi-satuan secara manual, serta ketiadaan kendali FEFO, pelacakan nomor seri garansi alat kesehatan, dan validasi label barcode fisik di gudang.',
+                { x: 0.9, y: 5.75, w: 11.5, h: 0.85, fontSize: 12, color: SLATE });
+
+            // 4. Tujuan, Manfaat & Batasan
+            s = addChrome('Tujuan, Manfaat, dan Batasan Sistem');
+            s.addShape(pptx.ShapeType.roundRect, { x: 0.65, y: 1.9, w: 5.9, h: 4.95, fill: { color: 'FFFFFF' }, line: { color: NAVY, width: 1.5 } });
+            s.addText('TUJUAN PENELITIAN (BAB I 1.5)\n\n1. Pusat Data Omnichannel Tunggal: Menyinkronkan stok kasir fisik (POS) & e-commerce mandiri secara real-time.\n\n2. Otomatisasi Multi-UOM: Konversi stok otomatis antar tingkat kemasan agar saldo & stok pengaman akurat.\n\n3. Kepatuhan FEFO & Garansi SN: Label barcode batch, deteksi anomali kasir, & pencatatan nomor seri alat kesehatan.',
+                { x: 0.85, y: 2.1, w: 5.5, h: 4.55, fontSize: 11.5, color: SLATE, valign: 'top' });
+            s.addShape(pptx.ShapeType.roundRect, { x: 6.8, y: 1.9, w: 5.85, h: 2.5, fill: { color: LIGHT }, line: { color: BORDER } });
+            s.addText('MANFAAT PENELITIAN (BAB I 1.6):\n• Bagi ZenCare Medical: Meniadakan overselling, menekan kerugian kedaluwarsa, mencegah deviasi kasir.\n• Bagi Penulis & Perguruan Tinggi: Penerapan RAD & rujukan sistem inventori omnichannel UMKM.',
+                { x: 7.0, y: 2.05, w: 5.45, h: 2.2, fontSize: 11, color: SLATE, valign: 'top' });
+            s.addShape(pptx.ShapeType.roundRect, { x: 6.8, y: 4.55, w: 5.85, h: 2.3, fill: { color: 'FFFFFF' }, line: { color: BORDER } });
+            s.addText('BATASAN RUANG LINGKUP (BAB I 1.3):\n• Terpusat di gerai ZenCare Medical Muharto; tanpa pembukuan finansial/poin pelanggan.\n• Kendali FEFO (Batch) & SN + Stok Opname; tanpa repacking, pre-order, atau refund otomatis.\n• Pembayaran Midtrans & RajaOngkir pada mode sandbox.',
+                { x: 7.0, y: 4.7, w: 5.45, h: 2.0, fontSize: 10.5, color: SLATE, valign: 'top' });
+
+            // 5. RAD
+            s = addChrome('Metodologi Penelitian (RAD) & Teknologi Sistem');
+            [
+                ['01. Requirements Planning', 'Observasi gerai ZenCare Muharto & identifikasi kendala overselling, Multi-UOM, FEFO, dan garansi SN.'],
+                ['02. User Design', 'Pemodelan Workflow, Sitemap 4 peran, Use Case (4 aktor), Activity Diagram, ERD 20 tabel, & UI.'],
+                ['03. Construction', 'Pembangunan sistem PHP & MySQL InnoDB (POS, E-Commerce, Logistik, Opname) dengan row locking FOR UPDATE.'],
+                ['04. Implementation & UAT', 'Pengujian stok lintas saluran, barcode scanner, cetak termal/A4, & UAT 4 peran (Skor: 93,75% Sesuai).']
+            ].forEach(([rt, rd], idx) => {
+                const col = idx % 2, row = Math.floor(idx / 2);
+                const rx = 0.65 + col * 6.1, ry = 1.9 + row * 1.75;
+                s.addShape(pptx.ShapeType.roundRect, { x: rx, y: ry, w: 5.9, h: 1.55, fill: { color: LIGHT }, line: { color: BORDER } });
+                s.addText(rt + '\n' + rd, { x: rx + 0.2, y: ry + 0.15, w: 5.5, h: 1.25, fontSize: 11, color: SLATE, valign: 'top' });
+            });
+            s.addShape(pptx.ShapeType.roundRect, { x: 0.65, y: 5.5, w: 12.0, h: 1.25, fill: { color: 'FFFFFF' }, line: { color: NAVY, width: 1.5 } });
+            s.addText('Teknologi Pembangun: PHP 8 & MySQL InnoDB (SELECT ... FOR UPDATE)  |  Midtrans Snap, RajaOngkir, & Leaflet Maps  |  Barcode Scanner & CSS Thermal Print (50x30mm, 58/80mm, 100x150mm, A4)',
+                { x: 0.85, y: 5.65, w: 11.6, h: 0.95, fontSize: 11, bold: true, color: NAVY, valign: 'middle' });
+
+            // 6. Use Case & Logika Inti
+            s = addChrome('Peran Pengguna (Use Case 4 Aktor) & Logika Inti');
+            await addImgFit(s, IMG.useCase, 0.65, 1.85, 6.0, 5.0);
+            s.addShape(pptx.ShapeType.roundRect, { x: 6.85, y: 1.9, w: 5.8, h: 2.9, fill: { color: LIGHT }, line: { color: BORDER } });
+            s.addText('• Pelanggan: Katalog stok aktual, checkout (2 jam + Midtrans), riwayat & batal.\n• Kasir: Transaksi POS scanner, Dual-UOM, FEFO, struk termal, & Blind Count Opname.\n• Admin: Penerimaan (Batch/SN + stiker), pesanan & resi/batal, konversi, & verifikasi Opname.\n• Superadmin: Master Harga, akun RBAC, Freeze Lock Opname, dasbor, & 6 laporan A4.',
+                { x: 7.05, y: 2.02, w: 5.4, h: 2.65, fontSize: 10.5, color: SLATE, valign: 'top' });
+            s.addShape(pptx.ShapeType.roundRect, { x: 6.85, y: 4.95, w: 5.8, h: 1.9, fill: { color: 'FFFFFF' }, line: { color: NAVY, width: 1.5 } });
+            s.addText('3 Logika Inti:\n1. FEFO: ORDER BY tgl_exp ASC FOR UPDATE + log_anomali_fefo.\n2. Multi-UOM: Daring Box utuh; POS melayani eceran & grosir.\n3. Anti-Race Condition: Keranjang non-blocking + SELECT ... FOR UPDATE saat Bayar Sekarang.',
+                { x: 7.05, y: 5.08, w: 5.4, h: 1.65, fontSize: 10.5, bold: true, color: NAVY, valign: 'top' });
+
+            // 7. ERD
+            s = addChrome('Arsitektur Basis Data: Logical Database (20 Tabel)');
+            s.addShape(pptx.ShapeType.roundRect, { x: 0.65, y: 1.9, w: 4.1, h: 4.95, fill: { color: LIGHT }, line: { color: BORDER } });
+            s.addText('1. Master & Multi-UOM:\nproduk_induk, produk_variasi, stok_toko, supplier, users, pengaturan_web\n\n2. Logistik Masuk:\npenerimaan_stok, penerimaan_detail, stok_batch, unit_serial, histori_konversi\n\n3. Omnichannel & FEFO:\npenjualan, detail_penjualan, pesanan_batch_alokasi, log_anomali_fefo, kartu_stok\n\n4. Stok Opname:\nsesi_opname, detail_opname_batch, detail_opname_sn, riwayat_hitung_opname',
+                { x: 0.85, y: 2.05, w: 3.7, h: 4.65, fontSize: 10, color: SLATE, valign: 'top' });
+            await addImgFit(s, IMG.erd, 4.95, 1.85, 7.7, 5.05);
+
+            // 8. DEMO SISTEM
+            s = addChrome('', true);
+            s.addText('DEMO SISTEM', { x: 1.0, y: 1.25, w: 11.3, h: 0.9, align: 'center', fontFace: 'Georgia', fontSize: 40, bold: true, color: NAVY });
+            s.addShape(pptx.ShapeType.rect, { x: 5.6, y: 2.2, w: 2.1, h: 0.06, fill: { color: TEAL } });
+            [
+                '1. Penerimaan & Label Fisik — Input Batch/Exp/SN + Harga Beli, cetak Stiker Barcode (50x30mm / A4).',
+                '2. Kasir POS, Scanner & FEFO — Pemindaian barcode, uji Anomali FEFO, & Struk Termal (80/58mm).',
+                '3. Rebutan Stok (Race Condition) — Keranjang E-Commerce vs POS beli habis -> ditolak sebelum Midtrans.',
+                '4. Pembatalan & Label Kurir — Status Dibatalkan melepaskan kuncian stok, cetak Resi (100x150mm).',
+                '5. Stok Opname & Kode FEFO — Freeze Lock, Blind Count, Kerugian Harga Beli, & kode pos.php (161) / checkout.php (181).'
+            ].forEach((t, idx) => {
+                const dy = 2.65 + idx * 0.78;
+                s.addShape(pptx.ShapeType.roundRect, { x: 1.2, y: dy, w: 10.9, h: 0.64, fill: { color: 'FFFFFF' }, line: { color: BORDER } });
+                s.addText(t, { x: 1.4, y: dy + 0.08, w: 10.5, h: 0.48, fontSize: 12, color: SLATE, valign: 'middle' });
+            });
+
+            // 9. UAT
+            s = addChrome('Hasil Evaluasi & Pengujian Sistem (UAT)');
+            const tblRows = [
+                [{ text: 'No', options: { bold: true, color: 'FFFFFF', fill: NAVY } },
+                 { text: 'Bagian Modul Pengujian (12 Nov 2026)', options: { bold: true, color: 'FFFFFF', fill: NAVY } },
+                 { text: 'Skor', options: { bold: true, color: 'FFFFFF', fill: NAVY } },
+                 { text: 'Capaian', options: { bold: true, color: 'FFFFFF', fill: NAVY } },
+                 { text: 'Status', options: { bold: true, color: 'FFFFFF', fill: NAVY } }],
+                ...UAT_ROWS.map(r => [r[0], r[1], r[2], { text: r[3], options: { bold: true, color: '065F46' } }, { text: r[4], options: { bold: true, color: '065F46' } }]),
+                [{ text: 'TOTAL KELAYAKAN (4 Peran, 16 Indikator)', options: { bold: true, colspan: 2, fill: 'ECFDF5', color: '065F46' } },
+                 { text: '300 / 320', options: { bold: true, fill: 'ECFDF5', color: '065F46' } },
+                 { text: '93,75%', options: { bold: true, fill: 'ECFDF5', color: '065F46' } },
+                 { text: 'SESUAI', options: { bold: true, fill: 'ECFDF5', color: '065F46' } }]
+            ];
+            s.addTable(tblRows, { x: 0.65, y: 1.95, w: 8.35, colW: [0.55, 4.5, 1.1, 1.1, 1.1], fontSize: 10, border: { pt: 1, color: BORDER }, rowH: 0.42 });
+            s.addShape(pptx.ShapeType.roundRect, { x: 9.25, y: 1.95, w: 3.4, h: 1.8, fill: { color: 'ECFDF5' }, line: { color: '065F46', width: 1.5 } });
+            s.addText('SKOR KELAYAKAN UAT\n93,75%\nSesuai Kebutuhan (300/320)', { x: 9.35, y: 2.08, w: 3.2, h: 1.55, align: 'center', fontSize: 15, bold: true, color: '065F46' });
+            s.addShape(pptx.ShapeType.roundRect, { x: 9.25, y: 3.95, w: 3.4, h: 2.85, fill: { color: LIGHT }, line: { color: BORDER } });
+            s.addText('Ringkasan Evaluasi:\n• Cakupan: Pemilik, Admin, Kasir, & Pelanggan.\n• Scanner & FEFO memangkas risiko kedaluwarsa.\n• Freeze Lock & Blind Count menertibkan Opname.\n• E-Commerce menolak checkout saat stok habis.',
+                { x: 9.4, y: 4.1, w: 3.1, h: 2.55, fontSize: 10.5, color: SLATE, valign: 'top' });
+
+            // 10. Kesimpulan & Saran
+            s = addChrome('Kesimpulan dan Saran');
+            s.addShape(pptx.ShapeType.roundRect, { x: 0.65, y: 2.0, w: 5.9, h: 4.7, fill: { color: 'FFFFFF' }, line: { color: NAVY, width: 1.5 } });
+            s.addText('KESIMPULAN HASIL (BAB V)\n\n1. Sinkronisasi Omnichannel Real-Time menyatukan POS & e-commerce mandiri tanpa selisih dan mencegah overselling.\n\n2. Multi-UOM, FEFO, & Serial Number berjalan terpadu lewat pemindai barcode & label fisik.\n\n3. Stok Opname (Freeze Lock, Blind Count, Harga Beli) teruji dengan UAT 93,75% (Sesuai).',
+                { x: 0.85, y: 2.2, w: 5.5, h: 4.3, fontSize: 12, color: SLATE, valign: 'top' });
+            s.addShape(pptx.ShapeType.roundRect, { x: 6.8, y: 2.0, w: 5.85, h: 4.7, fill: { color: LIGHT }, line: { color: BORDER } });
+            s.addText('SARAN PENGEMBANGAN\n\n1. Tingkatkan Midtrans & RajaOngkir dari sandbox ke live production.\n\n2. Tambah notifikasi pesan instan untuk reorder point dan batas kedaluwarsa.\n\n3. Kembangkan aplikasi mobile nirkabel untuk pencacahan stok opname.',
+                { x: 7.0, y: 2.2, w: 5.45, h: 4.3, fontSize: 12, color: SLATE, valign: 'top' });
+
+            // 11. Terima Kasih
+            s = addChrome('', true);
+            s.addText('Terima Kasih', { x: 1.5, y: 2.4, w: 10.3, h: 1.1, align: 'center', fontFace: 'Georgia', fontSize: 48, bold: true, color: NAVY });
+            s.addText('Sesi Tanya Jawab & Diskusi', { x: 1.5, y: 3.6, w: 10.3, h: 0.5, align: 'center', fontSize: 16, bold: true, color: '64748B' });
+            s.addShape(pptx.ShapeType.rect, { x: 5.9, y: 4.25, w: 1.5, h: 0.06, fill: { color: TEAL } });
+            s.addText('Marcell Chandra Kenchana - 322310015', { x: 1.5, y: 4.55, w: 10.3, h: 0.5, align: 'center', fontSize: 16, bold: true, color: NAVY });
+
+            // 12-22 Lampiran
+            s = addChrome('Lampiran 1: Workflow Barang Keluar (Berjalan vs Usulan)');
+            await addImgFit(s, IMG.wfKeluarOld, 0.65, 1.9, 5.7, 4.3);
+            await addImgFit(s, IMG.wfKeluarNew, 6.75, 1.9, 5.9, 4.3);
+            s = addChrome('Lampiran 2: Workflow Barang Masuk (Berjalan vs Usulan)');
+            await addImgFit(s, IMG.wfMasukOld, 0.65, 1.9, 5.7, 4.3);
+            await addImgFit(s, IMG.wfMasukNew, 6.75, 1.9, 5.9, 4.3);
+            s = addChrome('Lampiran 3: Sitemap (Pelanggan & Kasir POS)');
+            await addImgFit(s, IMG.smPelanggan, 0.65, 1.9, 5.8, 4.3);
+            await addImgFit(s, IMG.smKasir, 6.85, 1.9, 5.8, 4.3);
+            s = addChrome('Lampiran 4: Sitemap (Admin Toko & Superadmin)');
+            await addImgFit(s, IMG.smAdmin, 0.65, 1.9, 5.8, 4.3);
+            await addImgFit(s, IMG.smSuper, 6.85, 1.9, 5.8, 4.3);
+
+            for (const [lt, li, ltbl] of [
+                ['Lampiran 5: Activity Penerimaan Barang', IMG.actTerima, 'penerimaan_stok, penerimaan_detail, stok_batch, unit_serial, stok_toko, kartu_stok'],
+                ['Lampiran 6: Activity Kasir POS & FEFO', IMG.actPos, 'penjualan, detail_penjualan, pesanan_batch_alokasi, stok_batch, log_anomali_fefo, kartu_stok'],
+                ['Lampiran 7: Activity E-Commerce & Anti-Race Condition', IMG.actEcom, 'penjualan, detail_penjualan, pesanan_batch_alokasi, stok_batch, stok_toko, unit_serial'],
+                ['Lampiran 8: Activity Siklus Stok Opname', IMG.actOpname, 'sesi_opname, detail_opname_batch, detail_opname_sn, riwayat_hitung_opname, kartu_stok']
+            ]) {
+                s = addChrome(lt);
+                await addImgFit(s, li, 0.65, 1.85, 6.2, 5.0);
+                s.addText('Tabel Terkait:\n' + ltbl, { x: 7.1, y: 2.6, w: 5.5, h: 2.0, fontSize: 13, bold: true, color: NAVY, fill: { color: LIGHT }, line: { color: BORDER } });
+            }
+
+            s = addChrome('Lampiran 9: Pembaruan (Novelty) & Output Cetakan Sistem');
+            await addImgFit(s, IMG.novelty, 0.65, 1.9, 6.8, 4.5);
+            await addImgFit(s, IMG.uiBa, 7.7, 1.9, 4.9, 4.5);
+
+            s = addChrome('Lampiran 10: Dokumentasi Gerai ZenCare Medical');
+            await addImgFit(s, IMG.foto1, 0.8, 2.0, 5.6, 4.4);
+            await addImgFit(s, IMG.foto2, 6.9, 2.0, 5.6, 4.4);
+
+            s = addChrome('Lampiran 11: Dokumentasi Produk & Rak Gerai');
+            await addImgFit(s, IMG.foto3, 0.7, 2.0, 3.8, 4.4);
+            await addImgFit(s, IMG.foto4, 4.75, 2.0, 3.8, 4.4);
+            await addImgFit(s, IMG.foto5, 8.8, 2.0, 3.8, 4.4);
+
+            await pptx.writeFile({ fileName: 'Seminar_Hasil_TA_Final_Browser.pptx' });
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = origText;
+        }
+    }
+
+    renderSlides();
+    </script>
+</body>
+</html>
