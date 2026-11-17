@@ -1090,7 +1090,7 @@
                                         <td class="border border-slate-300 px-2 py-1 font-semibold">Pelanggan Toko Daring</td>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold">pelanggan</td>
                                         <td class="border border-slate-300 px-2 py-1">Konsumen pembeli produk kesehatan pada etalase toko <i>online</i>.</td>
-                                        <td class="border border-slate-300 px-2 py-1">Katalog daring, keranjang belanja, proses <i>checkout</i>, upload bukti transfer bayar, dan kejelasan informasi variasi produk.</td>
+                                        <td class="border border-slate-300 px-2 py-1">Katalog daring, keranjang belanja, proses <i>checkout</i>, pembayaran otomatis melalui gerbang Midtrans, dan kejelasan informasi variasi produk.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1098,7 +1098,7 @@
                     </div>
 
                 <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
-                    Instrumen pengujian penerimaan pengguna dirancang berbasis butir-butir pernyataan evaluasi kebutuhan operasional yang dinilai menggunakan skala Likert 1 hingga 5 (1: Sangat Tidak Setuju, 2: Tidak Setuju, 3: Cukup / Netral, 4: Setuju, 5: Sangat Setuju). Pengujian dikelompokkan ke dalam 8 (delapan) bagian modul fungsional, di mana setiap bagian disajikan dalam matriks evaluasi kebutuhan tersendiri beserta uraian analisisnya:
+                    Instrumen pengujian penerimaan pengguna (<i>User Acceptance Testing</i>) disusun berbasis skenario pengujian fungsional yang dijalankan langsung oleh masing-masing perwakilan peran sesuai hak akses dan tugas operasionalnya. Evaluasi dilakukan tanpa menggunakan pembobotan skala angka maupun rumus perhitungan persentase, melainkan memeriksa secara langsung apakah keluaran sistem sesuai dengan alur kerja yang diharapkan dengan status hasil uji <strong>Berhasil</strong> atau <strong>Tidak Berhasil</strong>. Pengujian dikelompokkan ke dalam 8 (delapan) bagian modul fungsional, di mana setiap bagian disajikan dalam matriks pengujian beserta uraian hasil uji operasionalnya:
                 </p>
 
                     <!-- A. Bagian I: Modul Autentikasi Staf dan Kontrol Hak Akses (<i>RBAC</i>) -->
@@ -1107,60 +1107,36 @@
                             A. Bagian I: Modul Autentikasi Staf dan Kontrol Hak Akses (<i>RBAC</i>)
                         </h5>
                         <p class="text-xs font-serif font-bold text-slate-900 mb-2">
-                            Tabel 4.2 Hasil Evaluasi Kuesioner Penerimaan Pengguna Bagian I: Autentikasi dan Hak Akses (<i>RBAC</i>)
+                            Tabel 4.2 Hasil Pengujian Penerimaan Pengguna (<i>UAT</i>) Bagian I: Autentikasi dan Hak Akses (<i>RBAC</i>)
                         </p>
                         <div class="overflow-x-auto mb-3">
                             <table class="w-full text-xs font-serif border border-slate-400">
                                 <thead class="bg-slate-100 text-slate-900 font-bold text-center">
                                     <tr>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-12" rowspan="2">Kode</th>
-                                        <th class="border border-slate-400 px-2 py-1.5" rowspan="2">Indikator Pernyataan Evaluasi Kebutuhan Pengguna</th>
-                                        <th class="border border-slate-400 px-2 py-1" colspan="4">Skor Peran Penguji</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-16" rowspan="2">Total Skor</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-20" rowspan="2">% Capaian</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-24" rowspan="2">Status</th>
-                                    </tr>
-                                    <tr>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Pemilik</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Admin</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Kasir</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-14">Pelanggan</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-16">Kode</th>
+                                        <th class="border border-slate-400 px-2 py-1.5">Skenario Pengujian Kebutuhan Pengguna</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-40">Peran Penguji</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-24">Hasil UAT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-01</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Sistem mampu memisahkan wewenang kerja staf secara tegas (Kasir hanya ke terminal kasir, Admin ke persediaan, Pemilik ke manajerial) guna mencegah penyalahgunaan hak akses.</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">19</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Sistem memisahkan wewenang kerja staf secara tegas (Kasir hanya ke terminal kasir, Admin ke persediaan, Pemilik ke manajerial) saat proses masuk aplikasi.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Pemilik Toko, Admin Toko, Kasir Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-02</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Sistem secara andal melindungi kerahasiaan data usaha dari upaya staf membuka menu manajerial tanpa izin melalui manipulasi alamat peramban.</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">19</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
-                                    </tr>
-                                    <tr class="bg-slate-50 font-bold">
-                                        <td colspan="6" class="border border-slate-300 px-2.5 py-1 text-right text-slate-800">Subtotal Capaian Bagian I (Maksimal: 40)</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-slate-900">38</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold text-emerald-700">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Sistem menolak akses dan melindungi halaman manajerial dari upaya pembukaan menu tanpa izin melalui perubahan alamat tautan (URL) peramban.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Admin Toko, Kasir Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                         <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
-                            Evaluasi pada Bagian I menunjukkan bahwa mekanisme keamanan satu pintu telah memenuhi kebutuhan operasional toko dengan sangat baik (skor capaian 95,0%). Pemilik Toko dan Admin Toko memberikan nilai maksimal (5) atas ketegasan sistem dalam mengarahkan staf langsung ke antarmuka yang sesuai dengan tugas pokoknya. Kasir Toko memberikan nilai 4 pada aspek proteksi navigasi URL karena memerlukan waktu penyesuaian saat pertama kali memahami batasan menu gerai. Secara keseluruhan, modul ini terbukti andal dalam menjaga kerahasiaan data usaha dari akses staf yang tidak berwenang.
+                            Pengujian pada Bagian I berjalan dengan hasil <strong>Berhasil</strong> pada seluruh skenario. Pemilik Toko, Admin Toko, dan Kasir Toko memastikan mekanisme masuk satu pintu langsung mengarahkan setiap pengguna ke antarmuka sesuai tugas pokoknya. Pengujian pembatasan akses tautan (URL) oleh Admin Toko dan Kasir Toko juga membuktikan bahwa halaman di luar hak akses otomatis tertolak, sehingga kerahasiaan data usaha tetap terjaga.
                         </p>
                     </div>
 
@@ -1170,60 +1146,36 @@
                             B. Bagian II: Modul Master Produk Medis, Konfigurasi Multi-Satuan (<i>Multi-UOM</i>), dan Pemasok
                         </h5>
                         <p class="text-xs font-serif font-bold text-slate-900 mb-2">
-                            Tabel 4.3 Hasil Evaluasi Kuesioner Penerimaan Pengguna Bagian II: Master Data Produk dan Multi-Satuan
+                            Tabel 4.3 Hasil Pengujian Penerimaan Pengguna (<i>UAT</i>) Bagian II: Master Data Produk dan Multi-Satuan
                         </p>
                         <div class="overflow-x-auto mb-3">
                             <table class="w-full text-xs font-serif border border-slate-400">
                                 <thead class="bg-slate-100 text-slate-900 font-bold text-center">
                                     <tr>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-12" rowspan="2">Kode</th>
-                                        <th class="border border-slate-400 px-2 py-1.5" rowspan="2">Indikator Pernyataan Evaluasi Kebutuhan Pengguna</th>
-                                        <th class="border border-slate-400 px-2 py-1" colspan="4">Skor Peran Penguji</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-16" rowspan="2">Total Skor</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-20" rowspan="2">% Capaian</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-24" rowspan="2">Status</th>
-                                    </tr>
-                                    <tr>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Pemilik</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Admin</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Kasir</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-14">Pelanggan</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-16">Kode</th>
+                                        <th class="border border-slate-400 px-2 py-1.5">Skenario Pengujian Kebutuhan Pengguna</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-40">Peran Penguji</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-24">Hasil UAT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-03</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Struktur master produk memudahkan pengelompokan produk induk dengan variasi kekuatan dosis, bentuk sediaan, serta berbagai pilihan jenis kemasan.</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">19</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Struktur master produk mengelompokkan produk induk beserta variasi kekuatan dosis, bentuk sediaan, dan pilihan satuan kemasan secara teratur.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Admin Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-04</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Otomasi konversi satuan kemasan (pemecahan box menjadi strip/tablet) berjalan akurat tanpa kesalahan perhitungan rasio serta memberikan peringatan saat stok mendekati batas minimum.</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">18</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">90.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
-                                    </tr>
-                                    <tr class="bg-slate-50 font-bold">
-                                        <td colspan="6" class="border border-slate-300 px-2.5 py-1 text-right text-slate-800">Subtotal Capaian Bagian II (Maksimal: 40)</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-slate-900">37</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold text-emerald-700">92.5%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Otomasi konversi satuan kemasan (pemecahan box menjadi strip/eceran) berjalan tepat serta memunculkan peringatan saat stok mendekati batas minimum.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Admin Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                         <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
-                            Evaluasi pada Bagian II mencatatkan tingkat kelayakan 92,5%. Struktur data yang membedakan produk induk dengan variasi kemasan dosis dinilai sangat fleksibel oleh Admin Toko dan Pelanggan dalam mengelola berbagai macam sediaan obat dan alat kesehatan. Kasir Toko dan Pelanggan memberikan nilai 4 pada konversi multi-satuan karena struktur kemasan bertingkat menuntut ketelitian saat meninjau satuan terkecil. Kendati demikian, seluruh responden sepakat bahwa otomasi konversi satuan berhasil meniadakan kesalahan hitung manual antara kemasan box dan strip.
+                            Pengujian pada Bagian II yang dijalankan oleh Admin Toko selaku pengelola persediaan memberikan hasil <strong>Berhasil</strong>. Struktur master produk yang memisahkan produk induk dengan variasi kemasan dosis dinilai rapi dan memudahkan pencarian maupun pendataan produk baru. Proses konversi pemecahan kemasan besar ke satuan eceran beserta indikator peringatan batas stok minimum juga berjalan sesuai perhitungan operasional toko tanpa kesalahan rasio.
                         </p>
                     </div>
 
@@ -1233,60 +1185,36 @@
                             C. Bagian III: Modul Transaksi Penjualan Kasir POS dan Alokasi <i>FEFO</i>
                         </h5>
                         <p class="text-xs font-serif font-bold text-slate-900 mb-2">
-                            Tabel 4.4 Hasil Evaluasi Kuesioner Penerimaan Pengguna Bagian III: Transaksi Kasir POS dan Logika <i>FEFO</i>
+                            Tabel 4.4 Hasil Pengujian Penerimaan Pengguna (<i>UAT</i>) Bagian III: Transaksi Kasir POS dan Logika <i>FEFO</i>
                         </p>
                         <div class="overflow-x-auto mb-3">
                             <table class="w-full text-xs font-serif border border-slate-400">
                                 <thead class="bg-slate-100 text-slate-900 font-bold text-center">
                                     <tr>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-12" rowspan="2">Kode</th>
-                                        <th class="border border-slate-400 px-2 py-1.5" rowspan="2">Indikator Pernyataan Evaluasi Kebutuhan Pengguna</th>
-                                        <th class="border border-slate-400 px-2 py-1" colspan="4">Skor Peran Penguji</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-16" rowspan="2">Total Skor</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-20" rowspan="2">% Capaian</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-24" rowspan="2">Status</th>
-                                    </tr>
-                                    <tr>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Pemilik</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Admin</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Kasir</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-14">Pelanggan</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-16">Kode</th>
+                                        <th class="border border-slate-400 px-2 py-1.5">Skenario Pengujian Kebutuhan Pengguna</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-40">Peran Penguji</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-24">Hasil UAT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-05</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Terminal kasir POS mempercepat pelayanan penjualan melalui pemindaian barcode yang responsif serta kalkulasi subtotal dan uang kembalian yang presisi.</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">19</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Terminal kasir POS memproses pemindaian barcode dengan cepat, menghitung subtotal serta uang kembalian secara akurat, dan mencetak struk transaksi.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Kasir Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-06</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Sistem secara otomatis mengalokasikan stok dengan tanggal kedaluwarsa terdekat (FEFO) dan memunculkan dialog peringatan wajib isi alasan jika kasir mengeluarkan stok lain.</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">19</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
-                                    </tr>
-                                    <tr class="bg-slate-50 font-bold">
-                                        <td colspan="6" class="border border-slate-300 px-2.5 py-1 text-right text-slate-800">Subtotal Capaian Bagian III (Maksimal: 40)</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-slate-900">38</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold text-emerald-700">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Sistem mengalokasikan stok dengan tanggal kedaluwarsa terdekat (FEFO) secara otomatis dan mewajibkan pengisian alasan apabila kasir memilih nomor batch lain.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Kasir Toko, Pemilik Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                         <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
-                            Evaluasi pada Bagian III menghasilkan skor capaian 95,0%. Kasir Toko sangat mengapresiasi kecepatan pemindaian barcode produk yang secara instan menghitung subtotal belanja dan uang kembalian. Fitur otomasi pengeluaran obat kedaluwarsa terdekat (<i>FEFO</i>) dinilai Pemilik Toko sangat efektif memangkas risiko kerugian barang kedaluwarsa. Kasir memberikan nilai 4 pada dialog peringatan anomali FEFO karena kewajiban mengisi alasan memperlambat sedikit tempo antrean, namun dipahami sebagai langkah proteksi mutlak demi keamanan pasien.
+                            Pengujian pada Bagian III dinyatakan <strong>Berhasil</strong>. Kasir Toko membuktikan bahwa pemindaian <i>barcode</i> pada terminal POS merespons cepat dan menghitung subtotal serta kembalian secara akurat. Mekanisme alokasi stok kedaluwarsa terdekat (<i>FEFO</i>) dan catatan wajib alasan pada saat pengeluaran tidak mengikuti urutan <i>FEFO</i> berjalan sesuai aturan, sehingga Pemilik Toko dapat memantau kesesuaian pengeluaran produk obat di meja kasir.
                         </p>
                     </div>
 
@@ -1296,60 +1224,36 @@
                             D. Bagian IV: Modul Toko Daring (<i>E-Commerce</i>) dan Sinkronisasi Penjualan <i>Omnichannel</i>
                         </h5>
                         <p class="text-xs font-serif font-bold text-slate-900 mb-2">
-                            Tabel 4.5 Hasil Evaluasi Kuesioner Penerimaan Pengguna Bagian IV: Toko Daring dan Sinkronisasi Penjualan
+                            Tabel 4.5 Hasil Pengujian Penerimaan Pengguna (<i>UAT</i>) Bagian IV: Toko Daring dan Sinkronisasi Penjualan
                         </p>
                         <div class="overflow-x-auto mb-3">
                             <table class="w-full text-xs font-serif border border-slate-400">
                                 <thead class="bg-slate-100 text-slate-900 font-bold text-center">
                                     <tr>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-12" rowspan="2">Kode</th>
-                                        <th class="border border-slate-400 px-2 py-1.5" rowspan="2">Indikator Pernyataan Evaluasi Kebutuhan Pengguna</th>
-                                        <th class="border border-slate-400 px-2 py-1" colspan="4">Skor Peran Penguji</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-16" rowspan="2">Total Skor</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-20" rowspan="2">% Capaian</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-24" rowspan="2">Status</th>
-                                    </tr>
-                                    <tr>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Pemilik</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Admin</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Kasir</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-14">Pelanggan</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-16">Kode</th>
+                                        <th class="border border-slate-400 px-2 py-1.5">Skenario Pengujian Kebutuhan Pengguna</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-40">Peran Penguji</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-24">Hasil UAT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-07</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Konsumen dapat menjelajahi katalog produk kesehatan secara mandiri, memilih variasi kemasan, memilih opsi pengiriman, dan mengunggah bukti pembayaran dengan mudah.</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">18</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">90.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Konsumen dapat menjelajahi katalog produk kesehatan, memilih variasi kemasan, menentukan opsi pengiriman, dan menyelesaikan pembayaran melalui gerbang Midtrans.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Pelanggan Toko Daring</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-08</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Mekanisme reservasi stok daring (reserved stock) berhasil mencegah penjualan ganda persediaan (race condition) dengan transaksi kasir gerai fisik secara seketika (real-time).</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">19</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
-                                    </tr>
-                                    <tr class="bg-slate-50 font-bold">
-                                        <td colspan="6" class="border border-slate-300 px-2.5 py-1 text-right text-slate-800">Subtotal Capaian Bagian IV (Maksimal: 40)</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-slate-900">37</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold text-emerald-700">92.5%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Mekanisme reservasi stok daring (reserved stock) mencegah terjadinya penjualan ganda (race condition) ketika bertransaksi bersamaan dengan terminal kasir gerai fisik.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Pelanggan Toko Daring, Admin Toko, Kasir Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                         <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
-                            Evaluasi pada Bagian IV memperoleh tingkat kelayakan 92,5%. Konsumen menyatakan antarmuka etalase daring bersih dan memudahkan pemesanan obat bebas serta alat kesehatan mandiri. Admin Toko dan Kasir Toko memberikan nilai 4 pada alur belanja daring karena proses verifikasi bukti transfer manual memerlukan perhatian saat toko fisik sedang ramai. Namun, mekanisme reservasi stok daring (<i>reserved stock</i>) dinilai luar biasa karena terbukti mencegah terjadinya penjualan ganda (<i>race condition</i>) persediaan dengan meja kasir gerai fisik.
+                            Pengujian pada Bagian IV mencatatkan hasil <strong>Berhasil</strong>. Pelanggan Toko Daring dapat memilih variasi kemasan hingga menyelesaikan pembayaran melalui gerbang Midtrans dengan alur yang mudah dipahami. Pengujian silang antara Pelanggan Toko Daring, Kasir Toko, dan Admin Toko juga membuktikan bahwa mekanisme reservasi stok daring (<i>reserved stock</i>) mampu mengunci sisa persediaan secara seketika sehingga tidak terjadi penjualan ganda antara saluran daring dan meja kasir gerai fisik.
                         </p>
                     </div>
 
@@ -1359,60 +1263,36 @@
                             E. Bagian V: Modul Logistik Penerimaan Pasokan Barang Masuk dan Penandaan Barcode
                         </h5>
                         <p class="text-xs font-serif font-bold text-slate-900 mb-2">
-                            Tabel 4.6 Hasil Evaluasi Kuesioner Penerimaan Pengguna Bagian V: Penerimaan Pasokan Barang dan Barcode
+                            Tabel 4.6 Hasil Pengujian Penerimaan Pengguna (<i>UAT</i>) Bagian V: Penerimaan Pasokan Barang dan Barcode
                         </p>
                         <div class="overflow-x-auto mb-3">
                             <table class="w-full text-xs font-serif border border-slate-400">
                                 <thead class="bg-slate-100 text-slate-900 font-bold text-center">
                                     <tr>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-12" rowspan="2">Kode</th>
-                                        <th class="border border-slate-400 px-2 py-1.5" rowspan="2">Indikator Pernyataan Evaluasi Kebutuhan Pengguna</th>
-                                        <th class="border border-slate-400 px-2 py-1" colspan="4">Skor Peran Penguji</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-16" rowspan="2">Total Skor</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-20" rowspan="2">% Capaian</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-24" rowspan="2">Status</th>
-                                    </tr>
-                                    <tr>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Pemilik</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Admin</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Kasir</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-14">Pelanggan</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-16">Kode</th>
+                                        <th class="border border-slate-400 px-2 py-1.5">Skenario Pengujian Kebutuhan Pengguna</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-40">Peran Penguji</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-24">Hasil UAT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-09</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Formulir penerimaan barang memudahkan staf mencatat faktur distributor lengkap dengan nomor batch, tanggal kedaluwarsa, dan nomor seri unik alat kesehatan.</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">19</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Formulir penerimaan barang mencatat faktur distributor lengkap dengan nomor batch, tanggal kedaluwarsa, dan nomor seri unik alat kesehatan dengan tepat.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Admin Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-10</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Fitur cetak stiker label barcode kemasan menghasilkan cetakan tajam dan dapat langsung dipindai dengan akurat oleh alat pemindai kasir.</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">19</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
-                                    </tr>
-                                    <tr class="bg-slate-50 font-bold">
-                                        <td colspan="6" class="border border-slate-300 px-2.5 py-1 text-right text-slate-800">Subtotal Capaian Bagian V (Maksimal: 40)</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-slate-900">38</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold text-emerald-700">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Fitur cetak stiker label barcode kemasan menghasilkan label yang jelas dan langsung terbaca akurat oleh pemindai optik di meja kasir.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Admin Toko, Kasir Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                         <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
-                            Evaluasi pada Bagian V mencatatkan persentase capaian 95,0%. Admin Toko menilai formulir penerimaan barang sangat informatif dalam mencatat nomor surat jalan, tanggal kedaluwarsa, dan nomor <i>batch</i> pasokan distributor. Pelacakan nomor seri unik (<i>serial number</i>) alat kesehatan juga dinilai Pemilik Toko sangat penting guna memastikan keabsahan klaim garansi produk. Kasir memberikan nilai 4 pada stiker barcode karena memerlukan keselarasan posisi cetak, namun hasil pemindaian barcode di terminal kasir terbukti tajam dan terbaca akurat.
+                            Pengujian pada Bagian V berakhir dengan status <strong>Berhasil</strong>. Admin Toko memverifikasi bahwa pencatatan faktur pemasok beserta nomor <i>batch</i>, tanggal kedaluwarsa, dan nomor seri unik (<i>serial number</i>) alat kesehatan tersimpan sesuai data penerimaan fisik. Label stiker <i>barcode</i> yang dicetak Admin Toko juga diuji langsung pada pemindai optik oleh Kasir Toko dan terbukti terbaca presisi tanpa kendala pemindaian.
                         </p>
                     </div>
 
@@ -1422,60 +1302,36 @@
                             F. Bagian VI: Modul Pengelolaan Mutasi Stok Manual dan Buku Besar Kartu Stok
                         </h5>
                         <p class="text-xs font-serif font-bold text-slate-900 mb-2">
-                            Tabel 4.7 Hasil Evaluasi Kuesioner Penerimaan Pengguna Bagian VI: Mutasi Stok Manual dan Kartu Stok
+                            Tabel 4.7 Hasil Pengujian Penerimaan Pengguna (<i>UAT</i>) Bagian VI: Mutasi Stok Manual dan Kartu Stok
                         </p>
                         <div class="overflow-x-auto mb-3">
                             <table class="w-full text-xs font-serif border border-slate-400">
                                 <thead class="bg-slate-100 text-slate-900 font-bold text-center">
                                     <tr>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-12" rowspan="2">Kode</th>
-                                        <th class="border border-slate-400 px-2 py-1.5" rowspan="2">Indikator Pernyataan Evaluasi Kebutuhan Pengguna</th>
-                                        <th class="border border-slate-400 px-2 py-1" colspan="4">Skor Peran Penguji</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-16" rowspan="2">Total Skor</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-20" rowspan="2">% Capaian</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-24" rowspan="2">Status</th>
-                                    </tr>
-                                    <tr>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Pemilik</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Admin</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Kasir</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-14">Pelanggan</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-16">Kode</th>
+                                        <th class="border border-slate-400 px-2 py-1.5">Skenario Pengujian Kebutuhan Pengguna</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-40">Peran Penguji</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-24">Hasil UAT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-11</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Pencatatan pengurangan stok rusak, botol pecah, atau barang kedaluwarsa di luar penjualan berjalan tertib dengan kewajiban mencantumkan alasan operasional tertulis.</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">18</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">90.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Pencatatan pengurangan stok rusak, kemasan pecah, atau barang kedaluwarsa di luar penjualan berjalan tertib dengan kewajiban mencantumkan alasan operasional tertulis.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Admin Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-12</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Buku besar kartu stok persediaan (inventory ledger) menyajikan riwayat mutasi masuk, keluar, saldo berjalan, dan nomor batch secara kronologis dan transparan.</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">19</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
-                                    </tr>
-                                    <tr class="bg-slate-50 font-bold">
-                                        <td colspan="6" class="border border-slate-300 px-2.5 py-1 text-right text-slate-800">Subtotal Capaian Bagian VI (Maksimal: 40)</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-slate-900">37</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold text-emerald-700">92.5%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Buku besar kartu stok persediaan (inventory ledger) menampilkan riwayat mutasi masuk, keluar, saldo berjalan, dan nomor batch secara kronologis dan transparan.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Admin Toko, Pemilik Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                         <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
-                            Evaluasi pada Bagian VI memperoleh tingkat kelayakan 92,5%. Pemilik Toko dan Admin Toko menegaskan bahwa formulir mutasi stok manual berhasil menertibkan pencatatan barang rusak, botol pecah, maupun barang kedaluwarsa dengan alasan operasional tertulis yang dapat dipertanggungjawabkan. Kasir Toko dan Pelanggan memberikan nilai 4 terkait rincian teknis buku besar, namun tampilan saldo berjalan (<i>running balance</i>) pada kartu stok terbukti menyajikan riwayat pergerakan barang secara kronologis dan transparan.
+                            Pengujian pada Bagian VI dinyatakan <strong>Berhasil</strong>. Admin Toko memastikan formulir mutasi stok manual menertibkan pencatatan barang rusak, botol pecah, maupun barang kedaluwarsa karena setiap penyesuaian mewajibkan alasan operasional tertulis. Admin Toko dan Pemilik Toko juga memverifikasi bahwa tampilan saldo berjalan (<i>running balance</i>) pada buku besar kartu stok mencatat seluruh riwayat pergerakan barang secara kronologis dan transparan.
                         </p>
                     </div>
 
@@ -1485,60 +1341,36 @@
                             G. Bagian VII: Modul Siklus Pengawasan Stok Fisik (<i>Stok Opname</i>) Terpusat
                         </h5>
                         <p class="text-xs font-serif font-bold text-slate-900 mb-2">
-                            Tabel 4.8 Hasil Evaluasi Kuesioner Penerimaan Pengguna Bagian VII: Siklus Pengawasan Stok Fisik Terpusat
+                            Tabel 4.8 Hasil Pengujian Penerimaan Pengguna (<i>UAT</i>) Bagian VII: Siklus Pengawasan Stok Fisik Terpusat
                         </p>
                         <div class="overflow-x-auto mb-3">
                             <table class="w-full text-xs font-serif border border-slate-400">
                                 <thead class="bg-slate-100 text-slate-900 font-bold text-center">
                                     <tr>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-12" rowspan="2">Kode</th>
-                                        <th class="border border-slate-400 px-2 py-1.5" rowspan="2">Indikator Pernyataan Evaluasi Kebutuhan Pengguna</th>
-                                        <th class="border border-slate-400 px-2 py-1" colspan="4">Skor Peran Penguji</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-16" rowspan="2">Total Skor</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-20" rowspan="2">% Capaian</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-24" rowspan="2">Status</th>
-                                    </tr>
-                                    <tr>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Pemilik</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Admin</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Kasir</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-14">Pelanggan</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-16">Kode</th>
+                                        <th class="border border-slate-400 px-2 py-1.5">Skenario Pengujian Kebutuhan Pengguna</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-40">Peran Penguji</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-24">Hasil UAT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-13</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Fitur pembekuan transaksi server (freeze lock) efektif mengunci pergerakan stok selama penghitungan fisik, dan formulir kasir (blind count) menjamin objektivitas pencacahan tanpa bias angka sistem.</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">19</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Fitur pembekuan transaksi server (freeze lock) mengunci pergerakan stok selama penghitungan fisik, dan formulir kasir (blind count) memfasilitasi pencacahan fisik tanpa tampilan saldo sistem.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Pemilik Toko, Kasir Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-14</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Layar verifikasi admin memudahkan identifikasi barang berselisih (surplus/defisit), memfasilitasi mutasi koreksi penyeimbang, dan mencetak Berita Acara resmi format A4.</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">19</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
-                                    </tr>
-                                    <tr class="bg-slate-50 font-bold">
-                                        <td colspan="6" class="border border-slate-300 px-2.5 py-1 text-right text-slate-800">Subtotal Capaian Bagian VII (Maksimal: 40)</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-slate-900">38</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold text-emerald-700">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Layar verifikasi admin menampilkan barang berselisih (surplus/defisit), memproses mutasi koreksi penyeimbang, dan mencetak Berita Acara resmi format A4.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Admin Toko, Pemilik Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                         <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
-                            Evaluasi pada Bagian VII mencapai skor capaian 95,0%. Pemilik Toko menilai fitur pembekuan transaksi server (<i>Freeze Lock</i>) sebagai keunggulan utama dalam mengunci integritas angka persediaan selama pencacahan fisik. Kasir Toko menyatakan formulir pencacahan tanpa saldo buku (<i>Blind Count</i>) memberikan kenyamanan bekerja tanpa tekanan angka sistem. Admin Toko menilai layar verifikasi selisih sangat praktis dalam mengeksekusi mutasi koreksi penyeimbang persediaan secara seketika dan menerbitkan Berita Acara A4 resmi.
+                            Pengujian pada Bagian VII berjalan dengan hasil <strong>Berhasil</strong>. Pemilik Toko mengonfirmasi bahwa fitur pembekuan transaksi server (<i>Freeze Lock</i>) efektif mengunci pergerakan stok selama penghitungan fisik berlangsung. Kasir Toko menjalankan pencacahan rak menggunakan formulir tanpa saldo buku (<i>Blind Count</i>) secara objektif, sementara Admin Toko menyelesaikan verifikasi selisih dengan mutasi koreksi penyeimbang serta menerbitkan Berita Acara format A4 resmi.
                         </p>
                     </div>
 
@@ -1548,74 +1380,48 @@
                             H. Bagian VIII: Modul Laporan Manajerial, Pengawasan Kedaluwarsa, dan Dasbor Eksekutif
                         </h5>
                         <p class="text-xs font-serif font-bold text-slate-900 mb-2">
-                            Tabel 4.9 Hasil Evaluasi Kuesioner Penerimaan Pengguna Bagian VIII: Pelaporan Manajerial dan Dasbor
+                            Tabel 4.9 Hasil Pengujian Penerimaan Pengguna (<i>UAT</i>) Bagian VIII: Pelaporan Manajerial dan Dasbor
                         </p>
                         <div class="overflow-x-auto mb-3">
                             <table class="w-full text-xs font-serif border border-slate-400">
                                 <thead class="bg-slate-100 text-slate-900 font-bold text-center">
                                     <tr>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-12" rowspan="2">Kode</th>
-                                        <th class="border border-slate-400 px-2 py-1.5" rowspan="2">Indikator Pernyataan Evaluasi Kebutuhan Pengguna</th>
-                                        <th class="border border-slate-400 px-2 py-1" colspan="4">Skor Peran Penguji</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-16" rowspan="2">Total Skor</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-20" rowspan="2">% Capaian</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-24" rowspan="2">Status</th>
-                                    </tr>
-                                    <tr>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Pemilik</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Admin</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-12">Kasir</th>
-                                        <th class="border border-slate-400 px-1 py-1 text-[10px] w-14">Pelanggan</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-16">Kode</th>
+                                        <th class="border border-slate-400 px-2 py-1.5">Skenario Pengujian Kebutuhan Pengguna</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-40">Peran Penguji</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-24">Hasil UAT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-15</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Dasbor eksekutif menyajikan informasi strategis yang jelas mencakup ringkasan omzet penjualan, status stok kritis, dan peringatan dini barang mendekati kedaluwarsa (30, 60, 90 hari).</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">18</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">90.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Dasbor eksekutif menyajikan informasi ringkasan omzet penjualan, status stok kritis, dan peringatan dini barang mendekati kedaluwarsa (30, 60, 90 hari) dengan akurat.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Pemilik Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono font-bold">UAT-16</td>
-                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Seluruh laporan manajerial (penjualan, kartu stok, penerimaan, dan analisis anomali FEFO) dapat difilter sesuai periode dan dicetak rapi format A4 siap arsip.</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">4</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center">5</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-bold">19</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">95.0%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Sesuai</td>
-                                    </tr>
-                                    <tr class="bg-slate-50 font-bold">
-                                        <td colspan="6" class="border border-slate-300 px-2.5 py-1 text-right text-slate-800">Subtotal Capaian Bagian VIII (Maksimal: 40)</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-slate-900">37</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold text-emerald-700">92.5%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-bold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2.5 py-1.5 font-medium">Seluruh laporan manajerial (penjualan, kartu stok, penerimaan, dan analisis anomali FEFO) dapat difilter berdasarkan periode dan dicetak rapi dalam format A4 siap arsip.</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center">Pemilik Toko, Admin Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                         <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
-                            Evaluasi pada Bagian VIII mencatatkan tingkat kelayakan 92,5%. Pemilik Toko menilai dasbor eksekutif menyajikan visualisasi data yang komprehensif, terutama ringkasan omzet dan estimasi nilai persediaan. Fitur pengawasan barang mendekati kedaluwarsa (30, 60, dan 90 hari) terbukti membantu manajemen mempercepat pengembalian (*retur*) pasokan ke distributor. Kasir dan Pelanggan memberikan nilai 4 pada opsi pemfilteran tanggal yang mendalam, namun seluruh lembar cetak laporan fisik A4 dinilai rapi dan siap diarsipkan.
+                            Pengujian pada Bagian VIII mencatatkan status <strong>Berhasil</strong>. Pemilik Toko menilai dasbor eksekutif menyajikan ringkasan omzet penjualan, daftar stok kritis, serta peringatan barang mendekati kedaluwarsa (30, 60, dan 90 hari) yang memudahkan tindak lanjut pengembalian (<i>retur</i>) pasokan ke distributor. Pemilik Toko bersama Admin Toko juga memastikan pemfilteran tanggal dan pencetakan seluruh laporan manajerial ke format A4 berjalan lancar dan siap diarsipkan.
                         </p>
                     </div>
 
-                    <!-- I. REKAPITULASI HASIL PENGUJIAN DAN EVALUASI KELAYAKAN PENGGUNA -->
+                    <!-- I. REKAPITULASI HASIL PENGUJIAN PENERIMAAN PENGGUNA -->
                     <div class="mt-8 pt-4 border-t border-slate-300">
                         <h5 class="text-xs font-bold font-serif text-slate-900 uppercase tracking-wide mb-3">
-                            I. Rekapitulasi Hasil Pengujian dan Evaluasi Kelayakan Pengguna Keseluruhan
+                            I. Rekapitulasi Hasil Pengujian Penerimaan Pengguna Keseluruhan
                         </h5>
-
-
 
                     <div class="my-4">
                         <p class="text-xs font-serif font-bold text-slate-900 mb-2">
-                            Tabel 4.10 Rekapitulasi Hasil Evaluasi Penerimaan Pengguna (<i>UAT</i>) Lintas Modul Sistem
+                            Tabel 4.10 Rekapitulasi Hasil Pengujian Penerimaan Pengguna (<i>UAT</i>) Lintas Modul Sistem
                         </p>
                         <div class="overflow-x-auto">
                             <table class="w-full text-xs font-serif border border-slate-400">
@@ -1623,11 +1429,9 @@
                                     <tr>
                                         <th class="border border-slate-400 px-2 py-1.5 w-10">No</th>
                                         <th class="border border-slate-400 px-2 py-1.5">Bagian Modul Operasional Sistem</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-24">Jml Indikator</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-24">Skor Aktual</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-24">Skor Maks</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-24">% Capaian</th>
-                                        <th class="border border-slate-400 px-2 py-1.5 w-28">Status</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-24">Jml Skenario</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-48">Peran Penguji Terlibat</th>
+                                        <th class="border border-slate-400 px-2 py-1.5 w-28">Hasil UAT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1635,83 +1439,65 @@
                                         <td class="border border-slate-300 px-2 py-1 text-center font-bold">1</td>
                                         <td class="border border-slate-300 px-2.5 py-1 font-semibold">Bagian I: Modul Autentikasi Staf dan Kontrol Hak Akses (RBAC)</td>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-mono">2</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold">38</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono">40</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono text-emerald-700 font-bold">95.00%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center">Pemilik Toko, Admin Toko, Kasir Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-bold">2</td>
                                         <td class="border border-slate-300 px-2.5 py-1 font-semibold">Bagian II: Modul Master Produk Medis, Konfigurasi Multi-Satuan (Multi-UOM), dan Pemasok</td>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-mono">2</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold">37</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono">40</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono text-emerald-700 font-bold">92.50%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center">Admin Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-bold">3</td>
                                         <td class="border border-slate-300 px-2.5 py-1 font-semibold">Bagian III: Modul Transaksi Penjualan Kasir POS dan Alokasi FEFO</td>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-mono">2</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold">38</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono">40</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono text-emerald-700 font-bold">95.00%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center">Kasir Toko, Pemilik Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-bold">4</td>
                                         <td class="border border-slate-300 px-2.5 py-1 font-semibold">Bagian IV: Modul Toko Daring (E-Commerce) dan Sinkronisasi Penjualan Omnichannel</td>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-mono">2</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold">37</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono">40</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono text-emerald-700 font-bold">92.50%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center">Pelanggan Toko Daring, Admin Toko, Kasir Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-bold">5</td>
                                         <td class="border border-slate-300 px-2.5 py-1 font-semibold">Bagian V: Modul Logistik Penerimaan Pasokan Barang Masuk dan Penandaan Barcode</td>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-mono">2</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold">38</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono">40</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono text-emerald-700 font-bold">95.00%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center">Admin Toko, Kasir Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-bold">6</td>
                                         <td class="border border-slate-300 px-2.5 py-1 font-semibold">Bagian VI: Modul Pengelolaan Mutasi Stok Manual dan Buku Besar Kartu Stok</td>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-mono">2</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold">37</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono">40</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono text-emerald-700 font-bold">92.50%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center">Admin Toko, Pemilik Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-bold">7</td>
                                         <td class="border border-slate-300 px-2.5 py-1 font-semibold">Bagian VII: Modul Siklus Pengawasan Stok Fisik (Stok Opname) Terpusat</td>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-mono">2</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold">38</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono">40</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono text-emerald-700 font-bold">95.00%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center">Pemilik Toko, Kasir Toko, Admin Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-bold">8</td>
                                         <td class="border border-slate-300 px-2.5 py-1 font-semibold">Bagian VIII: Modul Laporan Manajerial, Pengawasan Kedaluwarsa, dan Dasbor Eksekutif</td>
                                         <td class="border border-slate-300 px-2 py-1 text-center font-mono">2</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono font-bold">37</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono">40</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-mono text-emerald-700 font-bold">92.50%</td>
-                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Sesuai</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center">Pemilik Toko, Admin Toko</td>
+                                        <td class="border border-slate-300 px-2 py-1 text-center font-semibold text-emerald-800">Berhasil</td>
                                     </tr>
                                     <tr class="bg-emerald-50 font-bold text-slate-900 border-t-2 border-slate-400">
                                         <td colspan="2" class="border border-slate-300 px-3 py-1.5 text-right uppercase tracking-wider font-sans">
-                                            Grand Total Evaluasi Penerimaan Sistem
+                                            Rekapitulasi Keseluruhan Pengujian (UAT)
                                         </td>
                                         <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">16</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono text-blue-900 font-black">300</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono">320</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-mono text-emerald-800 font-black">93.75%</td>
-                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-black text-emerald-800 uppercase">Sesuai</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center text-slate-800 font-semibold">4 Peran Pengguna</td>
+                                        <td class="border border-slate-300 px-2 py-1.5 text-center font-black text-emerald-800 uppercase">Berhasil</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1719,48 +1505,29 @@
                     </div>
 
                     <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
-                        Berdasarkan data rekapitulasi penilaian pada Tabel 4.10, kalkulasi persentase kelayakan penerapan sistem dihitung menggunakan rumus persentase kelayakan skala Likert:
-                    </p>
-
-                    <div class="my-4 p-4 bg-slate-50 border border-slate-300 rounded text-center font-serif text-xs">
-                        <p class="font-bold text-slate-900 mb-2">Kalkulasi Persentase Kelayakan Sistem:</p>
-                        <p class="font-mono text-sm text-slate-800 mb-1">
-                            Persentase Kelayakan = ( Total Skor Aktual / Total Skor Maksimum ) &times; 100%
-                        </p>
-                        <p class="font-mono text-sm text-slate-800 font-bold mb-2">
-                            Persentase Kelayakan = ( 300 / 320 ) &times; 100% = 93.75%
-                        </p>
-                        <span class="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-full text-xs uppercase tracking-wide">
-                            Status: Sesuai Kebutuhan (93.75%)
-                        </span>
-                    </div>
-
-
-
-                    <p class="text-xs font-serif text-slate-800 text-justify mb-4 indent-8 leading-relaxed">
-                        Temuan penting dari pelaksanaan evaluasi penerimaan pengguna ini mencakup beberapa poin penguatan sistem:
+                        Berdasarkan rekapitulasi pada Tabel 4.10, seluruh 16 skenario pengujian di dalam 8 bagian modul operasional telah dijalankan langsung oleh masing-masing peran terkait (Pemilik Toko, Admin Toko, Kasir Toko, serta Pelanggan Toko Daring) dan dinyatakan <strong>Berhasil</strong> sesuai alur kerja yang diharapkan. Hasil utama yang diperoleh dari pelaksanaan UAT ini mencakup poin-poin berikut:
                     </p>
 
                     <ul class="list-disc pl-10 mb-4 space-y-1.5 text-xs font-serif text-slate-800 leading-relaxed">
                         <li>
-                            <strong>Efektivitas Penjagaan Kualitas Obat:</strong> Kasir Toko dan Admin Toko sangat mengapresiasi alokasi *<i>FEFO</i>* otomatis yang meniadakan keraguan kasir dalam mengambil barang di rak, memangkas potensi kerugian akibat barang kedaluwarsa.
+                            <strong>Efektivitas Penjagaan Kualitas Obat:</strong> Kasir Toko dan Pemilik Toko menilai alokasi <i>FEFO</i> otomatis meniadakan keraguan saat mengambil barang di rak, sehingga meminimalkan risiko keluarnya barang mendekati kedaluwarsa.
                         </li>
                         <li>
-                            <strong>Ketertiban <i>Stok Opname</i>:</strong> Pemilik Toko menegaskan bahwa mekanisme *<i>Freeze Lock</i>* dan *<i>Blind Count</i>* berhasil menertibkan proses penghitungan fisik tahunan menjadi terstruktur dan bebas dari manipulasi angka sistem.
+                            <strong>Ketertiban <i>Stok Opname</i>:</strong> Pemilik Toko, Kasir Toko, dan Admin Toko mengonfirmasi bahwa mekanisme <i>Freeze Lock</i> dan <i>Blind Count</i> berhasil menertibkan penghitungan fisik stok agar bebas dari bias angka sistem.
                         </li>
                         <li>
-                            <strong>Kelancaran Penjualan Lintas Saluran:</strong> Pelanggan Toko Daring menyatakan antarmuka katalog obat dan alkes sangat informatif, memudahkan pencarian variasi kemasan eceran dan proses transaksi mandiri tanpa bentrok stok dengan gerai fisik.
+                            <strong>Kelancaran Penjualan Lintas Saluran:</strong> Pelanggan Toko Daring dapat menelusuri katalog dan menyelesaikan pembayaran secara mandiri, sementara stok reservasi mencegah bentrok stok dengan meja kasir fisik.
                         </li>
                         <li>
-                            <strong>Kejelasan Histori Buku Besar Persediaan:</strong> Admin Toko merasakan kemudahan luar biasa dalam menelusuri arus mutasi barang masuk, keluar, dan konversi satuan melalui buku besar kartu stok yang transparan.
+                            <strong>Kejelasan Histori Buku Besar Persediaan:</strong> Admin Toko dan Pemilik Toko dapat menelusuri seluruh arus mutasi barang masuk, keluar, serta konversi satuan secara kronologis pada kartu stok.
                         </li>
                         <li>
-                            <strong>Otomasi Penyesuaian Mutasi:</strong> Mekanisme penyaringan otomatis selisih opname mempermudah verifikasi manajerial sehingga perbedaan fisik langsung dapat diselesaikan secara instan dan akurat.
+                            <strong>Ketepatan Penyesuaian Selisih dan Pelaporan:</strong> Penyaringan otomatis item berselisih pada layar verifikasi memudahkan Admin Toko memproses koreksi stok sekaligus mencetak dokumen laporan dan Berita Acara dalam format A4.
                         </li>
                     </ul>
 
                     <p class="text-xs font-serif text-slate-800 text-justify mb-2 indent-8 leading-relaxed">
-                        Dengan perolehan skor akhir <strong>93,75% (Sesuai)</strong> dan pengesahan resmi dari seluruh perwakilan peran penguji, Sistem Informasi Inventori dan Penjualan <em>Omnichannel</em> Toko Kesehatan ZenCare Medical dinyatakan telah memenuhi seluruh spesifikasi kebutuhan bisnis pengguna serta siap dioperasikan penuh pada gerai operasional.
+                        Berdasarkan seluruh hasil pengujian operasional di atas, Sistem Informasi Inventori dan Penjualan <em>Omnichannel</em> Toko Kesehatan ZenCare Medical dinyatakan telah berjalan sesuai spesifikasi kebutuhan masing-masing peran pengguna serta siap digunakan dalam mendukung kegiatan operasional harian toko fisik maupun toko daring.
                     </p>
                     </div>
 

@@ -1,4 +1,4 @@
-import pathlib, shutil
+import copy, pathlib
 from PIL import Image
 import pptx
 from pptx.util import Inches, Pt
@@ -8,27 +8,50 @@ from pptx.enum.shapes import MSO_SHAPE
 
 SRC_PPTX = pathlib.Path(r"c:\xampp\htdocs\inventory_zencare\lain\PPT\Seminar Proposal TA.pptx")
 OUT_PPTX = pathlib.Path(r"c:\xampp\htdocs\inventory_zencare\lain\PPT\Seminar Hasil TA Final.pptx")
+ALT_OUT_PPTX = pathlib.Path(r"c:\xampp\htdocs\inventory_zencare\lain\PPT\Seminar Hasil TA Final_Updated.pptx")
 
 ASSETS = pathlib.Path("lain/PPT/Diagram_Seminar_Hasil")
-UI_DIR = pathlib.Path("lain/Katalog_UI_UX_ZenCare_Medical")
+WF_DIR = pathlib.Path("lain/File PPT/Workflow")
 
 NAVY = RGBColor(0x00, 0x50, 0x88)
 DARK_NAVY = RGBColor(0x0F, 0x2D, 0x5A)
 TEAL = RGBColor(0x11, 0xCA, 0xA0)
+TEAL_DARK = RGBColor(0x4D, 0x6F, 0x78)
 SLATE = RGBColor(0x33, 0x41, 0x55)
 MUTED = RGBColor(0x64, 0x74, 0x8B)
-CRIMSON = RGBColor(0x9F, 0x12, 0x39)
 LIGHT_BG = RGBColor(0xF1, 0xF5, 0xF9)
 CARD_BORDER = RGBColor(0xCF, 0xD7, 0xE7)
 WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 EMERALD_BG = RGBColor(0xEC, 0xFD, 0xF5)
 EMERALD_TXT = RGBColor(0x06, 0x5F, 0x46)
 
-shutil.copy2(SRC_PPTX, OUT_PPTX)
-prs = pptx.Presentation(OUT_PPTX)
+prs = pptx.Presentation(SRC_PPTX)
+R_EMBED = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}embed"
 
 
-def set_text_keep_style(shape, new_text, align=None, color=None, size_pt=None, bold=None, font_name=None):
+def clone_chrome_slide(prs_obj, src_idx=3, skip_idxs=(6,)):
+    """Duplicate a Canva chrome slide while preserving image relationships."""
+    src = prs_obj.slides[src_idx]
+    new_sl = prs_obj.slides.add_slide(prs_obj.slide_layouts[6])
+    sp_tree = new_sl.shapes._spTree
+    rid_map = {}
+
+    for si, sh in enumerate(src.shapes):
+        if si in skip_idxs:
+            continue
+        el = copy.deepcopy(sh._element)
+        for node in el.iter():
+            old_rid = node.attrib.get(R_EMBED)
+            if old_rid:
+                if old_rid not in rid_map:
+                    rel = src.part.rels[old_rid]
+                    rid_map[old_rid] = new_sl.part.relate_to(rel.target_part, rel.reltype)
+                node.attrib[R_EMBED] = rid_map[old_rid]
+        sp_tree.append(el)
+    return new_sl
+
+
+def set_text_keep_style(shape, new_text, align=None, color=None, size_pt=None, bold=None, font_name=None, line_spacing=None):
     tf = shape.text_frame
     r0 = tf.paragraphs[0].runs[0] if tf.paragraphs[0].runs else None
     orig_name = font_name or (r0.font.name if r0 and r0.font.name else "DM Sans")
@@ -43,6 +66,8 @@ def set_text_keep_style(shape, new_text, align=None, color=None, size_pt=None, b
         p = tf.paragraphs[0] if idx == 0 else tf.add_paragraph()
         if align is not None:
             p.alignment = align
+        if line_spacing is not None:
+            p.line_spacing = line_spacing
         p.space_after = Pt(4)
         run = p.add_run()
         run.text = line
@@ -70,9 +95,10 @@ def add_runs_paragraph(tf, segments, first=False, space_after=6, line_spacing=1.
     return p
 
 
-def add_card(slide, x, y, w, h, fill=WHITE, border=CARD_BORDER, border_pt=1.25, radius=0.04):
-    sh = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
-    sh.adjustments[0] = radius
+def add_card(slide, x, y, w, h, fill=WHITE, border=CARD_BORDER, border_pt=1.25, radius=0.04, shape_type=MSO_SHAPE.ROUNDED_RECTANGLE):
+    sh = slide.shapes.add_shape(shape_type, Inches(x), Inches(y), Inches(w), Inches(h))
+    if shape_type == MSO_SHAPE.ROUNDED_RECTANGLE:
+        sh.adjustments[0] = radius
     sh.fill.solid()
     sh.fill.fore_color.rgb = fill
     if border is not None:
@@ -103,10 +129,10 @@ def remove_shapes(slide, indices_desc):
         sp.getparent().remove(sp)
 
 
-def update_badge(slide, label="SEMINAR HASIL TA"):
+def update_badge(slide):
     for sh in slide.shapes:
         if sh.has_text_frame and "SEMINAR PROPOSAL TA" in sh.text:
-            set_text_keep_style(sh, label, align=PP_ALIGN.RIGHT, color=NAVY, size_pt=20.2, bold=True, font_name="DM Sans Bold")
+            set_text_keep_style(sh, "SEMINAR HASIL TA", align=PP_ALIGN.RIGHT, color=NAVY, size_pt=20.2, bold=True, font_name="DM Sans Bold")
 
 
 def set_slide_title(slide, title_text):
@@ -116,29 +142,38 @@ def set_slide_title(slide, title_text):
             return
 
 
+# Clone 5 pristine chrome slides BEFORE mutating idx=3 (Perbandingan Terdahulu):
+# 22 -> Daftar Isi
+# 23 -> Sitemap Admin Toko
+# 24 -> Sitemap Superadmin
+# 25 -> Detail Database 1/2
+# 26 -> Detail Database 2/2
+s_toc = clone_chrome_slide(prs, src_idx=3, skip_idxs=(6,))      # idx 22
+s_sm_admin = clone_chrome_slide(prs, src_idx=3, skip_idxs=(6,)) # idx 23
+s_sm_super = clone_chrome_slide(prs, src_idx=3, skip_idxs=(6,)) # idx 24
+s_erd_z1 = clone_chrome_slide(prs, src_idx=3, skip_idxs=(6,))   # idx 25
+s_erd_z2 = clone_chrome_slide(prs, src_idx=3, skip_idxs=(6,))   # idx 26
+
 for sl in prs.slides:
     update_badge(sl)
 
 # =========================================================
-# CORE SLIDES (1-11)
+# 1. Cover (slot 0)
 # =========================================================
-
-# SLOT 0 -> Slide 1: Cover
 s1 = prs.slides[0]
 set_text_keep_style(s1.shapes[14], "Dr. Soetam Rizky Wicaksono, S.Kom., MM., MCP., MCTS., MOSM.", align=PP_ALIGN.CENTER, color=NAVY, size_pt=20.2, bold=True, font_name="DM Sans Bold")
 
-# SLOT 3 -> Slide 2: Daftar Isi (01-06 ringkas)
-s_toc = prs.slides[3]
+# =========================================================
+# 2. Daftar Isi (slot 22)
+# =========================================================
 set_slide_title(s_toc, "Daftar Isi")
-remove_shapes(s_toc, [6])
-
 toc_items = [
-    ("01", "Latar Belakang Masalah", "Kendala stok terpisah, Multi-UOM, & ketiadaan FEFO/SN/label"),
-    ("02", "Tujuan, Manfaat, & Batasan", "Target capaian sistem, manfaat mitra, & ruang lingkup penelitian"),
-    ("03", "Metodologi, Peran, & Logika Inti", "Realisasi 4 fase RAD, Use Case 4 aktor, FEFO & anti-race condition"),
-    ("04", "Arsitektur Basis Data (ERD)", "Logical Database 20 tabel relasional terintegrasi (Fokus Utama)"),
-    ("05", "Demo Sistem & Hasil Evaluasi", "Demonstrasi langsung fitur kunci & pengujian UAT (93,75%)"),
-    ("06", "Kesimpulan & Saran", "Rangkuman capaian hasil & rekomendasi pengembangan mendatang"),
+    ("01", "Latar Belakang, Tujuan & Batasan", "Kendala stok terpisah, tujuan, manfaat, & 3 batasan sistem"),
+    ("02", "Penelitian Terdahulu & Metodologi", "Komparasi studi sejenis (gap riset) & metode RAD 4 fase"),
+    ("03", "Workflow & Sitemap (4 Peran)", "Alur keluar-masuk terbaru & struktur navigasi tiap pengguna"),
+    ("04", "Use Case & Logical Database", "Pemodelan 4 aktor sistem & ERD 20 tabel (full & zoom)"),
+    ("05", "Demo Sistem & Hasil Evaluasi (UAT)", "Demonstrasi alur utama & hasil pengujian skenario pengguna"),
+    ("06", "Kesimpulan & Lampiran Dokumentasi", "Rangkuman capaian hasil & dokumentasi foto lapangan"),
 ]
 for i, (num, title_t, desc_t) in enumerate(toc_items):
     col = i // 3
@@ -154,7 +189,9 @@ for i, (num, title_t, desc_t) in enumerate(toc_items):
     add_runs_paragraph(ttb.text_frame, [(title_t, {"font": "DM Sans Bold", "size": 19, "bold": True, "color": NAVY})], first=True, space_after=4)
     add_runs_paragraph(ttb.text_frame, [(desc_t, {"size": 14.5, "color": SLATE})], space_after=0)
 
-# SLOT 1 -> Slide 3: Latar Belakang Masalah (murni masalah)
+# =========================================================
+# 3. Latar Belakang Masalah (slot 1)
+# =========================================================
 s2 = prs.slides[1]
 set_text_keep_style(
     s2.shapes[11],
@@ -177,139 +214,412 @@ set_text_keep_style(
     color=SLATE, size_pt=16.0
 )
 
-# SLOT 2 -> Slide 4: Tujuan, Manfaat, & Batasan Sistem (1 Slide Padat)
-s_tm = prs.slides[2]
-set_slide_title(s_tm, "Tujuan, Manfaat, dan Batasan Sistem")
-remove_shapes(s_tm, [2, 4, 6, 8, 9, 10, 12])
+# =========================================================
+# 4. Tujuan, Manfaat, dan Batasan Masalah (slot 9)
+# =========================================================
+s_tmb = prs.slides[9]
+set_slide_title(s_tmb, "Tujuan, Manfaat, dan Batasan Masalah")
+remove_shapes(s_tmb, [4, 5, 6, 9])
 
-# Left Card: Tujuan Penelitian
-add_card(s_tm, 1.25, 3.40, 8.65, 7.00, fill=WHITE, border=NAVY, border_pt=1.5)
-add_card(s_tm, 1.25, 3.40, 8.65, 0.70, fill=NAVY, border=None, radius=0.02)
-th_l = s_tm.shapes.add_textbox(Inches(1.55), Inches(3.52), Inches(8.05), Inches(0.45))
-add_runs_paragraph(th_l.text_frame, [("TUJUAN PENELITIAN (BAB I 1.5)", {"font": "DM Sans Bold", "size": 16.5, "bold": True, "color": WHITE})], first=True)
-tb_l = s_tm.shapes.add_textbox(Inches(1.55), Inches(4.32), Inches(8.05), Inches(5.85))
-tb_l.text_frame.word_wrap = True
-for idx, (pt_h, pt_b) in enumerate([
-    ("1. Pusat Data Omnichannel Tunggal:", "Menyinkronkan ketersediaan stok kasir fisik (POS) dan portal toko daring (e-commerce) mandiri dalam satu basis data secara waktu nyata (real-time)."),
-    ("2. Otomatisasi Multi-UOM:", "Mengotomatisasi konversi pemotongan persediaan lintas tingkat satuan kemasan (Box ↔ Strip/Pcs) agar saldo fisik dan batas stok pengaman selalu akurat."),
-    ("3. Kepatuhan FEFO & Garansi SN:", "Memfasilitasi pengendalian masa kedaluwarsa obat melalui label barcode fisik & deteksi anomali kasir, serta validasi nomor seri alat kesehatan.")
-]):
-    add_runs_paragraph(tb_l.text_frame, [(pt_h + " ", {"font": "DM Sans Bold", "size": 15.5, "bold": True, "color": NAVY}), (pt_b, {"size": 15, "color": SLATE})], first=(idx == 0), space_after=16, line_spacing=1.22)
+add_card(s_tmb, 1.25, 3.35, 8.55, 3.25, fill=LIGHT_BG, border=CARD_BORDER, border_pt=1.5)
+add_card(s_tmb, 1.25, 3.35, 8.55, 0.58, fill=NAVY, border=None, radius=0.02)
+add_runs_paragraph(s_tmb.shapes.add_textbox(Inches(1.50), Inches(3.43), Inches(8.05), Inches(0.42)).text_frame,
+                   [("Tujuan", {"font": "Merriweather Bold", "size": 19, "bold": True, "color": WHITE})], first=True, align=PP_ALIGN.CENTER)
+t_body_l = s_tmb.shapes.add_textbox(Inches(1.55), Inches(4.08), Inches(7.95), Inches(2.35))
+t_body_l.text_frame.word_wrap = True
+add_runs_paragraph(
+    t_body_l.text_frame,
+    [("Membangun sistem inventori omnichannel terpusat yang menyinkronkan stok kasir fisik (POS) dan e-commerce mandiri secara real-time, mengotomatisasi konversi Multi-UOM, serta menegakkan kendali kedaluwarsa berbasis FEFO dan Serial Number melalui label barcode fisik.",
+      {"size": 15, "color": SLATE})],
+    first=True, line_spacing=1.28, align=PP_ALIGN.LEFT
+)
 
-# Right Top Card: Manfaat Penelitian
-add_card(s_tm, 10.20, 3.40, 8.55, 3.65, fill=LIGHT_BG, border=CARD_BORDER)
-th_r = s_tm.shapes.add_textbox(Inches(10.50), Inches(3.55), Inches(7.95), Inches(0.45))
-add_runs_paragraph(th_r.text_frame, [("MANFAAT PENELITIAN (BAB I 1.6):", {"font": "DM Sans Bold", "size": 16.5, "bold": True, "color": NAVY})], first=True)
-tb_r = s_tm.shapes.add_textbox(Inches(10.50), Inches(4.05), Inches(7.95), Inches(2.85))
-tb_r.text_frame.word_wrap = True
-for idx, (pt_h, pt_b) in enumerate([
-    ("• Bagi ZenCare Medical:", "Meniadakan selisih stok & overselling, menekan kerugian kedaluwarsa, mencegah deviasi kasir, dan mempercepat operasional."),
-    ("• Bagi Penulis & Perguruan Tinggi:", "Penerapan metode RAD pada logistik medis nyata serta rujukan aplikatif sistem inventori omnichannel UMKM.")
-]):
-    add_runs_paragraph(tb_r.text_frame, [(pt_h + " ", {"font": "DM Sans Bold", "size": 14.5, "bold": True, "color": NAVY}), (pt_b, {"size": 14, "color": SLATE})], first=(idx == 0), space_after=10, line_spacing=1.20)
+add_card(s_tmb, 10.20, 3.35, 8.55, 3.25, fill=LIGHT_BG, border=CARD_BORDER, border_pt=1.5)
+add_card(s_tmb, 10.20, 3.35, 8.55, 0.58, fill=DARK_NAVY, border=None, radius=0.02)
+add_runs_paragraph(s_tmb.shapes.add_textbox(Inches(10.45), Inches(3.43), Inches(8.05), Inches(0.42)).text_frame,
+                   [("Manfaat", {"font": "Merriweather Bold", "size": 19, "bold": True, "color": WHITE})], first=True, align=PP_ALIGN.CENTER)
+t_body_r = s_tmb.shapes.add_textbox(Inches(10.50), Inches(4.08), Inches(7.95), Inches(2.35))
+t_body_r.text_frame.word_wrap = True
+add_runs_paragraph(
+    t_body_r.text_frame,
+    [("Membantu ZenCare Medical meniadakan overselling, menekan kerugian akibat obat kedaluwarsa, mencegah deviasi stok kasir, mempercepat operasional harian, serta menjadi rujukan aplikatif sistem inventori UMKM kesehatan bagi Universitas Ma Chung.",
+      {"size": 15, "color": SLATE})],
+    first=True, line_spacing=1.28, align=PP_ALIGN.LEFT
+)
 
-# Right Bottom Card: Batasan Kunci
-add_card(s_tm, 10.20, 7.25, 8.55, 3.15, fill=WHITE, border=CARD_BORDER)
-bh_r = s_tm.shapes.add_textbox(Inches(10.50), Inches(7.40), Inches(7.95), Inches(0.42))
-add_runs_paragraph(bh_r.text_frame, [("BATASAN RUANG LINGKUP (BAB I 1.3):", {"font": "DM Sans Bold", "size": 15.5, "bold": True, "color": DARK_NAVY})], first=True)
-bb_r = s_tm.shapes.add_textbox(Inches(10.50), Inches(7.85), Inches(7.95), Inches(2.40))
-bb_r.text_frame.word_wrap = True
-for idx, b_txt in enumerate([
-    "• Terpusat pada gerai ZenCare Medical Muharto; tidak mencakup pembukuan finansial (laba rugi/neraca/piutang) maupun poin pelanggan.",
-    "• Kendali FEFO (Batch) & Serial Number disertai cetak label fisik & Stok Opname; tanpa repacking, pre-order, atau refund otomatis.",
-    "• Pembayaran Midtrans & estimasi ongkir RajaOngkir berjalan pada mode sandbox."
-]):
-    add_runs_paragraph(bb_r.text_frame, [(b_txt, {"size": 13.5, "color": SLATE})], first=(idx == 0), space_after=6, line_spacing=1.16)
+add_card(s_tmb, 1.25, 6.78, 17.50, 3.60, fill=WHITE, border=NAVY, border_pt=1.5)
+add_card(s_tmb, 1.25, 6.78, 17.50, 0.52, fill=NAVY, border=None, radius=0.02)
+add_runs_paragraph(s_tmb.shapes.add_textbox(Inches(1.55), Inches(6.85), Inches(16.90), Inches(0.38)).text_frame,
+                   [("Batasan Masalah", {"font": "Merriweather Bold", "size": 17.5, "bold": True, "color": WHITE})], first=True, align=PP_ALIGN.CENTER)
 
-# SLOT 4 -> Slide 5: Metodologi RAD (Realisasi Progres) & Teknologi Sistem
+batasan_3 = [
+    ("1. Sinkronisasi & Lokasi Cabang",
+     "Menyinkronkan stok terminal POS dan e-commerce mandiri pada 1 cabang pusat (ZenCare Medical Muharto), tanpa modul pembukuan finansial maupun poin pelanggan."),
+    ("2. Kendali FEFO, SN, & Opname",
+     "Menerapkan FEFO berbasis Batch untuk obat dan Serial Number garansi alat kesehatan, lengkap dengan cetak stiker fisik serta siklus Stok Opname terpusat."),
+    ("3. Otomatisasi Satuan & Sandbox",
+     "Pemotongan otomatis ke Base UOM tanpa modul repacking, pre-order, atau refund otomatis. Integrasi Midtrans dan RajaOngkir berjalan pada mode sandbox.")
+]
+for bi, (bh, bb) in enumerate(batasan_3):
+    bx = 1.48 + bi * 5.78
+    add_card(s_tmb, bx, 7.45, 5.48, 2.75, fill=LIGHT_BG, border=CARD_BORDER)
+    bt = s_tmb.shapes.add_textbox(Inches(bx + 0.18), Inches(7.58), Inches(5.12), Inches(2.50))
+    bt.text_frame.word_wrap = True
+    add_runs_paragraph(bt.text_frame, [(bh, {"font": "DM Sans Bold", "size": 14.5, "bold": True, "color": NAVY})], first=True, space_after=4)
+    add_runs_paragraph(bt.text_frame, [(bb, {"size": 13.5, "color": SLATE})], space_after=0, line_spacing=1.18)
+
+# =========================================================
+# 5. Perbandingan Penelitian Terdahulu (slot 3)
+# =========================================================
+s_pt = prs.slides[3]
+set_slide_title(s_pt, "Perbandingan Penelitian Terdahulu")
+remove_shapes(s_pt, [6])
+
+pt_rows = [
+    ["Peneliti (Tahun)", "Fokus & Metode Studi", "Platform", "Celah Riset / Pembeda dengan ZenCare Medical"],
+    ["Rachman dkk. (2024)\nToko Obat Murah Bung Tomo",
+     "Migrasi pencatatan stok obat masuk/keluar dari buku ke web (Waterfall).",
+     "React.js, Express.js,\nMySQL",
+     "Masih stand-alone (gerai fisik saja) tanpa sinkronisasi toko daring, belum mendukung konversi Multi-UOM maupun pelacakan kedaluwarsa berbasis Batch (FEFO)."],
+    ["Nuralisa dkk. (2024)\nToko Obat Amanah Karya Farma",
+     "Percepatan pencarian & penyusunan laporan persediaan obat (R&D Waterfall).",
+     "PHP Laravel 10,\nMySQL",
+     "Berfokus pada pelaporan internal luring; belum terintegrasi penjualan daring (omnichannel), sehingga belum memiliki penguncian anti-overselling lintas kanal."],
+    ["Mattegunta (2025)\nRitel Omnichannel Umum",
+     "Integrasi stok real-time lintas saluran fisik dan digital (komparasi omnichannel).",
+     "POS Terintegrasi\nPlatform Cloud",
+     "Diterapkan pada ritel umum tanpa pengawasan karakteristik medis: tidak mewajibkan alokasi FEFO berbasis Batch obat maupun pelacakan Serial Number garansi alkes."],
+    ["Sistem Usulan (2026)\nZenCare Medical",
+     "Tata kelola inventori & penjualan omnichannel obat serta alkes (Metode RAD).",
+     "PHP, MySQL InnoDB,\nMidtrans & RajaOngkir",
+     "Menggabungkan POS + E-Commerce real-time (SELECT ... FOR UPDATE), otomasi Multi-UOM, Gatekeeper FEFO & SN + Stiker Barcode, hingga Stok Opname (Freeze Lock & Blind Count)."]
+]
+pt_sh = s_pt.shapes.add_table(len(pt_rows), 4, Inches(1.15), Inches(3.40), Inches(17.70), Inches(6.95))
+pt_tbl = pt_sh.table
+for ci, w in enumerate([3.65, 4.15, 2.75, 7.15]):
+    pt_tbl.columns[ci].width = Inches(w)
+
+for ri, rdata in enumerate(pt_rows):
+    is_hdr = (ri == 0)
+    is_us = (ri == len(pt_rows) - 1)
+    for ci, val in enumerate(rdata):
+        cell = pt_tbl.cell(ri, ci)
+        cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+        cell.fill.solid()
+        cell.fill.fore_color.rgb = NAVY if is_hdr else (EMERALD_BG if is_us else (WHITE if ri % 2 == 1 else LIGHT_BG))
+        tf = cell.text_frame
+        tf.word_wrap = True
+        tf.clear()
+        for li, line in enumerate(val.split("\n")):
+            p = tf.paragraphs[0] if li == 0 else tf.add_paragraph()
+            p.alignment = PP_ALIGN.CENTER if is_hdr else PP_ALIGN.LEFT
+            p.line_spacing = 1.15
+            r = p.add_run()
+            r.text = line
+            is_bold_line = is_hdr or is_us or (ci == 0 and li == 0)
+            r.font.name = "DM Sans Bold" if is_bold_line else "DM Sans"
+            r.font.size = Pt(14 if is_hdr else 13)
+            r.font.bold = is_bold_line
+            r.font.italic = (ci == 0 and li == 1 and not is_hdr)
+            r.font.color.rgb = WHITE if is_hdr else (EMERALD_TXT if (is_us and ci in (0, 3)) else (NAVY if (ci == 0 and li == 0) else SLATE))
+
+# =========================================================
+# 6. Metodologi Pengembangan — RAD (slot 4)
+# =========================================================
 s_rad = prs.slides[4]
-set_slide_title(s_rad, "Metodologi Penelitian (RAD) & Teknologi Sistem")
+set_slide_title(s_rad, "Metodologi Pengembangan")
 remove_shapes(s_rad, [6])
 
-rad_cards = [
-    ("01. Requirements Planning", "Observasi gerai ZenCare Medical Muharto, wawancara operasional, & identifikasi kendala overselling, konversi Multi-UOM, FEFO, dan garansi SN."),
-    ("02. User Design", "Pemodelan Workflow, Sitemap 4 peran, Use Case Diagram (4 aktor), Activity Diagram, skema Logical Database 20 tabel, & perancangan UI."),
-    ("03. Construction", "Pembangunan sistem web menggunakan PHP & MySQL InnoDB (POS, E-Commerce, Logistik, Stok Opname) dengan row locking SELECT ... FOR UPDATE."),
-    ("04. Implementation & UAT", "Pengujian alur stok lintas saluran, barcode scanner, cetak termal/A4, serta User Acceptance Testing 4 peran pengguna (Skor: 93,75% Sesuai).")
+rad_quads = [
+    ("01", "Requirements Planning", 0.90, 3.55,
+     "Mengidentifikasi kendala langsung di ZenCare Medical melalui observasi dan wawancara, mulai dari stok toko fisik dan toko daring yang terpisah, perbedaan satuan kemasan, hingga pencatatan masa kedaluwarsa dan nomor seri."),
+    ("02", "User Design", 0.90, 7.05,
+     "Merancang ulang alur kerja (Workflow), pemodelan sistem (Sitemap 4 peran, Use Case 4 aktor, dan Activity Diagram), struktur database 20 tabel, serta rancangan tampilan aplikasi."),
+    ("03", "Construction", 12.60, 3.55,
+     "Membangun aplikasi web secara bertahap dan terpusat dalam satu database, mencakup fitur kasir toko, toko daring (pembayaran Midtrans & ongkos kirim RajaOngkir), penerimaan barang, stok opname, serta cetak struk, stiker barcode, dan laporan A4."),
+    ("04", "Cutover & Testing", 12.60, 7.05,
+     "Melakukan pengujian langsung bersama pengguna (UAT) pada 4 peran sesuai alur operasional (hasil Berhasil di 8 modul), memasang alat barcode scanner, dan menyiapkan sistem untuk digunakan di toko.")
 ]
-for idx, (rh_t, rd_t) in enumerate(rad_cards):
-    col = idx % 2
-    row = idx // 2
-    cx = 1.25 + col * 8.95
-    cy = 3.45 + row * 2.55
-    add_card(s_rad, cx, cy, 8.55, 2.30, fill=LIGHT_BG, border=CARD_BORDER)
-    add_card(s_rad, cx, cy, 0.16, 2.30, fill=NAVY, border=None, radius=0.01)
-    rtb = s_rad.shapes.add_textbox(Inches(cx + 0.38), Inches(cy + 0.22), Inches(7.90), Inches(1.88))
-    rtb.text_frame.word_wrap = True
-    add_runs_paragraph(rtb.text_frame, [(rh_t, {"font": "DM Sans Bold", "size": 17.5, "bold": True, "color": NAVY})], first=True, space_after=6)
-    add_runs_paragraph(rtb.text_frame, [(rd_t, {"size": 14.5, "color": SLATE})], space_after=0, line_spacing=1.20)
+for num, head_t, qx, qy, desc_t in rad_quads:
+    add_card(s_rad, qx, qy, 6.45, 0.78, fill=NAVY, border=None, radius=0.45)
+    ntb = s_rad.shapes.add_textbox(Inches(qx + 0.25), Inches(qy + 0.14), Inches(0.75), Inches(0.50))
+    add_runs_paragraph(ntb.text_frame, [(num, {"font": "DM Sans Bold", "size": 20, "bold": True, "color": TEAL})], first=True)
+    htb = s_rad.shapes.add_textbox(Inches(qx + 1.00), Inches(qy + 0.16), Inches(5.20), Inches(0.45))
+    add_runs_paragraph(htb.text_frame, [(head_t, {"font": "DM Sans Bold", "size": 19, "bold": True, "color": WHITE})], first=True)
+    add_card(s_rad, qx + 0.10, qy + 0.90, 6.25, 2.30, fill=LIGHT_BG, border=CARD_BORDER)
+    dtb = s_rad.shapes.add_textbox(Inches(qx + 0.28), Inches(qy + 1.02), Inches(5.90), Inches(2.05))
+    dtb.text_frame.word_wrap = True
+    add_runs_paragraph(dtb.text_frame, [(desc_t, {"size": 14, "color": SLATE})], first=True, line_spacing=1.22)
 
-# Bottom Tech Stack Strip
-add_card(s_rad, 1.25, 8.65, 17.50, 1.70, fill=WHITE, border=NAVY, border_pt=1.5)
-tt_tb = s_rad.shapes.add_textbox(Inches(1.55), Inches(8.80), Inches(16.90), Inches(1.40))
-tt_tb.text_frame.word_wrap = True
-add_runs_paragraph(tt_tb.text_frame, [("Teknologi & Infrastruktur Pembangun Sistem:", {"font": "DM Sans Bold", "size": 16, "bold": True, "color": NAVY})], first=True, space_after=6)
-add_runs_paragraph(tt_tb.text_frame, [
-    ("Backend & Database: ", {"font": "DM Sans Bold", "size": 14.5, "bold": True, "color": DARK_NAVY}),
-    ("PHP 8 & MySQL InnoDB (Transaksional SELECT ... FOR UPDATE)   |   ", {"size": 14.5, "color": SLATE}),
-    ("Integrasi & Pemetaan: ", {"font": "DM Sans Bold", "size": 14.5, "bold": True, "color": DARK_NAVY}),
-    ("Midtrans Snap, RajaOngkir, & Leaflet Maps   |   ", {"size": 14.5, "color": SLATE}),
-    ("Perangkat Keras & Cetak: ", {"font": "DM Sans Bold", "size": 14.5, "bold": True, "color": DARK_NAVY}),
-    ("Barcode Scanner & CSS Thermal Print (50x30mm, 58/80mm, 100x150mm, A4)", {"size": 14.5, "color": SLATE})
-], space_after=0)
+rad_nodes = [
+    ("R", 8.05, 4.75, NAVY),
+    ("A", 10.25, 6.05, TEAL_DARK),
+    ("D", 8.05, 7.35, DARK_NAVY),
+]
+c1 = s_rad.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(9.35), Inches(5.55), Inches(1.40), Inches(0.14))
+c1.rotation = 32; c1.fill.solid(); c1.fill.fore_color.rgb = TEAL; c1.line.fill.background()
+c2 = s_rad.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(9.35), Inches(7.50), Inches(1.40), Inches(0.14))
+c2.rotation = -32; c2.fill.solid(); c2.fill.fore_color.rgb = TEAL; c2.line.fill.background()
 
-# SLOT 10 -> Slide 6: Use Case Diagram (4 Aktor) & Logika Inti
+for ch, nx, ny, col in rad_nodes:
+    add_card(s_rad, nx, ny, 1.55, 1.55, fill=col, border=WHITE, border_pt=3.0, shape_type=MSO_SHAPE.OVAL)
+    ctb = s_rad.shapes.add_textbox(Inches(nx), Inches(ny + 0.28), Inches(1.55), Inches(1.00))
+    add_runs_paragraph(ctb.text_frame, [(ch, {"font": "Merriweather Bold", "size": 44, "bold": True, "color": WHITE})], first=True, align=PP_ALIGN.CENTER)
+
+add_runs_paragraph(
+    s_rad.shapes.add_textbox(Inches(7.70), Inches(9.20), Inches(4.55), Inches(0.75)).text_frame,
+    [("Rapid Application Development\n(BAB III Subbab 3.1)", {"font": "DM Sans Bold", "size": 13.5, "bold": True, "color": MUTED})],
+    first=True, align=PP_ALIGN.CENTER
+)
+
+# =========================================================
+# 7. Workflow Barang Keluar (Sistem Usulan) (slot 5)
+# =========================================================
+s_wf1 = prs.slides[5]
+set_slide_title(s_wf1, "Workflow Barang Keluar (Sistem Usulan)")
+remove_shapes(s_wf1, [4, 5, 6, 8, 9, 10, 11])
+
+add_card(s_wf1, 1.15, 3.30, 5.60, 7.35, fill=WHITE, border=CARD_BORDER)
+add_picture_fit(s_wf1, WF_DIR / "Workflow Barang Keluar (Sistem Usulan).png", 1.25, 3.38, 5.40, 7.18, pad=0.06)
+
+add_card(s_wf1, 7.05, 3.30, 11.80, 7.35, fill=LIGHT_BG, border=CARD_BORDER)
+wf1_tb = s_wf1.shapes.add_textbox(Inches(7.45), Inches(3.75), Inches(11.00), Inches(6.50))
+wf1_tb.text_frame.word_wrap = True
+add_runs_paragraph(wf1_tb.text_frame, [("Alur Barang Keluar (3 Jalur)", {"font": "Merriweather Bold", "size": 19, "bold": True, "color": NAVY})], first=True, space_after=14)
+for wh, wb in [
+    ("1. Kasir Toko Fisik (POS):",
+     "Pelanggan ke kasir \u2192 pindai barcode \u2192 pecah kemasan otomatis bila perlu \u2192 sistem pilih kedaluwarsa terdekat (FEFO) / nomor seri \u2192 stok berkurang & struk tercetak."),
+    ("2. Toko Daring (Pengiriman Kurir):",
+     "Konsumen checkout kemasan besar & bayar Midtrans \u2192 stok dikunci maks. 2 jam \u2192 Admin kemas, pindai barcode, & input resi."),
+    ("3. Toko Daring (Ambil di Toko):",
+     "Konsumen pesan & bayar di website \u2192 Admin siapkan sesuai FEFO \u2192 diambil di gerai \u2192 status selesai & Kartu Stok tercatat.")
+]:
+    add_runs_paragraph(wf1_tb.text_frame, [(wh, {"font": "DM Sans Bold", "size": 16, "bold": True, "color": DARK_NAVY})], space_after=3)
+    add_runs_paragraph(wf1_tb.text_frame, [(wb, {"size": 14.5, "color": SLATE})], space_after=16, line_spacing=1.22)
+
+# =========================================================
+# 8. Workflow Barang Masuk & Logistik (Sistem Usulan) (slot 6)
+# =========================================================
+s_wf2 = prs.slides[6]
+set_slide_title(s_wf2, "Workflow Barang Masuk & Logistik (Sistem Usulan)")
+remove_shapes(s_wf2, [4, 5, 6, 7, 9, 10, 11, 12])
+
+add_card(s_wf2, 1.15, 3.30, 8.20, 7.35, fill=WHITE, border=CARD_BORDER)
+add_picture_fit(s_wf2, WF_DIR / "Workflow Barang Masuk & Logistik (Sistem Usulan).png", 1.25, 3.38, 8.00, 7.18, pad=0.06)
+
+add_card(s_wf2, 9.65, 3.30, 9.20, 7.35, fill=LIGHT_BG, border=CARD_BORDER)
+wf2_tb = s_wf2.shapes.add_textbox(Inches(10.00), Inches(3.68), Inches(8.50), Inches(6.60))
+wf2_tb.text_frame.word_wrap = True
+add_runs_paragraph(wf2_tb.text_frame, [("Alur Barang Masuk (4 Tahap)", {"font": "Merriweather Bold", "size": 19, "bold": True, "color": NAVY})], first=True, space_after=12)
+for wh, wb in [
+    ("1. Pemesanan / Pembelian:",
+     "Cek stok menipis \u2192 pesan ke distributor resmi atau beli grosir \u2192 paket & faktur tiba."),
+    ("2. Pemeriksaan Fisik:",
+     "Cocokkan jumlah fisik dengan faktur/nota dan pisahkan jika ada barang rusak."),
+    ("3. Pencatatan Sistem:",
+     "Input jumlah masuk, harga beli, batch & tanggal kedaluwarsa, atau nomor seri alat."),
+    ("4. Cetak Label & Tata Rak:",
+     "Stok & Kartu Stok bertambah \u2192 cetak stiker barcode \u2192 tata rak sesuai urutan kedaluwarsa.")
+]:
+    add_runs_paragraph(wf2_tb.text_frame, [(wh, {"font": "DM Sans Bold", "size": 15.5, "bold": True, "color": DARK_NAVY})], space_after=2)
+    add_runs_paragraph(wf2_tb.text_frame, [(wb, {"size": 14.2, "color": SLATE})], space_after=13, line_spacing=1.20)
+
+
+# Helper for Opsi B Sitemap slides (Gambar besar kiri + penjelasan fitur terbaru kanan!)
+def build_sitemap_slide(slide, title, img_path, role_heading, points, remove_idxs=()):
+    set_slide_title(slide, title)
+    if remove_idxs:
+        remove_shapes(slide, remove_idxs)
+    add_card(slide, 1.15, 3.30, 9.55, 7.35, fill=WHITE, border=CARD_BORDER)
+    add_picture_fit(slide, img_path, 1.25, 3.38, 9.35, 7.18)
+
+    add_card(slide, 11.00, 3.30, 7.85, 7.35, fill=LIGHT_BG, border=CARD_BORDER)
+    tb = slide.shapes.add_textbox(Inches(11.30), Inches(3.55), Inches(7.25), Inches(6.90))
+    tb.text_frame.word_wrap = True
+    add_runs_paragraph(tb.text_frame, [(role_heading, {"font": "Merriweather Bold", "size": 18, "bold": True, "color": NAVY})], first=True, space_after=10)
+    for ph, pb in points:
+        add_runs_paragraph(tb.text_frame, [(ph, {"font": "DM Sans Bold", "size": 14.5, "bold": True, "color": DARK_NAVY})], space_after=1)
+        add_runs_paragraph(tb.text_frame, [(pb, {"size": 13.3, "color": SLATE})], space_after=10, line_spacing=1.16)
+
+
+# =========================================================
+# 9. Sitemap — Pelanggan (slot 7)
+# =========================================================
+build_sitemap_slide(
+    prs.slides[7], "Sitemap — Pelanggan (E-Commerce)", ASSETS / "sitemap_3_5.png",
+    "Portal Toko Daring Konsumen",
+    [
+        ("Masuk Akun & Katalog Produk:", "Mendaftar akun baru, masuk akun, dan melihat produk kemasan besar utuh dengan jumlah stok terkini."),
+        ("Keranjang Belanja:", "Mengubah jumlah atau menghapus barang dengan pengecekan stok otomatis sebelum bayar."),
+        ("Checkout & Pembayaran:", "Memilih pengiriman kurir atau ambil langsung di toko, lalu membayar secara daring melalui Midtrans."),
+        ("Pantau & Batalkan Pesanan:", "Melihat perkembangan status pesanan hingga selesai serta mengajukan pembatalan jika diperlukan.")
+    ],
+    remove_idxs=[4, 5, 6, 8]
+)
+
+# =========================================================
+# 10. Sitemap — Kasir POS & Opname (slot 8)
+# =========================================================
+build_sitemap_slide(
+    prs.slides[8], "Sitemap — Kasir POS & Stok Opname", ASSETS / "sitemap_3_6.png",
+    "Antarmuka Meja Kasir & Hitung Fisik",
+    [
+        ("Cari & Pindai Barcode:", "Mencari barang atau memindai stiker barcode kemasan dengan cepat di meja kasir."),
+        ("Penjualan & Bongkar Kemasan:", "Melayani jual eceran maupun kemasan besar, termasuk memecah kemasan besar saat stok eceran kosong."),
+        ("Pilih Batch Kedaluwarsa & Nomor Seri:", "Sistem mengarahkan produk kedaluwarsa terdekat (FEFO) dan nomor seri alat, serta mencatat alasan jika kasir memilih batch lain."),
+        ("Hitung Fisik Stok Opname:", "Saat proses stok opname dibuka, kasir menginput hasil hitungan fisik (Baik, Rusak, Kedaluwarsa) tanpa melihat jumlah stok di sistem.")
+    ],
+    remove_idxs=[4, 5, 6, 8]
+)
+
+# =========================================================
+# 11. Sitemap — Admin Toko (slot 23)
+# =========================================================
+build_sitemap_slide(
+    s_sm_admin, "Sitemap — Admin Toko", ASSETS / "sitemap_3_7.png",
+    "Pengelolaan Stok, Logistik & Pesanan",
+    [
+        ("Ringkasan Stok & Data Produk:", "Memantau stok menipis, barang mendekati kedaluwarsa, pesanan masuk, serta mengelola data produk, satuan, dan supplier."),
+        ("Kelola Pesanan Daring:", "Menyiapkan barang pesanan daring dan ambil di toko, mencetak label pengiriman dan faktur, serta memproses pembatalan."),
+        ("Barang Masuk, Konversi & Mutasi:", "Mencatat barang masuk (batch, kedaluwarsa, harga beli, nomor seri), mencetak stiker barcode, konversi satuan, dan mencatat barang rusak."),
+        ("Verifikasi Selisih Opname:", "Mengecek selisih hasil hitungan fisik kasir, melakukan penyesuaian stok ke Kartu Stok, dan mencetak Berita Acara.")
+    ]
+)
+
+# =========================================================
+# 12. Sitemap — Superadmin / Pemilik (slot 24)
+# =========================================================
+build_sitemap_slide(
+    s_sm_super, "Sitemap — Superadmin (Pemilik Toko)", ASSETS / "sitemap_3_8.png",
+    "Kendali Pemilik & Laporan Usaha",
+    [
+        ("Ringkasan Usaha:", "Memantau pendapatan toko fisik dan daring, tren penjualan, produk terlaris, stok menipis, serta status stok opname."),
+        ("Atur Harga & Akun Pengguna:", "Menetapkan harga jual eceran dan kemasan besar, mengatur akun staf (Admin dan Kasir), serta pengaturan tampilan toko."),
+        ("Kontrol Sesi Stok Opname:", "Membuka penguncian transaksi saat stok opname dimulai, mengatur tahap verifikasi, dan membuka kunci toko kembali."),
+        ("6 Laporan Resmi Format A4:", "Mencetak laporan Penjualan, Persediaan, Penerimaan Barang, Logistik Medis, Kartu Stok, dan Catatan Deviasi FEFO.")
+    ]
+)
+
+# =========================================================
+# 13. Use Case (slot 10)
+# =========================================================
 s_uc = prs.slides[10]
-set_slide_title(s_uc, "Peran Pengguna (Use Case 4 Aktor) & Logika Inti")
+set_slide_title(s_uc, "Use Case")
 remove_shapes(s_uc, [4, 7])
 
-add_card(s_uc, 1.15, 3.30, 8.95, 7.40, fill=WHITE, border=CARD_BORDER)
-add_picture_fit(s_uc, ASSETS / "use_case.png", 1.25, 3.38, 8.75, 7.24)
+add_card(s_uc, 1.15, 3.30, 9.55, 7.35, fill=WHITE, border=CARD_BORDER)
+add_picture_fit(s_uc, ASSETS / "use_case.png", 1.25, 3.38, 9.35, 7.18)
 
-add_card(s_uc, 10.35, 3.30, 8.50, 4.35, fill=LIGHT_BG, border=CARD_BORDER)
-uc_tb = s_uc.shapes.add_textbox(Inches(10.65), Inches(3.48), Inches(7.90), Inches(4.00))
+add_card(s_uc, 11.00, 3.30, 7.85, 7.35, fill=LIGHT_BG, border=CARD_BORDER)
+uc_tb = s_uc.shapes.add_textbox(Inches(11.30), Inches(3.52), Inches(7.25), Inches(6.95))
 uc_tb.text_frame.word_wrap = True
-for idx, (rh, rb) in enumerate([
-    ("• Pelanggan (E-Commerce):", "Katalog stok aktual kemasan utuh, checkout (kuncian 2 jam + Midtrans), riwayat & pengajuan batal."),
-    ("• Kasir (POS & Opname):", "Penjualan luring scanner barcode, Dual-UOM (Bongkar Box), FEFO, struk termal, & Blind Count saat Opname."),
-    ("• Admin (Logistik & Pesanan):", "Penerimaan (Batch/SN + stiker), kelola pesanan & resi/batal, konversi UOM, mutasi, & verifikasi selisih Opname."),
-    ("• Superadmin (Pemilik):", "Master Data & harga, akun RBAC, kendali sesi Freeze Lock Stok Opname, dasbor, & 6 laporan A4.")
+for idx, (uh, ub) in enumerate([
+    ("Pelanggan (Toko Daring):",
+     "Melihat katalog produk kemasan utuh yang stoknya terhubung langsung dengan toko fisik, berbelanja hingga membayar via Midtrans (stok otomatis terkunci sementara), serta memantau atau mengajukan pembatalan pesanan."),
+    ("Kasir (POS & Hitung Fisik):",
+     "Melayani transaksi langsung di kasir dengan pindai barcode dan pecah kemasan besar, mengikuti arahan barang kedaluwarsa terdekat (FEFO), mencetak struk, serta menginput hasil hitungan fisik saat stok opname."),
+    ("Admin Toko (Logistik & Pesanan):",
+     "Mencatat penerimaan barang (batch, kedaluwarsa, harga beli, nomor seri) dan cetak stiker barcode, menyiapkan pesanan daring dan label kirim, mencatat mutasi barang rusak, serta memverifikasi selisih stok opname."),
+    ("Superadmin (Pemilik Toko):",
+     "Mengatur harga jual produk, mengelola akun staf dan pengaturan website, membuka dan menutup penguncian transaksi saat stok opname, memantau ringkasan usaha, serta mencetak 6 laporan resmi A4.")
 ]):
-    add_runs_paragraph(uc_tb.text_frame, [(rh + " ", {"font": "DM Sans Bold", "size": 14.5, "bold": True, "color": NAVY}), (rb, {"size": 13.5, "color": SLATE})], first=(idx == 0), space_after=8, line_spacing=1.18)
+    add_runs_paragraph(uc_tb.text_frame, [(uh, {"font": "DM Sans Bold", "size": 15, "bold": True, "color": NAVY})], first=(idx == 0), space_after=1)
+    add_runs_paragraph(uc_tb.text_frame, [(ub, {"size": 13.4, "color": SLATE})], space_after=11, line_spacing=1.16)
 
-add_card(s_uc, 10.35, 7.82, 8.50, 2.88, fill=WHITE, border=NAVY, border_pt=1.5)
-ltb = s_uc.shapes.add_textbox(Inches(10.65), Inches(7.96), Inches(7.90), Inches(2.60))
-ltb.text_frame.word_wrap = True
-add_runs_paragraph(ltb.text_frame, [("3 Logika Inti yang Diterapkan:", {"font": "DM Sans Bold", "size": 15, "bold": True, "color": NAVY})], first=True, space_after=4)
-for lh, lb in [
-    ("1. FEFO & Anomali:", "ORDER BY tgl_exp ASC FOR UPDATE; blokir kedaluwarsa & rekam deviasi kasir ke log_anomali_fefo."),
-    ("2. Multi-UOM Atomik:", "Daring fokus Box utuh (NOT LIKE '%.%'); kasir POS melayani eceran maupun grosir dari 1 saldo stok."),
-    ("3. Anti-Race Condition:", "Keranjang non-blocking + SELECT ... FOR UPDATE saat Bayar Sekarang menolak transaksi saat stok habis di POS.")
-]:
-    add_runs_paragraph(ltb.text_frame, [(lh + " ", {"font": "DM Sans Bold", "size": 13.5, "bold": True, "color": DARK_NAVY}), (lb, {"size": 13, "color": SLATE})], space_after=4, line_spacing=1.15)
-
-# SLOT 15 -> Slide 7: Logical Database (ERD 20 Tabel — Fokus Utama!)
+# =========================================================
+# 14. Logical Database — Arsitektur Penuh 20 Tabel (slot 15)
+# =========================================================
 s16 = prs.slides[15]
-set_slide_title(s16, "Arsitektur Basis Data: Logical Database (20 Tabel)")
+set_slide_title(s16, "Logical Database (Arsitektur Penuh 20 Tabel)")
 remove_shapes(s16, [4, 5, 6, 7])
 
-add_card(s16, 1.15, 3.30, 6.25, 7.42, fill=LIGHT_BG, border=CARD_BORDER)
-tb16 = s16.shapes.add_textbox(Inches(1.40), Inches(3.48), Inches(5.75), Inches(7.05))
+add_card(s16, 1.15, 3.30, 6.45, 7.45, fill=LIGHT_BG, border=CARD_BORDER)
+tb16 = s16.shapes.add_textbox(Inches(1.38), Inches(3.45), Inches(6.00), Inches(7.15))
 tb16.text_frame.word_wrap = True
-groups_db = [
-    ("1. Master Data & Pengaturan:", "produk_induk, produk_variasi (rasio Multi-UOM), stok_toko, supplier, users (RBAC 4 peran), pengaturan_web."),
-    ("2. Logistik Masuk & Pelacakan:", "penerimaan_stok, penerimaan_detail (Harga Beli), stok_batch (tgl_exp), unit_serial (garansi alkes), histori_konversi."),
-    ("3. Omnichannel & Kepatuhan FEFO:", "penjualan & detail_penjualan (POS + E-Commerce terpadu), pesanan_batch_alokasi (kuncian 2 jam), log_anomali_fefo, kartu_stok."),
-    ("4. Siklus Stok Opname Terpusat:", "sesi_opname (Freeze Lock), detail_opname_batch, detail_opname_sn, riwayat_hitung_opname.")
+ldb_blocks = [
+    ("1. Data Master & Stok Aktif (7 Tabel):",
+     "produk_induk dan produk_variasi (satuan besar dan eceran) terhubung ke stok_toko, stok_batch (kendali kedaluwarsa), dan unit_serial (nomor seri alat), ditambah users serta pengaturan_web."),
+    ("2. Barang Masuk & Penjualan (6 Tabel):",
+     "supplier masuk ke penerimaan_stok dan penerimaan_detail (harga beli). Penjualan kasir dan daring tercatat bersama di penjualan, detail_penjualan, dan pesanan_batch_alokasi."),
+    ("3. Kartu Stok & Catatan Khusus (3 Tabel):",
+     "Semua barang masuk, keluar, dan rusak tercatat di kartu_stok, dilengkapi histori_konversi (pecah kemasan) dan log_anomali_fefo."),
+    ("4. Proses Stok Opname (4 Tabel):",
+     "sesi_opname (jadwal & penguncian toko), detail_opname_batch, detail_opname_sn, serta riwayat_hitung_opname — detailnya diperbesar di 2 slide berikutnya.")
 ]
-for idx, (gh, gb) in enumerate(groups_db):
-    add_runs_paragraph(tb16.text_frame, [(gh, {"font": "DM Sans Bold", "size": 15, "bold": True, "color": NAVY})], first=(idx == 0), space_after=2)
-    add_runs_paragraph(tb16.text_frame, [(gb, {"size": 13.5, "color": SLATE})], space_after=11, line_spacing=1.18)
+for idx, (gh, gb) in enumerate(ldb_blocks):
+    add_runs_paragraph(tb16.text_frame, [(gh, {"font": "DM Sans Bold", "size": 14, "bold": True, "color": NAVY})], first=(idx == 0), space_after=1)
+    add_runs_paragraph(tb16.text_frame, [(gb, {"size": 12.8, "color": SLATE})], space_after=8, line_spacing=1.15)
 
-add_card(s16, 7.65, 1.32, 11.45, 9.10, fill=WHITE, border=CARD_BORDER)
-add_picture_fit(s16, pathlib.Path("lain/Gambar_3.18_Logical_Database_Model.png"), 7.75, 1.40, 11.25, 8.94, pad=0.05)
+add_card(s16, 7.80, 1.32, 11.30, 9.10, fill=WHITE, border=CARD_BORDER)
+add_picture_fit(s16, pathlib.Path("lain/Gambar_3.18_Logical_Database_Model.png"), 7.90, 1.40, 11.10, 8.94, pad=0.05)
 
-# SLOT 21 -> Slide 8: DEMO SISTEM (Langsung dari ERD!)
+# =========================================================
+# 15. Detail Database (1/2) (slot 25)
+# =========================================================
+set_slide_title(s_erd_z1, "Detail Database (1/2): Pasokan, Transaksi & Kartu Stok")
+add_card(s_erd_z1, 1.15, 3.30, 8.70, 5.75, fill=WHITE, border=CARD_BORDER)
+add_runs_paragraph(s_erd_z1.shapes.add_textbox(Inches(1.35), Inches(3.38), Inches(8.30), Inches(0.36)).text_frame,
+                   [("Kelompok Barang Masuk & Kartu Stok (5 Tabel)", {"font": "DM Sans Bold", "size": 14.5, "bold": True, "color": NAVY})], first=True)
+add_picture_fit(s_erd_z1, ASSETS / "db_crop_1a_pasokan_kartu.png", 1.25, 3.74, 8.50, 5.22, pad=0.04)
+
+add_card(s_erd_z1, 10.15, 3.30, 8.70, 5.75, fill=WHITE, border=CARD_BORDER)
+add_runs_paragraph(s_erd_z1.shapes.add_textbox(Inches(10.35), Inches(3.38), Inches(8.30), Inches(0.36)).text_frame,
+                   [("Kelompok Transaksi Kasir / Daring & Nomor Seri (5 Tabel)", {"font": "DM Sans Bold", "size": 14.5, "bold": True, "color": NAVY})], first=True)
+add_picture_fit(s_erd_z1, ASSETS / "db_crop_1b_penjualan.png", 10.25, 3.74, 8.50, 5.22, pad=0.04)
+
+add_card(s_erd_z1, 1.15, 9.20, 17.70, 1.35, fill=LIGHT_BG, border=NAVY, border_pt=1.5)
+q1_tb = s_erd_z1.shapes.add_textbox(Inches(1.40), Inches(9.30), Inches(17.20), Inches(1.15))
+q1_tb.text_frame.word_wrap = True
+add_runs_paragraph(q1_tb.text_frame, [
+    ("Penyimpanan Data Utama: ", {"font": "DM Sans Bold", "size": 14, "bold": True, "color": NAVY}),
+    ("Transaksi kasir dan toko daring disimpan di ", {"size": 13.5, "color": SLATE}),
+    ("penjualan + detail_penjualan", {"font": "DM Sans Bold", "size": 13.5, "bold": True, "color": DARK_NAVY}),
+    (" (kunci stok sementara di ", {"size": 13.5, "color": SLATE}),
+    ("pesanan_batch_alokasi", {"font": "DM Sans Bold", "size": 13.5, "bold": True, "color": DARK_NAVY}),
+    ("); Riwayat barang masuk, keluar, dan rusak di ", {"size": 13.5, "color": SLATE}),
+    ("kartu_stok", {"font": "DM Sans Bold", "size": 13.5, "bold": True, "color": DARK_NAVY}),
+    ("; Barang masuk di ", {"size": 13.5, "color": SLATE}),
+    ("penerimaan_stok + penerimaan_detail", {"font": "DM Sans Bold", "size": 13.5, "bold": True, "color": DARK_NAVY}),
+    ("; Nomor seri alat di ", {"size": 13.5, "color": SLATE}),
+    ("unit_serial", {"font": "DM Sans Bold", "size": 13.5, "bold": True, "color": DARK_NAVY}),
+    (".", {"size": 13.5, "color": SLATE}),
+], first=True, line_spacing=1.22)
+
+# =========================================================
+# 16. Detail Database (2/2) (slot 26)
+# =========================================================
+set_slide_title(s_erd_z2, "Detail Database (2/2): Master, Batch FEFO & Stok Opname")
+add_card(s_erd_z2, 1.15, 3.30, 8.70, 5.75, fill=WHITE, border=CARD_BORDER)
+add_runs_paragraph(s_erd_z2.shapes.add_textbox(Inches(1.35), Inches(3.38), Inches(8.30), Inches(0.36)).text_frame,
+                   [("Kelompok Master Produk, Satuan & Stok Batch (5 Tabel)", {"font": "DM Sans Bold", "size": 14.5, "bold": True, "color": NAVY})], first=True)
+add_picture_fit(s_erd_z2, ASSETS / "db_crop_2a_master_batch.png", 1.25, 3.74, 8.50, 5.22, pad=0.04)
+
+add_card(s_erd_z2, 10.15, 3.30, 8.70, 5.75, fill=WHITE, border=CARD_BORDER)
+add_runs_paragraph(s_erd_z2.shapes.add_textbox(Inches(10.35), Inches(3.38), Inches(8.30), Inches(0.36)).text_frame,
+                   [("Kelompok Konversi, Deviasi FEFO & Stok Opname (6 Tabel)", {"font": "DM Sans Bold", "size": 14.5, "bold": True, "color": NAVY})], first=True)
+add_picture_fit(s_erd_z2, ASSETS / "db_crop_2b_opname_audit.png", 10.25, 3.74, 8.50, 5.22, pad=0.04)
+
+add_card(s_erd_z2, 1.15, 9.20, 17.70, 1.35, fill=LIGHT_BG, border=NAVY, border_pt=1.5)
+q2_tb = s_erd_z2.shapes.add_textbox(Inches(1.40), Inches(9.30), Inches(17.20), Inches(1.15))
+q2_tb.text_frame.word_wrap = True
+add_runs_paragraph(q2_tb.text_frame, [
+    ("Penyimpanan Data Utama: ", {"font": "DM Sans Bold", "size": 14, "bold": True, "color": NAVY}),
+    ("Data kedaluwarsa FEFO disimpan di ", {"size": 13.5, "color": SLATE}),
+    ("stok_batch", {"font": "DM Sans Bold", "size": 13.5, "bold": True, "color": DARK_NAVY}),
+    (" (no_batch, tgl_exp, stok_sisa); Variasi satuan di ", {"size": 13.5, "color": SLATE}),
+    ("produk_variasi", {"font": "DM Sans Bold", "size": 13.5, "bold": True, "color": DARK_NAVY}),
+    ("; Pecah kemasan di ", {"size": 13.5, "color": SLATE}),
+    ("histori_konversi", {"font": "DM Sans Bold", "size": 13.5, "bold": True, "color": DARK_NAVY}),
+    (" & selisih pilihan batch di ", {"size": 13.5, "color": SLATE}),
+    ("log_anomali_fefo", {"font": "DM Sans Bold", "size": 13.5, "bold": True, "color": DARK_NAVY}),
+    ("; Hitung fisik di ", {"size": 13.5, "color": SLATE}),
+    ("sesi_opname, detail_opname_batch, detail_opname_sn, & riwayat_hitung_opname", {"font": "DM Sans Bold", "size": 13.5, "bold": True, "color": DARK_NAVY}),
+    (".", {"size": 13.5, "color": SLATE}),
+], first=True, line_spacing=1.22)
+
+# =========================================================
+# 17. DEMO SISTEM (slot 21)
+# =========================================================
 s_demo = prs.slides[21]
 remove_shapes(s_demo, [1, 4, 5, 6, 7, 8])
 
@@ -317,19 +627,17 @@ hero_tb = s_demo.shapes.add_textbox(Inches(2.00), Inches(2.25), Inches(16.00), I
 add_runs_paragraph(hero_tb.text_frame, [("DEMO SISTEM", {"font": "Merriweather Bold", "size": 66, "bold": True, "color": NAVY})], first=True, align=PP_ALIGN.CENTER)
 
 line_sh = s_demo.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(8.50), Inches(3.80), Inches(3.00), Inches(0.08))
-line_sh.fill.solid()
-line_sh.fill.fore_color.rgb = TEAL
-line_sh.line.fill.background()
+line_sh.fill.solid(); line_sh.fill.fore_color.rgb = TEAL; line_sh.line.fill.background()
 
 sub_tb = s_demo.shapes.add_textbox(Inches(2.50), Inches(4.08), Inches(15.00), Inches(0.55))
-add_runs_paragraph(sub_tb.text_frame, [("Demonstrasi Langsung Integrasi Omnichannel, Logika FEFO, & Perangkat Barcode", {"font": "DM Sans Bold", "size": 19, "bold": True, "color": MUTED})], first=True, align=PP_ALIGN.CENTER)
+add_runs_paragraph(sub_tb.text_frame, [("Demonstrasi Langsung Alur Toko Fisik, Toko Daring, FEFO, & Barcode Scanner", {"font": "DM Sans Bold", "size": 19, "bold": True, "color": MUTED})], first=True, align=PP_ALIGN.CENTER)
 
 demo_steps = [
-    ("1. Penerimaan & Label Fisik", "Input pasokan Batch/Exp/SN + Harga Beli, cetak Stiker Barcode Batch (50x30mm / A4) untuk ditempel ke barang contoh."),
-    ("2. Kasir POS, Scanner & FEFO", "Pindai barcode dengan alat scanner, uji dialog peringatan Anomali FEFO, dan cetak Struk Termal POS (80mm / 58mm)."),
-    ("3. Rebutan Stok (Race Condition)", "Masukkan stok sisa ke keranjang E-Commerce -> beli habis di Kasir POS -> klik Bayar Sekarang -> sistem menolak sebelum Midtrans."),
-    ("4. Pembatalan & Label Kurir", "Uji status Dibatalkan melepaskan kuncian stok kembali aktif, dan cetak Label Pengiriman Stiker Termal (100x150mm / A6)."),
-    ("5. Stok Opname & Kode FEFO", "Tunjukkan Freeze Lock, Blind Count, Total Kerugian Harga Beli di Berita Acara, serta kode FEFO di pos/pos.php (161) & api/checkout.php (181).")
+    ("1. Penerimaan Barang & Stiker Barcode", "Mencatat barang masuk beserta batch, kedaluwarsa/nomor seri, dan harga beli, lalu mencetak stiker barcode untuk ditempel ke barang contoh."),
+    ("2. Kasir POS, Scanner & Cek Kedaluwarsa", "Memindai stiker barcode dengan scanner, menguji peringatan saat kasir memilih batch kedaluwarsa lebih lama, lalu mencetak struk."),
+    ("3. Bentrok Stok Kasir vs Toko Daring", "Memasukkan stok terakhir ke keranjang toko daring \u2192 dibeli habis di kasir toko \u2192 klik bayar di website \u2192 sistem otomatis menolak sebelum pembayaran."),
+    ("4. Pembatalan Pesanan & Label Kirim", "Membuktikan pembatalan pesanan otomatis mengembalikan stok siap jual, lalu mencetak label pengiriman kurir."),
+    ("5. Stok Opname & Penyesuaian Stok", "Menunjukkan penguncian kasir saat opname, input hitungan fisik tanpa melihat saldo sistem, verifikasi selisih, dan Berita Acara.")
 ]
 for i, (dh, db) in enumerate(demo_steps):
     dy = 4.90 + i * 1.04
@@ -338,26 +646,28 @@ for i, (dh, db) in enumerate(demo_steps):
     stb.text_frame.word_wrap = True
     add_runs_paragraph(stb.text_frame, [(dh + " — ", {"font": "DM Sans Bold", "size": 16, "bold": True, "color": NAVY}), (db, {"size": 15, "color": SLATE})], first=True)
 
-# SLOT 20 -> Slide 9: Hasil Pengujian & Evaluasi (UAT 93,75%)
+# =========================================================
+# 18. Hasil Pengujian Sistem — UAT (slot 20)
+# =========================================================
 s_uat = prs.slides[20]
-set_slide_title(s_uat, "Hasil Evaluasi & Pengujian Sistem (UAT)")
+set_slide_title(s_uat, "Hasil Pengujian Sistem (UAT)")
 remove_shapes(s_uat, [6])
 
 uat_rows = [
-    ["No", "Bagian Modul Pengujian (12 November 2026)", "Skor", "Capaian", "Status"],
-    ["1", "Autentikasi Staf & Kontrol Hak Akses (RBAC)", "38 / 40", "95,00%", "Sesuai"],
-    ["2", "Master Produk, Multi-UOM, & Pemasok", "37 / 40", "92,50%", "Sesuai"],
-    ["3", "Terminal Kasir POS & Alokasi FEFO", "38 / 40", "95,00%", "Sesuai"],
-    ["4", "Toko Daring & Sinkronisasi Omnichannel", "37 / 40", "92,50%", "Sesuai"],
-    ["5", "Penerimaan Pasokan Barang & Label Barcode", "38 / 40", "95,00%", "Sesuai"],
-    ["6", "Mutasi Stok Manual & Kartu Stok", "37 / 40", "92,50%", "Sesuai"],
-    ["7", "Siklus Pengawasan Stok Opname Terpusat", "38 / 40", "95,00%", "Sesuai"],
-    ["8", "Laporan Manajerial & Dasbor Eksekutif", "37 / 40", "92,50%", "Sesuai"],
-    ["", "TOTAL KELAYAKAN (4 Peran, 16 Indikator)", "300 / 320", "93,75%", "SESUAI"],
+    ["No", "Bagian Modul Operasional Sistem", "Jml", "Peran Penguji Terlibat", "Hasil UAT"],
+    ["1", "Autentikasi Staf & Kontrol Hak Akses (RBAC)", "2", "Pemilik, Admin, Kasir", "Berhasil"],
+    ["2", "Master Produk Medis, Multi-UOM, & Pemasok", "2", "Admin Toko", "Berhasil"],
+    ["3", "Terminal Kasir POS & Alokasi FEFO", "2", "Kasir Toko, Pemilik Toko", "Berhasil"],
+    ["4", "Toko Daring & Sinkronisasi Omnichannel", "2", "Pelanggan, Admin, Kasir", "Berhasil"],
+    ["5", "Penerimaan Pasokan Barang & Label Barcode", "2", "Admin Toko, Kasir Toko", "Berhasil"],
+    ["6", "Mutasi Stok Manual & Buku Besar Kartu Stok", "2", "Admin Toko, Pemilik Toko", "Berhasil"],
+    ["7", "Siklus Pengawasan Stok Opname Terpusat", "2", "Pemilik, Kasir, Admin", "Berhasil"],
+    ["8", "Laporan Manajerial & Dasbor Eksekutif", "2", "Pemilik Toko, Admin Toko", "Berhasil"],
+    ["", "REKAPITULASI KESELURUHAN (16 Skenario)", "16", "4 Peran Pengguna", "BERHASIL"],
 ]
 tbl_sh = s_uat.shapes.add_table(len(uat_rows), 5, Inches(1.15), Inches(3.38), Inches(12.25), Inches(6.95))
 tbl = tbl_sh.table
-for ci, w in enumerate([0.75, 6.70, 1.65, 1.60, 1.55]):
+for ci, w in enumerate([0.70, 5.45, 0.85, 3.65, 1.60]):
     tbl.columns[ci].width = Inches(w)
 
 for ri, row_data in enumerate(uat_rows):
@@ -369,205 +679,101 @@ for ri, row_data in enumerate(uat_rows):
         cell.fill.solid()
         cell.fill.fore_color.rgb = NAVY if is_hdr else (EMERALD_BG if is_tot else (WHITE if ri % 2 == 1 else LIGHT_BG))
         tf = cell.text_frame
+        tf.word_wrap = True
         tf.clear()
         p = tf.paragraphs[0]
-        p.alignment = PP_ALIGN.LEFT if (ci == 1 and not is_hdr) else PP_ALIGN.CENTER
+        p.alignment = PP_ALIGN.LEFT if (ci in (1, 3) and not is_hdr) else PP_ALIGN.CENTER
         r = p.add_run()
         r.text = val
-        r.font.name = "DM Sans Bold" if (is_hdr or is_tot or ci >= 3) else "DM Sans"
-        r.font.size = Pt(14 if is_hdr or is_tot else 13.5)
-        r.font.bold = (is_hdr or is_tot or ci in (0, 3, 4))
-        r.font.color.rgb = WHITE if is_hdr else (EMERALD_TXT if (is_tot or ci in (3, 4)) else SLATE)
+        r.font.name = "DM Sans Bold" if (is_hdr or is_tot or ci in (0, 4)) else "DM Sans"
+        r.font.size = Pt(13.5 if is_hdr or is_tot else 13)
+        r.font.bold = (is_hdr or is_tot or ci in (0, 4))
+        r.font.color.rgb = WHITE if is_hdr else (EMERALD_TXT if (is_tot or ci == 4) else SLATE)
 
 add_card(s_uat, 13.65, 3.38, 5.20, 2.25, fill=EMERALD_BG, border=EMERALD_TXT, border_pt=1.5)
 sc_tb = s_uat.shapes.add_textbox(Inches(13.85), Inches(3.55), Inches(4.80), Inches(1.90))
 sc_tb.text_frame.word_wrap = True
-add_runs_paragraph(sc_tb.text_frame, [("SKOR KELAYAKAN UAT", {"font": "DM Sans Bold", "size": 14, "bold": True, "color": EMERALD_TXT})], first=True, align=PP_ALIGN.CENTER, space_after=4)
-add_runs_paragraph(sc_tb.text_frame, [("93,75%", {"font": "Merriweather Bold", "size": 44, "bold": True, "color": EMERALD_TXT})], align=PP_ALIGN.CENTER, space_after=4)
-add_runs_paragraph(sc_tb.text_frame, [("Status: Sesuai Kebutuhan Pengguna\n(300 / 320 • 4 Peran Penguji)", {"font": "DM Sans Bold", "size": 13.5, "bold": True, "color": SLATE})], align=PP_ALIGN.CENTER)
+add_runs_paragraph(sc_tb.text_frame, [("KEPUTUSAN PENGUJIAN UAT", {"font": "DM Sans Bold", "size": 14, "bold": True, "color": EMERALD_TXT})], first=True, align=PP_ALIGN.CENTER, space_after=4)
+add_runs_paragraph(sc_tb.text_frame, [("BERHASIL", {"font": "Merriweather Bold", "size": 36, "bold": True, "color": EMERALD_TXT})], align=PP_ALIGN.CENTER, space_after=4)
+add_runs_paragraph(sc_tb.text_frame, [("16 Skenario • 8 Bagian Modul\nSesuai Kebutuhan 4 Peran Pengguna", {"font": "DM Sans Bold", "size": 13.5, "bold": True, "color": SLATE})], align=PP_ALIGN.CENTER)
 
 add_card(s_uat, 13.65, 5.85, 5.20, 4.48, fill=LIGHT_BG, border=CARD_BORDER)
 fn_tb = s_uat.shapes.add_textbox(Inches(13.90), Inches(6.05), Inches(4.70), Inches(4.15))
 fn_tb.text_frame.word_wrap = True
-add_runs_paragraph(fn_tb.text_frame, [("Ringkasan Evaluasi & Temuan:", {"font": "DM Sans Bold", "size": 16, "bold": True, "color": NAVY})], first=True, space_after=8)
+add_runs_paragraph(fn_tb.text_frame, [("Temuan Utama Pengujian:", {"font": "DM Sans Bold", "size": 16, "bold": True, "color": NAVY})], first=True, space_after=8)
 for pt_txt in [
-    "• Cakupan Aktor: Pemilik Toko, Admin Toko, Kasir Toko, & Pelanggan Daring.",
-    "• Pemindai barcode & FEFO otomatis memangkas risiko barang kedaluwarsa di kasir.",
-    "• Freeze Lock & Blind Count menertibkan pemeriksaan fisik stok tanpa manipulasi angka.",
-    "• Stok daring sinkron langsung dengan POS dan aman menolak checkout saat stok habis."
+    "• Setiap skenario diuji oleh peran pengguna yang relevan langsung dengan modulnya.",
+    "• Scanner barcode & alokasi FEFO otomatis mencegah salah ambil obat mendekati ED.",
+    "• Freeze Lock & Blind Count menjaga objektivitas stok opname tanpa bias angka.",
+    "• Reservasi stok daring mencegah bentrok persediaan dengan kasir gerai fisik."
 ]:
-    add_runs_paragraph(fn_tb.text_frame, [(pt_txt, {"size": 13.5, "color": SLATE})], space_after=8, line_spacing=1.18)
+    add_runs_paragraph(fn_tb.text_frame, [(pt_txt, {"size": 13.2, "color": SLATE})], space_after=8, line_spacing=1.18)
 
-# SLOT 16 -> Slide 10: Kesimpulan dan Saran (BAB V)
+# =========================================================
+# 19. Kesimpulan (slot 16)
+# =========================================================
 s17 = prs.slides[16]
-set_slide_title(s17, "Kesimpulan dan Saran")
-remove_shapes(s17, [3, 4, 5])
+set_text_keep_style(
+    s17.shapes[5],
+    "Berdasarkan hasil analisis, perancangan, implementasi, dan pengujian, Sistem Informasi Inventori Omnichannel ZenCare Medical berhasil dibangun sebagai sistem terpusat yang menyinkronkan persediaan secara waktu nyata (real-time) antara terminal kasir fisik (POS) dan toko daring (e-commerce) mandiri, sehingga meniadakan selisih pencatatan serta mencegah pesanan ganda (overselling) melalui mekanisme penguncian stok.\n\nOtomatisasi konversi Multi-UOM, pengendalian masa kedaluwarsa berbasis First Expired, First Out (FEFO), pelacakan nomor seri (Serial Number) alat kesehatan, hingga siklus Stok Opname terpusat berjalan akurat dan seluruh 16 skenario User Acceptance Testing (UAT) pada 8 modul operasional dinyatakan Berhasil sesuai kebutuhan pengguna.",
+    align=PP_ALIGN.LEFT, color=SLATE, size_pt=16.5, bold=False, font_name="DM Sans", line_spacing=1.26
+)
 
-add_card(s17, 1.15, 3.45, 9.05, 6.95, fill=WHITE, border=NAVY, border_pt=1.5)
-add_card(s17, 1.15, 3.45, 9.05, 0.72, fill=NAVY, border=None, radius=0.02)
-kh = s17.shapes.add_textbox(Inches(1.45), Inches(3.56), Inches(8.45), Inches(0.50))
-add_runs_paragraph(kh.text_frame, [("KESIMPULAN HASIL PENELITIAN (BAB V)", {"font": "DM Sans Bold", "size": 17, "bold": True, "color": WHITE})], first=True)
-kb = s17.shapes.add_textbox(Inches(1.45), Inches(4.35), Inches(8.45), Inches(5.80))
-kb.text_frame.word_wrap = True
-for i, (t1, t2) in enumerate([
-    ("1. Sinkronisasi Omnichannel Real-Time:", "Sistem berhasil dibangun sebagai pusat kendali tunggal yang menyinkronkan POS fisik dan e-commerce mandiri, meniadakan selisih stok serta mencegah overselling (termasuk saat race condition)."),
-    ("2. Otomatisasi Multi-UOM, FEFO & SN:", "Konversi kemasan grosir ke eceran berjalan atomik, sedangkan kepatuhan FEFO obat dan penelusuran Serial Number alat kesehatan ditegakkan lewat pemindai barcode, stiker fisik, serta deteksi anomali."),
-    ("3. Validasi Pengguna & Pengawasan Stok:", "Siklus Stok Opname berbasis Freeze Lock, Blind Count, dan estimasi kerugian Harga Beli teruji tertib, dengan skor kelayakan UAT mencapai 93,75% (Sesuai).")
-]):
-    add_runs_paragraph(kb.text_frame, [(t1 + " ", {"font": "DM Sans Bold", "size": 15, "bold": True, "color": NAVY}), (t2, {"size": 14.5, "color": SLATE})], first=(i == 0), space_after=14, line_spacing=1.22)
+# =========================================================
+# 20. Lampiran 1 — Dokumentasi Gerai & Pengambilan Data (slot 18 — SEBELUM Penutup!)
+# =========================================================
+set_slide_title(prs.slides[18], "Lampiran: Dokumentasi Gerai ZenCare Medical")
 
-add_card(s17, 10.50, 3.45, 8.35, 6.95, fill=LIGHT_BG, border=CARD_BORDER, border_pt=1.5)
-add_card(s17, 10.50, 3.45, 8.35, 0.72, fill=DARK_NAVY, border=None, radius=0.02)
-sh_tb = s17.shapes.add_textbox(Inches(10.80), Inches(3.56), Inches(7.75), Inches(0.50))
-add_runs_paragraph(sh_tb.text_frame, [("SARAN PENGEMBANGAN MENDATANG", {"font": "DM Sans Bold", "size": 17, "bold": True, "color": WHITE})], first=True)
-sb = s17.shapes.add_textbox(Inches(10.80), Inches(4.35), Inches(7.75), Inches(5.80))
-sb.text_frame.word_wrap = True
-for i, (t1, t2) in enumerate([
-    ("1. Transisi ke Lingkungan Live Production:", "Meningkatkan integrasi gerbang pembayaran Midtrans dan API kurir RajaOngkir dari mode sandbox ke operasional penuh beserta pelacakan resi otomatis."),
-    ("2. Notifikasi Pesan Instan Otomatis:", "Menambahkan peringatan proaktif ke WhatsApp/pesan instan staf ketika stok menyentuh batas minimum (reorder point) atau obat mendekati masa kedaluwarsa."),
-    ("3. Dukungan Aplikasi Mobile Opname:", "Mengembangkan antarmuka bergerak nirkabel untuk mempercepat mobilitas staf dalam memindai rak gudang saat pencacahan fisik stok opname.")
-]):
-    add_runs_paragraph(sb.text_frame, [(t1 + " ", {"font": "DM Sans Bold", "size": 15, "bold": True, "color": NAVY}), (t2, {"size": 14.5, "color": SLATE})], first=(i == 0), space_after=16, line_spacing=1.22)
+# =========================================================
+# 21. Lampiran 2 — Dokumentasi Produk, Rak & Barang Datang (slot 19 — SEBELUM Penutup!)
+# =========================================================
+set_slide_title(prs.slides[19], "Lampiran: Dokumentasi Produk & Pengambilan Data")
 
-# SLOT 17 -> Slide 11: Terima Kasih
+# =========================================================
+# 22. Penutup / Terima Kasih (slot 17)
+# =========================================================
 s18 = prs.slides[17]
-sub_tk = s18.shapes.add_textbox(Inches(4.73), Inches(5.45), Inches(10.55), Inches(0.50))
-add_runs_paragraph(sub_tk.text_frame, [("Sesi Tanya Jawab & Diskusi", {"font": "DM Sans Bold", "size": 21, "bold": True, "color": MUTED})], first=True, align=PP_ALIGN.CENTER)
+add_runs_paragraph(s18.shapes.add_textbox(Inches(4.73), Inches(5.45), Inches(10.55), Inches(0.50)).text_frame,
+                   [("Sesi Tanya Jawab & Diskusi", {"font": "DM Sans Bold", "size": 21, "bold": True, "color": MUTED})], first=True, align=PP_ALIGN.CENTER)
 
 # =========================================================
-# LAMPIRAN SLIDES (12-22 — Setelah Slide Terima Kasih, Cadangan Tanya Jawab)
-# =========================================================
-
-# SLOT 5 & 6 -> Lampiran 1 & 2: Workflow Keluar & Masuk
-set_slide_title(prs.slides[5], "Lampiran 1: Workflow Barang Keluar (Berjalan vs Usulan)")
-set_slide_title(prs.slides[6], "Lampiran 2: Workflow Barang Masuk (Berjalan vs Usulan)")
-
-# SLOT 7 & 8 -> Lampiran 3 & 4: Sitemap 4 Peran
-s8 = prs.slides[7]
-set_slide_title(s8, "Lampiran 3: Sitemap (Pelanggan & Kasir POS)")
-remove_shapes(s8, [4, 5, 6, 8])
-add_card(s8, 0.95, 3.35, 8.85, 7.25, fill=WHITE, border=CARD_BORDER)
-add_runs_paragraph(s8.shapes.add_textbox(Inches(1.15), Inches(3.45), Inches(8.45), Inches(0.42)).text_frame, [("Sitemap Pelanggan (Gambar 3.5)", {"font": "DM Sans Bold", "size": 16, "bold": True, "color": NAVY})], first=True)
-add_picture_fit(s8, ASSETS / "sitemap_3_5.png", 1.15, 3.92, 8.45, 5.55)
-cap_p = s8.shapes.add_textbox(Inches(1.15), Inches(9.52), Inches(8.45), Inches(0.95))
-cap_p.text_frame.word_wrap = True
-add_runs_paragraph(cap_p.text_frame, [("Katalog kemasan utuh, visibilitas stok waktu nyata, keranjang belanja, checkout Midtrans, & pembatalan pesanan.", {"size": 13.5, "color": SLATE})], first=True)
-
-add_card(s8, 10.20, 3.35, 8.85, 7.25, fill=WHITE, border=CARD_BORDER)
-add_runs_paragraph(s8.shapes.add_textbox(Inches(10.40), Inches(3.45), Inches(8.45), Inches(0.42)).text_frame, [("Sitemap Kasir POS & Opname (Gambar 3.6)", {"font": "DM Sans Bold", "size": 16, "bold": True, "color": NAVY})], first=True)
-add_picture_fit(s8, ASSETS / "sitemap_3_6.png", 10.40, 3.92, 8.45, 5.55)
-cap_k = s8.shapes.add_textbox(Inches(10.40), Inches(9.52), Inches(8.45), Inches(0.95))
-cap_k.text_frame.word_wrap = True
-add_runs_paragraph(cap_k.text_frame, [("Terminal Kasir POS (scan barcode, Dual-UOM, FEFO/SN, anomali) & Input Fisik Blind Count saat Sesi Opname.", {"size": 13.5, "color": SLATE})], first=True)
-
-s9 = prs.slides[8]
-set_slide_title(s9, "Lampiran 4: Sitemap (Admin Toko & Superadmin)")
-remove_shapes(s9, [4, 5, 6, 8])
-add_card(s9, 0.95, 3.35, 8.85, 7.25, fill=WHITE, border=CARD_BORDER)
-add_runs_paragraph(s9.shapes.add_textbox(Inches(1.15), Inches(3.45), Inches(8.45), Inches(0.42)).text_frame, [("Sitemap Admin Toko (Gambar 3.7)", {"font": "DM Sans Bold", "size": 16, "bold": True, "color": NAVY})], first=True)
-add_picture_fit(s9, ASSETS / "sitemap_3_7.png", 1.15, 3.92, 8.45, 5.55)
-cap_a = s9.shapes.add_textbox(Inches(1.15), Inches(9.52), Inches(8.45), Inches(0.95))
-cap_a.text_frame.word_wrap = True
-add_runs_paragraph(cap_a.text_frame, [("Penerimaan barang (Batch/SN + stiker), pesanan omnichannel + resi & batal, konversi UOM, kartu stok, & verifikasi Opname.", {"size": 13.5, "color": SLATE})], first=True)
-
-add_card(s9, 10.20, 3.35, 8.85, 7.25, fill=WHITE, border=CARD_BORDER)
-add_runs_paragraph(s9.shapes.add_textbox(Inches(10.40), Inches(3.45), Inches(8.45), Inches(0.42)).text_frame, [("Sitemap Superadmin (Gambar 3.8)", {"font": "DM Sans Bold", "size": 16, "bold": True, "color": NAVY})], first=True)
-add_picture_fit(s9, ASSETS / "sitemap_3_8.png", 10.40, 3.92, 8.45, 5.55)
-cap_s = s9.shapes.add_textbox(Inches(10.40), Inches(9.52), Inches(8.45), Inches(0.95))
-cap_s.text_frame.word_wrap = True
-add_runs_paragraph(cap_s.text_frame, [("Master Harga & Multi-UOM, akun RBAC, konfigurasi API & web, Freeze Lock Opname, & 6 laporan resmi A4.", {"size": 13.5, "color": SLATE})], first=True)
-
-# SLOT 11, 12, 13, 14 -> Lampiran 5-8: Activity Diagrams
-def rebuild_activity_slide(slide, title, img_path, bullets, tables_list, remove_idxs):
-    set_slide_title(slide, title)
-    remove_shapes(slide, remove_idxs)
-    add_card(slide, 1.15, 3.30, 8.85, 7.42, fill=WHITE, border=CARD_BORDER)
-    add_picture_fit(slide, img_path, 1.25, 3.38, 8.65, 7.26)
-    add_card(slide, 10.25, 3.30, 8.55, 4.75, fill=LIGHT_BG, border=CARD_BORDER)
-    tb = slide.shapes.add_textbox(Inches(10.55), Inches(3.52), Inches(7.95), Inches(4.35))
-    tb.text_frame.word_wrap = True
-    for i, (b_head, b_body) in enumerate(bullets):
-        add_runs_paragraph(tb.text_frame, [(b_head + " ", {"font": "DM Sans Bold", "size": 15, "bold": True, "color": NAVY}), (b_body, {"size": 14.5, "color": SLATE})], first=(i == 0), space_after=10)
-    add_card(slide, 10.25, 8.25, 8.55, 2.47, fill=WHITE, border=NAVY, border_pt=1.5)
-    add_runs_paragraph(slide.shapes.add_textbox(Inches(10.55), Inches(8.42), Inches(7.95), Inches(0.40)).text_frame, [("Tabel Basis Data Aktual Terkait:", {"font": "DM Sans Bold", "size": 15.5, "bold": True, "color": NAVY})], first=True)
-    t_body = slide.shapes.add_textbox(Inches(10.55), Inches(8.88), Inches(7.95), Inches(1.65))
-    t_body.text_frame.word_wrap = True
-    add_runs_paragraph(t_body.text_frame, [(" • ".join(tables_list), {"font": "DM Sans Bold", "size": 15, "bold": True, "italic": True, "color": DARK_NAVY})], first=True, line_spacing=1.35)
-
-
-rebuild_activity_slide(
-    prs.slides[11], "Lampiran 5: Activity Penerimaan Barang & Validasi Logistik", ASSETS / "act_penerimaan.png",
-    [("Gatekeeper Logistik:", "Admin menginput kuantitas terima/rusak, Harga Beli perolehan, nomor Batch, Tanggal Kedaluwarsa, serta Serial Number."),
-     ("Penolakan Data Tidak Lengkap:", "Sistem menolak simpan jika atribut medis wajib atau nomor seri belum lengkap."),
-     ("Label Fisik & Buku Besar:", "Memperbarui stok_toko, stok_batch/unit_serial, mencatat kartu_stok, serta mencetak Nota A4 dan Stiker Barcode (50x30mm / A4).")],
-    ["penerimaan_stok", "penerimaan_detail", "stok_batch", "unit_serial", "stok_toko", "kartu_stok"], [3, 4, 5, 6, 9, 10, 11, 12]
-)
-rebuild_activity_slide(
-    prs.slides[12], "Lampiran 6: Activity Barang Keluar Kasir POS & FEFO", ASSETS / "act_pos.png",
-    [("Transaksi Cepat & Dual-UOM:", "Kasir memindai barcode atau memilih satuan kecil/besar; Bongkar Box otomatis memecah grosir ke eceran."),
-     ("Alokasi FEFO & Blokir Kedaluwarsa:", "Query ORDER BY tgl_exp ASC FOR UPDATE di pos/pos.php (baris 161) dan blokir item kedaluwarsa."),
-     ("Pengawasan Anomali Kasir:", "Pengambilan batch berbeda memicu alasan wajib ke log_anomali_fefo dan menerbitkan Struk Termal (58/80mm).")],
-    ["penjualan", "detail_penjualan", "pesanan_batch_alokasi", "stok_batch", "log_anomali_fefo", "kartu_stok"], [1, 4, 5, 6, 7, 10, 11, 12]
-)
-rebuild_activity_slide(
-    prs.slides[13], "Lampiran 7: Activity E-Commerce & Anti-Race Condition", ASSETS / "act_ecommerce.png",
-    [("Keranjang Real-Time & Checkout:", "Keranjang belum memotong DB; cek_stok_keranjang.php otomatis menyesuaikan atau menghapus item jika stok habis."),
-     ("Anti-Race Condition & Kuncian FEFO:", "Saat klik Bayar Sekarang (api/checkout.php baris 181), SELECT ... FOR UPDATE mengunci baris sebelum Midtrans."),
-     ("Pembatalan & Resi Pengiriman:", "Status Dibatalkan melepas stok kuncian ke stok aktif; pesanan siap kirim dicetak label termal (100x150mm).")],
-    ["penjualan", "detail_penjualan", "pesanan_batch_alokasi", "stok_batch", "stok_toko", "unit_serial"], [1, 5, 6, 7, 8, 11, 12, 13]
-)
-rebuild_activity_slide(
-    prs.slides[14], "Lampiran 8: Activity Siklus Stok Opname & Kartu Stok", ASSETS / "act_opname.png",
-    [("Tahap 1 — Freeze Lock:", "Superadmin memulai sesi opname; server membekukan sementara POS, checkout daring, konversi UOM, dan penerimaan barang."),
-     ("Tahap 2 — Blind Count 3 Kondisi:", "Kasir menghitung fisik rak (Baik, Rusak, Kedaluwarsa) tanpa melihat angka stok buku sistem."),
-     ("Tahap 3 & 4 — Harga Beli & Berita Acara:", "Admin memverifikasi selisih, menghitung Total Kerugian memakai Harga Beli perolehan, & menerbitkan Berita Acara A4 Lanskap.")],
-    ["sesi_opname", "detail_opname_batch", "detail_opname_sn", "riwayat_hitung_opname", "kartu_stok"], [4, 5, 8, 9, 10, 11]
-)
-
-# SLOT 9 -> Lampiran 9: Novelty & Ringkas Implementasi
-s_lamp9 = prs.slides[9]
-set_slide_title(s_lamp9, "Lampiran 9: Pembaruan (Novelty) & Output Cetakan Sistem")
-remove_shapes(s_lamp9, [4, 5, 6, 9])
-add_card(s_lamp9, 1.15, 3.30, 8.75, 7.35, fill=WHITE, border=CARD_BORDER)
-add_runs_paragraph(s_lamp9.shapes.add_textbox(Inches(1.35), Inches(3.45), Inches(8.35), Inches(0.45)).text_frame, [("Pembaruan terhadap Studi & Sistem Sebelumnya (Novelty):", {"font": "DM Sans Bold", "size": 15.5, "bold": True, "color": NAVY})], first=True)
-add_picture_fit(s_lamp9, ASSETS / "tpl_image9.png", 1.30, 4.00, 8.45, 4.65)
-add_runs_paragraph(s_lamp9.shapes.add_textbox(Inches(1.35), Inches(8.85), Inches(8.35), Inches(1.55)).text_frame, [("Ditambah siklus Stok Opname (Freeze Lock, Blind Count, Harga Beli), barcode scanner, & proteksi SELECT ... FOR UPDATE.", {"size": 13.5, "color": SLATE})], first=True)
-
-for idx, (lbl, imgp) in enumerate([
-    ("Struk Kasir (58/80mm)", UI_DIR / "02_Kasir_dan_Transaksi/Gambar_4_4_26_Cetak_Struk_Kasir.png"),
-    ("Label Resi (100x150mm)", UI_DIR / "02_Kasir_dan_Transaksi/Gambar_4_7_28_Cetak_Label_Pengiriman.png"),
-    ("Verifikasi Opname", UI_DIR / "04_Stok_Opname_Terpusat/Gambar_4_26_32_Stok_Opname_Verifikasi_Admin.png"),
-    ("Berita Acara Opname A4", UI_DIR / "04_Stok_Opname_Terpusat/Gambar_4_28_33_Cetak_Berita_Acara_Opname.png"),
-]):
-    r = idx // 2
-    c = idx % 2
-    ux = 10.15 + c * 4.45
-    uy = 3.30 + r * 3.75
-    add_card(s_lamp9, ux, uy, 4.25, 3.55, fill=WHITE, border=CARD_BORDER)
-    add_picture_fit(s_lamp9, imgp, ux + 0.08, uy + 0.08, 4.09, 2.90, pad=0.03)
-    add_runs_paragraph(s_lamp9.shapes.add_textbox(Inches(ux + 0.08), Inches(uy + 3.05), Inches(4.09), Inches(0.40)).text_frame, [(lbl, {"font": "DM Sans Bold", "size": 13, "bold": True, "color": NAVY})], first=True, align=PP_ALIGN.CENTER)
-
-# SLOT 18 & 19 -> Lampiran 10 & 11: Dokumentasi Gerai & Produk
-set_slide_title(prs.slides[18], "Lampiran 10: Dokumentasi Gerai ZenCare Medical")
-set_slide_title(prs.slides[19], "Lampiran 11: Dokumentasi Produk & Rak Gerai")
-
-# =========================================================
-# REORDER sldIdLst:
-# Core (1-11): 0(Cover), 3(DaftarIsi), 1(LatarBelakang), 2(TujuanManfaatBatasan),
-#              4(RAD), 10(UseCase&Logika), 15(ERD), 21(Demo), 20(UAT), 16(Kesimpulan), 17(TerimaKasih)
-# Lampiran (12-22): 5, 6, 7, 8, 11, 12, 13, 14, 9, 18, 19
+# REORDER sldIdLst (22 Slides) & Drop Unused Slots [2, 11, 12, 13, 14]
 # =========================================================
 sldIdLst = prs.slides._sldIdLst
 sldIds = list(sldIdLst)
-order = [0, 3, 1, 2, 4, 10, 15, 21, 20, 16, 17, 5, 6, 7, 8, 11, 12, 13, 14, 9, 18, 19]
+keep_order = [
+    0, 22, 1, 9, 3, 4,
+    5, 6,
+    7, 8, 23, 24,
+    10,
+    15, 25, 26,
+    21, 20, 16,
+    18, 19,
+    17
+]
+drop_idxs = [2, 11, 12, 13, 14]
+
 for el in sldIds:
     sldIdLst.remove(el)
-for idx in order:
+for di in drop_idxs:
+    r_id = sldIds[di].rId
+    prs.part.drop_rel(r_id)
+for idx in keep_order:
     sldIdLst.append(sldIds[idx])
 
-prs.save(OUT_PPTX)
-print("SAVED:", OUT_PPTX, "Slides:", len(prs.slides))
+assert len(prs.slides) == 22, f"Expected 22 slides, got {len(prs.slides)}"
+
+try:
+    prs.save(OUT_PPTX)
+    saved_path = OUT_PPTX
+    if ALT_OUT_PPTX.exists():
+        ALT_OUT_PPTX.unlink()
+except PermissionError:
+    prs.save(ALT_OUT_PPTX)
+    saved_path = ALT_OUT_PPTX
+    print("NOTICE: Seminar Hasil TA Final.pptx locked; saved to:", ALT_OUT_PPTX.name)
+
+print("SAVED:", saved_path, "Slides:", len(prs.slides))
 for i, sl in enumerate(prs.slides, 1):
     t = next((sh.text.strip().splitlines()[0] for sh in sl.shapes if sh.has_text_frame and len(sh.text.strip()) > 2 and "SEMINAR HASIL" not in sh.text), "?")
-    tag = "CORE" if i <= 11 else "LAMP"
-    print(f"  [{tag}] {i:2d}: {t[:75]}")
+    print(f"  {i:2d}: {t[:75]}")
