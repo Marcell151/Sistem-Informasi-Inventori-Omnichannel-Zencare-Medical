@@ -26,26 +26,38 @@ define('DB_NAME', getenv('DB_NAME') ?: 'db_inventory'); // db_inventory = databa
 define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
 
-// 2. MIDTRANS API CONFIGURATION (SANDBOX)
-// Gunakan key dari .env jika ada; jika .env belum dibuat di device baru (misal hasil clone GitHub), gunakan key sandbox default
-$midtransServerKey = getenv('MIDTRANS_SERVER_KEY');
+// Load optional overrides from config/api_keys.php (managed via admin/pengaturan_api.php)
+$apiKeysFile = __DIR__ . '/api_keys.php';
+$apiKeysCfg = file_exists($apiKeysFile) ? (require $apiKeysFile) : [];
+
+// 2. MIDTRANS API CONFIGURATION (SANDBOX / PRODUCTION)
+$midtransCfg = is_array($apiKeysCfg['midtrans'] ?? null) ? $apiKeysCfg['midtrans'] : [];
+$midtransActive = array_key_exists('is_active', $midtransCfg) ? (bool)$midtransCfg['is_active'] : true;
+$midtransIsProd = !empty($midtransCfg['is_production']);
+define('MIDTRANS_ACTIVE', $midtransActive);
+
+$midtransServerKey = !empty($midtransCfg['server_key']) ? $midtransCfg['server_key'] : getenv('MIDTRANS_SERVER_KEY');
 if (empty($midtransServerKey) || strpos($midtransServerKey, 'YOUR_') !== false || strpos($midtransServerKey, 'REPLACE_') !== false) {
     $midtransServerKey = base64_decode('TWlkLXNlcnZlci14RkRBYUtiRVpmdldBUjVwaWlkZGRkTmE=');
 }
 define('MIDTRANS_SERVER_KEY', $midtransServerKey);
 
-$midtransClientKey = getenv('MIDTRANS_CLIENT_KEY');
+$midtransClientKey = !empty($midtransCfg['client_key']) ? $midtransCfg['client_key'] : getenv('MIDTRANS_CLIENT_KEY');
 if (empty($midtransClientKey) || strpos($midtransClientKey, 'YOUR_') !== false || strpos($midtransClientKey, 'REPLACE_') !== false) {
     $midtransClientKey = base64_decode('TWlkLWNsaWVudC1uckxOMDk0bEl6bDM2ZWtN');
 }
 define('MIDTRANS_CLIENT_KEY', $midtransClientKey);
 
-define('MIDTRANS_IS_PRODUCTION', false);
-define('MIDTRANS_SNAP_URL', 'https://app.sandbox.midtrans.com/snap/snap.js');
-define('MIDTRANS_API_URL', 'https://api.sandbox.midtrans.com');
+define('MIDTRANS_IS_PRODUCTION', $midtransIsProd);
+define('MIDTRANS_SNAP_URL', $midtransIsProd ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js');
+define('MIDTRANS_API_URL', $midtransIsProd ? 'https://api.midtrans.com' : 'https://api.sandbox.midtrans.com');
 
 // 3. RAJAONGKIR KOMERCE API CONFIGURATION
-$komerceKey = getenv('KOMERCE_API_KEY');
+$rajaCfg = is_array($apiKeysCfg['rajaongkir'] ?? null) ? $apiKeysCfg['rajaongkir'] : [];
+$rajaActive = array_key_exists('is_active', $rajaCfg) ? (bool)$rajaCfg['is_active'] : true;
+define('RAJAONGKIR_ACTIVE', $rajaActive);
+
+$komerceKey = !empty($rajaCfg['api_key']) ? $rajaCfg['api_key'] : getenv('KOMERCE_API_KEY');
 if (empty($komerceKey) || strpos($komerceKey, 'YOUR_') !== false) {
     $komerceKey = base64_decode('Z25ud2R4WlFjNTRiOWQ5OWIyMzRjNDlhUHFOY2l0M2Y=');
 }

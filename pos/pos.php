@@ -454,10 +454,10 @@ foreach ($riwayatKasirHariIni as $rTrx) {
         #camera_scanner_view { width: 100% !important; overflow: hidden !important; border-radius: 0.375rem !important; background: #0f172a !important; }
         #camera_scanner_view video {
             width: 100% !important;
-            height: 100% !important;
-            min-height: 280px !important;
+            height: auto !important;
+            min-height: 240px !important;
             max-height: 360px !important;
-            object-fit: cover !important;
+            object-fit: contain !important;
             border-radius: 0.375rem !important;
             display: block !important;
             margin: 0 auto !important;
@@ -685,7 +685,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                         <p class="text-[11px] text-slate-500">Pilih produk manual atau scan barcode kemasan fisik</p>
                     </div>
                     <div class="relative w-full sm:w-64">
-                        <input type="text" id="pos_search" onkeyup="filterPos()" placeholder="Cari SKU / nama / batch / SN..."
+                        <input type="text" id="pos_search" onkeyup="filterPos()" onkeydown="handlePosSearchKey(event)" placeholder="Cari SKU / nama / batch / SN..."
                             class="w-full text-xs border border-slate-300 rounded px-3 py-2 pl-8 focus:outline-none focus:border-[#0f2d5a] bg-white text-slate-800">
                         <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     </div>
@@ -752,7 +752,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                                 </h4>
                                 
                                 <?php if (!empty($item['batch_list'])): ?>
-                                    <div class="mt-2 flex flex-wrap gap-1.5">
+                                    <div class="badge-batch-container mt-2 flex flex-wrap gap-1.5">
                                         <?php foreach(array_slice(explode(',', $item['batch_list']), 0, 2) as $b): ?>
                                             <span class="inline-block px-1.5 py-0.5 bg-[#eef6fb] text-[#0f2d5a] border border-[#cde3f5] rounded text-[9px] font-mono font-bold">B: <?= htmlspecialchars($b) ?></span>
                                         <?php endforeach; ?>
@@ -763,7 +763,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                                 <?php endif; ?>
                                 
                                 <?php if (!empty($item['sn_list'])): ?>
-                                    <div class="mt-2 flex flex-wrap gap-1.5">
+                                    <div class="badge-sn-container mt-2 flex flex-wrap gap-1.5">
                                         <?php foreach(array_slice(explode(',', $item['sn_list']), 0, 2) as $sn): ?>
                                             <span class="inline-block px-1.5 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 rounded text-[9px] font-mono font-bold">SN: <?= htmlspecialchars($sn) ?></span>
                                         <?php endforeach; ?>
@@ -849,7 +849,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                                 <?php if ($item['kategori'] === 'Obat' && (isset($item['stok_dus']) && $item['stok_dus'] > 0)): ?>
                                     <button type="button" 
                                         onclick="triggerManualBongkar(<?= intval($item['id']) ?>, '<?= htmlspecialchars($item['nama'], ENT_QUOTES, 'UTF-8') ?>', '<?= htmlspecialchars($item['batch_list'] ?? '') ?>', <?= floatval($item['harga_jual_kecil']) ?>, <?= floatval($item['harga_jual_besar']) ?>, <?= intval($item['stok']) ?>, <?= intval($item['rasio_konversi']) ?: 1 ?>)" 
-                                        class="w-full text-[9.5px] font-bold px-2 py-1 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition flex items-center justify-center gap-1">
+                                        class="btn-bongkar-box w-full text-[9.5px] font-bold px-2 py-1 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition flex items-center justify-center gap-1">
                                         <svg class="w-3 h-3 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                                         <span>Bongkar Box (Tersisa: <?= isset($item['stok_eceran']) ? $item['stok_eceran'] : 0 ?> <?= htmlspecialchars($item['satuan_kecil']) ?>)</span>
                                     </button>
@@ -1080,11 +1080,18 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                 </div>
             </div>
 
-            <div class="p-4 border-t border-slate-200 bg-[#f8fafc] flex justify-between items-center">
+            <div class="p-4 border-t border-slate-200 bg-[#f8fafc] flex flex-wrap justify-between items-center gap-2">
                 <span class="text-[11px] text-slate-500">Otomatis berbunyi bip saat barcode terbaca.</span>
-                <button type="button" onclick="closeCameraScannerModal()" class="px-4 py-2 rounded text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 transition">
-                    Tutup Scanner
-                </button>
+                <div class="flex items-center gap-2">
+                    <input type="file" id="pos_file_scanner_input" accept="image/*" class="hidden" onchange="scanPosBarcodeFromFile(this)">
+                    <label for="pos_file_scanner_input" class="cursor-pointer px-3.5 py-2 rounded text-xs font-bold bg-[#eef6fb] hover:bg-sky-100 text-[#0f2d5a] border border-[#cde3f5] transition inline-flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span>Upload Foto Barcode</span>
+                    </label>
+                    <button type="button" onclick="closeCameraScannerModal()" class="px-4 py-2 rounded text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 transition">
+                        Tutup Scanner
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1632,6 +1639,11 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                         renderCart();
                         return;
                     } else {
+                        var snUsedDup = (existingItem.alkes_allocations || []).some(u => u.verified && u.sn && u.sn.toUpperCase() === scannedCodeUpper);
+                        if (snUsedDup) {
+                            Swal.fire('SN Sudah Discan', 'Serial Number <b>' + scannedCodeUpper + '</b> sudah tervalidasi di keranjang! Gunakan SN unit fisik lain.', 'warning');
+                            return;
+                        }
                         if ((existingItem.qty + 1) * existingItem.rasio > existingItem.maxPcs) {
                             Swal.fire('Stok Terbatas', 'Stok fisik tidak mencukupi untuk ditambah.', 'warning');
                             return;
@@ -2456,6 +2468,34 @@ foreach ($riwayatKasirHariIni as $rTrx) {
         }, 200);
     }
 
+    function getPosSupportedFormats() {
+        if (typeof Html5QrcodeSupportedFormats === 'undefined') return [];
+        return [
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.CODE_93,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.ITF,
+            Html5QrcodeSupportedFormats.CODABAR,
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.DATA_MATRIX,
+            Html5QrcodeSupportedFormats.AZTEC
+        ];
+    }
+
+    function pickBestCameraDevice(devices) {
+        if (!devices || !devices.length) return null;
+        let isBadCam = (lbl) => /\b(ir|infrared|depth|virtual|obs|snap|droidcam)\b/i.test(lbl || '');
+        let isBackCam = (lbl) => /\b(back|rear|environment|belakang|usb)\b/i.test(lbl || '');
+        let valid = devices.filter(d => !isBadCam(d.label));
+        let pool = valid.length ? valid : devices;
+        let preferred = pool.find(d => isBackCam(d.label));
+        return (preferred || pool[0]).id;
+    }
+
     async function startCameraScanner(cameraId = null) {
         let loading = document.getElementById('camera_loading_indicator');
         let badge = document.getElementById('scan_status_badge');
@@ -2466,10 +2506,17 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                 throw new Error('Library Html5Qrcode belum selesai dimuat.');
             }
             if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("camera_scanner_view");
+                html5QrCode = new Html5Qrcode("camera_scanner_view", {
+                    formatsToSupport: getPosSupportedFormats(),
+                    experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+                    verbose: false
+                });
             }
-            
-            const devices = await Html5Qrcode.getCameras();
+
+            let devices = [];
+            try { devices = await Html5Qrcode.getCameras(); } catch (e) {}
+
+            let chosenCamera = cameraId || pickBestCameraDevice(devices) || { facingMode: "environment" };
             let select = document.getElementById('camera_device_select');
             if (select && devices && devices.length) {
                 select.innerHTML = '';
@@ -2477,30 +2524,36 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                     let opt = document.createElement('option');
                     opt.value = dev.id;
                     opt.text = dev.label || `Kamera ${idx + 1}`;
-                    if (cameraId && dev.id === cameraId) opt.selected = true;
+                    if (typeof chosenCamera === 'string' && dev.id === chosenCamera) opt.selected = true;
                     select.appendChild(opt);
                 });
             }
 
-            const chosenCamera = cameraId || (devices && devices.length > 0 ? devices[0].id : { facingMode: "environment" });
-
-            const config = {
-                fps: 20,
-                qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    let w = Math.min(Math.floor(viewfinderWidth * 0.75), 280);
-                    let h = Math.min(Math.floor(viewfinderHeight * 0.65), 180);
-                    return { width: Math.max(w, 200), height: Math.max(h, 120) };
-                }
+            const baseQrbox = function(viewfinderWidth, viewfinderHeight) {
+                let w = Math.min(Math.floor(viewfinderWidth * 0.88), 380);
+                let h = Math.min(Math.floor(viewfinderHeight * 0.58), 200);
+                return { width: Math.max(w, 220), height: Math.max(h, 120) };
             };
 
-            await html5QrCode.start(
-                chosenCamera,
-                config,
-                (decodedText) => {
-                    onBarcodeScanSuccess(decodedText);
-                },
-                (errorMessage) => {}
-            );
+            const vc = (typeof chosenCamera === 'string')
+                ? { deviceId: { exact: chosenCamera }, width: { ideal: 1280 }, height: { ideal: 720 } }
+                : { ...chosenCamera, width: { ideal: 1280 }, height: { ideal: 720 } };
+
+            try {
+                await html5QrCode.start(
+                    chosenCamera,
+                    { fps: 20, qrbox: baseQrbox, videoConstraints: vc },
+                    (decodedText) => onBarcodeScanSuccess(decodedText),
+                    () => {}
+                );
+            } catch (startErr) {
+                await html5QrCode.start(
+                    chosenCamera,
+                    { fps: 20, qrbox: baseQrbox },
+                    (decodedText) => onBarcodeScanSuccess(decodedText),
+                    () => {}
+                );
+            }
 
             isCameraScannerRunning = true;
             if (loading) loading.classList.add('hidden');
@@ -2517,7 +2570,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
             }
             Swal.fire({
                 title: 'Akses Kamera Terkendala',
-                text: 'Pastikan browser Anda mengizinkan akses webcam atau kamera. (' + err.message + ')',
+                text: 'Pastikan browser mengizinkan kamera, atau gunakan tombol "Upload Foto Barcode". (' + (err.message || err) + ')',
                 icon: 'warning'
             });
         }
@@ -2530,6 +2583,47 @@ foreach ($riwayatKasirHariIni as $rTrx) {
         }
         if (newDeviceId) {
             await startCameraScanner(newDeviceId);
+        }
+    }
+
+    async function scanPosBarcodeFromFile(input) {
+        if (!input || !input.files || !input.files.length) return;
+        let file = input.files[0];
+        let badge = document.getElementById('scan_status_badge');
+        let select = document.getElementById('camera_device_select');
+        let prevCamId = (select && select.value) ? select.value : null;
+        let wasRunning = isCameraScannerRunning;
+
+        if (badge) badge.innerText = 'Memindai Foto...';
+
+        try {
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("camera_scanner_view", {
+                    formatsToSupport: getPosSupportedFormats(),
+                    experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+                    verbose: false
+                });
+            }
+            if (isCameraScannerRunning) {
+                await html5QrCode.stop();
+                isCameraScannerRunning = false;
+            }
+            const res = await html5QrCode.scanFileV2(file, false);
+            if (res && res.decodedText) {
+                lastScanTimestamp = 0; // Izinkan langsung memproses scan file
+                onBarcodeScanSuccess(res.decodedText);
+            } else {
+                Swal.fire('Barcode Tidak Terbaca', 'Pastikan foto barcode tajam, terang, dan tidak terpotong.', 'warning');
+            }
+        } catch (err) {
+            Swal.fire('Gagal Membaca Foto Barcode', (err.message || err || 'Barcode tidak terdeteksi pada gambar.'), 'warning');
+        } finally {
+            input.value = '';
+            if (wasRunning && !document.getElementById('camera_scanner_modal')?.classList.contains('hidden')) {
+                await startCameraScanner(prevCamId);
+            } else if (badge) {
+                badge.innerText = 'Siap Scan';
+            }
         }
     }
 
@@ -2568,7 +2662,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
         let inputEl = document.getElementById('manual_barcode_input');
         if (codeEl) codeEl.innerText = code;
         if (timeEl) timeEl.innerText = new Date().toLocaleTimeString('id-ID');
-        if (inputEl) inputEl.value = code;
+        if (inputEl) inputEl.value = '';
 
         // PENTING: Suara beep HANYA dibunyikan 1x di dalam processBarcode() saat item valid masuk keranjang!
         processBarcode(code);
@@ -2579,24 +2673,25 @@ foreach ($riwayatKasirHariIni as $rTrx) {
     var barcodeTimer = null;
     
     document.addEventListener('keydown', function(e) {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.ctrlKey || e.altKey || e.metaKey) return;
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
         
-        if (e.key === 'Enter') {
-            e.preventDefault(); // Mencegah Enter dari scanner menekan tombol yang sedang fokus (ex: + Pilih Manual)
-            if (barcodeString.length > 2) {
-                processBarcode(barcodeString);
+        if (e.key === 'Enter' || e.key === 'Tab') {
+            if (barcodeString.trim().length > 2) {
+                e.preventDefault(); // Mencegah Enter/Tab dari scanner menekan tombol atau pindah fokus saat scan aktif
+                processBarcode(barcodeString.trim());
             }
             barcodeString = '';
             clearTimeout(barcodeTimer);
             return;
         }
         
-        if (e.key.length === 1) { 
+        if (e.key && e.key.length === 1) { 
             barcodeString += e.key;
             clearTimeout(barcodeTimer);
             barcodeTimer = setTimeout(function() {
                 barcodeString = ''; 
-            }, 300); // Diperpanjang menjadi 300ms untuk mentoleransi delay WiFi dari aplikasi HP
+            }, 600); // 600ms untuk mentoleransi delay WiFi/Bluetooth dari scanner HP/wireless
         }
     });
 
@@ -2611,6 +2706,34 @@ foreach ($riwayatKasirHariIni as $rTrx) {
         }
     }
 
+    function handlePosSearchKey(e) {
+        if (e.key === 'Enter') {
+            var inp = document.getElementById('pos_search');
+            var val = (inp ? inp.value : '').trim();
+            if (!val) return;
+            var qLower = val.toLowerCase();
+            var cards = document.getElementsByClassName('product-card');
+            var hasExact = false;
+            for (var i = 0; i < cards.length; i++) {
+                var c = cards[i];
+                var skuEl = c.querySelector('span.font-mono');
+                var snArr = (c.getAttribute('data-sn') || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+                var bArr = (c.getAttribute('data-batch') || '').split(',').map(b => b.split('|')[0].trim().toLowerCase()).filter(Boolean);
+                var expArr = (c.getAttribute('data-expired-batch') || '').split(',').map(b => b.split('|')[0].trim().toLowerCase()).filter(Boolean);
+                if ((skuEl && skuEl.innerText.trim().toLowerCase() === qLower) || snArr.includes(qLower) || bArr.includes(qLower) || expArr.includes(qLower)) {
+                    hasExact = true;
+                    break;
+                }
+            }
+            if (hasExact) {
+                e.preventDefault();
+                processBarcode(val);
+                inp.value = '';
+                filterPos();
+            }
+        }
+    }
+
     function processBarcode(sku) {
         try {
             sku = sku.trim().toLowerCase();
@@ -2620,20 +2743,20 @@ foreach ($riwayatKasirHariIni as $rTrx) {
             for (var i = 0; i < cards.length; i++) {
                 var c = cards[i];
                 var skuSpan = c.querySelector('span.font-mono');
+                var skuText = skuSpan ? skuSpan.innerText.trim().toLowerCase() : '';
                 var dataSn = c.getAttribute('data-sn') || '';
+                var snArray = dataSn ? dataSn.split(',').map(s => s.trim().toLowerCase()).filter(Boolean) : [];
                 var dataBatch = c.getAttribute('data-batch') || '';
-                var batchArray = dataBatch ? dataBatch.split(',').map(b => b.split('|')[0].toLowerCase()) : [];
+                var batchArray = dataBatch ? dataBatch.split(',').map(b => b.split('|')[0].trim().toLowerCase()).filter(Boolean) : [];
                 
                 var isMatch = false;
-                if (skuSpan && skuSpan.innerText.toLowerCase() === sku) isMatch = true;
-                else if (dataSn.split(',').includes(sku)) isMatch = true;
+                if (skuText && skuText === sku) isMatch = true;
+                else if (snArray.includes(sku)) isMatch = true;
                 else if (batchArray.includes(sku)) isMatch = true;
 
                 if (isMatch) {
-                    var btn = c.querySelector('button');
+                    var btn = c.querySelector('button[data-id]');
                     if (btn && !btn.disabled) {
-                        // Pass the scanned code!
-                        // Ensure we pass the exact scanned code
                         var matchedCode = sku;
                         
                         found = true;
@@ -2651,7 +2774,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                         } catch(err) {}
                         
                         // Execute addToPos with scannedCode
-                        if (skuSpan && skuSpan.innerText.toLowerCase() === sku) {
+                        if (skuText && skuText === sku) {
                             // They scanned the general SKU, not the Batch/SN barcode.
                             // We pass null to force them to scan the physical item if it's Obat/Alkes.
                             addToPos(btn, null);
@@ -2782,6 +2905,23 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                                     confirmButtonColor: '#1a75d2'
                                 });
                             }
+                        } else if (res.found && res.tipe === 'sku' && parseInt(res.stok_toko || 0) <= 0) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Stok Produk Habis',
+                                html: `Produk <b>${res.nama || sku.toUpperCase()}</b> tercatat di sistem dengan <b>stok = 0</b>.`,
+                                confirmButtonColor: '#1a75d2'
+                            });
+                        } else if (res.found && ((res.tipe === 'sku' && parseInt(res.stok_toko || 0) > 0) || (res.tipe === 'batch' && parseInt(res.stok_sisa || 0) > 0 && !res.is_expired) || (res.tipe === 'sn' && res.status === 'Tersedia'))) {
+                            syncPosCatalogLive();
+                            Swal.fire({
+                                toast: true,
+                                position: 'top',
+                                icon: 'info',
+                                title: 'Katalog baru saja disinkronkan dari server — silakan scan ulang kode ini.',
+                                showConfirmButton: false,
+                                timer: 2500
+                            });
                         } else {
                             Swal.fire({
                                 icon: 'error',
@@ -2842,20 +2982,26 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                 
                 var oldStokDus = parseInt(card.getAttribute('data-stok-dus') || 0);
                 var oldStokEceran = parseInt(card.getAttribute('data-stok-eceran') || 0);
-                var oldBatch = card.getAttribute('data-batch') || '';
+                var oldTotalStok = parseInt(btn.getAttribute('data-stok') || 0);
+                var oldBatch = (card.getAttribute('data-batch') || '').toLowerCase();
+                var oldSn = (card.getAttribute('data-sn') || '').toLowerCase();
+                var oldExpBatch = (card.getAttribute('data-expired-batch') || '').toLowerCase();
                 
                 var newStokDus = parseInt(item.stok_dus || 0);
                 var newStokEceran = parseInt(item.stok_eceran || 0);
                 var newTotalStok = parseInt(item.stok || 0);
                 var newBatch = (item.batch_list || '').toLowerCase();
+                var newSn = (item.sn_list || '').toLowerCase();
+                var newExpBatch = (item.expired_batch_list || '').toLowerCase();
                 var rasio = parseInt(item.rasio_konversi) || 1;
                 
-                // Cek apakah ada perubahan stok atau batch
-                if (oldStokDus !== newStokDus || oldStokEceran !== newStokEceran || oldBatch !== newBatch) {
+                // Cek apakah ada perubahan stok, batch, SN, atau daftar kadaluarsa
+                if (oldStokDus !== newStokDus || oldStokEceran !== newStokEceran || oldTotalStok !== newTotalStok || oldBatch !== newBatch || oldSn !== newSn || oldExpBatch !== newExpBatch) {
                     card.setAttribute('data-stok-dus', newStokDus);
                     card.setAttribute('data-stok-eceran', newStokEceran);
                     card.setAttribute('data-batch', newBatch);
-                    if (item.sn_list) card.setAttribute('data-sn', (item.sn_list || '').toLowerCase());
+                    card.setAttribute('data-sn', newSn);
+                    card.setAttribute('data-expired-batch', newExpBatch);
                     
                     btn.setAttribute('data-stok', newTotalStok);
                     btn.setAttribute('data-stok-dus', newStokDus);
@@ -2874,7 +3020,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                     }
                     
                     // Update tampilan badge batch pada kartu
-                    var badgeContainer = card.querySelector('.mt-2.flex.flex-wrap.gap-1\\.5');
+                    var badgeContainer = card.querySelector('.badge-batch-container');
                     if (badgeContainer) {
                         if (item.batch_list) {
                             var bItems = item.batch_list.split(',').slice(0, 2);
@@ -2888,6 +3034,24 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                             badgeContainer.innerHTML = bHtml;
                         } else {
                             badgeContainer.innerHTML = '';
+                        }
+                    }
+
+                    // Update tampilan badge SN pada kartu
+                    var snContainer = card.querySelector('.badge-sn-container');
+                    if (snContainer) {
+                        if (item.sn_list) {
+                            var sItems = item.sn_list.split(',').slice(0, 2);
+                            var sHtml = '';
+                            sItems.forEach(function(snStr) {
+                                sHtml += '<span class="inline-block px-1.5 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 rounded text-[9px] font-mono font-bold">SN: ' + snStr + '</span> ';
+                            });
+                            if (item.sn_list.split(',').length > 2) {
+                                sHtml += '<span class="inline-block px-1.5 py-0.5 bg-slate-100 text-slate-500 border border-slate-200 rounded text-[9px] font-mono font-bold">+' + (item.sn_list.split(',').length - 2) + '</span>';
+                            }
+                            snContainer.innerHTML = sHtml;
+                        } else {
+                            snContainer.innerHTML = '';
                         }
                     }
                     
@@ -2911,7 +3075,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                     }
                     
                     // Update tombol bongkar
-                    var bongkarBtn = card.querySelector('.bg-rose-50, .bg-rose-100');
+                    var bongkarBtn = card.querySelector('.btn-bongkar-box');
                     if (bongkarBtn) {
                         if (item.kategori === 'Obat' && newStokDus > 0) {
                             bongkarBtn.style.display = 'block';
@@ -2926,6 +3090,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                     cart.forEach(function(ci) {
                         if (parseInt(ci.id) === parseInt(item.id)) {
                             ci.batch_list = item.batch_list;
+                            ci.sn_list = item.sn_list || '';
                             var isMulti = (ci.product_rasio || ci.rasio) > 1;
                             var maxAvail = isMulti ? ((ci.satuan_tipe === 'kecil') ? newStokEceran : newStokDus) : newTotalStok;
                             ci.maxPcs = maxAvail;

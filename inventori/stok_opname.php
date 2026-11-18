@@ -1679,7 +1679,8 @@ if ($activeSession) {
     $params = [$idSesi];
 
     if ($searchQ !== '') {
-        $where[] = "(pi.nama_produk LIKE ? OR pv.nama_variasi LIKE ? OR sb.no_batch LIKE ? OR pv.sku_variasi LIKE ?)";
+        $where[] = "(pi.nama_produk LIKE ? OR pv.nama_variasi LIKE ? OR sb.no_batch LIKE ? OR pv.sku_variasi LIKE ? OR EXISTS (SELECT 1 FROM unit_serial us WHERE us.id_variasi = pv.id AND us.serial_number LIKE ?))";
+        $params[] = "%$searchQ%";
         $params[] = "%$searchQ%";
         $params[] = "%$searchQ%";
         $params[] = "%$searchQ%";
@@ -2777,10 +2778,14 @@ if ($isKasir) {
                                         <!-- Baris Sub-Item / Batch / Unit Fisik -->
                                         <?php foreach ($grp['items'] as $it): 
                                             $isCalculated = ($it['status_hitung'] === 'Sudah');
-                                            $searchableStr = htmlspecialchars($it['nama_produk'] . ' ' . $it['nama_variasi'] . ' ' . ($it['sku_variasi'] ?? '') . ' ' . ($it['no_batch'] ?? ''));
                                             $isObatExp = ($it['jenis_komoditas'] === 'Obat' && !empty($it['tgl_exp']) && strtotime($it['tgl_exp']) < strtotime(date('Y-m-d')));
                                             $hasBatchInfo = (!empty($it['id_batch']) || !empty($it['no_batch']));
                                             $isAlkesSN = ($it['jenis_komoditas'] === 'Alkes' && !$hasBatchInfo);
+                                            $snSearchList = '';
+                                            if ($isAlkesSN && !empty($alkesSnMap[$it['id_variasi']])) {
+                                                $snSearchList = implode(' ', array_column($alkesSnMap[$it['id_variasi']], 'serial_number'));
+                                            }
+                                            $searchableStr = htmlspecialchars(trim($it['nama_produk'] . ' ' . $it['nama_variasi'] . ' ' . ($it['sku_variasi'] ?? '') . ' ' . ($it['no_batch'] ?? '') . ' ' . $snSearchList));
                                         ?>
                                         <tr class="hover:bg-slate-50/70 transition" data-barcode-search="<?= $searchableStr ?>" data-id="<?= $it['id'] ?>" data-nama="<?= htmlspecialchars($it['nama_produk']) ?>" data-satuan-tipe="<?= $it['satuan_tipe'] ?>" data-is-exp="<?= $isObatExp ? '1' : '0' ?>" data-komoditas="<?= $it['jenis_komoditas'] ?>">
                                             <td class="py-3 px-3 text-center text-slate-400 font-mono text-xs">

@@ -24,7 +24,7 @@ $uStmt->execute([$_SESSION['user_id']]);
 $savedUser = $uStmt->fetch();
 
 $apiKeys = file_exists(__DIR__ . '/../config/api_keys.php') ? (require __DIR__ . '/../config/api_keys.php') : [];
-$rajaongkirEnabled = !empty($apiKeys['rajaongkir']['active']);
+$rajaongkirEnabled = defined('RAJAONGKIR_ACTIVE') ? RAJAONGKIR_ACTIVE : !empty($apiKeys['rajaongkir']['is_active']);
 
 $stmtWeb  = $pdo->query("SELECT * FROM pengaturan_web WHERE id=1");
 $webCfg   = $stmtWeb->fetch() ?: [];
@@ -637,12 +637,15 @@ require_once __DIR__ . '/header.php';
         let serviceSelect = document.getElementById('service_select');
         serviceSelect.innerHTML = '<option value="">Kalkulasi Ongkir API RajaOngkir...</option>';
 
+        let provSelectElem = document.getElementById('provinsi_select');
+        let provNameVal = provSelectElem.options[provSelectElem.selectedIndex]?.text || '';
         let citySelectElem = document.getElementById('kota_select');
         let cityNameVal = citySelectElem.options[citySelectElem.selectedIndex]?.text || '';
 
         let formData = new FormData();
         formData.append('origin', ORIGIN_KOTA_ID);
         formData.append('destination', destCityId);
+        formData.append('province_name', provNameVal);
         formData.append('city_name', cityNameVal);
         formData.append('weight', totalWeight);
         formData.append('courier', courier);
@@ -910,6 +913,17 @@ require_once __DIR__ . '/header.php';
             return;
         }
 
+        if (!provSelect.value || !citySelect.value || !courier) {
+            alert('Harap pilih Provinsi, Kota/Kabupaten tujuan, serta Kurir Pengiriman terlebih dahulu!');
+            return;
+        }
+
+        let serviceSelect = document.getElementById('service_select');
+        if (courier !== 'internal' && courier !== 'pickup' && (!serviceSelect || !serviceSelect.value || selectedServiceLabel.includes('Kalkulasi'))) {
+            alert('Tarif ongkos kirim ekspedisi belum siap. Mohon tunggu sebentar hingga pilihan layanan ekspedisi muncul.');
+            return;
+        }
+
         if (!Array.isArray(cart) || cart.length === 0) {
             alert('Keranjang belanja kosong!');
             return;
@@ -961,6 +975,12 @@ require_once __DIR__ . '/header.php';
 
             if (data.status === 'success' && data.token) {
                 if (isPayNow) {
+                    if (typeof snap === 'undefined' || !snap.pay) {
+                        alert('Pesanan berhasil dibuat (' + data.order_id + '), namun popup pembayaran Midtrans gagal dimuat (cek koneksi internet). Anda dapat melanjutkan pembayaran dari Riwayat Pesanan.');
+                        clearPurchasedFromCart(cart);
+                        window.location.href = 'profil.php';
+                        return;
+                    }
                     snap.pay(data.token, {
                         onSuccess: function(result) {
                             let pType = result && result.payment_type ? result.payment_type : '';

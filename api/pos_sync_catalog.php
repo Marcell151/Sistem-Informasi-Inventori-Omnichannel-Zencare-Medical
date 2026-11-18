@@ -14,7 +14,9 @@ try {
                (SELECT COALESCE(SUM(stok_sisa), 0) 
                 FROM stok_batch WHERE id_variasi = v.id AND no_batch LIKE '%.%' AND tgl_exp >= CURDATE()) AS stok_eceran,
                (SELECT COALESCE(SUM(stok_sisa), 0) 
-                FROM stok_batch WHERE id_variasi = v.id AND no_batch NOT LIKE '%.%' AND tgl_exp >= CURDATE()) AS stok_dus
+                FROM stok_batch WHERE id_variasi = v.id AND no_batch NOT LIKE '%.%' AND tgl_exp >= CURDATE()) AS stok_dus,
+               (SELECT GROUP_CONCAT(CONCAT(no_batch, '|', tgl_exp) ORDER BY tgl_exp DESC SEPARATOR ',')
+                FROM stok_batch WHERE id_variasi = v.id AND stok_sisa > 0 AND tgl_exp < CURDATE()) AS expired_batch_list
         FROM produk_variasi v 
         JOIN produk_induk i ON v.id_produk_induk=i.id
         LEFT JOIN stok_toko sc ON sc.id_variasi=v.id 

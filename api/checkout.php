@@ -1,5 +1,8 @@
 <?php
 // File: api/checkout.php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/db.php';
@@ -36,6 +39,9 @@ if (empty($namaPembeli) || empty($phone) || empty($alamatLengkap) || empty($cart
 }
 
 try {
+    if (defined('MIDTRANS_ACTIVE') && !MIDTRANS_ACTIVE) {
+        throw new Exception('Gateway pembayaran Midtrans sedang dinonaktifkan sementara oleh Admin.');
+    }
     $pdo = DB::connect();
     
     // Pemicu timer mandiri: batalkan pesanan kedaluwarsa sebelum menghitung stok checkout baru
@@ -109,7 +115,6 @@ try {
     }
 
     // 3. Simpan ke penjualan
-    session_start();
     $idUser = $_SESSION['user_id'] ?? null;
     $orderId = "WEB-" . date('Ymd') . "-" . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
 
@@ -326,7 +331,7 @@ try {
     ]);
 
 } catch (Exception $e) {
-    if (isset($pdo)) $pdo->rollBack();
+    if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
 ?>

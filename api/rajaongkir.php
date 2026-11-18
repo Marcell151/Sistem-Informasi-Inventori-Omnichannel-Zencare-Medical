@@ -9,7 +9,7 @@ $action = $_GET['action'] ?? '';
 // Helper function to send requests to Komerce API
 if (!function_exists('callKomerce')) {
 function callKomerce($path, $method = 'GET', $params = []) {
-    if (empty(KOMERCE_API_KEY)) {
+    if ((defined('RAJAONGKIR_ACTIVE') && !RAJAONGKIR_ACTIVE) || empty(KOMERCE_API_KEY)) {
         return getMockData($path, $params);
     }
 
@@ -207,40 +207,128 @@ switch ($action) {
             $origin = '46748';
         }
 
-        $destination = $_POST['destination'] ?? '';
+        $destination = trim($_POST['destination'] ?? '');
         $cityName = trim($_POST['city_name'] ?? '');
-        $weight = $_POST['weight'] ?? 1000;
-        $courier = $_POST['courier'] ?? 'jne';
+        $provinceName = trim($_POST['province_name'] ?? '');
+        $weight = max(1, intval($_POST['weight'] ?? 1000));
+        $courier = strtolower(trim($_POST['courier'] ?? 'jne'));
 
         if (empty($destination) && empty($cityName)) {
             echo json_encode(['status' => 'error', 'message' => 'destination ID is required']);
             break;
         }
+        if (empty($courier) || in_array($courier, ['internal', 'pickup'], true)) {
+            echo json_encode(['status' => 'error', 'message' => 'Courier tidak valid untuk kalkulasi ekspedisi RajaOngkir']);
+            break;
+        }
 
-        // Resolusi ID Destinasi Komerce yang akurat berdasarkan nama kota pilihan pembeli
+        // Jika API RajaOngkir dimatikan di Pengaturan Admin, langsung gunakan kalkulator lokal
+        if (defined('RAJAONGKIR_ACTIVE') && !RAJAONGKIR_ACTIVE) {
+            echo getFallbackShippingCost($cityName, $weight, $courier);
+            break;
+        }
+
+        // 1. Resolusi ID Subdistrict/Destinasi Komerce yang akurat:
+        // Prioritas utama via hierarki City ID -> District -> Subdistrict (bebas salah kota seperti Surabaya vs Surabaya Baru Lampung)
         $targetDest = $destination;
-        if (!empty($cityName)) {
-            $cleanCity = preg_replace('/^(KOTA|KABUPATEN|KAB\.?)\s+/i', '', $cityName);
-            $cleanCity = trim($cleanCity);
-            $cacheKeyDest = 'dest_komerce_' . md5(strtolower($cleanCity));
-            $foundDest = getCachedResponse($cacheKeyDest, function() use ($cleanCity) {
-                $raw = callKomerce('/destination/domestic-destination', 'GET', [
-                    'search' => $cleanCity,
-                    'limit' => 1
-                ]);
-                $dec = json_decode($raw, true);
-                return !empty($dec['data'][0]['id']) ? (string)$dec['data'][0]['id'] : '';
+        $resolvedSubdest = '';
+
+        if (ctype_digit($destination) && intval($destination) > 0) {
+            $cacheKeyCity = 'dest_city_v2_' . $destination;
+            $cachedCityJson = getCachedResponse($cacheKeyCity, function() use ($destination) {
+                $distRaw = callKomerce('/destination/district/' . $destination);
+                $distDec = json_decode($distRaw, true);
+                $firstDistId = !empty($distDec['data'][0]['id']) ? (string)$distDec['data'][0]['id'] : '';
+                if ($firstDistId !== '') {
+                    $subRaw = callKomerce('/destination/sub-district/' . $firstDistId);
+                    $subDec = json_decode($subRaw, true);
+                    if (!empty($subDec['data'][0]['id'])) {
+                        return json_encode([
+                            'status' => 'success',
+                            'dest_id' => (string)$subDec['data'][0]['id']
+                        ]);
+                    }
+                }
+                return '';
+            }, 2592000);
+            $cityResDec = json_decode($cachedCityJson, true);
+            if (!empty($cityResDec['dest_id'])) {
+                $resolvedSubdest = (string)$cityResDec['dest_id'];
+            }
+        }
+
+        // 2. Fallback pencarian teks jika ID kota offline tidak cocok, prioritaskan city_name & province_name persis
+        if ($resolvedSubdest === '' && !empty($cityName)) {
+            $cleanCity = trim(preg_replace('/^(KOTA|KABUPATEN|KAB\.?)\s+/i', '', $cityName));
+            $cleanProv = trim(preg_replace('/^(PROVINSI|PROV\.?)\s+|\s*\(.*?\)/i', '', $provinceName));
+            $cacheKeyText = 'dest_text_v2_' . md5(strtolower($cleanCity . '|' . $cleanProv));
+
+            $cachedTextJson = getCachedResponse($cacheKeyText, function() use ($cleanCity, $cleanProv) {
+                $pickBest = function($rows) use ($cleanCity, $cleanProv) {
+                    $bestId = '';
+                    $bestScore = -1;
+                    $targetCityUp = strtoupper($cleanCity);
+                    $targetProvUp = strtoupper($cleanProv);
+                    foreach ($rows as $row) {
+                        $rowCity = strtoupper(trim($row['city_name'] ?? ''));
+                        $rowProv = strtoupper(trim($row['province_name'] ?? ''));
+                        $rowDist = strtoupper(trim($row['district_name'] ?? ''));
+                        $score = 0;
+                        if ($rowCity === $targetCityUp) {
+                            $score += 100;
+                        } elseif ($targetCityUp !== '' && strpos($rowCity, $targetCityUp) !== false) {
+                            $score += 30;
+                        }
+                        if ($targetProvUp !== '' && ($rowProv === $targetProvUp || strpos($rowProv, $targetProvUp) !== false || strpos($targetProvUp, $rowProv) !== false)) {
+                            $score += 50;
+                        }
+                        if ($targetCityUp !== '' && $rowDist === $targetCityUp) {
+                            $score += 10;
+                        }
+                        if ($score > $bestScore) {
+                            $bestScore = $score;
+                            $bestId = (string)($row['id'] ?? '');
+                        }
+                    }
+                    $minAccept = ($targetProvUp !== '') ? 80 : 100;
+                    return ($bestScore >= $minAccept && $bestId !== '') ? $bestId : '';
+                };
+
+                $queries = array_values(array_unique(array_filter([
+                    $cleanProv !== '' ? ($cleanCity . ' ' . $cleanProv) : '',
+                    $cleanCity
+                ])));
+
+                foreach ($queries as $qStr) {
+                    $raw = callKomerce('/destination/domestic-destination', 'GET', [
+                        'search' => $qStr,
+                        'limit' => 50
+                    ]);
+                    $dec = json_decode($raw, true);
+                    if (!empty($dec['data']) && is_array($dec['data'])) {
+                        $picked = $pickBest($dec['data']);
+                        if ($picked !== '') {
+                            return json_encode(['status' => 'success', 'dest_id' => $picked]);
+                        }
+                    }
+                }
+                return '';
             }, 2592000);
 
-            if (!empty($foundDest)) {
-                $targetDest = $foundDest;
+            $textResDec = json_decode($cachedTextJson, true);
+            if (!empty($textResDec['dest_id'])) {
+                $resolvedSubdest = (string)$textResDec['dest_id'];
             }
+        }
+
+        if ($resolvedSubdest !== '') {
+            $targetDest = $resolvedSubdest;
         }
 
         // Cache cost calculation queries for 7 days
         // We round weight to the nearest 100g to increase cache hit rate
-        $roundedWeight = round($weight / 100) * 100;
-        $cacheKey = 'cost_' . $origin . '_' . $targetDest . '_' . $roundedWeight . '_' . $courier;
+        $roundedWeight = max(100, round($weight / 100) * 100);
+        $cacheKey = 'cost_v2_' . $origin . '_' . $targetDest . '_' . $roundedWeight . '_' . $courier;
         
         $costResponse = getCachedResponse($cacheKey, function() use ($origin, $targetDest, $weight, $courier, $cityName) {
             $apiRes = callKomerce('/calculate/domestic-cost', 'POST', [

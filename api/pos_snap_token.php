@@ -12,9 +12,14 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+if (defined('MIDTRANS_ACTIVE') && !MIDTRANS_ACTIVE) {
+    echo json_encode(['status' => 'error', 'message' => 'Gateway pembayaran Midtrans sedang dinonaktifkan di Pengaturan API.']);
+    exit;
+}
+
 $input = json_decode(file_get_contents('php://input'), true);
 $total = intval($input['total'] ?? 0);
-$cart = $input['cart'] ?? [];
+$cart = is_array($input['cart'] ?? null) ? $input['cart'] : [];
 $invoiceNo = trim($input['invoice'] ?? ('POS-' . date('Ymd') . '-' . rand(1000, 9999)));
 
 if ($total <= 0) {
@@ -25,14 +30,15 @@ if ($total <= 0) {
 try {
     $itemDetails = [];
     foreach ($cart as $item) {
-        $nama = substr($item['name'] ?? 'Item POS', 0, 45);
-        $qty = intval($item['qty'] ?? 1);
-        $price = intval($item['price'] ?? 0);
+        $nama = substr(trim((string)($item['name'] ?? $item['nama'] ?? 'Item POS')), 0, 45);
+        $qty = max(1, intval($item['qty'] ?? 1));
+        $price = intval($item['price'] ?? $item['harga'] ?? 0);
+        if ($price <= 0) continue;
         $itemDetails[] = [
             'id' => (string)($item['id'] ?? '1'),
             'price' => $price,
             'quantity' => $qty,
-            'name' => $nama
+            'name' => $nama ?: 'Item POS'
         ];
     }
     

@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
     $newStatus  = $_POST['status_pesanan'] ?? '';
     
     if ($idPesanan && in_array($newStatus, ['Menunggu Pembayaran', 'Diproses', 'Dikirim', 'Siap Diambil', 'Selesai', 'Dibatalkan'])) {
-        if (in_array($newStatus, ['Dikirim', 'Selesai'])) {
+        if (in_array($newStatus, ['Dikirim', 'Siap Diambil', 'Selesai'])) {
             assertTidakSedangOpname($pdo, 'pengiriman / penyelesaian pesanan');
         }
         $pdo->beginTransaction();
@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
                                 if ($bQty <= 0) $bQty = ($satuanTipe === 'besar') ? $qtyBox : $qtyPotong;
                                 $deskripsi = "Konfirmasi Pengambilan di Toko (Pick-up) [Batch: $bName ($bQty $satLabel)]";
                                 $pdo->prepare("INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, ?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
-                                    ->execute([$idVar, $bId, $satuanTipe, $noInvoice, $bQty, $sisaStokTampil, $deskripsi, $_SESSION['id_user'] ?? 1]);
+                                    ->execute([$idVar, $bId, $satuanTipe, $noInvoice, $bQty, $sisaStokTampil, $deskripsi, $_SESSION['user_id'] ?? 1]);
                             }
                         } else {
                             $catatan = trim($item['catatan_logistik'] ?? '');
@@ -183,12 +183,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
                                     $bQty  = $b['qty'];
                                     $deskripsi = "Konfirmasi Pengambilan di Toko (Pick-up) [Batch: $bName ($bQty $satLabel)]";
                                     $pdo->prepare("INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, ?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
-                                        ->execute([$idVar, $bId, $satuanTipe, $noInvoice, $bQty, $sisaStokTampil, $deskripsi, $_SESSION['id_user'] ?? 1]);
+                                        ->execute([$idVar, $bId, $satuanTipe, $noInvoice, $bQty, $sisaStokTampil, $deskripsi, $_SESSION['user_id'] ?? 1]);
                                 }
                             } else {
                                 $deskripsi = 'Konfirmasi Pengambilan di Toko (Pick-up)';
                                 $pdo->prepare("INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, NULL, ?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
-                                    ->execute([$idVar, $satuanTipe, $noInvoice, $qtyKartu, $sisaStokTampil, $deskripsi, $_SESSION['id_user'] ?? 1]);
+                                    ->execute([$idVar, $satuanTipe, $noInvoice, $qtyKartu, $sisaStokTampil, $deskripsi, $_SESSION['user_id'] ?? 1]);
                             }
                         }
                     }
@@ -238,7 +238,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
                                 if ($bQty <= 0) $bQty = ($satuanTipe === 'besar') ? $qtyBox : $qtyPotong;
                                 $deskripsi = "Pengiriman via Ekspedisi (Kurir) [Batch: $bName ($bQty $satLabel)]";
                                 $pdo->prepare("INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, ?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
-                                    ->execute([$idVar, $bId, $satuanTipe, $noInvoice, $bQty, $sisaStokTampil, $deskripsi, $_SESSION['id_user'] ?? 1]);
+                                    ->execute([$idVar, $bId, $satuanTipe, $noInvoice, $bQty, $sisaStokTampil, $deskripsi, $_SESSION['user_id'] ?? 1]);
                             }
                         } else {
                             $catatan = trim($item['catatan_logistik'] ?? '');
@@ -265,12 +265,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
                                     $bQty  = $b['qty'];
                                     $deskripsi = "Pengiriman via Ekspedisi (Kurir) [Batch: $bName ($bQty $satLabel)]";
                                     $pdo->prepare("INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, ?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
-                                        ->execute([$idVar, $bId, $satuanTipe, $noInvoice, $bQty, $sisaStokTampil, $deskripsi, $_SESSION['id_user'] ?? 1]);
+                                        ->execute([$idVar, $bId, $satuanTipe, $noInvoice, $bQty, $sisaStokTampil, $deskripsi, $_SESSION['user_id'] ?? 1]);
                                 }
                             } else {
                                 $deskripsi = 'Pengiriman via Ekspedisi (Kurir)';
                                 $pdo->prepare("INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, no_ref_dokumen, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, NULL, ?, 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', ?, ?, ?, ?, ?)")
-                                    ->execute([$idVar, $satuanTipe, $noInvoice, $qtyKartu, $sisaStokTampil, $deskripsi, $_SESSION['id_user'] ?? 1]);
+                                    ->execute([$idVar, $satuanTipe, $noInvoice, $qtyKartu, $sisaStokTampil, $deskripsi, $_SESSION['user_id'] ?? 1]);
                             }
                         }
                     }
@@ -353,7 +353,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
                                 $pdo->prepare("UPDATE unit_serial SET status = 'Terjual', id_penjualan = ? WHERE serial_number = ? AND id_variasi = ?")->execute([$idPesanan, $batchScan, $idVarA]);
                                 $pdo->prepare("UPDATE detail_penjualan SET catatan_logistik = ? WHERE id_penjualan = ? AND id_variasi = ?")->execute([$batchScan, $idPesanan, $idVarA]);
                             } else {
-                                $pdo->prepare("INSERT INTO log_anomali_fefo (id_penjualan, id_user, id_variasi, batch_diambil, batch_seharusnya, qty) VALUES (?, ?, ?, ?, ?, ?)")->execute([$idPesanan, $_SESSION['id_user'] ?? 1, $idVarA, $batchScan, $batchSeharusnya, $qtyAn]);
+                                $pdo->prepare("INSERT INTO log_anomali_fefo (id_penjualan, id_user, id_variasi, batch_diambil, batch_seharusnya, qty) VALUES (?, ?, ?, ?, ?, ?)")->execute([$idPesanan, $_SESSION['user_id'] ?? 1, $idVarA, $batchScan, $batchSeharusnya, $qtyAn]);
                             }
                         }
                     }
@@ -809,10 +809,10 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
 #pack_camera_view { width: 100% !important; overflow: hidden !important; border-radius: 0.75rem !important; background: #0f172a !important; }
 #pack_camera_view video {
     width: 100% !important;
-    height: 100% !important;
-    min-height: 280px !important;
+    height: auto !important;
+    min-height: 240px !important;
     max-height: 360px !important;
-    object-fit: cover !important;
+    object-fit: contain !important;
     border-radius: 0.75rem !important;
     display: block !important;
     margin: 0 auto !important;
@@ -887,11 +887,18 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
             </div>
         </div>
 
-        <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
+        <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center gap-2">
             <span class="text-[11px] text-slate-500">Arahkan barcode kardus / SN ke kotak kamera</span>
-            <button type="button" onclick="closePackCameraModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 transition">
-                Tutup Scanner
-            </button>
+            <div class="flex items-center gap-2">
+                <input type="file" id="pack_file_scanner_input" accept="image/*" class="hidden" onchange="scanPackBarcodeFromFile(this)">
+                <label for="pack_file_scanner_input" class="cursor-pointer px-3.5 py-2.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition inline-flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>Upload Foto Barcode</span>
+                </label>
+                <button type="button" onclick="closePackCameraModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 transition">
+                    Tutup Scanner
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -1317,6 +1324,34 @@ async function closePackCameraModal() {
     }, 200);
 }
 
+function getPackSupportedFormats() {
+    if (typeof Html5QrcodeSupportedFormats === 'undefined') return [];
+    return [
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.CODE_93,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.UPC_E,
+        Html5QrcodeSupportedFormats.ITF,
+        Html5QrcodeSupportedFormats.CODABAR,
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.DATA_MATRIX,
+        Html5QrcodeSupportedFormats.AZTEC
+    ];
+}
+
+function pickBestPackCameraDevice(devices) {
+    if (!devices || !devices.length) return null;
+    let isBad = (lbl) => /\b(ir|infrared|depth|virtual|obs|snap|droidcam)\b/i.test(lbl || '');
+    let isBack = (lbl) => /\b(back|rear|environment|belakang|usb)\b/i.test(lbl || '');
+    let valid = devices.filter(d => !isBad(d.label));
+    let pool = valid.length ? valid : devices;
+    let pref = pool.find(d => isBack(d.label));
+    return (pref || pool[0]).id;
+}
+
 async function startPackCamera(cameraId = null) {
     let loading = document.getElementById('pack_camera_loading');
     let badge = document.getElementById('pack_scan_status_badge');
@@ -1327,10 +1362,17 @@ async function startPackCamera(cameraId = null) {
             throw new Error('Library Html5Qrcode belum dimuat.');
         }
         if (!packHtml5QrCode) {
-            packHtml5QrCode = new Html5Qrcode("pack_camera_view");
+            packHtml5QrCode = new Html5Qrcode("pack_camera_view", {
+                formatsToSupport: getPackSupportedFormats(),
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+                verbose: false
+            });
         }
         
-        const devices = await Html5Qrcode.getCameras();
+        let devices = [];
+        try { devices = await Html5Qrcode.getCameras(); } catch (e) {}
+
+        const chosenCamera = cameraId || pickBestPackCameraDevice(devices) || { facingMode: "environment" };
         let select = document.getElementById('pack_camera_select');
         if (select && devices && devices.length) {
             select.innerHTML = '';
@@ -1338,29 +1380,35 @@ async function startPackCamera(cameraId = null) {
                 let opt = document.createElement('option');
                 opt.value = dev.id;
                 opt.text = dev.label || `Kamera ${idx + 1}`;
-                if (cameraId && dev.id === cameraId) opt.selected = true;
+                if (typeof chosenCamera === 'string' && dev.id === chosenCamera) opt.selected = true;
                 select.appendChild(opt);
             });
         }
         
-        const chosenCamera = cameraId || (devices && devices.length > 0 ? devices[0].id : { facingMode: "environment" });
-        const config = {
-            fps: 20,
-            qrbox: function(viewfinderWidth, viewfinderHeight) {
-                let w = Math.min(Math.floor(viewfinderWidth * 0.75), 280);
-                let h = Math.min(Math.floor(viewfinderHeight * 0.65), 180);
-                return { width: Math.max(w, 200), height: Math.max(h, 120) };
-            }
+        const packQrbox = function(viewfinderWidth, viewfinderHeight) {
+            let w = Math.min(Math.floor(viewfinderWidth * 0.88), 380);
+            let h = Math.min(Math.floor(viewfinderHeight * 0.58), 200);
+            return { width: Math.max(w, 220), height: Math.max(h, 120) };
         };
-        
-        await packHtml5QrCode.start(
-            chosenCamera,
-            config,
-            (decodedText) => {
-                onPackCameraSuccess(decodedText);
-            },
-            (error) => {}
-        );
+        const vc = (typeof chosenCamera === 'string')
+            ? { deviceId: { exact: chosenCamera }, width: { ideal: 1280 }, height: { ideal: 720 } }
+            : { ...chosenCamera, width: { ideal: 1280 }, height: { ideal: 720 } };
+
+        try {
+            await packHtml5QrCode.start(
+                chosenCamera,
+                { fps: 20, qrbox: packQrbox, videoConstraints: vc },
+                (decodedText) => onPackCameraSuccess(decodedText),
+                () => {}
+            );
+        } catch (startErr) {
+            await packHtml5QrCode.start(
+                chosenCamera,
+                { fps: 20, qrbox: packQrbox },
+                (decodedText) => onPackCameraSuccess(decodedText),
+                () => {}
+            );
+        }
         
         isPackCameraRunning = true;
         if (loading) loading.classList.add('hidden');
@@ -1376,10 +1424,8 @@ async function startPackCamera(cameraId = null) {
         }
         Swal.fire({
             title: 'Akses Kamera Terkendala',
-            text: 'Pastikan browser Anda mengizinkan akses webcam atau kamera. (' + err.message + ')',
+            text: 'Pastikan browser mengizinkan webcam, atau gunakan "Upload Foto Barcode". (' + (err.message || err) + ')',
             icon: 'warning'
-        }).then(() => {
-            closePackCameraModal();
         });
     }
 }
@@ -1391,6 +1437,46 @@ async function changePackCamera(newDeviceId) {
     }
     if (newDeviceId) {
         await startPackCamera(newDeviceId);
+    }
+}
+
+async function scanPackBarcodeFromFile(input) {
+    if (!input || !input.files || !input.files.length) return;
+    let file = input.files[0];
+    let badge = document.getElementById('pack_scan_status_badge');
+    let select = document.getElementById('pack_camera_select');
+    let prevCamId = (select && select.value) ? select.value : null;
+    let wasRunning = isPackCameraRunning;
+    if (badge) badge.innerText = 'Memindai Foto...';
+
+    try {
+        if (!packHtml5QrCode) {
+            packHtml5QrCode = new Html5Qrcode("pack_camera_view", {
+                formatsToSupport: getPackSupportedFormats(),
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+                verbose: false
+            });
+        }
+        if (isPackCameraRunning) {
+            await packHtml5QrCode.stop();
+            isPackCameraRunning = false;
+        }
+        const res = await packHtml5QrCode.scanFileV2(file, false);
+        if (res && res.decodedText) {
+            packLastTimestamp = 0;
+            onPackCameraSuccess(res.decodedText);
+        } else {
+            Swal.fire('Barcode Tidak Terbaca', 'Pastikan foto barcode jelas dan tidak buram.', 'warning');
+        }
+    } catch (err) {
+        Swal.fire('Gagal Membaca Foto Barcode', (err.message || err || 'Barcode tidak terdeteksi.'), 'warning');
+    } finally {
+        input.value = '';
+        if (wasRunning && !document.getElementById('pack_camera_modal')?.classList.contains('hidden')) {
+            await startPackCamera(prevCamId);
+        } else if (badge) {
+            badge.innerText = 'Scanner Aktif';
+        }
     }
 }
 

@@ -77,10 +77,12 @@ try {
 
     // 3. Cek SKU Variasi
     $stmtSku = $pdo->prepare("
-        SELECT pv.sku_variasi, pi.nama_produk, pv.nama_variasi
+        SELECT pv.sku_variasi, pi.nama_produk, pv.nama_variasi, COALESCE(st.stok, 0) AS stok_toko
         FROM produk_variasi pv
         JOIN produk_induk pi ON pv.id_produk_induk = pi.id
+        LEFT JOIN stok_toko st ON st.id_variasi = pv.id
         WHERE LOWER(pv.sku_variasi) = LOWER(?)
+          AND pv.is_active = 1 AND pi.is_active = 1
         LIMIT 1
     ");
     $stmtSku->execute([$barcode]);
@@ -92,6 +94,7 @@ try {
             'tipe' => 'sku',
             'sku' => $skuVar['sku_variasi'],
             'nama' => $skuVar['nama_produk'] . ' - ' . $skuVar['nama_variasi'],
+            'stok_toko' => intval($skuVar['stok_toko'] ?? 0),
             'is_expired' => false
         ]);
         exit;

@@ -312,8 +312,9 @@ $totalStiker = count($flatStickers);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cetak Label Stiker Kelompok - ZenCare Medical (<?= $totalStiker ?> Label)</title>
-    <!-- JsBarcode untuk barcode Code 128 yang scannable & presisi -->
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <!-- JsBarcode untuk barcode Code 128 yang scannable & presisi (Local offline asset first + CDN fallback) -->
+    <script src="../assets/js/JsBarcode.all.min.js"></script>
+    <script>if (typeof JsBarcode === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>'); }</script>
     <style>
         * {
             box-sizing: border-box;

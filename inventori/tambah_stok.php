@@ -1123,10 +1123,10 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
 #bpom_scanner_view { width: 100% !important; overflow: hidden !important; border-radius: 0.75rem !important; background: #0f172a !important; }
 #bpom_scanner_view video {
     width: 100% !important;
-    height: 100% !important;
-    min-height: 280px !important;
+    height: auto !important;
+    min-height: 240px !important;
     max-height: 360px !important;
-    object-fit: cover !important;
+    object-fit: contain !important;
     border-radius: 0.75rem !important;
     display: block !important;
     margin: 0 auto !important;
@@ -1883,7 +1883,19 @@ async function startBpomScanner(cameraId = null) {
             verbose: false
         });
 
-        const devices = await Html5Qrcode.getCameras();
+        let devices = [];
+        try { devices = await Html5Qrcode.getCameras(); } catch (e) {}
+
+        const pickBestBpomCam = (devs) => {
+            if (!devs || !devs.length) return null;
+            const bad = (l) => /\b(ir|infrared|depth|virtual|obs|snap|droidcam)\b/i.test(l || '');
+            const back = (l) => /\b(back|rear|environment|belakang|usb)\b/i.test(l || '');
+            const valid = devs.filter(d => !bad(d.label));
+            const pool = valid.length ? valid : devs;
+            return (pool.find(d => back(d.label)) || pool[0]).id;
+        };
+
+        const chosenCamera = cameraId || pickBestBpomCam(devices) || { facingMode: "environment" };
         const select = document.getElementById('bpom_camera_select');
         if (select && devices && devices.length) {
             select.innerHTML = '';
@@ -1891,27 +1903,35 @@ async function startBpomScanner(cameraId = null) {
                 const opt = document.createElement('option');
                 opt.value = dev.id;
                 opt.text = dev.label || `Kamera ${idx + 1}`;
-                if (cameraId && dev.id === cameraId) opt.selected = true;
+                if (typeof chosenCamera === 'string' && dev.id === chosenCamera) opt.selected = true;
                 select.appendChild(opt);
             });
         }
 
-        const chosenCamera = cameraId || (devices && devices.length > 0 ? devices[0].id : { facingMode: "environment" });
-        const config = {
-            fps: 20,
-            qrbox: function(viewfinderWidth, viewfinderHeight) {
-                let w = Math.min(Math.floor(viewfinderWidth * 0.75), 280);
-                let h = Math.min(Math.floor(viewfinderHeight * 0.65), 180);
-                return { width: Math.max(w, 200), height: Math.max(h, 120) };
-            }
+        const baseQrbox = function(viewfinderWidth, viewfinderHeight) {
+            let w = Math.min(Math.floor(viewfinderWidth * 0.88), 380);
+            let h = Math.min(Math.floor(viewfinderHeight * 0.58), 200);
+            return { width: Math.max(w, 220), height: Math.max(h, 120) };
         };
+        const vc = (typeof chosenCamera === 'string')
+            ? { deviceId: { exact: chosenCamera }, width: { ideal: 1280 }, height: { ideal: 720 } }
+            : { ...chosenCamera, width: { ideal: 1280 }, height: { ideal: 720 } };
 
-        await bpomScanner.start(
-            chosenCamera,
-            config,
-            (decodedText) => onBpomBarcodeScanSuccess(decodedText),
-            (errorMessage) => {}
-        );
+        try {
+            await bpomScanner.start(
+                chosenCamera,
+                { fps: 20, qrbox: baseQrbox, videoConstraints: vc },
+                (decodedText) => onBpomBarcodeScanSuccess(decodedText),
+                () => {}
+            );
+        } catch (startErr) {
+            await bpomScanner.start(
+                chosenCamera,
+                { fps: 20, qrbox: baseQrbox },
+                (decodedText) => onBpomBarcodeScanSuccess(decodedText),
+                () => {}
+            );
+        }
 
         isBpomScannerRunning = true;
         if (loading) loading.classList.add('hidden');
@@ -1956,9 +1976,13 @@ async function scanBarcodeFromFile(input) {
                 Html5QrcodeSupportedFormats.EAN_8,
                 Html5QrcodeSupportedFormats.UPC_A
             ] : [];
-            bpomScanner = new Html5Qrcode("bpom_scanner_view", { formatsToSupport: formats, verbose: false });
+            bpomScanner = new Html5Qrcode("bpom_scanner_view", {
+                formatsToSupport: formats,
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+                verbose: false
+            });
         }
-        const result = await bpomScanner.scanFileV2(file, true);
+        const result = await bpomScanner.scanFileV2(file, false);
         if (result && result.decodedText) {
             onBpomBarcodeScanSuccess(result.decodedText);
         } else {
@@ -2096,10 +2120,14 @@ let hwBarcodeBuffer = '';
 let hwBarcodeTimer = null;
 
 document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    const modalBpom = document.getElementById('modal_bpom_search');
+    if (!modalBpom || modalBpom.classList.contains('hidden')) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
     
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' || e.key === 'Tab') {
         if (hwBarcodeBuffer.trim().length >= 3) {
+            e.preventDefault();
             onBpomBarcodeScanSuccess(hwBarcodeBuffer.trim());
         }
         hwBarcodeBuffer = '';
@@ -2112,7 +2140,7 @@ document.addEventListener('keydown', function(e) {
         clearTimeout(hwBarcodeTimer);
         hwBarcodeTimer = setTimeout(() => {
             hwBarcodeBuffer = '';
-        }, 300);
+        }, 600);
     }
 });
 
