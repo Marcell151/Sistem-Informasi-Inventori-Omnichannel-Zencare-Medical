@@ -383,8 +383,13 @@ function layoutSidebar(string $activeMenu = 'dashboard') {
         <div class="min-w-0 flex-1">
           <span class="text-xs font-bold text-[#0f2d5a] truncate block leading-snug">' . $nama . '</span>
           <span class="text-[11px] text-slate-500 font-medium block">' . $roleLabel . '</span>
-        </div>
-      </div>
+        </div>';
+    if (in_array($role, ['superadmin', 'admin'], true)) {
+        echo '<a href="/inventory_zencare/demo/index.php" title="Panel Demo & Snapshot Database" class="p-1.5 rounded-md text-slate-400 opacity-30 hover:opacity-100 hover:text-[#1a75d2] hover:bg-slate-200/60 transition shrink-0" aria-label="Panel Demo">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        </a>';
+    }
+    echo '</div>
       <a href="/inventory_zencare/logout.php" class="sidebar-link text-[#c0392b] hover:!bg-rose-50 hover:!text-rose-700 justify-center gap-2 py-2 text-xs font-semibold">'
       . icon('logout', 'w-4 h-4') . ' <span>Keluar Sistem</span></a>
     </div></aside>';

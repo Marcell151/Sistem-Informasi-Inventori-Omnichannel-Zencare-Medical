@@ -195,7 +195,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 include __DIR__ . '/../scratch/run_full_opname_simulation.php';
                 $simLog = ob_get_clean();
                 cekSesiOpnameAktif($pdo, true);
-                header("Location: /inventory_zencare/inventori/stok_opname.php?demo_selesai=" . intval($idSesi) . "&msg=" . urlencode("Uji coba testing penuh berhasil dijalankan dari awal hingga penutupan sesi opname! Seluruh 111 item telah dihitung, 6 item anomali selisih telah diverifikasi & dimutasi ke Kartu Stok, sesi resmi ditutup, dan Berita Acara telah diterbitkan di bawah ini.") . "&type=success");
+                $simTotal = intval($totalRowSnapshot ?? 0);
+                $simAnom = intval($pdo->query("SELECT COUNT(*) FROM detail_opname_batch WHERE id_sesi = " . intval($idSesi) . " AND (selisih != 0 OR COALESCE(fisik_rusak,0) > 0 OR COALESCE(fisik_expired,0) > 0)")->fetchColumn());
+                header("Location: /inventory_zencare/inventori/stok_opname.php?demo_selesai=" . intval($idSesi) . "&msg=" . urlencode("Uji coba testing penuh berhasil dijalankan dari awal hingga penutupan sesi opname! Seluruh $simTotal item telah dihitung, $simAnom item anomali selisih telah diverifikasi & dimutasi ke Kartu Stok, sesi resmi ditutup, dan Berita Acara telah diterbitkan di bawah ini.") . "&type=success");
                 exit;
             } catch (Exception $e) {
                 $msg = "Gagal menjalankan simulasi: " . $e->getMessage();
@@ -214,7 +216,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 include __DIR__ . '/../scratch/run_full_opname_simulation.php';
                 $simLog = ob_get_clean();
                 cekSesiOpnameAktif($pdo, true);
-                header("Location: /inventory_zencare/inventori/stok_opname.php?status_eval=berselisih&msg=" . urlencode("Simulasi dibuka pada Tahap 2 (Verifikasi Selisih): 105 item klop disembunyikan otomatis dan 6 item anomali siap diverifikasi.") . "&type=success");
+                $simTotal = intval($totalRowSnapshot ?? 0);
+                $simAnom = intval($pdo->query("SELECT COUNT(*) FROM detail_opname_batch WHERE id_sesi = " . intval($idSesi) . " AND (selisih != 0 OR COALESCE(fisik_rusak,0) > 0 OR COALESCE(fisik_expired,0) > 0)")->fetchColumn());
+                $simKlop = max(0, $simTotal - $simAnom);
+                header("Location: /inventory_zencare/inventori/stok_opname.php?status_eval=berselisih&msg=" . urlencode("Simulasi dibuka pada Tahap 2 (Verifikasi Selisih): $simKlop item klop disembunyikan otomatis dan $simAnom item anomali siap diverifikasi.") . "&type=success");
                 exit;
             } catch (Exception $e) {
                 $msg = "Gagal menjalankan simulasi: " . $e->getMessage();
@@ -779,7 +784,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     WHERE id = ?
                 ")->execute([$userId, $idSesi]);
 
-                header("Location: stok_opname.php?status_eval=berselisih&msg=" . urlencode("Skenario Uji Coba Berhasil Di-Generate! Sebanyak $updatedCount entitas fisik terisi (6 anomali selisih: Cefadroxil Rusak, Sanmol Expired, Amoxicillin Hilang, Tensimeter Hilang, Termometer Rusak, Betadine Surplus). Sistem otomatis beralih ke tahap Verifikasi dan menyembunyikan 115 barang cocok.") . "&type=success");
+                $klopHidden = max(0, $updatedCount - $diffCount);
+                header("Location: stok_opname.php?status_eval=berselisih&msg=" . urlencode("Skenario Uji Coba Berhasil Di-Generate! Sebanyak $updatedCount entitas fisik terisi ($diffCount anomali selisih: Cefadroxil Rusak, Sanmol Expired, Amoxicillin Hilang, Tensimeter Hilang, Termometer Rusak, Betadine Surplus). Sistem otomatis beralih ke tahap Verifikasi dan menyembunyikan $klopHidden barang cocok.") . "&type=success");
                 exit;
             } catch (Exception $e) {
                 $msg = "Gagal menjalankan auto-fill demo: " . $e->getMessage();
@@ -1871,7 +1877,7 @@ if ($isKasir) {
                 <div class="flex items-center gap-2.5 flex-wrap">
                     <?php if ($canVerify): ?>
                         <!-- Tombol [Utilitas Demo] Jalankan Uji Coba Testing -->
-                        <form method="POST" onsubmit="return confirm('Jalankan skenario uji coba testing otomatis dari awal hingga selesai (Mulai Sesi 111 Item -> Hitung Fisik 3 Kondisi -> Verifikasi & Mutasi 6 Produk Anomali -> Tutup Sesi Opname -> Terbitkan Berita Acara)?');" class="inline">
+                        <form method="POST" onsubmit="return confirm('Jalankan skenario uji coba testing otomatis dari awal hingga selesai (Mulai Sesi Seluruh Item -> Hitung Fisik 3 Kondisi -> Verifikasi & Mutasi 6 Produk Anomali -> Tutup Sesi Opname -> Terbitkan Berita Acara)?');" class="inline">
                             <input type="hidden" name="aksi" value="jalankan_simulasi_demo">
                             <button type="submit" class="h-9 px-3.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer whitespace-nowrap" title="Khusus keperluan demo pengujian: Jalankan skenario uji coba otomatis dari awal hingga penutupan sesi dan penerbitan Berita Acara">
                                 <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
