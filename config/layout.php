@@ -101,6 +101,11 @@ function layoutHead(string $title = 'Dashboard')
   .swal2-container {
     z-index: 20000 !important;
   }
+  /* Cegah modal biasa terpotong atas/bawah di layar laptop 1280x720 */
+  div.fixed.inset-0 > div.bg-white:not(.flex-col) {
+    max-height: 92vh;
+    overflow-y: auto;
+  }
 
   /* ── Harmonize Off-Brand Purple/Indigo AI Accents to ZenCare Logo Palette ── */
   .bg-indigo-50, .bg-purple-50, .bg-violet-50, .bg-indigo-50\/50, .bg-purple-50\/50 {

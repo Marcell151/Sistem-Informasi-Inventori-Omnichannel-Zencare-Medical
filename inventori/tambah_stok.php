@@ -3497,7 +3497,7 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
     function nextHistoryPage() {
         if (currentHistPage < totalPages) {
             currentHistPage++;
-            updateHistoryPag ination();
+            updateHistoryPagination();
         }
     }
 

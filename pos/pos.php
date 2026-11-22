@@ -521,6 +521,10 @@ foreach ($riwayatKasirHariIni as $rTrx) {
         .swal2-container {
             z-index: 20000 !important;
         }
+        div.fixed.inset-0 > div.bg-white:not(.flex-col) {
+            max-height: 92vh;
+            overflow-y: auto;
+        }
 
         /* Skala proporsional agar layar laptop 1280px–1536px tetap rapi seperti monitor 1920px */
         html {
