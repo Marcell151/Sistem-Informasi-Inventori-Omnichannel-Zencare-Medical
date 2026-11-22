@@ -13,10 +13,19 @@ if (!$idVariasi) {
 }
 
 try {
-    // Cek kategori produk
-    $kategori = $pdo->query("SELECT pi.kategori FROM produk_variasi pv JOIN produk_induk pi ON pv.id_produk_induk = pi.id WHERE pv.id = $idVariasi")->fetchColumn();
+    // Cek kategori & informasi satuan produk
+    $stmtMeta = $pdo->prepare("SELECT pi.kategori, pv.satuan_besar, pv.satuan_kecil, pv.rasio_konversi FROM produk_variasi pv JOIN produk_induk pi ON pv.id_produk_induk = pi.id WHERE pv.id = ?");
+    $stmtMeta->execute([$idVariasi]);
+    $meta = $stmtMeta->fetch(PDO::FETCH_ASSOC);
+    $kategori = $meta['kategori'] ?? '';
 
-    $response = ['kategori' => $kategori, 'items' => []];
+    $response = [
+        'kategori'       => $kategori,
+        'satuan_besar'   => $meta['satuan_besar'] ?? 'Box',
+        'satuan_kecil'   => $meta['satuan_kecil'] ?? 'Pcs',
+        'rasio_konversi' => max(1, intval($meta['rasio_konversi'] ?? 1)),
+        'items'          => []
+    ];
 
     if ($kategori === 'Obat') {
         // Ambil Batch aktif yang memiliki stok fisik di toko (stok_sisa + reserved > 0)

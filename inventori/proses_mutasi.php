@@ -32,29 +32,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo->beginTransaction();
             
-            // Cek Kategori
-            $kategori = $pdo->query("SELECT pi.kategori FROM produk_variasi pv JOIN produk_induk pi ON pv.id_produk_induk = pi.id WHERE pv.id = $idVariasi")->fetchColumn();
-            
+            // Cek Kategori & Satuan (Multi-UOM)
+            $stmtVar = $pdo->prepare("SELECT pi.kategori, pv.satuan_besar, pv.satuan_kecil, pv.rasio_konversi FROM produk_variasi pv JOIN produk_induk pi ON pv.id_produk_induk = pi.id WHERE pv.id = ?");
+            $stmtVar->execute([$idVariasi]);
+            $varMeta = $stmtVar->fetch(PDO::FETCH_ASSOC);
+            if (!$varMeta) throw new Exception("Produk tidak ditemukan.");
+
+            $kategori   = $varMeta['kategori'];
+            $satBesar   = $varMeta['satuan_besar'] ?: 'Box';
+            $satKecil   = $varMeta['satuan_kecil'] ?: 'Pcs';
+            $rasio      = max(1, intval($varMeta['rasio_konversi'] ?? 1));
+            $satuanTipe = 'kecil';
+            $qtyPcs     = $qty;
+            $satLabel   = $satKecil;
+
             $detailLog = "";
             $idBatchMutasi = null;
 
             if ($kategori === 'Obat') {
                 $noBatch = trim($_POST['no_batch'] ?? '');
                 if (!$noBatch) throw new Exception("Nomor Batch wajib diisi untuk kategori Obat.");
+
+                // Batch induk (tanpa titik '.') pada produk Multi-UOM (rasio > 1) -> Satuan Besar (Karton/Box)
+                // Sub-batch bertitik ('.A', '.B', dst) atau rasio 1 -> Satuan Kecil (Botol/Strip/Pcs)
+                $isSubBatch = (strpos($noBatch, '.') !== false);
+                $isSatuanBesar = (!$isSubBatch && $rasio > 1);
+                $satuanTipe = $isSatuanBesar ? 'besar' : 'kecil';
+                $qtyPcs     = $isSatuanBesar ? ($qty * $rasio) : $qty;
+                $satLabel   = $isSatuanBesar ? $satBesar : $satKecil;
                 
                 if ($jenisMutasi === 'Pengurangan') {
                     // Cek ketersediaan batch
                     $cekBatch = $pdo->prepare("SELECT id, stok_sisa FROM stok_batch WHERE id_variasi = ? AND no_batch = ? FOR UPDATE");
                     $cekBatch->execute([$idVariasi, $noBatch]);
                     $batchRow = $cekBatch->fetch();
-                    $stokBatch = $batchRow ? $batchRow['stok_sisa'] : false;
+                    $stokBatch = $batchRow ? intval($batchRow['stok_sisa']) : false;
                     $idBatchMutasi = $batchRow ? $batchRow['id'] : null;
                     
-                    if ($stokBatch === false || $stokBatch < $qty) {
-                        throw new Exception("Sisa stok Batch $noBatch tidak mencukupi (Sisa: " . intval($stokBatch) . ").");
+                    if ($stokBatch === false || $stokBatch < $qtyPcs) {
+                        $sisaTampil = $isSatuanBesar ? (floor(intval($stokBatch) / $rasio) . " $satBesar") : (intval($stokBatch) . " $satKecil");
+                        throw new Exception("Sisa stok Batch $noBatch tidak mencukupi (Sisa: $sisaTampil).");
                     }
                     
-                    $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$qty, $idBatchMutasi]);
+                    $pdo->prepare("UPDATE stok_batch SET stok_sisa = stok_sisa - ? WHERE id = ?")->execute([$qtyPcs, $idBatchMutasi]);
                 } else {
                     // Penambahan Batch
                     $tglExp = $_POST['tgl_exp'] ?? '';
@@ -66,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception("Tanggal kedaluwarsa Batch '$noBatch' ($tglExpFmt) ditolak! Tanggal kedaluwarsa tidak boleh hari ini atau tanggal lampau (minimal besok H+1 / $tglMinFmt).");
                     }
                     
-                    $pdo->prepare("INSERT INTO stok_batch (id_variasi, no_batch, tgl_exp, stok_sisa) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE stok_sisa = stok_sisa + ?")->execute([$idVariasi, $noBatch, $tglExp, $qty, $qty]);
+                    $pdo->prepare("INSERT INTO stok_batch (id_variasi, no_batch, tgl_exp, stok_sisa) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE stok_sisa = stok_sisa + ?")->execute([$idVariasi, $noBatch, $tglExp, $qtyPcs, $qtyPcs]);
                     
                     $qBatchId = $pdo->prepare("SELECT id FROM stok_batch WHERE id_variasi = ? AND no_batch = ?");
                     $qBatchId->execute([$idVariasi, $noBatch]);
@@ -108,22 +128,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $detailLog = " [SN: $snStr]";
             }
 
-            // Update stok fisik produk (Global)
+            // Update stok fisik produk (Global dalam satuan kecil / Pcs)
             $operator = $jenisMutasi === 'Penambahan' ? '+' : '-';
             $stmtStok = $pdo->prepare("UPDATE stok_toko SET stok = stok $operator ? WHERE id_variasi = ?");
-            $stmtStok->execute([$qty, $idVariasi]);
+            $stmtStok->execute([$qtyPcs, $idVariasi]);
             
-            // Catat di kartu stok
-            $sisaStok = $pdo->query("SELECT stok FROM stok_toko WHERE id_variasi = $idVariasi")->fetchColumn();
+            // Hitung sisa stok sesuai satuan kartu stok (Terpisah Besar vs Kecil)
+            if ($kategori === 'Obat' && $rasio > 1) {
+                if ($satuanTipe === 'besar') {
+                    $qSisa = $pdo->prepare("SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = ? AND no_batch NOT LIKE '%.%'");
+                    $qSisa->execute([$idVariasi]);
+                    $sisaStok = intval(floor(intval($qSisa->fetchColumn()) / $rasio));
+                } else {
+                    $qSisa = $pdo->prepare("SELECT COALESCE(SUM(stok_sisa), 0) FROM stok_batch WHERE id_variasi = ? AND no_batch LIKE '%.%'");
+                    $qSisa->execute([$idVariasi]);
+                    $sisaStok = intval($qSisa->fetchColumn());
+                }
+            } else {
+                $qSisa = $pdo->prepare("SELECT stok FROM stok_toko WHERE id_variasi = ?");
+                $qSisa->execute([$idVariasi]);
+                $sisaStok = intval($qSisa->fetchColumn());
+            }
+
+            // Mapping alasan ke ENUM valid kartu_stok.alasan_mutasi agar tidak kosong
+            $alasanEnum = match ($alasan) {
+                'Barang Kadaluwarsa', 'Barang Kedaluwarsa' => 'Barang Kedaluwarsa',
+                'Barang Rusak / Cacat Pabrik', 'Barang Rusak' => 'Barang Rusak',
+                'Retur ke Supplier' => 'Retur Barang Rusak',
+                'Klaim Garansi Pelanggan' => 'Klaim Garansi SN',
+                'Selisih Stock Opname' => 'Selisih Stok Opname',
+                default => 'Koreksi Manual',
+            };
             
             $jMutasi = $jenisMutasi === 'Penambahan' ? 'Masuk' : 'Keluar';
-            $fullCatatan = $catatan . $detailLog;
+            $fullCatatan = ($catatan ? $catatan . " ($alasan)" : $alasan) . $detailLog;
             
-            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, 'kecil', ?, 'Manual', ?, ?, ?, ?, ?)");
-            $stmtKartu->execute([$idVariasi, $idBatchMutasi, $jMutasi, $alasan, $qty, $sisaStok, $fullCatatan, $userId]);
+            $stmtKartu = $pdo->prepare("INSERT INTO kartu_stok (id_variasi, id_batch, satuan_tipe, jenis_mutasi, kanal, alasan_mutasi, qty, sisa_stok, keterangan, dibuat_oleh) VALUES (?, ?, ?, ?, 'Manual', ?, ?, ?, ?, ?)");
+            $stmtKartu->execute([$idVariasi, $idBatchMutasi, $satuanTipe, $jMutasi, $alasanEnum, $qty, $sisaStok, $fullCatatan, $userId]);
 
             $pdo->commit();
-            $msg = "Berhasil memproses $jenisMutasi sebanyak $qty unit$detailLog.";
+            $msg = "Berhasil memproses $jenisMutasi sebanyak $qty $satLabel" . ($satuanTipe === 'besar' ? " ($qtyPcs $satKecil)" : "") . "$detailLog.";
             $msgType = 'success';
         } catch (Exception $e) {
             $pdo->rollBack();
@@ -198,7 +242,7 @@ layoutHeader('Mutasi Stok Manual', 'Penyesuaian stok gudang karena selisih, retu
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-zcTxt mb-1.5">Qty Fisik *</label>
+                        <label id="qty_label" class="block text-sm font-semibold text-zcTxt mb-1.5">Qty Fisik *</label>
                         <input type="number" name="qty" id="qty_input" required min="1" placeholder="Contoh: 5"
                             class="w-full text-sm border border-zcBrd rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zc bg-slate-50">
                     </div>
@@ -328,59 +372,92 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.error) return;
 
                 const kat = data.kategori;
-                const items = data.items;
+                const items = data.items || [];
+                const rasio = parseInt(data.rasio_konversi || 1, 10) || 1;
+                const satBesar = data.satuan_besar || 'Box';
+                const satKecil = data.satuan_kecil || 'Pcs';
+                const qtyLabel = document.getElementById('qty_label');
+                const qtyInputEl = document.getElementById('qty_input');
                 let html = '';
 
                 if (kat === 'Obat') {
-                    document.getElementById('qty_input').removeAttribute('readonly');
+                    qtyInputEl.removeAttribute('readonly');
+                    qtyInputEl.removeAttribute('max');
                     labelTitle.textContent = 'IDENTITAS BATCH (OBAT)';
                     if (jenis === 'Pengurangan') {
+                        if (qtyLabel) qtyLabel.textContent = 'Qty Fisik *';
                         html += `<label class="block text-xs font-semibold text-zcTxt mb-1">Pilih Batch yang Dikurangi *</label>
                                  <select name="no_batch" required class="w-full text-sm border border-zcBrd rounded-lg px-3 py-2 bg-white">
                                      <option value="">-- Pilih Batch --</option>`;
                         items.forEach(i => {
-                            html += `<option value="${i.no_batch}" data-max="${i.stok_sisa}">Batch: ${i.no_batch} (Sisa: ${i.stok_sisa} | Exp: ${i.tgl_exp})</option>`;
+                            const isSub = (i.no_batch || '').includes('.');
+                            const isBesar = (!isSub && rasio > 1);
+                            const stokPcs = parseInt(i.stok_sisa || 0, 10);
+                            const maxUom = isBesar ? Math.floor(stokPcs / rasio) : stokPcs;
+                            const uomLbl = isBesar ? satBesar : satKecil;
+                            const tagLbl = isBesar ? `Grosir • Sisa: ${maxUom} ${satBesar} (${stokPcs} ${satKecil})` : `Eceran • Sisa: ${stokPcs} ${satKecil}`;
+                            html += `<option value="${i.no_batch}" data-max="${maxUom}" data-uom="${uomLbl}" data-tipe="${isBesar ? 'besar' : 'kecil'}">${i.no_batch} [${tagLbl} | Exp: ${i.tgl_exp}]</option>`;
                         });
-                        html += `</select>`;
+                        html += `</select>
+                                 <p id="batch_uom_hint" class="text-[10px] text-slate-500 mt-1">Satuan otomatis mengikuti jenis batch: batch induk = <b>${satBesar}</b> (Grosir), sub-batch bertitik = <b>${satKecil}</b> (Eceran).</p>`;
                         
                         setTimeout(() => {
                             const selBatch = document.querySelector('select[name="no_batch"]');
+                            const hintEl = document.getElementById('batch_uom_hint');
                             if (selBatch) {
                                 selBatch.addEventListener('change', function() {
-                                    const qtyInput = document.getElementById('qty_input');
                                     const opt = this.options[this.selectedIndex];
                                     if (opt && opt.value !== "") {
-                                        const max = opt.getAttribute('data-max');
-                                        qtyInput.setAttribute('max', max);
-                                        qtyInput.placeholder = `Maks: ${max}`;
-                                        
-                                        // Auto reset if current value > max
-                                        if (parseInt(qtyInput.value) > max) {
-                                            qtyInput.value = max;
+                                        const max = parseInt(opt.getAttribute('data-max') || 0, 10);
+                                        const uom = opt.getAttribute('data-uom') || satKecil;
+                                        const tipe = opt.getAttribute('data-tipe') || 'kecil';
+                                        qtyInputEl.setAttribute('max', max);
+                                        qtyInputEl.placeholder = `Maks: ${max} ${uom}`;
+                                        if (qtyLabel) qtyLabel.textContent = `Qty Fisik (${uom}) *`;
+                                        if (hintEl) {
+                                            hintEl.innerHTML = tipe === 'besar'
+                                                ? `Batch induk terdeteksi → input dalam <b>${uom}</b> (1 ${satBesar} = ${rasio} ${satKecil}) &amp; tercatat di Kartu Stok <b>Satuan Besar</b>.`
+                                                : `Sub-batch eceran terdeteksi → input dalam <b>${uom}</b> &amp; tercatat di Kartu Stok <b>Satuan Kecil</b>.`;
+                                        }
+                                        if (parseInt(qtyInputEl.value, 10) > max) {
+                                            qtyInputEl.value = max;
                                         }
                                     } else {
-                                        qtyInput.removeAttribute('max');
-                                        qtyInput.placeholder = "Contoh: 5";
+                                        qtyInputEl.removeAttribute('max');
+                                        qtyInputEl.placeholder = "Contoh: 5";
+                                        if (qtyLabel) qtyLabel.textContent = 'Qty Fisik *';
                                     }
                                 });
                             }
                         }, 50);
                     } else {
+                        if (qtyLabel) qtyLabel.textContent = rasio > 1 ? `Qty Fisik (${satBesar}) *` : `Qty Fisik (${satKecil}) *`;
                         html += `<div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="block text-xs font-semibold text-zcTxt mb-1">Nomor Batch Baru *</label>
-                                        <input type="text" name="no_batch" required class="w-full text-sm border border-zcBrd rounded-lg px-3 py-2 bg-white" placeholder="Contoh: BT-001">
+                                        <input type="text" name="no_batch" id="input_batch_baru" required class="w-full text-sm border border-zcBrd rounded-lg px-3 py-2 bg-white" placeholder="Contoh: BT-001">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-zcTxt mb-1">Tgl Kedaluwarsa *</label>
                                         <input type="date" name="tgl_exp" min="<?= date('Y-m-d', strtotime('+1 day')) ?>" required class="w-full text-sm border border-zcBrd rounded-lg px-3 py-2 bg-white">
                                         <div class="text-[9px] text-amber-700 mt-1">Min. Besok (H+1)</div>
                                     </div>
-                                 </div>`;
+                                 </div>
+                                 <p class="text-[10px] text-slate-500 mt-1">Batch tanpa titik = <b>${satBesar}</b> (Grosir); Sub-batch bertitik (cth: <code>.A</code>) = <b>${satKecil}</b> (Eceran).</p>`;
+                        setTimeout(() => {
+                            const inpB = document.getElementById('input_batch_baru');
+                            if (inpB && qtyLabel) {
+                                inpB.addEventListener('input', function() {
+                                    const isSub = this.value.includes('.');
+                                    qtyLabel.textContent = (!isSub && rasio > 1) ? `Qty Fisik (${satBesar}) *` : `Qty Fisik (${satKecil}) *`;
+                                });
+                            }
+                        }, 50);
                     }
                     container.classList.remove('hidden');
                     inputContainer.innerHTML = html;
                 } else if (kat === 'Alat Kesehatan') {
+                    if (qtyLabel) qtyLabel.textContent = `Qty Fisik (${satKecil}) *`;
                     labelTitle.textContent = 'IDENTITAS SERIAL NUMBER (ALKES)';
                     if (jenis === 'Pengurangan') {
                         html += `<label class="block text-xs font-semibold text-zcTxt mb-1">Pilih Serial Number yang Dikeluarkan *</label>

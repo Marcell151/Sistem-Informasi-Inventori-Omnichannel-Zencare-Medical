@@ -590,7 +590,8 @@ layoutHeader(
         </div>
         <?php
         $expList = $pdo->query("
-            SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sb.no_batch, sb.tgl_exp, sb.stok_sisa, pv.satuan_kecil, pi.batas_hari_expired,
+            SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sb.no_batch, sb.tgl_exp, sb.stok_sisa,
+                   pv.satuan_besar, pv.satuan_kecil, pv.rasio_konversi, pi.batas_hari_expired,
                    DATEDIFF(sb.tgl_exp, CURDATE()) AS sisa_hari
             FROM stok_batch sb
             JOIN produk_variasi pv ON sb.id_variasi = pv.id
@@ -608,18 +609,29 @@ layoutHeader(
             $color = $isExpired ? '#dc2626' : '#d97706';
             $bg = $isExpired ? '#fee2e2' : '#fef3c7';
             $label = $isExpired ? 'EXPIRED (Sisa: ' . $e['sisa_hari'] . ' Hari)' : 'Sisa: ' . $e['sisa_hari'] . ' Hari';
+            $rasioExp = max(1, intval($e['rasio_konversi'] ?? 1));
+            $isSubExp = (strpos($e['no_batch'], '.') !== false);
+            $isBesarExp = (!$isSubExp && $rasioExp > 1);
+            $qtyDispExp = $isBesarExp ? floor(intval($e['stok_sisa']) / $rasioExp) : intval($e['stok_sisa']);
+            $satDispExp = $isBesarExp ? ($e['satuan_besar'] ?: 'Box') : ($e['satuan_kecil'] ?: 'Pcs');
         ?>
         <div class="exp-superadmin-item" style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:none;justify-content:space-between;align-items:center;">
             <div style="flex:1;min-width:0;">
                 <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($e['nama']) ?></div>
-                <div style="font-size:10px;color:<?= $color ?>;margin-top:1px;font-weight:600;display:flex;align-items:center;gap:4px;">
+                <div style="font-size:10px;color:<?= $color ?>;margin-top:1px;font-weight:600;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
                     <span style="background:<?= $bg ?>;padding:1px 4px;border-radius:3px;font-size:9px;"><?= $label ?></span> 
                     Batch: <?= htmlspecialchars($e['no_batch']) ?>
+                    <span style="background:#f1f5f9;color:#475569;padding:1px 4px;border-radius:3px;font-size:9px;"><?= $isBesarExp ? 'Grosir' : 'Eceran' ?></span>
                 </div>
             </div>
-            <span style="font-size:12px;font-weight:700;color:<?= $color ?>;margin-left:12px;white-space:nowrap;">
-                <?= $e['stok_sisa'] ?> <?= htmlspecialchars($e['satuan_kecil']) ?>
-            </span>
+            <div style="text-align:right;margin-left:12px;white-space:nowrap;">
+                <span style="font-size:12px;font-weight:700;color:<?= $color ?>;display:block;">
+                    <?= $qtyDispExp ?> <?= htmlspecialchars($satDispExp) ?>
+                </span>
+                <?php if ($isBesarExp): ?>
+                <span style="font-size:9.5px;color:#64748b;display:block;">(<?= intval($e['stok_sisa']) ?> <?= htmlspecialchars($e['satuan_kecil']) ?>)</span>
+                <?php endif; ?>
+            </div>
         </div>
         <?php endforeach; ?>
         </div>
@@ -989,7 +1001,8 @@ layoutHeader(
         </div>
         <?php
         $expList = $pdo->query("
-            SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sb.no_batch, sb.tgl_exp, sb.stok_sisa, pv.satuan_kecil, pi.batas_hari_expired,
+            SELECT CONCAT(pi.nama_produk, ' - ', pv.nama_variasi) AS nama, sb.no_batch, sb.tgl_exp, sb.stok_sisa,
+                   pv.satuan_besar, pv.satuan_kecil, pv.rasio_konversi, pi.batas_hari_expired,
                    DATEDIFF(sb.tgl_exp, CURDATE()) AS sisa_hari
             FROM stok_batch sb
             JOIN produk_variasi pv ON sb.id_variasi = pv.id
@@ -1007,18 +1020,29 @@ layoutHeader(
             $color = $isExpired ? '#dc2626' : '#d97706';
             $bg = $isExpired ? '#fee2e2' : '#fef3c7';
             $label = $isExpired ? 'EXPIRED (Sisa: ' . $e['sisa_hari'] . ' Hari)' : 'Sisa: ' . $e['sisa_hari'] . ' Hari';
+            $rasioExp = max(1, intval($e['rasio_konversi'] ?? 1));
+            $isSubExp = (strpos($e['no_batch'], '.') !== false);
+            $isBesarExp = (!$isSubExp && $rasioExp > 1);
+            $qtyDispExp = $isBesarExp ? floor(intval($e['stok_sisa']) / $rasioExp) : intval($e['stok_sisa']);
+            $satDispExp = $isBesarExp ? ($e['satuan_besar'] ?: 'Box') : ($e['satuan_kecil'] ?: 'Pcs');
         ?>
         <div class="exp-admin-item" style="padding:9px 16px;border-bottom:1px solid #f8fafc;display:none;justify-content:space-between;align-items:center;">
             <div style="flex:1;min-width:0;">
                 <div style="font-size:12px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($e['nama']) ?></div>
-                <div style="font-size:10px;color:<?= $color ?>;margin-top:1px;font-weight:600;display:flex;align-items:center;gap:4px;">
+                <div style="font-size:10px;color:<?= $color ?>;margin-top:1px;font-weight:600;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
                     <span style="background:<?= $bg ?>;padding:1px 4px;border-radius:3px;font-size:9px;"><?= $label ?></span> 
                     Batch: <?= htmlspecialchars($e['no_batch']) ?>
+                    <span style="background:#f1f5f9;color:#475569;padding:1px 4px;border-radius:3px;font-size:9px;"><?= $isBesarExp ? 'Grosir' : 'Eceran' ?></span>
                 </div>
             </div>
-            <span style="font-size:12px;font-weight:700;color:<?= $color ?>;margin-left:12px;white-space:nowrap;">
-                <?= $e['stok_sisa'] ?> <?= htmlspecialchars($e['satuan_kecil']) ?>
-            </span>
+            <div style="text-align:right;margin-left:12px;white-space:nowrap;">
+                <span style="font-size:12px;font-weight:700;color:<?= $color ?>;display:block;">
+                    <?= $qtyDispExp ?> <?= htmlspecialchars($satDispExp) ?>
+                </span>
+                <?php if ($isBesarExp): ?>
+                <span style="font-size:9.5px;color:#64748b;display:block;">(<?= intval($e['stok_sisa']) ?> <?= htmlspecialchars($e['satuan_kecil']) ?>)</span>
+                <?php endif; ?>
+            </div>
         </div>
         <?php endforeach; ?>
         </div>
