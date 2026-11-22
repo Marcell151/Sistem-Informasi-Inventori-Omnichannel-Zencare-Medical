@@ -464,7 +464,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
     <script src="<?= MIDTRANS_SNAP_URL ?>" data-client-key="<?= MIDTRANS_CLIENT_KEY ?>"></script>
     <script src="../assets/js/html5-qrcode.min.js?v=20261122c"></script>
     <script src="../assets/js/zxing-wasm-reader.js?v=20261122c"></script>
-    <script src="../assets/js/zencare-barcode-boost.js?v=20261122f"></script>
+    <script src="../assets/js/zencare-barcode-boost.js?v=20261122g"></script>
     <style>
         ::-webkit-scrollbar {
             width: 5px;

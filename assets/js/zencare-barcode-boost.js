@@ -75,7 +75,7 @@
                     corePath: ocrBase,
                     langPath: ocrBase,
                     workerBlobURL: false,
-                    gzip: true
+                    gzip: false
                 });
                 await worker.setParameters({
                     tessedit_pageseg_mode: '7', // PSM.SINGLE_LINE
@@ -212,16 +212,8 @@
         return editDistanceMax2(a, b) === 1;
     }
 
-    // Pre-warm worker OCR secara diam-diam saat halaman idle agar saat modal kamera dibuka, OCR langsung siap (0ms tunggu)
-    if (typeof window.addEventListener === 'function') {
-        window.addEventListener('load', function () {
-            setTimeout(function () {
-                if (!ocrWorkerPromise && typeof window.ZXingWASM !== 'undefined') {
-                    getOcrWorker();
-                }
-            }, 1200);
-        });
-    }
+    // Worker OCR hanya dimuat on-demand saat modal kamera / unggah foto barcode digunakan
+    // (tidak memicu unduhan di background saat halaman baru dibuka).
 
     function resolveOcrCandidate(rawText, confidence, state, isFileFallback) {
         const clean = cleanOcrText(rawText);

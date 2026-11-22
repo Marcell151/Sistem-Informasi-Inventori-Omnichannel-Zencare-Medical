@@ -1985,7 +1985,7 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
 
 <script src="../assets/js/html5-qrcode.min.js?v=20261122b"></script>
 <script src="../assets/js/zxing-wasm-reader.js?v=20261122b"></script>
-<script src="../assets/js/zencare-barcode-boost.js?v=20261122f"></script>
+<script src="../assets/js/zencare-barcode-boost.js?v=20261122g"></script>
 <script>
     let rC = 1;
     const rawProdukList = <?= json_encode($produkList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;

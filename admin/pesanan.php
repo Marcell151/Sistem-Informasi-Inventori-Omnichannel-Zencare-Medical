@@ -1871,6 +1871,6 @@ function proceedPackingMatch(val, targetStatus, fromCamera = false) {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="../assets/js/html5-qrcode.min.js?v=20261122c"></script>
 <script src="../assets/js/zxing-wasm-reader.js?v=20261122c"></script>
-<script src="../assets/js/zencare-barcode-boost.js?v=20261122f"></script>
+<script src="../assets/js/zencare-barcode-boost.js?v=20261122g"></script>
 
 <?php layoutEnd(); ?>
