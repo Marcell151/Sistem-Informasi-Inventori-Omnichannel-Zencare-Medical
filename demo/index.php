@@ -73,6 +73,14 @@ $presets = [
         'path'    => $presetDir . '/demo_sudah_penerimaan.sql',
         'tags'    => ['Faktur PDF Terlampir', 'Retur Menunggu Pengganti', 'Stiker Baru Siap Scan']
     ],
+    'penerimaan_produk_baru' => [
+        'title'   => '6. Preset Penerimaan + Produk Baru (Mixagrip & Oximeter)',
+        'badge'   => 'LENGKAP + PRODUK BARU',
+        'color'   => 'teal',
+        'desc'    => 'Berisi seluruh data Preset 5 (KUL-20261122-001) PLUS 2 produk baru cadangan sesuai panduan: Mixagrip Flu (3 Box utuh, Batch MXG-26A01, eceran=0 siap uji Bongkar Box) & Oximeter Digital LK87 (3 Unit, SN OXM-LK87-01..03). Keduanya sudah diterima via Penerimaan Barang & langsung siap cetak stiker / scan di POS & E-Commerce!',
+        'path'    => $presetDir . '/demo_penerimaan_produk_baru.sql',
+        'tags'    => ['Mixagrip MXG-26A01 (Ecer 0)', 'Oximeter OXM-LK87-01..03', 'Siap Cetak & Scan']
+    ],
 ];
 
 function loadSnapshotMeta(string $metaFile): array {
@@ -321,6 +329,7 @@ layoutHeader('Panel Demo & Snapshot Database', 'Utilitas cepat mengganti preset 
                     'amber'   => 'bg-amber-50 text-amber-700 border-amber-200',
                     'indigo'  => 'bg-indigo-50 text-indigo-700 border-indigo-200',
                     'rose'    => 'bg-rose-50 text-rose-700 border-rose-200',
+                    'teal'    => 'bg-teal-50 text-teal-700 border-teal-200',
                     default   => 'bg-blue-50 text-blue-700 border-blue-200',
                 };
                 $btnCls = match($p['color']) {
@@ -328,6 +337,7 @@ layoutHeader('Panel Demo & Snapshot Database', 'Utilitas cepat mengganti preset 
                     'amber'   => 'bg-amber-600 hover:bg-amber-700 text-white',
                     'indigo'  => 'bg-indigo-600 hover:bg-indigo-700 text-white',
                     'rose'    => 'bg-rose-600 hover:bg-rose-700 text-white',
+                    'teal'    => 'bg-teal-600 hover:bg-teal-700 text-white',
                     default   => 'bg-[#0f2d5a] hover:bg-[#1a75d2] text-white',
                 };
             ?>

@@ -60,16 +60,16 @@
     <b>Panduan Potongan Lembar Pelengkap Ini (Melengkapi PDF 17 Label Anda):</b><br>
     • <b>Baris 1–2 (Hasil Penerimaan Barang KUL-20261122-001):</b> <code>HUFPIL-2027-02</code> (2x terima baik), <code>HUFPIL-2027-02R</code> (1x pengganti retur rusak), <code>HUF-TMP-28</code> (2x terima baik), <code>OMR-7120-201</code> &amp; <code>OMR-7120-202</code> (Tensimeter baru), <code>OMR-MC246-21</code> &amp; <code>OMR-MC246-22</code> (Termometer baru).<br>
     • <b>Uji Blokir / Safety Guard (Negative Test):</b> <code>SNM-24K061</code> (Sanmol <b>EXPIRED</b> -> blokir mutlak), <code>OMR-7120-101</code> (Tensimeter <b>SUDAH TERJUAL</b> -> blokir + info garansi), <code>OMR-7120-R01</code> (Tensimeter <b>RUSAK</b> -> blokir unit afkir).<br>
-    • <b>Cadangan Produk Baru (Jika Diminta Saat Tanya-Jawab):</b> <code>MXG-26A01</code> (Mixagrip) &amp; <code>OXM-LK87-01</code> (Oximeter LK87).
+    • <b>Cadangan Produk Baru (Preset 6 / Tanya-Jawab):</b> <code>MXG-26A01</code> (Mixagrip Flu 3 Box, eceran=0 siap Bongkar Box) &amp; <code>OXM-LK87-01</code>, <code>OXM-LK87-02</code>, <code>OXM-LK87-03</code> (Oximeter LK87 3 Unit).
   </div>
 </div>
 
 <script>
 const LABELS = [
   // Penerimaan KUL-20261122-001 (Obat & Retur)
-  { name: 'Hufagrip - Hufagrip Biru (Pil...', code: 'HUFPIL-2027-02',  exp: 'EXP: 30/06/2027', danger: false },
-  { name: 'Hufagrip - Hufagrip Biru (Pil...', code: 'HUFPIL-2027-02',  exp: 'EXP: 30/06/2027', danger: false },
-  { name: 'Hufagrip - Hufagrip Biru (Retur)', code: 'HUFPIL-2027-02R', exp: 'EXP: 30/09/2027', danger: false },
+  { name: 'Hufagrip - Hufagrip Biru (Pil...', code: 'HUFPIL-2027-02',  exp: 'EXP: 30/11/2028', danger: false },
+  { name: 'Hufagrip - Hufagrip Biru (Pil...', code: 'HUFPIL-2027-02',  exp: 'EXP: 30/11/2028', danger: false },
+  { name: 'Hufagrip - Hufagrip Biru (Retur)', code: 'HUFPIL-2027-02R', exp: 'EXP: 31/12/2028', danger: false },
   { name: 'Hufagrip - Hufagrip Merah (...',   code: 'HUF-TMP-28',      exp: 'EXP: 15/10/2028', danger: false },
 
   // Penerimaan KUL-20261122-001 (Merah ke-2 + Alkes Baru)
@@ -84,9 +84,11 @@ const LABELS = [
   { name: 'Tensimeter Digital Omron - ...',   code: 'OMR-7120-101',    exp: 'SN (Terjual)',    danger: true  },
   { name: 'Tensimeter Digital Omron - ...',   code: 'OMR-7120-R01',    exp: 'SN (Rusak)',      danger: true  },
 
-  // Cadangan Tambah Produk Baru (Tanya-Jawab)
+  // Cadangan Tambah Produk Baru (Preset 6 / Tanya-Jawab)
   { name: 'Mixagrip - Flu Strip Isi 4',       code: 'MXG-26A01',       exp: 'EXP: 30/11/2027', danger: false },
-  { name: 'Oximeter Digital Fingertip...',    code: 'OXM-LK87-01',     exp: 'Serial Number',   danger: false }
+  { name: 'Oximeter Digital Fingertip...',    code: 'OXM-LK87-01',     exp: 'Serial Number',   danger: false },
+  { name: 'Oximeter Digital Fingertip...',    code: 'OXM-LK87-02',     exp: 'Serial Number',   danger: false },
+  { name: 'Oximeter Digital Fingertip...',    code: 'OXM-LK87-03',     exp: 'Serial Number',   danger: false }
 ];
 
 const grid = document.getElementById('grid');
