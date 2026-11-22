@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cetak Label Stiker Tambahan Penerimaan & Uji Blokir (14 Label) — ZenCare Medical</title>
+<script src="../assets/js/JsBarcode.all.min.js"></script>
+<script>if (typeof JsBarcode === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>'); }</script>
+<style>
+  @page { size: A4 portrait; margin: 10mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #f1f5f9; color: #0f172a; }
+  .toolbar { position: sticky; top: 0; z-index: 20; background: #0f2d5a; color: #fff; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .toolbar h1 { font-size: 14px; font-weight: 800; }
+  .toolbar p { font-size: 11px; color: #bae6fd; margin-top: 2px; }
+  .toolbar button { background: #1a75d2; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; }
+  .sheet { width: 190mm; margin: 14px auto; background: #fff; padding: 4mm; box-shadow: 0 4px 18px rgba(0,0,0,.08); }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4mm; }
+  .grid.compact { grid-template-columns: repeat(4, 1fr); gap: 3mm; }
+  .label-card {
+    border: 1px dashed #94a3b8; border-radius: 4px; padding: 3mm 3.5mm 2.5mm;
+    background: #fff; display: flex; flex-direction: column; justify-content: space-between;
+    height: 41mm; page-break-inside: avoid;
+  }
+  .grid.compact .label-card { padding: 2.5mm 2mm 2mm; height: 33mm; }
+  .lbl-name { font-size: 9pt; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+  .grid.compact .lbl-name { font-size: 7.4pt; }
+  .lbl-bc { width: 100%; display: flex; justify-content: center; align-items: center; margin: 0.5mm 0; }
+  .lbl-bc svg { width: auto; max-width: 100%; height: auto; max-height: 23mm; display: block; }
+  .grid.compact .lbl-bc svg { max-height: 15.5mm; }
+  .lbl-foot { display: flex; justify-content: space-between; align-items: center; font-size: 8pt; border-top: 1px solid #f1f5f9; padding-top: 1mm; }
+  .grid.compact .lbl-foot { font-size: 6.5pt; }
+  .lbl-brand { color: #1a75d2; font-weight: 800; }
+  .lbl-exp { color: #475569; font-weight: 600; font-family: ui-monospace, Consolas, monospace; }
+  .lbl-exp.danger { color: #b91c1c; font-weight: 800; }
+  .legend { margin-top: 6mm; padding: 3.5mm 4mm; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 7.5pt; color: #334155; line-height: 1.5; }
+  .legend b { color: #0f2d5a; }
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none !important; }
+    .sheet { width: 100%; margin: 0; padding: 0; box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <div>
+    <h1>Pelengkap Stiker 17-Label Anda: 14 Stiker Penerimaan Demo (KUL-20261122-001) &amp; Uji Blokir</h1>
+    <p>Desain &amp; ukuran identik dengan PDF 17 Label Anda (Grid 4 Kolom A4). Cetak 1 lembar lalu gunting sebagai pelengkap!</p>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button onclick="toggleSizeMode()" id="btn_size" style="background:#0f172a">Ubah ke Grid 4 Kolom (Kecil)</button>
+    <button onclick="window.print()">Cetak / Simpan PDF (Ctrl+P)</button>
+  </div>
+</div>
+
+<div class="sheet">
+  <div class="grid" id="grid"></div>
+  <div class="legend">
+    <b>Panduan Potongan Lembar Pelengkap Ini (Melengkapi PDF 17 Label Anda):</b><br>
+    • <b>Baris 1–2 (Hasil Penerimaan Barang KUL-20261122-001):</b> <code>HUFPIL-2027-02</code> (2x terima baik), <code>HUFPIL-2027-02R</code> (1x pengganti retur rusak), <code>HUF-TMP-28</code> (2x terima baik), <code>OMR-7120-201</code> &amp; <code>OMR-7120-202</code> (Tensimeter baru), <code>OMR-MC246-21</code> &amp; <code>OMR-MC246-22</code> (Termometer baru).<br>
+    • <b>Uji Blokir / Safety Guard (Negative Test):</b> <code>SNM-24K061</code> (Sanmol <b>EXPIRED</b> -> blokir mutlak), <code>OMR-7120-101</code> (Tensimeter <b>SUDAH TERJUAL</b> -> blokir + info garansi), <code>OMR-7120-R01</code> (Tensimeter <b>RUSAK</b> -> blokir unit afkir).<br>
+    • <b>Cadangan Produk Baru (Jika Diminta Saat Tanya-Jawab):</b> <code>MXG-26A01</code> (Mixagrip) &amp; <code>OXM-LK87-01</code> (Oximeter LK87).
+  </div>
+</div>
+
+<script>
+const LABELS = [
+  // Penerimaan KUL-20261122-001 (Obat & Retur)
+  { name: 'Hufagrip - Hufagrip Biru (Pil...', code: 'HUFPIL-2027-02',  exp: 'EXP: 30/06/2027', danger: false },
+  { name: 'Hufagrip - Hufagrip Biru (Pil...', code: 'HUFPIL-2027-02',  exp: 'EXP: 30/06/2027', danger: false },
+  { name: 'Hufagrip - Hufagrip Biru (Retur)', code: 'HUFPIL-2027-02R', exp: 'EXP: 30/09/2027', danger: false },
+  { name: 'Hufagrip - Hufagrip Merah (...',   code: 'HUF-TMP-28',      exp: 'EXP: 15/10/2028', danger: false },
+
+  // Penerimaan KUL-20261122-001 (Merah ke-2 + Alkes Baru)
+  { name: 'Hufagrip - Hufagrip Merah (...',   code: 'HUF-TMP-28',      exp: 'EXP: 15/10/2028', danger: false },
+  { name: 'Tensimeter Digital Omron - ...',   code: 'OMR-7120-201',    exp: 'Serial Number',   danger: false },
+  { name: 'Tensimeter Digital Omron - ...',   code: 'OMR-7120-202',    exp: 'Serial Number',   danger: false },
+  { name: 'Termometer Digital Omron -...',    code: 'OMR-MC246-21',    exp: 'Serial Number',   danger: false },
+
+  // Termometer ke-2 + 3 Uji Blokir (Expired, Terjual, Rusak)
+  { name: 'Termometer Digital Omron -...',    code: 'OMR-MC246-22',    exp: 'Serial Number',   danger: false },
+  { name: 'Sanmol Sirup Anak 60ml - B...',    code: 'SNM-24K061',      exp: 'EXP: 15/10/2026', danger: true  },
+  { name: 'Tensimeter Digital Omron - ...',   code: 'OMR-7120-101',    exp: 'SN (Terjual)',    danger: true  },
+  { name: 'Tensimeter Digital Omron - ...',   code: 'OMR-7120-R01',    exp: 'SN (Rusak)',      danger: true  },
+
+  // Cadangan Tambah Produk Baru (Tanya-Jawab)
+  { name: 'Mixagrip - Flu Strip Isi 4',       code: 'MXG-26A01',       exp: 'EXP: 30/11/2027', danger: false },
+  { name: 'Oximeter Digital Fingertip...',    code: 'OXM-LK87-01',     exp: 'Serial Number',   danger: false }
+];
+
+const grid = document.getElementById('grid');
+let isCompactMode = false;
+
+function renderLabels() {
+  grid.innerHTML = '';
+  grid.classList.toggle('compact', isCompactMode);
+  LABELS.forEach((l, i) => {
+    const card = document.createElement('div');
+    card.className = 'label-card';
+    card.innerHTML = `
+      <div class="lbl-name">${l.name}</div>
+      <div class="lbl-bc"><svg id="b_${i}"></svg></div>
+      <div class="lbl-foot">
+        <span class="lbl-brand">ZenCare</span>
+        <span class="lbl-exp ${l.danger ? 'danger' : ''}">${l.exp}</span>
+      </div>
+    `;
+    grid.appendChild(card);
+    if (typeof JsBarcode !== 'undefined') {
+      JsBarcode('#b_' + i, l.code, {
+        format: 'CODE128',
+        width: isCompactMode ? 1.5 : 2.1,
+        height: isCompactMode ? 34 : 46,
+        fontSize: isCompactMode ? 11 : 14,
+        fontOptions: 'bold',
+        margin: isCompactMode ? 10 : 12,
+        textMargin: 2,
+        displayValue: true
+      });
+    }
+  });
+}
+
+function toggleSizeMode() {
+  isCompactMode = !isCompactMode;
+  const btn = document.getElementById('btn_size');
+  if (btn) btn.innerText = isCompactMode ? 'Ubah ke Grid 2 Kolom (Ramah Webcam)' : 'Ubah ke Grid 4 Kolom (Kecil)';
+  renderLabels();
+}
+
+renderLabels();
+</script>
+</body>
+</html>

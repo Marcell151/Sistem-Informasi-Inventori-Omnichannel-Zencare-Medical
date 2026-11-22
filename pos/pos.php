@@ -445,7 +445,9 @@ foreach ($riwayatKasirHariIni as $rTrx) {
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="<?= MIDTRANS_SNAP_URL ?>" data-client-key="<?= MIDTRANS_CLIENT_KEY ?>"></script>
-    <script src="../assets/js/html5-qrcode.min.js"></script>
+    <script src="../assets/js/html5-qrcode.min.js?v=20261122c"></script>
+    <script src="../assets/js/zxing-wasm-reader.js?v=20261122c"></script>
+    <script src="../assets/js/zencare-barcode-boost.js?v=20261122c"></script>
     <style>
         ::-webkit-scrollbar { width:5px; height:5px; } ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
         body { animation: fadeIn .15s ease; background-color: #f4f7fa; } @keyframes fadeIn { from{opacity:.85;} to{opacity:1;} }
@@ -455,9 +457,8 @@ foreach ($riwayatKasirHariIni as $rTrx) {
         #camera_scanner_view video {
             width: 100% !important;
             height: auto !important;
-            min-height: 240px !important;
             max-height: 360px !important;
-            object-fit: contain !important;
+            object-fit: fill !important;
             border-radius: 0.375rem !important;
             display: block !important;
             margin: 0 auto !important;
@@ -1081,7 +1082,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
             </div>
 
             <div class="p-4 border-t border-slate-200 bg-[#f8fafc] flex flex-wrap justify-between items-center gap-2">
-                <span class="text-[11px] text-slate-500">Otomatis berbunyi bip saat barcode terbaca.</span>
+                <span class="text-[11px] text-slate-500">Tahan stiker &plusmn;20&ndash;30 cm agar tidak buram &bull; Otomatis bip saat terbaca.</span>
                 <div class="flex items-center gap-2">
                     <input type="file" id="pos_file_scanner_input" accept="image/*" class="hidden" onchange="scanPosBarcodeFromFile(this)">
                     <label for="pos_file_scanner_input" class="cursor-pointer px-3.5 py-2 rounded text-xs font-bold bg-[#eef6fb] hover:bg-sky-100 text-[#0f2d5a] border border-[#cde3f5] transition inline-flex items-center gap-1.5">
@@ -1391,6 +1392,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                             if (oppositeUom === 'kecil' && scannedUom === 'besar') {
                                 var allBatchesRaw = rawBatch ? rawBatch.split(',').map(b => b.split('|')[0].trim().toLowerCase()) : [];
                                 if (allBatchesRaw.includes(scannedCode.toLowerCase())) {
+                                    resetPosScanState('Salah kemasan fisik — siap scan ulang');
                                     Swal.fire({
                                         title: 'Salah Ambil Fisik', 
                                         html: 'Di keranjang pesanan adalah <b>ECERAN (Kecil)</b>, tetapi fisik yang Anda scan adalah <b>GROSIR / DUS (Besar)</b>.<br><br><span class="text-xs text-slate-500">Silakan ambil kemasan eceran (sub-batch bertitik) atau tambahkan kardus ke keranjang terlebih dahulu.</span>', 
@@ -1399,6 +1401,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                                     return;
                                 }
                             } else if (oppositeUom === 'besar' && scannedUom === 'kecil') {
+                                resetPosScanState('Salah kemasan fisik — siap scan ulang');
                                 Swal.fire({
                                     title: 'Salah Ambil Fisik', 
                                     html: 'Di keranjang pesanan adalah <b>GROSIR / DUS (Besar)</b>, tetapi fisik yang Anda scan adalah <b>ECERAN (Kecil)</b>.<br><br><span class="text-xs text-slate-500">Silakan ambil kemasan kardus utuh atau tambahkan eceran ke keranjang terlebih dahulu.</span>', 
@@ -1541,12 +1544,15 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                                     });
                                     updateCameraModalCartPreview(name + ' (' + uomLabel + ')');
                                     renderCart();
+                                } else {
+                                    resetPosScanState('Scan dibatalkan — siap scan ulang');
                                 }
                             });
                             return;
                         } else {
                             // Semua alokasi sudah tervalidasi, scan lagi berarti menambah Qty (+1)
                             if ((existingItem.qty + 1) * existingItem.rasio > existingItem.maxPcs) {
+                                resetPosScanState('Stok terbatas — siap scan produk lain');
                                 Swal.fire('Stok Terbatas', 'Stok fisik tidak mencukupi untuk ditambah.', 'warning');
                                 return;
                             }
@@ -1602,6 +1608,8 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                                 });
                                 updateCameraModalCartPreview(name + ' (' + uomLabel + ')');
                                 renderCart();
+                            } else {
+                                resetPosScanState('Anomali FEFO dibatalkan — siap scan ulang');
                             }
                         });
                         return;
@@ -2401,11 +2409,29 @@ foreach ($riwayatKasirHariIni as $rTrx) {
         document.getElementById('form_pos').submit();
     }
 
-    // --- Camera Scanner Implementation (html5-qrcode) ---
+    // --- Camera Scanner Implementation (html5-qrcode + Quagga2 1D Boost) ---
     let html5QrCode = null;
     let isCameraScannerRunning = false;
     let lastScannedBarcode = '';
     let lastScanTimestamp = 0;
+
+    // Reset state scan saat gagal / dibatalkan / modal dibuka agar bisa LANGSUNG scan ulang tanpa tutup-buka
+    function resetPosScanState(statusMsg = null) {
+        lastScannedBarcode = '';
+        lastScanTimestamp = 0;
+        if (typeof ZenCareBarcodeBoost !== 'undefined') {
+            ZenCareBarcodeBoost.resetCandidate('camera_scanner_view');
+        }
+        let cdEl = document.getElementById('cam_cooldown_indicator');
+        if (cdEl) {
+            cdEl.innerText = 'Siap Scan';
+            cdEl.className = 'text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200 shrink-0';
+        }
+        if (statusMsg) {
+            let prodEl = document.getElementById('cam_last_product_label');
+            if (prodEl) prodEl.innerHTML = `<span class="text-rose-600 font-bold truncate block">${statusMsg}</span>`;
+        }
+    }
 
     function updateCameraModalCartPreview(lastProductName = null) {
         let countEl = document.getElementById('cam_cart_count_badge');
@@ -2443,6 +2469,7 @@ foreach ($riwayatKasirHariIni as $rTrx) {
     async function openCameraScannerModal() {
         let modal = document.getElementById('camera_modal');
         let modalContent = document.getElementById('camera_modal_content');
+        resetPosScanState();
         updateCameraModalCartPreview();
         modal.classList.remove('hidden');
         setTimeout(() => {
@@ -2455,12 +2482,16 @@ foreach ($riwayatKasirHariIni as $rTrx) {
     async function closeCameraScannerModal() {
         let modal = document.getElementById('camera_modal');
         let modalContent = document.getElementById('camera_modal_content');
+        if (typeof ZenCareBarcodeBoost !== 'undefined') {
+            ZenCareBarcodeBoost.stop('camera_scanner_view');
+        }
         if (html5QrCode && isCameraScannerRunning) {
             try {
                 await html5QrCode.stop();
             } catch(e) {}
             isCameraScannerRunning = false;
         }
+        resetPosScanState();
         modalContent.classList.remove('scale-100', 'opacity-100');
         modalContent.classList.add('scale-95', 'opacity-0');
         setTimeout(() => {
@@ -2473,23 +2504,16 @@ foreach ($riwayatKasirHariIni as $rTrx) {
         return [
             Html5QrcodeSupportedFormats.CODE_128,
             Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.CODE_93,
             Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E,
-            Html5QrcodeSupportedFormats.ITF,
-            Html5QrcodeSupportedFormats.CODABAR,
             Html5QrcodeSupportedFormats.QR_CODE,
-            Html5QrcodeSupportedFormats.DATA_MATRIX,
-            Html5QrcodeSupportedFormats.AZTEC
+            Html5QrcodeSupportedFormats.DATA_MATRIX
         ];
     }
 
     function pickBestCameraDevice(devices) {
         if (!devices || !devices.length) return null;
-        let isBadCam = (lbl) => /\b(ir|infrared|depth|virtual|obs|snap|droidcam)\b/i.test(lbl || '');
-        let isBackCam = (lbl) => /\b(back|rear|environment|belakang|usb)\b/i.test(lbl || '');
+        let isBadCam = (lbl) => /\b(ir|infrared|depth|virtual|obs|snap)\b/i.test(lbl || '');
+        let isBackCam = (lbl) => /\b(back|rear|environment|belakang|usb|droidcam)\b/i.test(lbl || '');
         let valid = devices.filter(d => !isBadCam(d.label));
         let pool = valid.length ? valid : devices;
         let preferred = pool.find(d => isBackCam(d.label));
@@ -2530,32 +2554,52 @@ foreach ($riwayatKasirHariIni as $rTrx) {
             }
 
             const baseQrbox = function(viewfinderWidth, viewfinderHeight) {
-                let w = Math.min(Math.floor(viewfinderWidth * 0.88), 380);
-                let h = Math.min(Math.floor(viewfinderHeight * 0.58), 200);
-                return { width: Math.max(w, 220), height: Math.max(h, 120) };
+                let w = Math.min(Math.floor(viewfinderWidth * 0.90), 440);
+                let h = Math.min(Math.floor(viewfinderHeight * 0.56), 220);
+                return { width: Math.max(w, 220), height: Math.max(h, 110) };
             };
 
-            const vc = (typeof chosenCamera === 'string')
+            const vcFhd = (typeof chosenCamera === 'string')
+                ? { deviceId: { exact: chosenCamera }, width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 } }
+                : { ...chosenCamera, width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 } };
+            const vcHd = (typeof chosenCamera === 'string')
                 ? { deviceId: { exact: chosenCamera }, width: { ideal: 1280 }, height: { ideal: 720 } }
                 : { ...chosenCamera, width: { ideal: 1280 }, height: { ideal: 720 } };
 
             try {
                 await html5QrCode.start(
                     chosenCamera,
-                    { fps: 20, qrbox: baseQrbox, videoConstraints: vc },
+                    { fps: 12, qrbox: baseQrbox, videoConstraints: vcFhd },
                     (decodedText) => onBarcodeScanSuccess(decodedText),
                     () => {}
                 );
-            } catch (startErr) {
-                await html5QrCode.start(
-                    chosenCamera,
-                    { fps: 20, qrbox: baseQrbox },
-                    (decodedText) => onBarcodeScanSuccess(decodedText),
-                    () => {}
-                );
+            } catch (fhdErr) {
+                try {
+                    await html5QrCode.start(
+                        chosenCamera,
+                        { fps: 12, qrbox: baseQrbox, videoConstraints: vcHd },
+                        (decodedText) => onBarcodeScanSuccess(decodedText),
+                        () => {}
+                    );
+                } catch (startErr) {
+                    await html5QrCode.start(
+                        chosenCamera,
+                        { fps: 12, qrbox: baseQrbox },
+                        (decodedText) => onBarcodeScanSuccess(decodedText),
+                        () => {}
+                    );
+                }
             }
 
+            // Aktifkan autofocus kontinu jika didukung webcam
+            try {
+                await html5QrCode.applyVideoConstraints({ advanced: [{ focusMode: 'continuous' }] });
+            } catch (afErr) {}
+
             isCameraScannerRunning = true;
+            if (typeof ZenCareBarcodeBoost !== 'undefined') {
+                ZenCareBarcodeBoost.start('camera_scanner_view', (decodedText) => onBarcodeScanSuccess(decodedText));
+            }
             if (loading) loading.classList.add('hidden');
             if (badge) {
                 badge.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>Kamera Aktif</span>';
@@ -2577,6 +2621,9 @@ foreach ($riwayatKasirHariIni as $rTrx) {
     }
 
     async function changeCameraDevice(newDeviceId) {
+        if (typeof ZenCareBarcodeBoost !== 'undefined') {
+            ZenCareBarcodeBoost.stop('camera_scanner_view');
+        }
         if (html5QrCode && isCameraScannerRunning) {
             await html5QrCode.stop();
             isCameraScannerRunning = false;
@@ -2597,6 +2644,9 @@ foreach ($riwayatKasirHariIni as $rTrx) {
         if (badge) badge.innerText = 'Memindai Foto...';
 
         try {
+            if (typeof ZenCareBarcodeBoost !== 'undefined') {
+                ZenCareBarcodeBoost.stop('camera_scanner_view');
+            }
             if (!html5QrCode) {
                 html5QrCode = new Html5Qrcode("camera_scanner_view", {
                     formatsToSupport: getPosSupportedFormats(),
@@ -2608,18 +2658,29 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                 await html5QrCode.stop();
                 isCameraScannerRunning = false;
             }
-            const res = await html5QrCode.scanFileV2(file, false);
-            if (res && res.decodedText) {
-                lastScanTimestamp = 0; // Izinkan langsung memproses scan file
-                onBarcodeScanSuccess(res.decodedText);
+            let decodedText = null;
+            try {
+                const res = await html5QrCode.scanFileV2(file, false);
+                if (res && res.decodedText) decodedText = res.decodedText;
+            } catch (zxErr) {}
+
+            if (!decodedText && typeof ZenCareBarcodeBoost !== 'undefined') {
+                decodedText = await ZenCareBarcodeBoost.decodeFileFallback(file);
+            }
+
+            if (decodedText) {
+                resetPosScanState();
+                onBarcodeScanSuccess(decodedText);
             } else {
+                resetPosScanState('Foto tidak terbaca — coba ulangi');
                 Swal.fire('Barcode Tidak Terbaca', 'Pastikan foto barcode tajam, terang, dan tidak terpotong.', 'warning');
             }
         } catch (err) {
+            resetPosScanState();
             Swal.fire('Gagal Membaca Foto Barcode', (err.message || err || 'Barcode tidak terdeteksi pada gambar.'), 'warning');
         } finally {
             input.value = '';
-            if (wasRunning && !document.getElementById('camera_scanner_modal')?.classList.contains('hidden')) {
+            if (wasRunning && !document.getElementById('camera_modal')?.classList.contains('hidden')) {
                 await startCameraScanner(prevCamId);
             } else if (badge) {
                 badge.innerText = 'Siap Scan';
@@ -2628,12 +2689,17 @@ foreach ($riwayatKasirHariIni as $rTrx) {
     }
 
     function onBarcodeScanSuccess(code) {
-        code = code.trim();
+        // Jangan proses scan kamera baru saat popup alert/konfirmasi sedang tampil
+        if (typeof Swal !== 'undefined' && Swal.isVisible()) return;
+
+        code = (code || '').trim();
+        // Abaikan pecahan bacaan palsu < 4 karakter (misal "M")
+        if (code.length < 4) return;
         let now = Date.now();
         
-        // Cooldown 3.5 detik khusus barcode yang SAMA PERSIS agar kasir tidak men-scan ganda secara tak sengaja
-        if (code.toLowerCase() === (lastScannedBarcode || '').toLowerCase() && (now - lastScanTimestamp) < 3500) {
-            let sisaDetik = Math.ceil((3500 - (now - lastScanTimestamp)) / 1000);
+        // Cooldown 2.5 detik HANYA untuk barcode yang sebelumnya BERHASIL masuk keranjang
+        if (code.toLowerCase() === (lastScannedBarcode || '').toLowerCase() && (now - lastScanTimestamp) < 2500) {
+            let sisaDetik = Math.ceil((2500 - (now - lastScanTimestamp)) / 1000);
             let cdEl = document.getElementById('cam_cooldown_indicator');
             if (cdEl) {
                 cdEl.innerText = `Cooldown (${sisaDetik}s)`;
@@ -2642,8 +2708,8 @@ foreach ($riwayatKasirHariIni as $rTrx) {
             return;
         }
         
-        // Jeda minimal 1 detik antar barang berbeda
-        if ((now - lastScanTimestamp) < 1000) {
+        // Jeda minimal 0.8 detik antar barang berbeda
+        if ((now - lastScanTimestamp) < 800) {
             return;
         }
         
@@ -2668,18 +2734,22 @@ foreach ($riwayatKasirHariIni as $rTrx) {
         processBarcode(code);
     }
 
-    // --- Barcode Scanner Listener ---
+    // --- Barcode Scanner Listener (Kompatibel Penuh Scanner HP WiFi / Bluetooth / USB Seperti Versi Lama) ---
     var barcodeString = '';
     var barcodeTimer = null;
     
     document.addEventListener('keydown', function(e) {
         if (e.ctrlKey || e.altKey || e.metaKey) return;
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
         
         if (e.key === 'Enter' || e.key === 'Tab') {
             if (barcodeString.trim().length > 2) {
-                e.preventDefault(); // Mencegah Enter/Tab dari scanner menekan tombol atau pindah fokus saat scan aktif
-                processBarcode(barcodeString.trim());
+                e.preventDefault(); // Mencegah Enter/Tab dari scanner menekan tombol yang sedang fokus
+                var scanned = barcodeString.trim();
+                barcodeString = '';
+                clearTimeout(barcodeTimer);
+                processBarcode(scanned);
+                return;
             }
             barcodeString = '';
             clearTimeout(barcodeTimer);
@@ -2786,6 +2856,8 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                 }
             }
             if (!found) {
+                // Scan tidak cocok / gagal -> JANGAN simpan di cooldown agar kasir bisa langsung scan ulang tanpa keluar-masuk!
+                resetPosScanState('Scan ditolak / tidak cocok — siap scan ulang');
                 // 1. Cek apakah barcode cocok dengan batch obat yang SUDAH KADALUARSA di katalog
                 var expiredMatch = null;
                 for (var i = 0; i < cards.length; i++) {

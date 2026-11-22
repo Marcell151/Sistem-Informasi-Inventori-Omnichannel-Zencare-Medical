@@ -1124,9 +1124,8 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
 #bpom_scanner_view video {
     width: 100% !important;
     height: auto !important;
-    min-height: 240px !important;
     max-height: 360px !important;
-    object-fit: contain !important;
+    object-fit: fill !important;
     border-radius: 0.75rem !important;
     display: block !important;
     margin: 0 auto !important;
@@ -1582,7 +1581,9 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
     </div>
 </div>
 
-<script src="../assets/js/html5-qrcode.min.js"></script>
+<script src="../assets/js/html5-qrcode.min.js?v=20261122b"></script>
+<script src="../assets/js/zxing-wasm-reader.js?v=20261122b"></script>
+<script src="../assets/js/zencare-barcode-boost.js?v=20261122b"></script>
 <script>
 let rC = 1;
 const rawProdukList = <?= json_encode($produkList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
@@ -1862,16 +1863,11 @@ async function startBpomScanner(cameraId = null) {
             formatsToSupport = [
                 Html5QrcodeSupportedFormats.EAN_13,
                 Html5QrcodeSupportedFormats.CODE_128,
-                Html5QrcodeSupportedFormats.QR_CODE,
-                Html5QrcodeSupportedFormats.DATA_MATRIX,
-                Html5QrcodeSupportedFormats.CODE_39,
                 Html5QrcodeSupportedFormats.EAN_8,
                 Html5QrcodeSupportedFormats.UPC_A,
-                Html5QrcodeSupportedFormats.UPC_E,
-                Html5QrcodeSupportedFormats.CODE_93,
-                Html5QrcodeSupportedFormats.CODABAR,
-                Html5QrcodeSupportedFormats.ITF,
-                Html5QrcodeSupportedFormats.AZTEC
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.QR_CODE,
+                Html5QrcodeSupportedFormats.DATA_MATRIX
             ];
         }
 
@@ -1888,8 +1884,8 @@ async function startBpomScanner(cameraId = null) {
 
         const pickBestBpomCam = (devs) => {
             if (!devs || !devs.length) return null;
-            const bad = (l) => /\b(ir|infrared|depth|virtual|obs|snap|droidcam)\b/i.test(l || '');
-            const back = (l) => /\b(back|rear|environment|belakang|usb)\b/i.test(l || '');
+            const bad = (l) => /\b(ir|infrared|depth|virtual|obs|snap)\b/i.test(l || '');
+            const back = (l) => /\b(back|rear|environment|belakang|usb|droidcam)\b/i.test(l || '');
             const valid = devs.filter(d => !bad(d.label));
             const pool = valid.length ? valid : devs;
             return (pool.find(d => back(d.label)) || pool[0]).id;
@@ -1909,31 +1905,52 @@ async function startBpomScanner(cameraId = null) {
         }
 
         const baseQrbox = function(viewfinderWidth, viewfinderHeight) {
-            let w = Math.min(Math.floor(viewfinderWidth * 0.88), 380);
-            let h = Math.min(Math.floor(viewfinderHeight * 0.58), 200);
-            return { width: Math.max(w, 220), height: Math.max(h, 120) };
+            let w = Math.min(Math.floor(viewfinderWidth * 0.90), 440);
+            let h = Math.min(Math.floor(viewfinderHeight * 0.56), 220);
+            return { width: Math.max(w, 220), height: Math.max(h, 110) };
         };
-        const vc = (typeof chosenCamera === 'string')
+        const vcFhd = (typeof chosenCamera === 'string')
+            ? { deviceId: { exact: chosenCamera }, width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 } }
+            : { ...chosenCamera, width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 } };
+        const vcHd = (typeof chosenCamera === 'string')
             ? { deviceId: { exact: chosenCamera }, width: { ideal: 1280 }, height: { ideal: 720 } }
             : { ...chosenCamera, width: { ideal: 1280 }, height: { ideal: 720 } };
 
         try {
             await bpomScanner.start(
                 chosenCamera,
-                { fps: 20, qrbox: baseQrbox, videoConstraints: vc },
+                { fps: 12, qrbox: baseQrbox, videoConstraints: vcFhd },
                 (decodedText) => onBpomBarcodeScanSuccess(decodedText),
                 () => {}
             );
-        } catch (startErr) {
-            await bpomScanner.start(
-                chosenCamera,
-                { fps: 20, qrbox: baseQrbox },
-                (decodedText) => onBpomBarcodeScanSuccess(decodedText),
-                () => {}
-            );
+        } catch (fhdErr) {
+            try {
+                await bpomScanner.start(
+                    chosenCamera,
+                    { fps: 12, qrbox: baseQrbox, videoConstraints: vcHd },
+                    (decodedText) => onBpomBarcodeScanSuccess(decodedText),
+                    () => {}
+                );
+            } catch (startErr) {
+                await bpomScanner.start(
+                    chosenCamera,
+                    { fps: 12, qrbox: baseQrbox },
+                    (decodedText) => onBpomBarcodeScanSuccess(decodedText),
+                    () => {}
+                );
+            }
         }
 
+        try {
+            await bpomScanner.applyVideoConstraints({ advanced: [{ focusMode: 'continuous' }] });
+        } catch (afErr) {}
+
         isBpomScannerRunning = true;
+        lastScanCode = '';
+        lastScanTime = 0;
+        if (typeof ZenCareBarcodeBoost !== 'undefined') {
+            ZenCareBarcodeBoost.start('bpom_scanner_view', (decodedText) => onBpomBarcodeScanSuccess(decodedText));
+        }
         if (loading) loading.classList.add('hidden');
         if (badge) {
             badge.innerText = 'Scanner Aktif';
@@ -1950,12 +1967,17 @@ async function startBpomScanner(cameraId = null) {
 }
 
 async function stopBpomScanner() {
+    if (typeof ZenCareBarcodeBoost !== 'undefined') {
+        ZenCareBarcodeBoost.stop('bpom_scanner_view');
+    }
     if (bpomScanner && isBpomScannerRunning) {
         try {
             await bpomScanner.stop();
         } catch(e) {}
         isBpomScannerRunning = false;
     }
+    lastScanCode = '';
+    lastScanTime = 0;
 }
 
 // Opsi pemindaian cadangan dari upload foto jika webcam kurang tajam
@@ -1963,18 +1985,24 @@ async function scanBarcodeFromFile(input) {
     if (!input || !input.files || input.files.length === 0) return;
     const file = input.files[0];
     const badge = document.getElementById('bpom_scan_badge');
+    const select = document.getElementById('bpom_camera_select');
+    const prevCamId = (select && select.value) ? select.value : null;
+    const wasRunning = isBpomScannerRunning;
     if (badge) badge.innerText = 'Memindai File...';
     
     try {
+        if (typeof ZenCareBarcodeBoost !== 'undefined') {
+            ZenCareBarcodeBoost.stop('bpom_scanner_view');
+        }
         if (!bpomScanner) {
             let formats = (typeof Html5QrcodeSupportedFormats !== 'undefined') ? [
                 Html5QrcodeSupportedFormats.EAN_13,
                 Html5QrcodeSupportedFormats.CODE_128,
-                Html5QrcodeSupportedFormats.QR_CODE,
-                Html5QrcodeSupportedFormats.DATA_MATRIX,
-                Html5QrcodeSupportedFormats.CODE_39,
                 Html5QrcodeSupportedFormats.EAN_8,
-                Html5QrcodeSupportedFormats.UPC_A
+                Html5QrcodeSupportedFormats.UPC_A,
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.QR_CODE,
+                Html5QrcodeSupportedFormats.DATA_MATRIX
             ] : [];
             bpomScanner = new Html5Qrcode("bpom_scanner_view", {
                 formatsToSupport: formats,
@@ -1982,17 +2010,42 @@ async function scanBarcodeFromFile(input) {
                 verbose: false
             });
         }
-        const result = await bpomScanner.scanFileV2(file, false);
-        if (result && result.decodedText) {
-            onBpomBarcodeScanSuccess(result.decodedText);
+        if (isBpomScannerRunning) {
+            await bpomScanner.stop();
+            isBpomScannerRunning = false;
+        }
+        let decodedText = null;
+        try {
+            const result = await bpomScanner.scanFileV2(file, false);
+            if (result && result.decodedText) decodedText = result.decodedText;
+        } catch (zxErr) {}
+
+        if (!decodedText && typeof ZenCareBarcodeBoost !== 'undefined') {
+            decodedText = await ZenCareBarcodeBoost.decodeFileFallback(file);
+        }
+
+        if (decodedText) {
+            lastScanCode = '';
+            lastScanTime = 0;
+            onBpomBarcodeScanSuccess(decodedText);
         } else {
+            lastScanCode = '';
+            lastScanTime = 0;
             alert('Tidak dapat mendeteksi barcode pada foto tersebut. Pastikan barcode terlihat jelas dan tidak buram.');
         }
     } catch(err) {
+        lastScanCode = '';
+        lastScanTime = 0;
         alert('Gagal mendeteksi barcode dari foto: ' + (err.message || err || 'Barcode tidak terbaca'));
     } finally {
         input.value = '';
-        if (badge) badge.innerText = 'Scanner Siap';
+        const boxOpen = !document.getElementById('bpom_inline_camera_box')?.classList.contains('hidden');
+        const modalOpen = !document.getElementById('modal_bpom_search')?.classList.contains('hidden');
+        if (wasRunning && boxOpen && modalOpen) {
+            await startBpomScanner(prevCamId);
+        } else if (badge) {
+            badge.innerText = 'Scanner Siap';
+        }
     }
 }
 

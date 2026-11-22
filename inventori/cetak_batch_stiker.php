@@ -478,9 +478,40 @@ $totalStiker = count($flatStickers);
             margin: 0.5mm 0;
         }
         .barcode-area svg {
-            width: 100%;
+            width: auto;
             max-width: 44mm;
-            height: 14mm;
+            height: auto;
+            max-height: 15mm;
+            display: block;
+        }
+
+        /* ======================================================== */
+        /* MODE A4 BESAR: GRID 2 KOLOM (RAMAH WEBCAM LAPTOP)        */
+        /* ======================================================== */
+        .large-body .sheet-container-a4 {
+            grid-template-columns: repeat(2, 92mm);
+            grid-auto-rows: 42mm;
+            gap: 4mm 4mm;
+        }
+        .large-body .sticker-card {
+            width: 92mm;
+            height: 42mm;
+            padding: 3mm 4mm;
+        }
+        .large-body .sticker-header {
+            font-size: 9.5pt;
+            max-height: 24px;
+        }
+        .large-body .sticker-title {
+            max-width: 72mm;
+        }
+        .large-body .barcode-area svg {
+            max-width: 84mm;
+            max-height: 24mm;
+        }
+        .large-body .sticker-footer {
+            font-size: 8.5pt;
+            padding-top: 1.5mm;
         }
 
         .sticker-footer {
@@ -585,7 +616,7 @@ $totalStiker = count($flatStickers);
         }
     </style>
 </head>
-<body class="<?= $mode === 'thermal' ? 'thermal-body' : '' ?>">
+<body class="<?= $mode === 'thermal' ? 'thermal-body' : ($mode === 'a4_large' ? 'large-body' : '') ?>">
 
     <!-- TOOLBAR LAYAR (KONTROL CETAK & MODE) -->
     <div class="no-print-toolbar">
@@ -609,6 +640,12 @@ $totalStiker = count($flatStickers);
                title="Format Kertas Stiker HVS A4 Grid 4x10 (Printer Biasa / Laser / Inkjet)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 <span>Kertas A4 (Grid 4x10)</span>
+            </button>
+            <button type="button" id="btn_mode_a4_large" onclick="setPrintMode('a4_large')" 
+               class="btn-action <?= $mode === 'a4_large' ? 'btn-active' : 'btn-secondary' ?>" 
+               title="Format Stiker Besar Grid 2x6 (Garis Barcode 2x Lebih Tebal — Sangat Cepat Discan Webcam Laptop)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                <span>A4 Besar (Ramah Webcam)</span>
             </button>
             <button type="button" id="btn_mode_thermal" onclick="setPrintMode('thermal')" 
                class="btn-action <?= $mode === 'thermal' ? 'btn-active' : 'btn-secondary' ?>" 
@@ -674,59 +711,61 @@ $totalStiker = count($flatStickers);
     <?php endif; ?>
 
     <script>
-        // Render semua Barcode Code 128 secara presisi
+        const STICKER_CODES = <?= json_encode(array_column($flatStickers, 'kode')) ?>;
+
+        function renderAllBarcodes(mode) {
+            const isLarge = (mode === 'a4_large');
+            const isThermal = (mode === 'thermal');
+            STICKER_CODES.forEach(function(kode, idx) {
+                try {
+                    JsBarcode("#bc_" + idx, kode, {
+                        format: "CODE128",
+                        lineColor: "#000000",
+                        width: isLarge ? 2.2 : (isThermal ? 1.8 : 1.6),
+                        height: isLarge ? 50 : (isThermal ? 38 : 34),
+                        displayValue: true,
+                        fontSize: isLarge ? 15 : 12,
+                        fontOptions: "bold",
+                        textMargin: 2,
+                        margin: isLarge ? 12 : 10
+                    });
+                } catch (err) {
+                    console.error("Gagal merender barcode #bc_" + idx + ":", err);
+                }
+            });
+        }
+
+        // Render semua Barcode Code 128 secara presisi (dengan Quiet Zone standar ISO)
         document.addEventListener('DOMContentLoaded', function() {
-            <?php foreach ($flatStickers as $idx => $stk): ?>
-            try {
-                JsBarcode("#bc_<?= $idx ?>", "<?= addslashes($stk['kode']) ?>", {
-                    format: "CODE128",
-                    lineColor: "#000000",
-                    width: <?= $mode === 'thermal' ? '1.8' : '1.5' ?>,
-                    height: <?= $mode === 'thermal' ? '36' : '30' ?>,
-                    displayValue: true,
-                    fontSize: 13,
-                    fontOptions: "bold",
-                    textMargin: 1,
-                    margin: 0
-                });
-            } catch (err) {
-                console.error("Gagal merender barcode #bc_<?= $idx ?>:", err);
-            }
-            <?php endforeach; ?>
+            renderAllBarcodes("<?= htmlspecialchars($mode, ENT_QUOTES, 'UTF-8') ?>");
         });
 
         function setPrintMode(mode) {
             const dynStyle = document.getElementById('dynamic-print-page');
             const btnA4 = document.getElementById('btn_mode_a4');
+            const btnLarge = document.getElementById('btn_mode_a4_large');
             const btnThermal = document.getElementById('btn_mode_thermal');
-            
+
+            document.body.classList.remove('thermal-body', 'large-body');
+            [btnA4, btnLarge, btnThermal].forEach(b => {
+                if (!b) return;
+                b.classList.remove('btn-active');
+                b.classList.add('btn-secondary');
+            });
+
             if (mode === 'thermal') {
                 document.body.classList.add('thermal-body');
-                if (btnThermal) {
-                    btnThermal.classList.add('btn-active');
-                    btnThermal.classList.remove('btn-secondary');
-                }
-                if (btnA4) {
-                    btnA4.classList.remove('btn-active');
-                    btnA4.classList.add('btn-secondary');
-                }
-                if (dynStyle) {
-                    dynStyle.innerHTML = `@media print { @page { size: 50mm 30mm; margin: 0; } }`;
-                }
+                if (btnThermal) { btnThermal.classList.add('btn-active'); btnThermal.classList.remove('btn-secondary'); }
+                if (dynStyle) dynStyle.innerHTML = `@media print { @page { size: 50mm 30mm; margin: 0; } }`;
+            } else if (mode === 'a4_large') {
+                document.body.classList.add('large-body');
+                if (btnLarge) { btnLarge.classList.add('btn-active'); btnLarge.classList.remove('btn-secondary'); }
+                if (dynStyle) dynStyle.innerHTML = `@media print { @page { size: A4 portrait; margin: 8mm 6mm; } }`;
             } else {
-                document.body.classList.remove('thermal-body');
-                if (btnA4) {
-                    btnA4.classList.add('btn-active');
-                    btnA4.classList.remove('btn-secondary');
-                }
-                if (btnThermal) {
-                    btnThermal.classList.remove('btn-active');
-                    btnThermal.classList.add('btn-secondary');
-                }
-                if (dynStyle) {
-                    dynStyle.innerHTML = `@media print { @page { size: A4 portrait; margin: 8mm 6mm; } }`;
-                }
+                if (btnA4) { btnA4.classList.add('btn-active'); btnA4.classList.remove('btn-secondary'); }
+                if (dynStyle) dynStyle.innerHTML = `@media print { @page { size: A4 portrait; margin: 8mm 6mm; } }`;
             }
+            renderAllBarcodes(mode);
             if (window.history && window.history.replaceState) {
                 const url = new URL(window.location.href);
                 url.searchParams.set('mode', mode);

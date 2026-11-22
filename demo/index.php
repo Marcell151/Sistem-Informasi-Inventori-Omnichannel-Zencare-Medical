@@ -34,28 +34,44 @@ $defaultSqlPath = file_exists(__DIR__ . '/../Demo_Bersih.sql')
 
 $presets = [
     'default_demo4' => [
-        'title'   => 'Default — Demo 4 (All-in-One)',
+        'title'   => '1. Default — Siap Demo Sidang (All-in-One)',
         'badge'   => 'DEFAULT UTAMA',
         'color'   => 'blue',
-        'desc'    => 'Database default resmi (Demo_Bersih.sql): 59 produk aktif, 92 riwayat konversi UOM berpasangan di Kartu Stok, stok rendah AMX-500 (3 Box), batch kadaluarsa SNM-24K061, SN Alkes (Tersedia/Terjual/Rusak), serta riwayat penjualan POS & E-Commerce.',
+        'desc'    => 'Database default resmi (Demo_Bersih.sql) yang juga dipakai tombol Reset Stok Opname: Hufagrip Merah tepat 2 Karton + 50 Botol, Hufagrip Biru eceran 5 Botol, Tensimeter 2 Unit, Termometer 5 Unit, POS & E-Com selaras (pelanggan1/2/3), 92 konversi, dan siap uji Stok Opname 6 anomali.',
         'path'    => $defaultSqlPath,
-        'tags'    => ['92 Konversi', 'FEFO + Expired', 'Stok Opname Ready', '0 Mismatch']
+        'tags'    => ['Hufagrip 2 Ktn / Ecer 5', 'Tensi 2 & Termo 5', '92 Konversi', 'Stok Opname Ready']
+    ],
+    'stok_normal' => [
+        'title'   => '2. Preset Stok Normal (Baseline Sebelumnya)',
+        'badge'   => 'STOK NORMAL',
+        'color'   => 'emerald',
+        'desc'    => 'Database Demo_Bersih versi sebelumnya dengan stok melimpah pada seluruh 59 produk aktif (sebelum penyesuaian stok kritis sidang), lengkap dengan 92 riwayat konversi berpasangan di Kartu Stok, akun pelanggan1/2/3, batch kadaluarsa SNM-24K061, serta data SN Alkes lengkap.',
+        'path'    => $presetDir . '/demo_stok_normal.sql',
+        'tags'    => ['Stok Melimpah', '92 Konversi', 'pelanggan1/2/3', '0 Mismatch']
     ],
     'omnichannel' => [
-        'title'   => 'Preset Omnichannel (POS & E-Commerce Selaras)',
+        'title'   => '3. Preset Omnichannel (POS & E-Com Barengan)',
         'badge'   => 'OMNICHANNEL',
-        'color'   => 'emerald',
-        'desc'    => 'Menampilkan transaksi POS (Luring) & E-Commerce (Daring) secara bersamaan pada produk yang sama (Panadol Extra, Promag, Tolak Angin) memakai akun pelanggan asli (pelanggan1, pelanggan2, pelanggan3), stok kritis 1–2 Box (AMX-500, DCL-GEN, CDR-EFT) untuk demo Race Condition, 2 pesanan Menunggu Pembayaran (reserved), dan 1 pesanan Diproses siap packing.',
+        'color'   => 'indigo',
+        'desc'    => 'Khusus demo transaksi POS & E-Commerce bersamaan + Race Condition: Hufagrip Merah 2 Karton + 50 Botol (1 POS vs 2 E-Com), Hufagrip Biru eceran 5 Botol (beli 10 -> Bongkar Box -> scan .A & .D), Tensimeter 2 Unit, Termometer 5 Unit (3 E-Com + 2 POS = 0), plus 4 order online aktif.',
         'path'    => $presetDir . '/demo_omnichannel.sql',
-        'tags'    => ['POS + E-Com Selaras', 'pelanggan1/2/3', 'AMX-500 Sisa 1 Box', 'Siap Packing']
+        'tags'    => ['1 POS vs 2 E-Com', 'Termo 3+2=0', '4 Order Aktif', 'Siap Packing']
     ],
     'fefo_konversi' => [
-        'title'   => 'Preset FEFO, Expired & Konversi Darurat',
+        'title'   => '4. Preset FEFO, Expired & Konversi Darurat',
         'badge'   => 'FEFO & BONGKAR BOX',
         'color'   => 'amber',
-        'desc'    => '4 obat populer (Paracetamol 500mg, Panadol Extra, Tolak Angin, Promag) stok ecerannya habis terjual via transaksi POS nyata sehingga langsung memicu popup Bongkar Box Darurat; dilengkapi penerimaan batch ED +25/+28 hari berkode farmasi asli (PCT-25C014 & BDR-25C022) untuk uji FEFO & Anomali FEFO.',
+        'desc'    => '4 obat populer (Paracetamol 500mg, Panadol Extra, Tolak Angin, Promag) stok ecerannya habis terjual via transaksi POS nyata sehingga langsung memicu popup Bongkar Box Darurat; dilengkapi penerimaan batch ED +25/+28 hari (PCT-25C014 & BDR-25C022) untuk uji FEFO & Anomali FEFO.',
         'path'    => $presetDir . '/demo_fefo_konversi.sql',
-        'tags'    => ['Eceran Habis (POS Nyata)', 'Batch PCT-25C014 & BDR-25C022', 'Uji Anomali FEFO']
+        'tags'    => ['Eceran Habis (Trigger Bongkar)', 'Batch PCT-25C014 & BDR-25C022', 'Uji Anomali FEFO']
+    ],
+    'sudah_penerimaan' => [
+        'title'   => '5. Preset Sudah Penerimaan & Retur (KUL-20261122-001)',
+        'badge'   => 'PASCA PENERIMAAN',
+        'color'   => 'rose',
+        'desc'    => 'Sudah tercatat faktur KUL-20261122-001 (PT Kimia Farma + lampiran PDF nota): Hufagrip Biru 2 Ktn baik + 1 Ktn rusak menunggu pengganti (HUFPIL-2027-02), Hufagrip Merah 2 Ktn (HUF-TMP-28), Tensimeter (OMR-7120-201/202), & Termometer (OMR-MC246-21/22). Langsung siap demo retur & scan stiker tambahan!',
+        'path'    => $presetDir . '/demo_sudah_penerimaan.sql',
+        'tags'    => ['Faktur PDF Terlampir', 'Retur Menunggu Pengganti', 'Stiker Baru Siap Scan']
     ],
 ];
 
@@ -303,11 +319,15 @@ layoutHeader('Panel Demo & Snapshot Database', 'Utilitas cepat mengganti preset 
                 $badgeCls = match($p['color']) {
                     'emerald' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                     'amber'   => 'bg-amber-50 text-amber-700 border-amber-200',
+                    'indigo'  => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                    'rose'    => 'bg-rose-50 text-rose-700 border-rose-200',
                     default   => 'bg-blue-50 text-blue-700 border-blue-200',
                 };
                 $btnCls = match($p['color']) {
                     'emerald' => 'bg-emerald-600 hover:bg-emerald-700 text-white',
                     'amber'   => 'bg-amber-600 hover:bg-amber-700 text-white',
+                    'indigo'  => 'bg-indigo-600 hover:bg-indigo-700 text-white',
+                    'rose'    => 'bg-rose-600 hover:bg-rose-700 text-white',
                     default   => 'bg-[#0f2d5a] hover:bg-[#1a75d2] text-white',
                 };
             ?>

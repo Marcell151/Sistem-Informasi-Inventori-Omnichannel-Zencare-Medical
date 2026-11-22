@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Panduan Sidang HP — ZenCare Medical</title>
+<style>
+  :root {
+    --navy:#0f2d5a; --blue:#1a75d2; --red:#c0392b; --bg:#f1f5f9;
+    --card:#ffffff; --txt:#0f172a; --mut:#475569; --brd:#e2e8f0;
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--txt); line-height:1.5; padding-bottom:48px; }
+  .topbar { position:sticky; top:0; z-index:50; background:var(--navy); color:#fff; padding:12px 14px 10px; box-shadow:0 4px 14px rgba(15,45,90,.2); }
+  .topbar-row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:9px; }
+  .brand { font-size:15px; font-weight:800; letter-spacing:-.2px; }
+  .brand small { display:block; font-size:11px; font-weight:500; color:#bae6fd; }
+  .btn-print { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.28); padding:6px 10px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; }
+  .search-wrap { position:relative; }
+  #q { width:100%; padding:10px 36px 10px 12px; border-radius:10px; border:none; font-size:14px; outline:none; color:#0f172a; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.12); }
+  #clearBtn { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:#e2e8f0; color:#334155; border:none; width:24px; height:24px; border-radius:50%; font-weight:800; font-size:13px; cursor:pointer; display:none; }
+  .chips { display:flex; gap:6px; overflow-x:auto; padding:8px 14px 2px; scrollbar-width:none; background:#fff; border-bottom:1px solid var(--brd); position:sticky; top:96px; z-index:40; }
+  .chips::-webkit-scrollbar { display:none; }
+  .chip { flex:0 0 auto; padding:6px 11px; border-radius:999px; border:1px solid var(--brd); background:#f8fafc; color:#334155; font-size:12px; font-weight:700; cursor:pointer; margin-bottom:6px; }
+  .chip.active { background:var(--blue); color:#fff; border-color:var(--blue); }
+  .wrap { max-width:860px; margin:0 auto; padding:12px; }
+  .hint { font-size:11.5px; color:var(--mut); margin:2px 2px 10px; }
+  .section-title { font-size:13px; font-weight:800; color:var(--navy); text-transform:uppercase; letter-spacing:.4px; margin:16px 2px 8px; display:flex; align-items:center; justify-content:space-between; }
+  .card { background:var(--card); border:1px solid var(--brd); border-radius:12px; padding:12px 13px; margin-bottom:9px; box-shadow:0 1px 2px rgba(15,23,42,.04); }
+  .card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:5px; }
+  .card-title { font-size:13.5px; font-weight:800; color:var(--navy); margin:0; }
+  .badge { display:inline-block; font-size:10px; font-weight:800; padding:2px 7px; border-radius:6px; background:#eef6fb; color:var(--blue); border:1px solid #cde3f5; white-space:nowrap; }
+  .badge.red { background:#fef2f2; color:#b91c1c; border-color:#fecaca; }
+  .badge.green { background:#ecfdf5; color:#047857; border-color:#a7f3d0; }
+  .badge.amber { background:#fffbeb; color:#b45309; border-color:#fde68a; }
+  .card p { margin:4px 0 0; font-size:13px; color:#334155; }
+  .code-line { margin-top:7px; background:#f8fafc; border:1px solid var(--brd); border-radius:8px; padding:7px 9px; font-size:12px; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; color:#0f2d5a; word-break:break-word; }
+  .copy-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
+  .copy-btn { display:inline-flex; align-items:center; gap:5px; background:#eef6fb; border:1px solid #bfdbfe; color:#0f2d5a; padding:5px 9px; border-radius:8px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:ui-monospace,Consolas,monospace; }
+  .copy-btn:active { background:#dbeafe; }
+  .step-num { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:6px; background:var(--navy); color:#fff; font-size:11px; font-weight:800; margin-right:6px; flex-shrink:0; }
+  .grid2 { display:grid; grid-template-columns:1fr; gap:8px; }
+  @media(min-width:640px) { .grid2 { grid-template-columns:1fr 1fr; } }
+  .toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:#0f172a; color:#fff; padding:8px 14px; border-radius:999px; font-size:12px; font-weight:700; opacity:0; pointer-events:none; transition:opacity .2s; z-index:99; }
+  .toast.show { opacity:1; }
+  .empty { text-align:center; padding:26px 12px; color:#64748b; font-size:13px; background:#fff; border-radius:12px; border:1px dashed #cbd5e1; }
+  mark { background:#fef08a; color:#0f172a; padding:0 2px; border-radius:3px; }
+  @media print {
+    .topbar, .chips, .copy-btn, .hint, .toast { display:none !important; }
+    body { background:#fff; padding:0; }
+    .wrap { max-width:100%; padding:0; }
+    .card { break-inside:avoid; box-shadow:none; border-color:#cbd5e1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <div class="brand">ZenCare Medical — Panduan Sidang HP<small>Ketik bebas: "ubah header", "jarak", "kadaluarsa", "tabel konversi", "internet mati"</small></div>
+    <button class="btn-print" onclick="window.print()">Cetak / PDF</button>
+  </div>
+  <div class="search-wrap">
+    <input id="q" type="search" placeholder="Cari pertanyaan, lokasi kode, tabel DB, atau cara ubah..." autocomplete="off">
+    <button id="clearBtn" onclick="clearSearch()">×</button>
+  </div>
+</div>
+
+<div class="chips" id="chips">
+  <button class="chip active" data-tab="all">Semua</button>
+  <button class="chip" data-tab="demo">Alur Demo & Kode</button>
+  <button class="chip" data-tab="qa">Q&amp;A Konsep &amp; Kebijakan</button>
+  <button class="chip" data-tab="whatif">Pengandaian</button>
+  <button class="chip" data-tab="code">Peta Kode &amp; UI</button>
+  <button class="chip" data-tab="db">20 Tabel DB</button>
+  <button class="chip" data-tab="newprod">Produk Baru</button>
+</div>
+
+<div class="wrap">
+  <div class="hint" id="resultHint">Siap dipakai di HP secara offline. Ketik kata apa saja untuk langsung menemukan jawaban, lokasi file, atau nama tabel.</div>
+  <div id="content"></div>
+</div>
+<div class="toast" id="toast">Tersalin!</div>
+
+<script>
+const DATA = {"qa": [{"cat": "qa", "badge": "Konsep", "q": "Apa itu Omnichannel dan apa bedanya dengan Multichannel?", "tags": "omnichannel multichannel pengertian definisi beda sinkronisasi pos ecommerce stok terpusat", "a": "Multichannel berarti toko punya beberapa saluran jualan (toko fisik & online) tetapi stok dan datanya terpisah sehingga rawan overselling. Omnichannel menyatukan seluruh saluran jualan (Kasir POS Luring, E-Commerce Pengiriman, dan Pick-up in Store) ke dalam SATU sumber database stok terpusat secara real-time, sehingga transaksi di satu kanal langsung memengaruhi ketersediaan stok di kanal lain."}, {"cat": "qa", "badge": "Konsep", "q": "Apa itu FEFO dan kenapa obat pakai FEFO, bukan FIFO?", "tags": "fefo fifo pengertian obat kadaluarsa expired tgl_exp urutan batch", "a": "FEFO (First Expired First Out) mengeluarkan barang berdasarkan tanggal kedaluwarsa terdekat terlebih dahulu, bukan tanggal masuk gudang (FIFO). Pada produk farmasi/obat, batch yang baru datang dari supplier bisa saja memiliki tanggal kedaluwarsa lebih dekat dibanding stok lama. Di sistem ZenCare, query SQL memakai ORDER BY tgl_exp ASC dengan syarat tgl_exp >= CURDATE()."}, {"cat": "qa", "badge": "Konsep", "q": "Apa itu Multi-UOM (Konversi Satuan / Bongkar Box)?", "tags": "multi uom konversi satuan bongkar box karton strip botol rasio pecahan", "a": "Multi-UOM memungkinkan 1 produk memiliki dua tingkat kemasan (misal 1 Karton = 50 Botol pada Hufagrip, atau 1 Box = 10 Strip pada Amoxicillin). E-Commerce menjual kemasan besar utuh (Karton/Box), sedangkan Kasir POS bisa menjual grosir maupun eceran. Saat stok eceran habis, kasir/admin membongkar 1 Dus menjadi sub-batch eceran (.A, .B, .D) yang tercatat keluar Rp0 di Kartu Stok Besar dan masuk di Kartu Stok Kecil."}, {"cat": "qa", "badge": "Konsep", "q": "Apa itu Race Condition dan bagaimana sistem mencegah Overselling?", "tags": "race condition rebutan stok overselling for update pessimistic locking transaksi bersamaan", "a": "Race Condition terjadi ketika dua transaksi (misal Kasir POS dan Pelanggan E-Commerce) memperebutkan stok terakhir secara bersamaan. Sistem mencegahnya dengan transaksi database (beginTransaction) dan Pessimistic Row-Level Locking (SELECT ... FOR UPDATE pada stok_toko, stok_batch, dan unit_serial). Transaksi pertama mengunci baris stok hingga selesai/commit; transaksi kedua baru membaca stok terbaru sehingga otomatis ditolak jika stok sudah habis."}, {"cat": "qa", "badge": "Konsep", "q": "Apa itu Stok Opname, Freeze Lock, Blind Count, dan Segregation of Duties?", "tags": "stok opname freeze lock blind count segregation of duties pemisahan tugas kasir netral audit", "a": "Stok Opname adalah pencocokan fisik barang di rak dengan angka sistem. (1) Freeze Lock: saat Superadmin membuka sesi, seluruh transaksi POS, E-Commerce, penerimaan, dan konversi dibekukan agar angka stok tidak bergerak. (2) Blind Count: Kasir menghitung fisik (Baik/Rusak/Expired) tanpa melihat angka komputer agar objektif. (3) Segregation of Duties: Kasir dipilih menghitung karena tidak mengelola gudang (netral), Admin memverifikasi & memutasi selisih tanpa bisa mengedit hitungan Kasir, dan Superadmin yang membuka/mengoreksi/menutup sesi."}, {"cat": "qa", "badge": "Kebijakan Sistem", "q": "Stok Opname biasanya dilakukan berapa kali? Di sistem ini bagaimana?", "tags": "stok opname berapa kali jadwal rutin bulanan triwulan mendadak frekuensi", "a": "Di operasional apotek/toko alkes, stok opname umumnya dilakukan 1 bulan sekali (rutin awal/akhir bulan) atau per triwulan (3 bulan sekali), ditambah opname mendadak bila dicurigai ada selisih besar. Di sistem ZenCare, jadwalnya fleksibel (on-demand): Superadmin bisa memulai sesi kapan saja sesuai kebutuhan, namun sistem membatasi hanya 1 sesi aktif dalam satu waktu (Freeze Lock). Pada histori data sistem terdapat contoh Opname Triwulan III dan Opname Rutin Awal Bulan."}, {"cat": "qa", "badge": "Kebijakan Sistem", "q": "Stok minimum itu biasanya berapa? Di sistem ini berapa & bagaimana cara kerjanya?", "tags": "stok minimum menipis berapa batas alert warning dashboard besar kecil fast moving", "a": "Tidak dipatok 1 angka kaku — stok minimum diatur per variasi dan dipisah antara satuan besar (stok_minimum_besar) dan satuan kecil (stok_minimum_kecil) agar bisa disesuaikan dengan produk fast-moving/slow-moving. Pada data ZenCare saat ini: Obat Multi-UOM diset minimum 2 Karton/Box (besar) dan 5–10 Strip/Botol (kecil); sedangkan Alkes diset minimum 5 Unit. Jika stok dus <= min besar ATAU stok eceran <= min kecil, produk otomatis muncul di tabel Peringatan Stok Menipis pada Dashboard."}, {"cat": "qa", "badge": "Kebijakan Sistem", "q": "Pengawasan kedaluwarsa (mendekati ED) di sistem ini berapa hari sebelum ED?", "tags": "kadaluarsa expired berapa hari batas_hari_expired 90 hari 180 hari 30 hari pengawasan ed warning", "a": "Batas hari pengawasan diatur fleksibel per produk melalui kolom produk_induk.batas_hari_expired (default fallback 30 hari jika kosong). Pada data ZenCare saat ini: mayoritas Obat (33 produk) & BMHP (10 produk) diset 90 hari (3 bulan sebelum ED) agar masih sempat dilakukan promo/retur distributor; 2 produk obat khusus diset 180 hari (6 bulan); dan 8 Alkes non-ED (seperti Tensimeter/Termometer) diset 0 karena menggunakan pelacakan Serial Number & garansi."}, {"cat": "qa", "badge": "Kebijakan Sistem", "q": "Berapa lama batas waktu pembayaran (expiry) Midtrans di POS dan E-Commerce?", "tags": "midtrans timer batas waktu expiry menit jam 5 menit 120 menit 2 jam otomatis batal cooldown", "a": "Dikonfigurasi di config/config.php: (1) POS Kasir (QRIS) = 5 menit karena pelanggan walk-in berada di depan meja kasir. (2) E-Commerce (semua kanal QRIS/VA/E-Wallet) = 120 menit (2 jam). Jika lewat 2 jam belum dibayar, fungsi batalkanPesananKadaluarsa() otomatis membatalkan pesanan dan mengembalikan stok yang terkunci (reserved)."}, {"cat": "qa", "badge": "Kebijakan Sistem", "q": "Kenapa Estimasi Kerugian di Berita Acara Stok Opname memakai Harga Beli, bukan Harga Jual?", "tags": "kerugian harga beli harga jual modal hpp berita acara stok opname akuntansi", "a": "Secara akuntansi persediaan, kerugian riil yang ditanggung ZenCare Medical atas barang hilang, rusak, atau kedaluwarsa adalah nilai modal perolehan (Harga Pokok / Harga Beli dari penerimaan terakhir), bukan harga jual yang sudah memuat margin keuntungan. Sedangkan selisih lebih (surplus) tidak dihitung sebagai kerugian karena merupakan kelebihan fisik dari pengiriman supplier."}, {"cat": "qa", "badge": "Teknis API", "q": "Bagaimana Kurir Internal Malang menghitung jarak dan tarif? Pakai API apa?", "tags": "kurir internal malang jarak leaflet haversine peta koordinat ongkir rumus api gratis", "a": "Peta interaktif memakai Leaflet.js (OpenStreetMap) untuk mengambil titik koordinat (latitude, longitude) lokasi pembeli. Jarak dihitung langsung oleh kode JavaScript menggunakan Rumus Haversine (calculateHaversineDistance, jari-jari bumi R = 6.371 km) dari toko ZenCare Muharto (-7.9881, 112.6371) ke pin pembeli — tanpa API jarak berbayar sehingga gratis dan instan. Tarif: Rp 10.000 (2 km pertama) + Rp 3.000/km berikutnya + Rp 2.000/kg di atas 1 kg, dibulatkan ke atas kelipatan Rp 1.000."}, {"cat": "qa", "badge": "Teknis API", "q": "Apakah Label Pengiriman 100x150mm terhubung ke RajaOngkir untuk generate resi JNE otomatis?", "tags": "label pengiriman resi awb rajaongkir jne cetak stiker internal kurir luar kota", "a": "Tidak — API RajaOngkir Komerce digunakan khusus untuk data wilayah (provinsi/kota) dan kalkulasi tarif ongkir + estimasi pengiriman (JNE/POS/J&T). Label 100x150mm (admin/cetak_label_pengiriman.php) adalah label alamat & identifikasi paket internal sistem ZenCare (berisi kurir, layanan, alamat, barcode invoice JsBarcode, dan rincian batch/SN) untuk mempermudah packing gudang. Untuk kurir toko langsung dipakai mengantar; untuk JNE/POS/J&T ditempel sebelum diserahkan ke agen ekspedisi."}, {"cat": "qa", "badge": "Kebijakan Sistem", "q": "Kenapa pesanan E-Commerce yang baru dibayar/Diproses belum masuk Kartu Stok?", "tags": "kartu stok reservasi terkunci menunggu pembayaran diproses dikirim selesai pickup", "a": "Karena saat Menunggu Pembayaran dan Diproses, barang fisiknya masih berada di rak gudang. Sistem hanya mengunci (reserve) stok di stok_toko & pesanan_batch_alokasi agar tidak terjual ganda di kasir. Pencatatan Keluar di Kartu Stok baru dilakukan ketika barang benar-benar meninggalkan toko secara fisik (status Dikirim untuk Kurir, atau Selesai untuk Pick-up). Bila batal sebelum dikirim, reservasi langsung dilepas tanpa mengotori Kartu Stok."}, {"cat": "whatif", "badge": "Pengandaian", "q": "Bagaimana kalau internet / API Midtrans / RajaOngkir sedang gangguan atau offline?", "tags": "pengandaian internet mati offline midtrans down rajaongkir error fallback tunai cache", "a": "(1) Di Kasir POS, pembayaran Tunai tetap berjalan 100% lokal tanpa internet, dan aset JS utama (Tailwind/SweetAlert/JsBarcode/html5-qrcode) sudah tersedia lokal offline. (2) Di E-Commerce, RajaOngkir memiliki cache lokal 7–30 hari di folder cache/ serta fallback daftar wilayah & kalkulator tarif cadangan di api/indonesia_regions.php, dan Kurir Internal (Haversine) tetap jalan. (3) Jika Midtrans dimatikan di Pengaturan API, sistem menampilkan pesan informatif tanpa crash."}, {"cat": "whatif", "badge": "Pengandaian", "q": "Bagaimana kalau stiker barcode rusak/buram atau kamera laptop tidak terbaca?", "tags": "pengandaian barcode rusak buram kamera tidak terbaca webcam gelap upload foto manual ketik", "a": "Sistem menyediakan 3 jalur cadangan berlapis: (1) Kamera webcam memakai BarcodeDetector native browser, (2) Tombol \"Upload Foto Barcode\" di modal kamera (scanFileV2) bila autofocus webcam terganggu pencahayaan, dan (3) Input manual ketik SKU / No. Batch / Serial Number di kolom scanner atau pencarian POS/Packing."}, {"cat": "whatif", "badge": "Pengandaian", "q": "Bagaimana kalau pelanggan di kasir menolak batch FEFO (misal kemasan agak penyok) dan minta batch lain?", "tags": "pengandaian pelanggan tolak batch fefo anomali kemasan penyok tukar batch log", "a": "Sistem tidak kaku mematikan penjualan: saat kasir memindai batch non-FEFO, muncul peringatan ANOMALI FEFO TERDETEKSI. Jika kasir memilih Tetap Lanjutkan, transaksi tetap bisa diproses, namun sistem otomatis merekam deviasi ke tabel log_anomali_fefo dan memunculkan indikator \"Batch Terlewat\" di Kasir serta Laporan Anomali FEFO Superadmin agar batch yang terlewat segera diprioritaskan pada transaksi berikutnya."}, {"cat": "whatif", "badge": "Pengandaian", "q": "Bagaimana kalau obat sudah kedaluwarsa tidak sengaja terscan di kasir atau saat packing online?", "tags": "pengandaian obat kadaluarsa expired terscan blokir mutlak safety guard", "a": "Berbeda dengan anomali FEFO, obat yang sudah melewati tanggal kedaluwarsa (tgl_exp < CURDATE()) DIBLOKIR MUTLAK (hard block) di POS Kasir maupun Packing E-Commerce dengan peringatan OBAT KADALUARSA. Barang tidak bisa masuk keranjang atau dikirim, dan staf diarahkan memisahkannya ke karantina / Mutasi Keluar (Barang Kedaluwarsa)."}, {"cat": "whatif", "badge": "Pengandaian", "q": "Bagaimana kalau Kasir salah mengetik angka fisik saat Blind Count Stok Opname?", "tags": "pengandaian kasir salah input ketik blind count koreksi superadmin admin tidak bisa ubah", "a": "Selama tahap Penghitungan belum ditutup, Kasir masih bisa memperbaiki inputnya. Setelah masuk tahap Verifikasi, Admin Toko TIDAK bisa mengubah angka hitungan Kasir (hanya memverifikasi & memutasi selisih). Jika ditemukan kesalahan hitung lapangan, hanya Superadmin yang berwenang melakukan koreksi melalui aksi koreksi_hitung_superadmin, dan riwayat sebelum/sesudah + alasannya otomatis tercatat di tabel audit riwayat_hitung_opname."}, {"cat": "whatif", "badge": "Pengandaian", "q": "Bagaimana kalau barang dari supplier datang rusak sebagian saat Penerimaan Barang?", "tags": "pengandaian barang rusak penerimaan supplier retur menunggu pengganti potong faktur", "a": "Admin menginput jumlah diterima baik (masuk stok & Kartu Stok) dan jumlah rusak secara terpisah pada form Penerimaan Barang. Barang rusak tidak dicampur ke stok layak jual, melainkan otomatis berstatus menunggu_pengganti dan muncul di widget Status Retur Supplier pada Dashboard. Saat supplier mengirim pengganti (atau memotong faktur), Admin mencatat penyelesaian retur beserta batch/ED penggantinya."}, {"cat": "whatif", "badge": "Pengandaian", "q": "Bagaimana kalau pelanggan sudah checkout & bayar E-Commerce tapi ingin membatalkan pesanan?", "tags": "pengandaian batal pesanan pelanggan sudah bayar menunggu pembayaran diproses request batal", "a": "(1) Jika status masih Menunggu Pembayaran: pelanggan bisa langsung klik Batal di Profil -> stok reservasi otomatis kembali. (2) Jika sudah dibayar (status Diproses): pelanggan tidak bisa membatalkan sepihak karena gudang mungkin sedang mengemas; pelanggan menekan tombol Ajukan Pembatalan dengan alasan, lalu Admin Toko yang menyetujui/menolak. (3) Jika sudah Dikirim/Siap Diambil/Selesai: pembatalan diblokir sistem."}, {"cat": "whatif", "badge": "Pengandaian", "q": "Bagaimana kalau 1 unit Alkes ber-SN rusak diklaim garansi atau tidak sengaja terscan 2 kali?", "tags": "pengandaian alkes sn ganda rusak garansi klaim terjual", "a": "(1) Scan SN yang sama 2 kali di POS otomatis ditolak oleh guard snUsedDup. (2) SN berstatus Retur/Rusak diblokir mutlak saat discan. (3) SN berstatus Terjual diblokir untuk dijual ulang, dan sistem langsung menampilkan nomor invoice, tanggal beli, serta sisa hari garansi aktifnya untuk layanan klaim garansi."}], "code": [{"title": "Ubah Header, Sidebar, Warna Tema & Tulisan UI", "files": "config/layout.php (Backoffice) | ecommerce/header.php (Toko Online) | pos/pos.php (Kasir) | admin/pengaturan_web.php", "find": "tailwind.config (layout.php:26, header.php:59, pos.php:437) | layoutSidebar (layout.php:282) | layoutHeader (layout.php:399)", "tags": "ubah header ganti warna tulisan sidebar logo tema css tailwind pengaturan web nama toko tampilan ui", "desc": "Warna utama (zc, navy #0f2d5a, crimson #c0392b) ada di blok tailwind.config. Menu kiri diubah di function layoutSidebar(), judul/bar atas di layoutHeader(). Sedangkan nama toko, logo, telepon, WA, alamat, dan banner promosi cukup diubah langsung lewat menu Pengaturan Web (tabel pengaturan_web) tanpa edit kode!"}, {"title": "Logika FEFO (Obat Kedaluwarsa Terdekat)", "files": "pos/pos.php (baris 161 & 343) | api/checkout.php (baris 186)", "find": "LOKASI QUERY LOGIKA FEFO", "tags": "fefo codingan query order by tgl_exp asc obat kadaluarsa", "desc": "Mengurutkan stok_batch dengan tgl_exp >= CURDATE() ORDER BY tgl_exp ASC agar batch ED terdekat selalu dialokasikan lebih dulu di POS maupun E-Commerce."}, {"title": "Penguncian Stok Anti Race Condition (FOR UPDATE)", "files": "pos/pos.php (baris 50, 163, 213) | api/checkout.php (baris 69, 190, 221) | api/pos_konversi.php (baris 35)", "find": "FOR UPDATE", "tags": "race condition rebutan stok for update lock transaksi beginTransaction overselling", "desc": "Menggunakan Pessimistic Row-Level Locking InnoDB di dalam PDO beginTransaction() sehingga dua transaksi bersamaan tidak pernah bisa memotong stok yang sama secara ganda."}, {"title": "Logika Konversi UOM / Bongkar Box", "files": "inventori/konversi_uom.php (baris 50–130) | api/pos_konversi.php (baris 35–115)", "find": "INSERT INTO histori_konversi", "tags": "konversi uom bongkar box pecah satuan sub batch kartu stok", "desc": "Memotong stok_batch induk sebesar qtyBox × rasio, membuat sub-batch baru (.A/.B/.D), mencatat 2 baris di kartu_stok (Bongkar Dus Keluar & Hasil Bongkar Masuk), lalu menyimpan log ke histori_konversi."}, {"title": "Hitung Jarak Peta Leaflet & Rumus Haversine (Kurir Internal)", "files": "ecommerce/zencare_checkout.php (baris 417–454)", "find": "calculateHaversineDistance  atau  onMarkerMove", "tags": "leaflet peta jarak haversine kurir internal ongkir malang koordinat lat lng", "desc": "Mengambil koordinat marker Leaflet, menghitung jarak bumi (R=6371 km) dari titik toko ZenCare (-7.9881, 112.6371), lalu menghitung ongkir Rp 10.000 + Rp 3.000/km (>2km) + Rp 2.000/kg (>1kg)."}, {"title": "API RajaOngkir (Wilayah & Tarif Ekspedisi)", "files": "api/rajaongkir.php | config/config.php | api/indonesia_regions.php", "find": "callKomerce  atau  dest_city_v2_", "tags": "rajaongkir ongkir jne pos jnt komerce api ekspedisi provinsi kota cache", "desc": "Mengambil daftar provinsi/kota, meresolusi tujuan lewat hierarki resmi city_id -> district -> sub-district, menghitung ongkir ekspedisi, menyimpan cache di folder cache/, dengan fallback offline."}, {"title": "API Pembayaran Midtrans (Snap Token, Sync & Webhook)", "files": "api/checkout.php (baris 289) | api/pos_snap_token.php | api/sync_payment.php | api/webhook.php | config/config.php", "find": "MIDTRANS_API_URL  atau  MIDTRANS_SERVER_KEY", "tags": "midtrans bayar qris va snap token webhook payment gateway pembayaran", "desc": "Membuat Snap Token via cURL ke Midtrans (POS 5 menit, E-Commerce 120 menit), menyinkronkan status bayar di sync_payment.php, dan verifikasi SHA-512 signature pada webhook.php."}, {"title": "Kamera Barcode Scanner & Hardware USB/Bluetooth", "files": "pos/pos.php (baris 2499) | admin/pesanan.php | inventori/tambah_stok.php", "find": "startCameraScanner  atau  processBarcode", "tags": "barcode scan kamera webcam html5qrcode scanner usb upload foto", "desc": "Memakai Html5Qrcode + BarcodeDetector native browser (12 format 1D/2D), pemilih kamera pintar (hindari IR/OBS), fallback Upload Foto Barcode (scanFileV2), dan listener keyboard Enter/Tab."}, {"title": "Stok Opname (Freeze Lock, Blind Count & Koreksi Superadmin)", "files": "config/opname_helper.php (baris 42) | inventori/stok_opname.php (baris 1080) | inventori/cetak_berita_acara_opname.php", "find": "assertTidakSedangOpname  atau  koreksi_hitung_superadmin", "tags": "stok opname freeze lock blind count koreksi superadmin berita acara", "desc": "assertTidakSedangOpname() memblokir semua transaksi saat sesi aktif. koreksi_hitung_superadmin dikunci khusus Superadmin dan direkam di riwayat_hitung_opname."}, {"title": "Pengawasan Stok Menipis & Kedaluwarsa di Dashboard", "files": "index.php (baris 62–71, 532–598) | laporan/logistik_medis.php", "find": "batas_hari_expired  atau  stok_minimum_besar", "tags": "dashboard stok menipis kadaluarsa expired alert widget retur anomali", "desc": "Query otomatis membandingkan stok dus/eceran terhadap stok_minimum_besar/kecil serta tgl_exp terhadap batas_hari_expired masing-masing produk."}], "db": [{"group": "Master & Stok Aktif", "table": "produk_induk", "desc": "Menyimpan produk utama (nama_produk, kategori, deskripsi, batas_hari_expired).", "tags": "simpan produk master induk kategori expired"}, {"group": "Master & Stok Aktif", "table": "produk_variasi", "desc": "Menyimpan variasi, SKU, satuan besar/kecil, rasio_konversi, harga_jual_besar/kecil, stok_minimum_besar/kecil, berat.", "tags": "simpan variasi sku harga satuan uom rasio minimum stok"}, {"group": "Master & Stok Aktif", "table": "stok_toko", "desc": "Menyimpan saldo total stok aktif toko per variasi (dalam satuan kecil) — dipakai bersama oleh POS & E-Commerce.", "tags": "simpan stok total toko aktif omnichannel"}, {"group": "Master & Stok Aktif", "table": "stok_batch", "desc": "Menyimpan stok per batch obat & sub-batch eceran (no_batch, tgl_exp, stok_sisa) — pusat data FEFO & Konversi.", "tags": "simpan batch stok kadaluarsa fefo sub batch eceran"}, {"group": "Master & Stok Aktif", "table": "unit_serial", "desc": "Menyimpan tiap nomor seri Alkes (serial_number, status: Tersedia/Terjual/Retur/Rusak, id_penjualan, tgl_habis_garansi).", "tags": "simpan alkes serial number sn garansi rusak"}, {"group": "Master & Stok Aktif", "table": "supplier", "desc": "Menyimpan data pemasok/distributor barang (nama, kontak, email, alamat).", "tags": "simpan supplier pemasok distributor"}, {"group": "Master & Stok Aktif", "table": "users", "desc": "Menyimpan akun 4 peran (superadmin, admin, kasir, pelanggan) beserta alamat & kota_id.", "tags": "simpan user akun login pelanggan kasir admin superadmin"}, {"group": "Barang Masuk & Retur", "table": "penerimaan_stok", "desc": "Header faktur pembelian/penerimaan barang masuk (no_referensi, sumber, id_supplier, tanggal_terima, file_nota).", "tags": "simpan penerimaan barang masuk faktur nota kulakan"}, {"group": "Barang Masuk & Retur", "table": "penerimaan_detail", "desc": "Detail item barang masuk (qty_pesan, qty_terima, qty_rusak, harga_beli, no_batch, tgl_exp, status_retur, no_batch_pengganti).", "tags": "simpan detail penerimaan harga beli barang rusak retur supplier"}, {"group": "Penjualan Omnichannel", "table": "penjualan", "desc": "Header transaksi gabungan POS & E-Commerce (no_invoice, tipe_transaksi, metode_pengambilan, status_pesanan, total_harga, ongkir, kurir, snap_token, alasan_batal).", "tags": "simpan transaksi penjualan pos ecommerce invoice ongkir midtrans batal"}, {"group": "Penjualan Omnichannel", "table": "detail_penjualan", "desc": "Rincian produk terjual per transaksi (id_penjualan, id_variasi, qty, harga_satuan, catatan_logistik batch/SN).", "tags": "simpan detail transaksi penjualan item qty"}, {"group": "Penjualan Omnichannel", "table": "pesanan_batch_alokasi", "desc": "Menyimpan kuncian/reservasi batch untuk pesanan E-Commerce agar stok tidak terjual ganda dan bisa dikembalikan bila batal.", "tags": "simpan reservasi kuncian stok alokasi batch ecommerce"}, {"group": "Audit, Konversi & FEFO", "table": "kartu_stok", "desc": "Buku besar kronologis keluar-masuk stok (satuan_tipe besar/kecil, jenis_mutasi Masuk/Keluar, kanal POS/E-Commerce/Manual, alasan_mutasi, qty, sisa_stok, dibuat_oleh).", "tags": "simpan kartu stok mutasi riwayat keluar masuk"}, {"group": "Audit, Konversi & FEFO", "table": "histori_konversi", "desc": "Menyimpan rekam aktivitas Bongkar Box (batch_asal, batch_hasil, qty_box_buka, qty_pcs_hasil, sisa_dus_akhir, dibuat_oleh).", "tags": "simpan konversi bongkar box uom"}, {"group": "Audit, Konversi & FEFO", "table": "log_anomali_fefo", "desc": "Menyimpan catatan deviasi saat batch non-FEFO dijual (batch_diambil, batch_seharusnya, qty, status terlewat/selesai).", "tags": "simpan anomali fefo batch terlewat"}, {"group": "Stok Opname & Audit", "table": "sesi_opname", "desc": "Header sesi Stok Opname & status Freeze Lock (kode_sesi, status Aktif/Selesai/Dibatalkan, tahap Penghitungan/Verifikasi).", "tags": "simpan stok opname sesi freeze lock"}, {"group": "Stok Opname & Audit", "table": "detail_opname_batch", "desc": "Snapshot sistem & hasil Blind Count 3 kondisi (stok_sistem_fisik, fisik_baik, fisik_rusak, fisik_expired, selisih, status_mutasi, alasan_mutasi).", "tags": "simpan detail opname blind count selisih rusak hilang"}, {"group": "Stok Opname & Audit", "table": "detail_opname_sn", "desc": "Menyimpan pilihan Serial Number Alkes tertentu yang hilang/rusak saat verifikasi opname.", "tags": "simpan opname sn alkes"}, {"group": "Stok Opname & Audit", "table": "riwayat_hitung_opname", "desc": "Menyimpan jejak audit koreksi angka hitungan fisik oleh Superadmin (hitung_sebelumnya, hitung_baru, alasan_koreksi).", "tags": "simpan audit koreksi opname superadmin"}, {"group": "Pengaturan Sistem", "table": "pengaturan_web", "desc": "Menyimpan profil toko dinamis (nama_toko, deskripsi, telepon, whatsapp, alamat, logo, banner_promosi, email_cs).", "tags": "simpan pengaturan web profil toko logo alamat ubah tulisan"}]};
+
+const DEMO_CARDS = [
+  {
+    cat:'demo', badge:'Login & Reset', color:'green',
+    title:'Akun Login & Setup 4 Jendela Browser (Password Semua: 123456)',
+    tags:'login akun username password superadmin admin kasir pelanggan browser reset demo',
+    body:'Siapkan sebelum masuk ruangan: Window 1 = superadmin, Window 2 = admin_toko, Window 3 (Incognito) = kasir_toko, Window 4 = pelanggan1 (Budi Santoso) / pelanggan2 (Siti Rahmawati) / pelanggan3 (Andi Wijaya). Reset cepat via ikon database kecil pojok bawah sidebar -> demo/index.php -> Default Siap Demo Sidang.',
+    copies:['superadmin','admin_toko','kasir_toko','pelanggan1','pelanggan2','pelanggan3','123456']
+  },
+  {
+    cat:'demo', badge:'Kode Scan', color:'',
+    title:'Kode Batch & Serial Number Siap Scan (Default Demo Sidang)',
+    tags:'kode scan barcode hufagrip merah biru tensimeter termometer sanmol expired amoxicillin sn batch',
+    body:'Hufagrip Merah (2 Ktn utuh + 50 Btl eceran): FEFO = HUF-24J089, Non-FEFO = HUF-TMP-26. Hufagrip Biru (10 Ktn + 5 Btl eceran): HUFPIL-2027-01.A (5) -> Bongkar Box lahir .D (50) -> scan 2 sub-batch! Expired Blokir: SNM-24K061. Tensimeter (sisa 2): OMR-7120-102, OMR-7120-103 (Terjual: 101, Rusak: R01). Termometer (sisa 5): OMR-MC246-02 s/d 06.',
+    copies:['HUF-24J089','HUF-TMP-26','HUFPIL-2027-01.A','SNM-24K061','OMR-7120-102','OMR-7120-R01','OMR-MC246-02']
+  },
+  {
+    cat:'demo', badge:'Tahap 1–3 (3,5 mnt)', color:'',
+    title:'Alur Demo Bagian 1: Master -> Penerimaan KUL-20261122-001 & Retur -> Konversi & Kartu Stok',
+    tags:'alur demo tahap 1 2 3 master produk penerimaan barang retur rusak cetak stiker konversi kartu stok hufagrip faktur pdf',
+    body:'(1) admin_toko: tunjukkan Dashboard (widget Retur Supplier & Anomali FEFO) + Master Produk Hufagrip (5 variasi, 1 Karton = 50 Botol) 30 detik. (2) Penerimaan Barang (tambah_stok.php): input faktur KUL-20261122-001 (PT Kimia Farma, upload Faktur_Supplier_KUL-20261122-001.pdf): Hufagrip Biru 2 Ktn baik + 1 Ktn rusak (HUFPIL-2027-02 ED 30/06/2027; retur pengganti HUFPIL-2027-02R ED 30/09/2027), Hufagrip Merah 2 Ktn (HUF-TMP-28 ED 15/10/2028), Tensimeter 2 Unit (OMR-7120-201/202), Termometer 2 Unit (OMR-MC246-21/22). Tips: jalankan Omnichannel dulu baru Penerimaan (atau langsung pilih Preset 5 di demo/index.php!). (3) Kartu Stok (filter Semua Aktivitas Konversi): tunjukkan keluar Rp0 di Satuan Besar & masuk Sub-Batch di Satuan Kecil.',
+    copies:['KUL-20261122-001','HUFPIL-2027-02','HUFPIL-2027-02R','HUF-TMP-28','OMR-7120-201','OMR-MC246-21']
+  },
+  {
+    cat:'demo', badge:'Tahap 4 (2,5 mnt)', color:'amber',
+    title:'Alur Demo Bagian 2: Kasir POS — Scan, Multi Sub-Batch, Anomali FEFO, Expired & Alkes',
+    tags:'alur demo tahap 4 kasir pos scan barcode anomali fefo expired bongkar box multi batch struk termal',
+    body:'kasir_toko (pos/pos.php): (a) Hufagrip Biru beli 10 Botol eceran (sisa 5 di .A) -> klik Bongkar Box (lahir .D=50) -> scan 2 barcode sub-batch (.A & .D). (b) Hufagrip Merah: scan HUF-TMP-26 (non-FEFO) -> muncul ANOMALI FEFO TERDETEKSI -> Tetap Lanjutkan -> tunjukkan badge Batch Terlewat. (c) Scan SNM-24K061 -> diblokir OBAT KADALUARSA. (d) Scan OMR-7120-R01 (Rusak -> ditolak), lalu OMR-7120-102 (valid). (e) Bayar Tunai / tunjukkan QRIS Midtrans 5 mnt -> Cetak Struk 80mm + tunjukkan struk fisik.'
+  },
+  {
+    cat:'demo', badge:'Tahap 5 (3 mnt)', color:'red',
+    title:'Alur Demo Bagian 3: Omnichannel Race Condition, Ongkir, Midtrans, Packing & Batal',
+    tags:'alur demo tahap 5 omnichannel race condition rebutan stok hufagrip merah tensimeter termometer ongkir leaflet rajaongkir midtrans packing batal label',
+    body:'(a) Rebutan Obat: E-Com masukkan 2 Karton Hufagrip Merah -> tunjukkan peta Leaflet Malang (Haversine) & Surabaya (RajaOngkir) -> sebelum bayar, POS beli 1 Karton -> E-Com klik bayar -> DITOLAK! (b) Rebutan & Habis Alkes: Tensimeter (2 Unit: 1 POS vs 2 E-Com -> ditolak) & Termometer (5 Unit: 3 E-Com + 2 POS = tepat 0). (c) Checkout sukses via Midtrans (Bayar Nanti = Menunggu Pembayaran) -> cek POS stok berkurang (reserved), Kartu Stok belum keluar. (d) Admin pesanan.php: Cetak Label 100x150mm + Scan Packing -> Dikirim (baru masuk Kartu Stok), lalu uji Pembatalan pesanan -> stok kembali!'
+  },
+  {
+    cat:'demo', badge:'Tahap 6–7 (2,5 mnt)', color:'green',
+    title:'Alur Demo Bagian 4: Stok Opname (Freeze Lock -> Blind Count -> Verifikasi) & 6 Laporan',
+    tags:'alur demo tahap 6 7 stok opname freeze lock blind count verifikasi berita acara 6 laporan superadmin',
+    body:'(1) superadmin mulai Sesi Opname (Freeze Lock -> POS/E-Com terkunci). (2) kasir_toko isi 1–2 baris Blind Count (stok sistem tersembunyi, 3 kondisi Baik/Rusak/Expired). (3) Lompat cepat via utilitas Verifikasi 6 Anomali -> tunjukkan barang klop tersembunyi otomatis, Admin hanya verifikasi/mutasi (koreksi khusus Superadmin), soroti Estimasi Kerugian berbasis Harga Beli -> Tutup Sesi & cetak Berita Acara. (4) superadmin tunjukkan sekilas 6 Laporan Manajerial (Penjualan Omnichannel, Persediaan, Logistik Medis, Penerimaan, Mutasi & Konversi, Anomali FEFO).'
+  }
+];
+
+const NEW_PROD_CARDS = [
+  {
+    cat:'newprod', badge:'Obat Baru Cadangan', color:'',
+    title:'Tambah Obat Baru (Multi-UOM): Mixagrip — Flu Strip Isi 4',
+    tags:'tambah produk baru obat mixagrip crud master produk penerimaan baru',
+    body:'Produk Induk: Mixagrip | Kategori: Obat | Deskripsi: Obat pereda gejala flu, demam, sakit kepala, dan hidung tersumbat. Variasi: Flu Strip Isi 4 | SKU: MXG-FLU | Satuan: 1 Box = 25 Strip | Harga Grosir: Rp 65.000 | Harga Eceran: Rp 3.000 | Min Besar: 2, Min Kecil: 10 | Berat: 250g. Penerimaan: PT Kimia Farma, 3 Box, Harga Beli Rp 55.000, Batch MXG-26A01, ED 2027-11-30.',
+    copies:['Mixagrip','Flu Strip Isi 4','MXG-FLU','MXG-26A01']
+  },
+  {
+    cat:'newprod', badge:'Alkes Baru Cadangan', color:'green',
+    title:'Tambah Alkes Baru (Serial Number): Oximeter Digital Fingertip — Unit LK87',
+    tags:'tambah produk baru alkes oximeter serial number sn crud master produk',
+    body:'Produk Induk: Oximeter Digital Fingertip | Kategori: Alat Kesehatan | Deskripsi: Alat pengukur saturasi oksigen (SpO2) dan detak jantung digital. Variasi: Unit LK87 | SKU: OXM-LK87 | Satuan: Unit (Rasio 1) | Harga Jual: Rp 135.000 | Min Stok: 3 | Berat: 150g. Penerimaan: PT Jayamas Medica Industri (OneMed), 3 Unit, Harga Beli Rp 95.000, SN: OXM-LK87-01, OXM-LK87-02, OXM-LK87-03.',
+    copies:['Oximeter Digital Fingertip','Unit LK87','OXM-LK87','OXM-LK87-01']
+  }
+];
+
+// Synonym expansion so natural Indonesian queries always match cleanly
+const SYNONYMS = {
+  'ubah':['ganti','edit','modifikasi','layout','warna','header','sidebar','tulisan','pengaturan'],
+  'ganti':['ubah','edit','warna','header','sidebar','tulisan'],
+  'header':['layout','sidebar','navbar','judul','warna','tulisan','logo'],
+  'warna':['tailwind','tema','css','header','layout'],
+  'jarak':['leaflet','haversine','km','ongkir','kurir','internal','malang','peta'],
+  'ongkir':['rajaongkir','jne','pos','jnt','jarak','haversine','kurir','pengiriman'],
+  'bayar':['midtrans','qris','va','snap','payment','pembayaran','webhook'],
+  'kadaluarsa':['expired','ed','fefo','batas_hari_expired','90','hari','blokir'],
+  'expired':['kadaluarsa','ed','fefo','batas_hari_expired','90','hari'],
+  'opname':['blind','freeze','selisih','berita','acara','koreksi','berapa','kali'],
+  'konversi':['bongkar','box','uom','pecah','sub','batch','histori_konversi','kartu_stok'],
+  'simpan':['tabel','database','db','kolom','menyimpan','lokasi'],
+  'tabel':['database','db','simpan','kolom'],
+  'scan':['barcode','kamera','webcam','scanner','stiker','foto'],
+  'rebutan':['race','condition','overselling','omnichannel','for','update','lock'],
+  'mati':['offline','error','down','gangguan','fallback','internet'],
+  'rusak':['retur','cacat','supplier','pengganti','karantina']
+};
+
+let activeTab = 'all';
+
+function expandTokens(raw) {
+  const base = raw.toLowerCase().replace(/[^a-z0-9_.\- ]/g,' ').split(/\s+/).filter(Boolean);
+  const out = new Set(base);
+  base.forEach(tok => {
+    if (SYNONYMS[tok]) SYNONYMS[tok].forEach(s => out.add(s));
+  });
+  return { base, expanded: Array.from(out) };
+}
+
+function scoreText(haystack, queryRaw) {
+  if (!queryRaw) return 1;
+  const h = haystack.toLowerCase();
+  const q = queryRaw.toLowerCase().trim();
+  let s = 0;
+  if (h.includes(q)) s += 20;
+  const { base, expanded } = expandTokens(q);
+  let baseHits = 0;
+  base.forEach(t => { if (h.includes(t)) { s += 8; baseHits++; } });
+  expanded.forEach(t => { if (h.includes(t)) s += 2; });
+  if (base.length > 0 && baseHits === base.length) s += 10;
+  return s;
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function hl(text, queryRaw) {
+  let safe = esc(text);
+  if (!queryRaw || queryRaw.trim().length < 2) return safe;
+  const toks = queryRaw.trim().toLowerCase().split(/\s+/).filter(t => t.length >= 2);
+  toks.forEach(t => {
+    const escapedTok = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const rx = new RegExp('(' + escapedTok + ')', 'gi');
+    safe = safe.replace(rx, '<mark>$1</mark>');
+  });
+  return safe;
+}
+
+function copyVal(v) {
+  navigator.clipboard?.writeText(v).catch(()=>{});
+  const t = document.getElementById('toast');
+  t.innerText = 'Disalin: ' + v;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1400);
+}
+
+function render() {
+  const q = document.getElementById('q').value.trim();
+  document.getElementById('clearBtn').style.display = q ? 'block' : 'none';
+
+  let cards = [];
+
+  // Demo cards
+  if (activeTab === 'all' || activeTab === 'demo') {
+    DEMO_CARDS.forEach(c => {
+      const sc = scoreText(c.title + ' ' + c.body + ' ' + c.tags, q);
+      if (sc > 0) cards.push({ score: sc, sec: 'Alur Demo & Kode Uji', html:
+        `<div class="card"><div class="card-head"><h3 class="card-title">${hl(c.title, q)}</h3><span class="badge ${c.color}">${esc(c.badge)}</span></div><p>${hl(c.body, q)}</p>` +
+        (c.copies ? `<div class="copy-row">` + c.copies.map(x => `<button class="copy-btn" onclick="copyVal('${x.replace(/'/g,"\'")}')">📋 ${esc(x)}</button>`).join('') + `</div>` : '') +
+        `</div>` });
+    });
+  }
+
+  // Q&A + What-if
+  DATA.qa.forEach(c => {
+    if (activeTab !== 'all' && activeTab !== c.cat) return;
+    const sc = scoreText(c.q + ' ' + c.a + ' ' + c.tags + ' ' + c.badge, q);
+    if (sc > 0) {
+      const clr = c.cat === 'whatif' ? 'amber' : (c.badge === 'Teknis API' ? 'green' : '');
+      cards.push({ score: sc, sec: c.cat === 'whatif' ? 'Pengandaian ("Bagaimana Kalau...")' : 'Q&A Penguji (Konsep & Kebijakan)', html:
+        `<div class="card"><div class="card-head"><h3 class="card-title">${hl(c.q, q)}</h3><span class="badge ${clr}">${esc(c.badge)}</span></div><p>${hl(c.a, q)}</p></div>` });
+    }
+  });
+
+  // Code map
+  if (activeTab === 'all' || activeTab === 'code') {
+    DATA.code.forEach(c => {
+      const sc = scoreText(c.title + ' ' + c.files + ' ' + c.find + ' ' + c.desc + ' ' + c.tags, q);
+      if (sc > 0) {
+        const firstFind = c.find.split('  atau  ')[0].split(' (')[0].trim();
+        cards.push({ score: sc, sec: 'Peta Kode Sumber & Cara Ubah UI', html:
+          `<div class="card"><div class="card-head"><h3 class="card-title">${hl(c.title, q)}</h3><span class="badge">Kode</span></div>` +
+          `<div class="code-line"><b>File:</b> ${hl(c.files, q)}<br><b>Ctrl+F:</b> ${hl(c.find, q)}</div>` +
+          `<p>${hl(c.desc, q)}</p>` +
+          `<div class="copy-row"><button class="copy-btn" onclick="copyVal('${firstFind.replace(/'/g,"\'")}')">📋 Copy Ctrl+F: ${esc(firstFind)}</button></div></div>` });
+      }
+    });
+  }
+
+  // DB 20 tables
+  if (activeTab === 'all' || activeTab === 'db') {
+    DATA.db.forEach(c => {
+      const sc = scoreText(c.group + ' ' + c.table + ' ' + c.desc + ' ' + c.tags, q);
+      if (sc > 0) {
+        cards.push({ score: sc, sec: 'Peta Database db_inventory (20 Tabel)', html:
+          `<div class="card"><div class="card-head"><h3 class="card-title" style="font-family:ui-monospace,Consolas,monospace">${hl(c.table, q)}</h3><span class="badge green">${esc(c.group)}</span></div><p>${hl(c.desc, q)}</p></div>` });
+      }
+    });
+  }
+
+  // New products
+  if (activeTab === 'all' || activeTab === 'newprod') {
+    NEW_PROD_CARDS.forEach(c => {
+      const sc = scoreText(c.title + ' ' + c.body + ' ' + c.tags, q);
+      if (sc > 0) cards.push({ score: sc, sec: 'Data Cadangan Tambah Produk Baru', html:
+        `<div class="card"><div class="card-head"><h3 class="card-title">${hl(c.title, q)}</h3><span class="badge ${c.color}">${esc(c.badge)}</span></div><p>${hl(c.body, q)}</p>` +
+        `<div class="copy-row">` + c.copies.map(x => `<button class="copy-btn" onclick="copyVal('${x.replace(/'/g,"\'")}')">📋 ${esc(x)}</button>`).join('') + `</div></div>` });
+    });
+  }
+
+  const container = document.getElementById('content');
+  const hint = document.getElementById('resultHint');
+  if (cards.length === 0) {
+    hint.innerText = 'Tidak ada hasil untuk "' + q + '". Coba kata lain (mis. "ubah header", "jarak", "opname", "tabel stok").';
+    container.innerHTML = '<div class="empty">Tidak ditemukan. Coba kata kunci yang lebih singkat seperti <b>header</b>, <b>jarak</b>, <b>kadaluarsa</b>, <b>midtrans</b>, atau <b>konversi</b>.</div>';
+    return;
+  }
+
+  if (q) {
+    cards.sort((a,b) => b.score - a.score);
+    hint.innerText = 'Menampilkan ' + cards.length + ' hasil paling relevan untuk "' + q + '" (urut dari paling cocok):';
+    container.innerHTML = cards.map(c => c.html).join('');
+  } else {
+    hint.innerText = 'Total ' + cards.length + ' kartu panduan. Ketik bebas di atas untuk pencarian instan saat tanya-jawab sidang.';
+    let html = '', lastSec = '';
+    cards.forEach(c => {
+      if (c.sec !== lastSec) {
+        html += `<div class="section-title"><span>${esc(c.sec)}</span></div>`;
+        lastSec = c.sec;
+      }
+      html += c.html;
+    });
+    container.innerHTML = html;
+  }
+}
+
+function clearSearch() {
+  document.getElementById('q').value = '';
+  render();
+  document.getElementById('q').focus();
+}
+
+document.getElementById('q').addEventListener('input', render);
+document.getElementById('chips').addEventListener('click', e => {
+  const btn = e.target.closest('.chip');
+  if (!btn) return;
+  document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeTab = btn.dataset.tab;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

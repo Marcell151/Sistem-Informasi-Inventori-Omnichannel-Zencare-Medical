@@ -810,9 +810,8 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
 #pack_camera_view video {
     width: 100% !important;
     height: auto !important;
-    min-height: 240px !important;
     max-height: 360px !important;
-    object-fit: contain !important;
+    object-fit: fill !important;
     border-radius: 0.75rem !important;
     display: block !important;
     margin: 0 auto !important;
@@ -888,7 +887,7 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
         </div>
 
         <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center gap-2">
-            <span class="text-[11px] text-slate-500">Arahkan barcode kardus / SN ke kotak kamera</span>
+            <span class="text-[11px] text-slate-500">Tahan stiker &plusmn;20&ndash;30 cm agar tidak buram</span>
             <div class="flex items-center gap-2">
                 <input type="file" id="pack_file_scanner_input" accept="image/*" class="hidden" onchange="scanPackBarcodeFromFile(this)">
                 <label for="pack_file_scanner_input" class="cursor-pointer px-3.5 py-2.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition inline-flex items-center gap-1.5">
@@ -1284,8 +1283,17 @@ function updatePackCameraItemsList() {
     }
 }
 
+function resetPackScanState() {
+    packLastBarcode = '';
+    packLastTimestamp = 0;
+    if (typeof ZenCareBarcodeBoost !== 'undefined') {
+        ZenCareBarcodeBoost.resetCandidate('pack_camera_view');
+    }
+}
+
 async function openPackCameraScanner(targetStatus) {
     packCurrentTargetStatus = targetStatus;
+    resetPackScanState();
     
     // Tutup popup Swal packing sementara
     if (typeof Swal !== 'undefined' && Swal.isVisible()) {
@@ -1308,6 +1316,9 @@ async function openPackCameraScanner(targetStatus) {
 async function closePackCameraModal() {
     let modal = document.getElementById('pack_camera_modal');
     let content = document.getElementById('pack_camera_modal_content');
+    if (typeof ZenCareBarcodeBoost !== 'undefined') {
+        ZenCareBarcodeBoost.stop('pack_camera_view');
+    }
     
     if (packHtml5QrCode && isPackCameraRunning) {
         try {
@@ -1315,6 +1326,7 @@ async function closePackCameraModal() {
         } catch(e) {}
         isPackCameraRunning = false;
     }
+    resetPackScanState();
     
     content.classList.remove('scale-100', 'opacity-100');
     content.classList.add('scale-95', 'opacity-0');
@@ -1329,23 +1341,16 @@ function getPackSupportedFormats() {
     return [
         Html5QrcodeSupportedFormats.CODE_128,
         Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
-        Html5QrcodeSupportedFormats.CODE_39,
-        Html5QrcodeSupportedFormats.CODE_93,
         Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.UPC_E,
-        Html5QrcodeSupportedFormats.ITF,
-        Html5QrcodeSupportedFormats.CODABAR,
         Html5QrcodeSupportedFormats.QR_CODE,
-        Html5QrcodeSupportedFormats.DATA_MATRIX,
-        Html5QrcodeSupportedFormats.AZTEC
+        Html5QrcodeSupportedFormats.DATA_MATRIX
     ];
 }
 
 function pickBestPackCameraDevice(devices) {
     if (!devices || !devices.length) return null;
-    let isBad = (lbl) => /\b(ir|infrared|depth|virtual|obs|snap|droidcam)\b/i.test(lbl || '');
-    let isBack = (lbl) => /\b(back|rear|environment|belakang|usb)\b/i.test(lbl || '');
+    let isBad = (lbl) => /\b(ir|infrared|depth|virtual|obs|snap)\b/i.test(lbl || '');
+    let isBack = (lbl) => /\b(back|rear|environment|belakang|usb|droidcam)\b/i.test(lbl || '');
     let valid = devices.filter(d => !isBad(d.label));
     let pool = valid.length ? valid : devices;
     let pref = pool.find(d => isBack(d.label));
@@ -1386,31 +1391,50 @@ async function startPackCamera(cameraId = null) {
         }
         
         const packQrbox = function(viewfinderWidth, viewfinderHeight) {
-            let w = Math.min(Math.floor(viewfinderWidth * 0.88), 380);
-            let h = Math.min(Math.floor(viewfinderHeight * 0.58), 200);
-            return { width: Math.max(w, 220), height: Math.max(h, 120) };
+            let w = Math.min(Math.floor(viewfinderWidth * 0.90), 440);
+            let h = Math.min(Math.floor(viewfinderHeight * 0.56), 220);
+            return { width: Math.max(w, 220), height: Math.max(h, 110) };
         };
-        const vc = (typeof chosenCamera === 'string')
+        const vcFhd = (typeof chosenCamera === 'string')
+            ? { deviceId: { exact: chosenCamera }, width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 } }
+            : { ...chosenCamera, width: { ideal: 1920, min: 1280 }, height: { ideal: 1080, min: 720 } };
+        const vcHd = (typeof chosenCamera === 'string')
             ? { deviceId: { exact: chosenCamera }, width: { ideal: 1280 }, height: { ideal: 720 } }
             : { ...chosenCamera, width: { ideal: 1280 }, height: { ideal: 720 } };
 
         try {
             await packHtml5QrCode.start(
                 chosenCamera,
-                { fps: 20, qrbox: packQrbox, videoConstraints: vc },
+                { fps: 12, qrbox: packQrbox, videoConstraints: vcFhd },
                 (decodedText) => onPackCameraSuccess(decodedText),
                 () => {}
             );
-        } catch (startErr) {
-            await packHtml5QrCode.start(
-                chosenCamera,
-                { fps: 20, qrbox: packQrbox },
-                (decodedText) => onPackCameraSuccess(decodedText),
-                () => {}
-            );
+        } catch (fhdErr) {
+            try {
+                await packHtml5QrCode.start(
+                    chosenCamera,
+                    { fps: 12, qrbox: packQrbox, videoConstraints: vcHd },
+                    (decodedText) => onPackCameraSuccess(decodedText),
+                    () => {}
+                );
+            } catch (startErr) {
+                await packHtml5QrCode.start(
+                    chosenCamera,
+                    { fps: 12, qrbox: packQrbox },
+                    (decodedText) => onPackCameraSuccess(decodedText),
+                    () => {}
+                );
+            }
         }
+
+        try {
+            await packHtml5QrCode.applyVideoConstraints({ advanced: [{ focusMode: 'continuous' }] });
+        } catch (afErr) {}
         
         isPackCameraRunning = true;
+        if (typeof ZenCareBarcodeBoost !== 'undefined') {
+            ZenCareBarcodeBoost.start('pack_camera_view', (decodedText) => onPackCameraSuccess(decodedText));
+        }
         if (loading) loading.classList.add('hidden');
         if (badge) {
             badge.innerHTML = '<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>Kamera Aktif</span>';
@@ -1431,6 +1455,9 @@ async function startPackCamera(cameraId = null) {
 }
 
 async function changePackCamera(newDeviceId) {
+    if (typeof ZenCareBarcodeBoost !== 'undefined') {
+        ZenCareBarcodeBoost.stop('pack_camera_view');
+    }
     if (packHtml5QrCode && isPackCameraRunning) {
         await packHtml5QrCode.stop();
         isPackCameraRunning = false;
@@ -1450,6 +1477,9 @@ async function scanPackBarcodeFromFile(input) {
     if (badge) badge.innerText = 'Memindai Foto...';
 
     try {
+        if (typeof ZenCareBarcodeBoost !== 'undefined') {
+            ZenCareBarcodeBoost.stop('pack_camera_view');
+        }
         if (!packHtml5QrCode) {
             packHtml5QrCode = new Html5Qrcode("pack_camera_view", {
                 formatsToSupport: getPackSupportedFormats(),
@@ -1461,14 +1491,25 @@ async function scanPackBarcodeFromFile(input) {
             await packHtml5QrCode.stop();
             isPackCameraRunning = false;
         }
-        const res = await packHtml5QrCode.scanFileV2(file, false);
-        if (res && res.decodedText) {
-            packLastTimestamp = 0;
-            onPackCameraSuccess(res.decodedText);
+        let decodedText = null;
+        try {
+            const res = await packHtml5QrCode.scanFileV2(file, false);
+            if (res && res.decodedText) decodedText = res.decodedText;
+        } catch (zxErr) {}
+
+        if (!decodedText && typeof ZenCareBarcodeBoost !== 'undefined') {
+            decodedText = await ZenCareBarcodeBoost.decodeFileFallback(file);
+        }
+
+        if (decodedText) {
+            resetPackScanState();
+            onPackCameraSuccess(decodedText);
         } else {
+            resetPackScanState();
             Swal.fire('Barcode Tidak Terbaca', 'Pastikan foto barcode jelas dan tidak buram.', 'warning');
         }
     } catch (err) {
+        resetPackScanState();
         Swal.fire('Gagal Membaca Foto Barcode', (err.message || err || 'Barcode tidak terdeteksi.'), 'warning');
     } finally {
         input.value = '';
@@ -1481,7 +1522,9 @@ async function scanPackBarcodeFromFile(input) {
 }
 
 function onPackCameraSuccess(code) {
-    code = code.trim();
+    if (typeof Swal !== 'undefined' && Swal.isVisible()) return;
+    code = (code || '').trim();
+    if (code.length < 4) return;
     let now = Date.now();
     if (code === packLastBarcode && (now - packLastTimestamp) < 1800) {
         return;
@@ -1513,6 +1556,7 @@ function onPackCameraSuccess(code) {
 function handlePackScan(val, targetStatus, fromCamera = false) {
     // KUNCI GANDA 1: Blokir Eceran untuk Pesanan E-Commerce
     if (val.includes(".")) {
+        resetPackScanState();
         Swal.fire({
             title: "&#10060; BLOKIR FATAL!",
             html: `Pesanan E-Commerce <b>HANYA</b> melayani <b>Grosir (Kardus/Box)</b>.<br><br>
@@ -1542,6 +1586,7 @@ function handlePackScan(val, targetStatus, fromCamera = false) {
     }
 
     if (expiredMatch) {
+        resetPackScanState();
         Swal.fire({
             title: "OBAT KADALUARSA TERDETEKSI",
             html: `Fisik batch yang Anda scan: <b>${expiredMatch.batch}</b> (${expiredMatch.name})<br><br>
@@ -1564,6 +1609,7 @@ function handlePackScan(val, targetStatus, fromCamera = false) {
         .then(r => r.json())
         .then(res => {
             if (res.found && res.is_expired) {
+                resetPackScanState();
                 Swal.fire({
                     title: "OBAT KADALUARSA TERDETEKSI",
                     html: `Fisik batch yang Anda scan: <b>${res.no_batch}</b> (${res.nama})<br><br>
@@ -1613,6 +1659,7 @@ function proceedPackingMatch(val, targetStatus, fromCamera = false) {
             (i.cleanBatch && i.cleanBatch.toLowerCase() === val)
         ));
         if (alreadyVerified) {
+            resetPackScanState();
             let nextPending = pendingItems.find(i => !i.verified);
             let nextTarget = nextPending ? (nextPending.cleanBatch || nextPending.instruksi) : '';
             Swal.fire({
@@ -1735,10 +1782,12 @@ function proceedPackingMatch(val, targetStatus, fromCamera = false) {
                     showPackingModal(targetStatus);
                 }
             } else {
+                resetPackScanState();
                 if (!fromCamera) showPackingModal(targetStatus);
             }
         });
     } else if (wrongProductIdx !== -1) {
+        resetPackScanState();
         Swal.fire({
             title: "&#10060; SALAH PRODUK!",
             html: `Anda men-scan barang yang <b>BERBEDA</b> dari daftar pesanan!<br><br>
@@ -1749,6 +1798,7 @@ function proceedPackingMatch(val, targetStatus, fromCamera = false) {
             if (!fromCamera) showPackingModal(targetStatus); 
         });
     } else {
+        resetPackScanState();
         Swal.fire({
             icon: "error",
             title: "Tidak Ditemukan",
@@ -1758,8 +1808,42 @@ function proceedPackingMatch(val, targetStatus, fromCamera = false) {
         });
     }
 }
+
+// Global USB/WiFi HP Scanner Listener saat modal Packing terbuka (jika fokus terlepas dari #pack-scanner)
+(function() {
+    let packBuf = '';
+    let packBufTimer = null;
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey || e.altKey || e.metaKey) return;
+        const inp = document.getElementById('pack-scanner');
+        const camOpen = !document.getElementById('pack_camera_modal')?.classList.contains('hidden');
+        if (!inp && !camOpen) return;
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+
+        if (e.key === 'Enter' || e.key === 'Tab') {
+            if (packBuf.trim().length > 2) {
+                e.preventDefault();
+                const val = packBuf.trim().toLowerCase();
+                packBuf = '';
+                clearTimeout(packBufTimer);
+                handlePackScan(val, packCurrentTargetStatus || (activeForm?.querySelector('select[name="status_pesanan"]')?.value || 'Dikirim'), camOpen);
+            } else {
+                packBuf = '';
+                clearTimeout(packBufTimer);
+            }
+            return;
+        }
+        if (e.key && e.key.length === 1) {
+            packBuf += e.key;
+            clearTimeout(packBufTimer);
+            packBufTimer = setTimeout(() => { packBuf = ''; }, 600);
+        }
+    });
+})();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="../assets/js/html5-qrcode.min.js"></script>
+<script src="../assets/js/html5-qrcode.min.js?v=20261122c"></script>
+<script src="../assets/js/zxing-wasm-reader.js?v=20261122c"></script>
+<script src="../assets/js/zencare-barcode-boost.js?v=20261122c"></script>
 
 <?php layoutEnd(); ?>

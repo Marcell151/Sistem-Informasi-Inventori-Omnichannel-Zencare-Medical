@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lembar Cetak Stiker Scan Demo (A4 Siap Gunting) — ZenCare Medical</title>
+<script src="../assets/js/JsBarcode.all.min.js"></script>
+<script>if (typeof JsBarcode === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>'); }</script>
+<style>
+  @page { size: A4 portrait; margin: 8mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #f1f5f9; color: #0f172a; }
+  .toolbar { position: sticky; top: 0; z-index: 20; background: #0f2d5a; color: #fff; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .toolbar h1 { font-size: 14px; font-weight: 800; }
+  .toolbar p { font-size: 11px; color: #bae6fd; margin-top: 2px; }
+  .toolbar button { background: #1a75d2; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; }
+  .toolbar button:hover { background: #155da5; }
+  .sheet { width: 194mm; margin: 14px auto; background: #fff; padding: 4mm; box-shadow: 0 4px 18px rgba(0,0,0,.08); }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4mm; }
+  .grid.compact { grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+  .sticker {
+    border: 1.2px dashed #64748b; border-radius: 4px; padding: 3.5mm 3mm 2.8mm;
+    background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    min-height: 44mm; page-break-inside: avoid;
+  }
+  .st-top { width: 100%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 1.5mm; margin-bottom: 1.5mm; }
+  .st-brand { font-size: 7.5pt; font-weight: 800; color: #0f2d5a; letter-spacing: .3px; }
+  .st-tag { font-size: 6.5pt; font-weight: 800; padding: 1px 5px; border-radius: 3px; border: 1px solid #cbd5e1; color: #0f2d5a; background: #eef6fb; }
+  .st-tag.warn { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+  .st-tag.danger { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+  .st-tag.ok { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+  .st-name { font-size: 8pt; font-weight: 700; text-align: center; color: #0f172a; line-height: 1.2; margin-bottom: 1mm; }
+  .st-svg { width: auto; max-width: 100%; height: auto; max-height: 22mm; display: block; }
+  .st-meta { width: 100%; display: flex; justify-content: space-between; font-size: 6.8pt; color: #475569; margin-top: 1mm; border-top: 1px dotted #cbd5e1; padding-top: 1mm; }
+  .st-note { font-size: 6.5pt; color: #64748b; text-align: center; margin-top: 1mm; font-style: italic; }
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none !important; }
+    .sheet { width: 100%; margin: 0; padding: 0; box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <div>
+    <h1>Lembar Stiker Scan Demo (15 Barcode Siap Gunting — 1 Halaman A4)</h1>
+    <p>Gunakan kertas stiker A4 atau HVS/karton tebal, gunting sepanjang garis putus-putus untuk tes scan kamera saat sidang.</p>
+  </div>
+  <button onclick="window.print()">Cetak 1 Halaman A4 (Ctrl+P)</button>
+</div>
+
+<div class="sheet">
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+const STICKERS = [
+  { code: 'HUF-24J089',      name: 'Hufagrip Merah (TMP) — Karton',  exp: 'EXP: 20/02/2027', tag: 'FEFO 1',     cls: 'ok',     note: 'Batch Dus FEFO terdepan' },
+  { code: 'HUF-TMP-26',      name: 'Hufagrip Merah (TMP) — Karton',  exp: 'EXP: 15/08/2027', tag: 'NON-FEFO',   cls: 'warn',   note: 'Scan ini untuk uji ANOMALI FEFO' },
+  { code: 'HUF-24J089.A',    name: 'Hufagrip Merah (TMP) — Eceran',  exp: 'EXP: 20/02/2027', tag: 'ECERAN',     cls: '',       note: 'Sub-batch eceran (50 Botol)' },
+
+  { code: 'HUFPIL-2027-01',  name: 'Hufagrip Biru (Pilek) — Karton', exp: 'EXP: 15/08/2028', tag: 'DUS UTUH',   cls: '',       note: 'Batch Dus utuh (10 Karton)' },
+  { code: 'HUFPIL-2027-01.A',name: 'Hufagrip Biru (Pilek) — Eceran', exp: 'EXP: 15/08/2028', tag: 'ECER SISA 5',cls: 'ok',     note: 'Scan 1/2 saat beli 10 Botol' },
+  { code: 'HUFPIL-2027-01.D',name: 'Hufagrip Biru (Pilek) — Eceran', exp: 'EXP: 15/08/2028', tag: 'HASIL BONGKAR',cls:'warn',  note: 'Scan 2/2 setelah Bongkar Box' },
+
+  { code: 'SNM-24K061',      name: 'Sanmol Sirup Anak 60ml',         exp: 'EXP: 15/10/2026', tag: 'EXPIRED',    cls: 'danger', note: 'Uji BLOKIR OBAT KADALUARSA' },
+  { code: 'AMX-2026-01',     name: 'Amoxicillin 500mg — Box',        exp: 'EXP: 15/12/2027', tag: 'STOK 1 BOX', cls: 'warn',   note: 'Uji Race Condition 1 Box' },
+  { code: 'OMR-7120-102',    name: 'Tensimeter Digital Omron',       exp: 'SN ALKES',        tag: 'TERSEDIA',   cls: 'ok',     note: 'SN Valid 1/2 (Race Condition)' },
+
+  { code: 'OMR-7120-103',    name: 'Tensimeter Digital Omron',       exp: 'SN ALKES',        tag: 'TERSEDIA',   cls: 'ok',     note: 'SN Valid 2/2' },
+  { code: 'OMR-7120-101',    name: 'Tensimeter Digital Omron',       exp: 'SN ALKES',        tag: 'TERJUAL',    cls: 'warn',   note: 'Uji Blokir SN Terjual + Garansi' },
+  { code: 'OMR-7120-R01',    name: 'Tensimeter Digital Omron',       exp: 'SN ALKES',        tag: 'RUSAK',      cls: 'danger', note: 'Uji Blokir Unit Alkes Rusak' },
+
+  { code: 'OMR-MC246-02',    name: 'Termometer Digital Omron',       exp: 'SN ALKES',        tag: 'TERSEDIA',   cls: 'ok',     note: 'SN Valid (Dipakai jika POS duluan)' },
+  { code: 'OMR-MC246-05',    name: 'Termometer Digital Omron',       exp: 'SN ALKES',        tag: 'TERSEDIA',   cls: 'ok',     note: 'SN POS 1/2 (setelah E-Com ambil 3)' },
+  { code: 'OMR-MC246-06',    name: 'Termometer Digital Omron',       exp: 'SN ALKES',        tag: 'TERSEDIA',   cls: 'ok',     note: 'SN POS 2/2 (stok tepat jadi 0)' }
+];
+
+const grid = document.getElementById('grid');
+STICKERS.forEach((s, idx) => {
+  const div = document.createElement('div');
+  div.className = 'sticker';
+  div.innerHTML = `
+    <div class="st-top">
+      <span class="st-brand">ZENCARE MEDICAL</span>
+      <span class="st-tag ${s.cls}">${s.tag}</span>
+    </div>
+    <div class="st-name">${s.name}</div>
+    <svg id="bc_${idx}" class="st-svg"></svg>
+    <div class="st-meta"><span><b>${s.code}</b></span><span>${s.exp}</span></div>
+    <div class="st-note">${s.note}</div>
+  `;
+  grid.appendChild(div);
+  if (typeof JsBarcode !== 'undefined') {
+    JsBarcode('#bc_' + idx, s.code, {
+      format: 'CODE128',
+      width: 2.1,
+      height: 48,
+      margin: 12,
+      displayValue: false
+    });
+  }
+});
+</script>
+</body>
+</html>

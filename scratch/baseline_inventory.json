@@ -1,8 +1,8 @@
 {
-    "generated_at": "2026-11-21 12:03:18",
+    "generated_at": "2026-11-22 10:30:41",
     "source": "Demo_Bersih.sql (Demo 4)",
     "max_sesi_opname_id": 11,
-    "max_kartu_stok_id": 464,
+    "max_kartu_stok_id": 474,
     "stok_batch": [
         {
             "id": 1,
@@ -31,12 +31,12 @@
         },
         {
             "id": 6,
-            "stok_sisa": 250,
+            "stok_sisa": 50,
             "tgl_exp": "2027-02-20"
         },
         {
             "id": 7,
-            "stok_sisa": 30,
+            "stok_sisa": 10,
             "tgl_exp": "2027-12-15"
         },
         {
@@ -46,7 +46,7 @@
         },
         {
             "id": 9,
-            "stok_sisa": 192,
+            "stok_sisa": 168,
             "tgl_exp": "2028-05-10"
         },
         {
@@ -61,27 +61,27 @@
         },
         {
             "id": 12,
-            "stok_sisa": 200,
+            "stok_sisa": 50,
             "tgl_exp": "2027-08-15"
         },
         {
             "id": 13,
-            "stok_sisa": 45,
+            "stok_sisa": 0,
             "tgl_exp": "2027-08-15"
         },
         {
             "id": 14,
-            "stok_sisa": 400,
+            "stok_sisa": 0,
             "tgl_exp": "2028-06-20"
         },
         {
             "id": 15,
-            "stok_sisa": 47,
+            "stok_sisa": 0,
             "tgl_exp": "2028-06-20"
         },
         {
             "id": 16,
-            "stok_sisa": 34850,
+            "stok_sisa": 500,
             "tgl_exp": "2028-08-15"
         },
         {
@@ -121,22 +121,22 @@
         },
         {
             "id": 24,
-            "stok_sisa": 312,
+            "stok_sisa": 288,
             "tgl_exp": "2027-11-30"
         },
         {
             "id": 25,
-            "stok_sisa": 12,
+            "stok_sisa": 8,
             "tgl_exp": "2027-11-30"
         },
         {
             "id": 26,
-            "stok_sisa": 220,
+            "stok_sisa": 190,
             "tgl_exp": "2027-11-30"
         },
         {
             "id": 27,
-            "stok_sisa": 2112,
+            "stok_sisa": 2100,
             "tgl_exp": "2027-11-30"
         },
         {
@@ -206,7 +206,7 @@
         },
         {
             "id": 41,
-            "stok_sisa": 80,
+            "stok_sisa": 20,
             "tgl_exp": "2027-11-30"
         },
         {
@@ -236,7 +236,7 @@
         },
         {
             "id": 47,
-            "stok_sisa": 150,
+            "stok_sisa": 50,
             "tgl_exp": "2027-10-15"
         },
         {
@@ -346,7 +346,7 @@
         },
         {
             "id": 80,
-            "stok_sisa": 48,
+            "stok_sisa": 5,
             "tgl_exp": "2028-08-15"
         },
         {
@@ -356,7 +356,7 @@
         },
         {
             "id": 82,
-            "stok_sisa": 48,
+            "stok_sisa": 0,
             "tgl_exp": "2028-08-15"
         },
         {
@@ -381,12 +381,12 @@
         },
         {
             "id": 87,
-            "stok_sisa": 10,
+            "stok_sisa": 7,
             "tgl_exp": "2027-11-30"
         },
         {
             "id": 88,
-            "stok_sisa": 12,
+            "stok_sisa": 7,
             "tgl_exp": "2027-11-30"
         },
         {
@@ -546,12 +546,12 @@
         },
         {
             "id": 123,
-            "stok_sisa": 100,
+            "stok_sisa": 0,
             "tgl_exp": "2027-08-15"
         },
         {
             "id": 124,
-            "stok_sisa": 50,
+            "stok_sisa": 0,
             "tgl_exp": "2028-08-15"
         },
         {
@@ -768,11 +768,11 @@
     "stok_toko": [
         {
             "id": 1,
-            "stok": 38
+            "stok": 18
         },
         {
             "id": 2,
-            "stok": 384
+            "stok": 360
         },
         {
             "id": 3,
@@ -780,19 +780,19 @@
         },
         {
             "id": 4,
-            "stok": 8
+            "stok": 2
         },
         {
             "id": 5,
-            "stok": 11
+            "stok": 5
         },
         {
             "id": 6,
-            "stok": 1092
+            "stok": 150
         },
         {
             "id": 7,
-            "stok": 34996
+            "stok": 505
         },
         {
             "id": 8,
@@ -816,15 +816,15 @@
         },
         {
             "id": 13,
-            "stok": 360
+            "stok": 332
         },
         {
             "id": 14,
-            "stok": 250
+            "stok": 217
         },
         {
             "id": 15,
-            "stok": 2160
+            "stok": 2143
         },
         {
             "id": 16,
@@ -872,7 +872,7 @@
         },
         {
             "id": 27,
-            "stok": 100
+            "stok": 40
         },
         {
             "id": 28,
@@ -896,7 +896,7 @@
         },
         {
             "id": 33,
-            "stok": 200
+            "stok": 100
         },
         {
             "id": 34,
@@ -1036,39 +1036,39 @@
         },
         {
             "id": 4,
-            "status": "Tersedia",
+            "status": "Terjual",
             "catatan": null,
-            "id_penjualan": null
+            "id_penjualan": 93
         },
         {
             "id": 5,
-            "status": "Tersedia",
+            "status": "Terjual",
             "catatan": null,
-            "id_penjualan": null
+            "id_penjualan": 93
         },
         {
             "id": 6,
-            "status": "Tersedia",
+            "status": "Terjual",
             "catatan": null,
-            "id_penjualan": null
+            "id_penjualan": 93
         },
         {
             "id": 7,
-            "status": "Tersedia",
+            "status": "Terjual",
             "catatan": null,
-            "id_penjualan": null
+            "id_penjualan": 93
         },
         {
             "id": 8,
-            "status": "Tersedia",
+            "status": "Terjual",
             "catatan": null,
-            "id_penjualan": null
+            "id_penjualan": 93
         },
         {
             "id": 9,
-            "status": "Tersedia",
+            "status": "Terjual",
             "catatan": null,
-            "id_penjualan": null
+            "id_penjualan": 93
         },
         {
             "id": 10,
@@ -1120,39 +1120,39 @@
         },
         {
             "id": 18,
-            "status": "Tersedia",
+            "status": "Terjual",
             "catatan": null,
-            "id_penjualan": null
+            "id_penjualan": 94
         },
         {
             "id": 19,
-            "status": "Tersedia",
+            "status": "Terjual",
             "catatan": null,
-            "id_penjualan": null
+            "id_penjualan": 94
         },
         {
             "id": 20,
-            "status": "Tersedia",
+            "status": "Terjual",
             "catatan": null,
-            "id_penjualan": null
+            "id_penjualan": 94
         },
         {
             "id": 21,
-            "status": "Tersedia",
+            "status": "Terjual",
             "catatan": null,
-            "id_penjualan": null
+            "id_penjualan": 94
         },
         {
             "id": 22,
-            "status": "Tersedia",
+            "status": "Terjual",
             "catatan": null,
-            "id_penjualan": null
+            "id_penjualan": 94
         },
         {
             "id": 23,
-            "status": "Tersedia",
+            "status": "Terjual",
             "catatan": null,
-            "id_penjualan": null
+            "id_penjualan": 94
         },
         {
             "id": 24,
