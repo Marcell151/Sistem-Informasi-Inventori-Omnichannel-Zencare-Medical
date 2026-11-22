@@ -810,23 +810,25 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
 #pack_camera_view video {
     width: 100% !important;
     height: auto !important;
-    max-height: 360px !important;
-    object-fit: fill !important;
+    max-height: clamp(180px, 34vh, 250px) !important;
+    object-fit: cover !important;
     border-radius: 0.75rem !important;
     display: block !important;
     margin: 0 auto !important;
 }
 #pack_camera_view canvas { border-radius: 0.75rem !important; }
 #pack_camera_view #qr-shaded-region { border-radius: 0.75rem !important; }
+/* Pastikan popup notifikasi SweetAlert2 SELALU tampil di atas modal kamera */
+.swal2-container { z-index: 20000 !important; }
 </style>
 
 <!-- Modal Live Barcode Scanner Kamera untuk Verifikasi Packing E-Commerce -->
-<div id="pack_camera_modal" class="fixed inset-0 z-[10000] hidden bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0 duration-200 border border-slate-200" id="pack_camera_modal_content">
+<div id="pack_camera_modal" class="fixed inset-0 z-50 hidden bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white w-full max-w-lg max-h-[94vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0 duration-200 border border-slate-200" id="pack_camera_modal_content">
         <!-- Header Modal -->
-        <div class="bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-4 flex items-center justify-between text-white">
+        <div class="bg-gradient-to-r from-indigo-600 to-blue-600 px-4 py-3 flex items-center justify-between text-white shrink-0">
             <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
                 </div>
                 <div>
@@ -839,9 +841,9 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
             </button>
         </div>
 
-        <div class="p-5 space-y-4">
+        <div class="p-3.5 sm:p-4 space-y-3 overflow-y-auto flex-1 min-h-0">
             <!-- Camera Viewport Box -->
-            <div class="relative bg-slate-900 rounded-xl overflow-hidden shadow-inner border-2 border-slate-700 min-h-[250px] flex items-center justify-center">
+            <div class="relative bg-slate-900 rounded-xl overflow-hidden shadow-inner border-2 border-slate-700 min-h-[180px] flex items-center justify-center">
                 <div id="pack_camera_view" class="w-full"></div>
                 <div id="pack_camera_loading" class="text-center p-4 text-white text-xs">
                     <div class="inline-block w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin mb-2"></div>
@@ -851,13 +853,13 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
 
             <!-- Device Selector & Status Badge -->
             <div class="flex items-center justify-between gap-3 text-xs">
-                <div class="flex-1">
+                <div class="flex-1 min-w-0">
                     <label class="block text-[11px] font-bold text-slate-500 mb-1">Pilih Perangkat Kamera:</label>
                     <select id="pack_camera_select" onchange="changePackCamera(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-semibold focus:outline-none focus:border-indigo-500">
                         <option value="">Deteksi kamera...</option>
                     </select>
                 </div>
-                <div class="text-right">
+                <div class="text-right shrink-0">
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800" id="pack_scan_status_badge">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         <span>Scanner Aktif</span>
@@ -866,35 +868,35 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
             </div>
 
             <!-- Checklist Status Barang yang Harus Di-scan -->
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                <div class="text-[11px] font-bold text-slate-700 mb-2 flex items-center justify-between">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                <div class="text-[11px] font-bold text-slate-700 mb-1.5 flex items-center justify-between">
                     <span>Daftar Verifikasi Barang:</span>
                     <span id="pack_progress_text" class="text-indigo-600 font-extrabold text-[11px]">0 / 0 Selesai</span>
                 </div>
-                <div id="pack_camera_items_list" class="space-y-1.5 max-h-32 overflow-y-auto pr-1 text-xs">
+                <div id="pack_camera_items_list" class="space-y-1.5 max-h-28 overflow-y-auto pr-1 text-xs">
                     <!-- Dinamis terisi dari pendingItems -->
                 </div>
             </div>
 
             <!-- Last Scanned Info Card -->
-            <div id="pack_last_scanned_box" class="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 flex items-center justify-between">
-                <div>
-                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">Hasil Scan Terakhir:</span>
-                    <span id="pack_last_scanned_code" class="font-mono font-bold text-sm text-slate-800">-</span>
+            <div id="pack_last_scanned_box" class="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <span id="pack_last_scanned_label" class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">Hasil Scan Terakhir:</span>
+                    <span id="pack_last_scanned_code" class="font-mono font-bold text-sm text-slate-800 block truncate">-</span>
                 </div>
-                <span id="pack_last_scanned_time" class="text-[11px] text-slate-500 font-medium">Belum ada scan</span>
+                <span id="pack_last_scanned_time" class="text-[11px] text-slate-500 font-medium shrink-0">Belum ada scan</span>
             </div>
         </div>
 
-        <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center gap-2">
+        <div class="px-4 py-3 border-t border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center gap-2 shrink-0">
             <span class="text-[11px] text-slate-500">Tahan stiker &plusmn;20&ndash;30 cm agar tidak buram</span>
             <div class="flex items-center gap-2">
                 <input type="file" id="pack_file_scanner_input" accept="image/*" class="hidden" onchange="scanPackBarcodeFromFile(this)">
-                <label for="pack_file_scanner_input" class="cursor-pointer px-3.5 py-2.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition inline-flex items-center gap-1.5">
+                <label for="pack_file_scanner_input" class="cursor-pointer px-3 py-2 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition inline-flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                     <span>Upload Foto Barcode</span>
                 </label>
-                <button type="button" onclick="closePackCameraModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 transition">
+                <button type="button" onclick="closePackCameraModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 transition">
                     Tutup Scanner
                 </button>
             </div>
@@ -1283,11 +1285,35 @@ function updatePackCameraItemsList() {
     }
 }
 
-function resetPackScanState() {
+function setPackLastScanFeedback(type, labelText, codeText) {
+    const box = document.getElementById('pack_last_scanned_box');
+    const lbl = document.getElementById('pack_last_scanned_label');
+    const cd = document.getElementById('pack_last_scanned_code');
+    if (cd && codeText !== undefined) cd.innerText = codeText;
+    if (!box || !lbl) return;
+    if (type === 'error') {
+        box.className = 'p-2.5 rounded-xl bg-rose-50 border border-rose-300 text-xs text-rose-900 flex items-center justify-between gap-2';
+        lbl.className = 'text-[10px] font-bold text-rose-600 uppercase tracking-wider block';
+    } else if (type === 'success') {
+        box.className = 'p-2.5 rounded-xl bg-emerald-50 border border-emerald-300 text-xs text-emerald-900 flex items-center justify-between gap-2';
+        lbl.className = 'text-[10px] font-bold text-emerald-700 uppercase tracking-wider block';
+    } else {
+        box.className = 'p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 flex items-center justify-between gap-2';
+        lbl.className = 'text-[10px] font-bold text-blue-600 uppercase tracking-wider block';
+    }
+    if (labelText) lbl.innerText = labelText;
+}
+
+function resetPackScanState(errorMsg = null) {
     packLastBarcode = '';
     packLastTimestamp = 0;
     if (typeof ZenCareBarcodeBoost !== 'undefined') {
         ZenCareBarcodeBoost.resetCandidate('pack_camera_view');
+    }
+    if (errorMsg) {
+        setPackLastScanFeedback('error', errorMsg);
+    } else {
+        setPackLastScanFeedback('default', 'Hasil Scan Terakhir:');
     }
 }
 
@@ -1556,7 +1582,7 @@ function onPackCameraSuccess(code) {
 function handlePackScan(val, targetStatus, fromCamera = false) {
     // KUNCI GANDA 1: Blokir Eceran untuk Pesanan E-Commerce
     if (val.includes(".")) {
-        resetPackScanState();
+        resetPackScanState('DITOLAK — Barang Eceran (.A/.B) Dilarang untuk E-Commerce');
         Swal.fire({
             title: "&#10060; BLOKIR FATAL!",
             html: `Pesanan E-Commerce <b>HANYA</b> melayani <b>Grosir (Kardus/Box)</b>.<br><br>
@@ -1586,7 +1612,7 @@ function handlePackScan(val, targetStatus, fromCamera = false) {
     }
 
     if (expiredMatch) {
-        resetPackScanState();
+        resetPackScanState('DITOLAK — Obat Kadaluarsa Terdeteksi');
         Swal.fire({
             title: "OBAT KADALUARSA TERDETEKSI",
             html: `Fisik batch yang Anda scan: <b>${expiredMatch.batch}</b> (${expiredMatch.name})<br><br>
@@ -1700,6 +1726,7 @@ function proceedPackingMatch(val, targetStatus, fromCamera = false) {
     if (matchIdx !== -1) {
         pendingItems[matchIdx].verified = true;
         pendingItems[matchIdx].scannedBatch = val.toUpperCase();
+        setPackLastScanFeedback('success', 'TERVERIFIKASI — ' + pendingItems[matchIdx].nama, val.toUpperCase());
         
         let allDone = pendingItems.every(i => i.verified);
         if (fromCamera && isPackCameraRunning) {
@@ -1787,7 +1814,7 @@ function proceedPackingMatch(val, targetStatus, fromCamera = false) {
             }
         });
     } else if (wrongProductIdx !== -1) {
-        resetPackScanState();
+        resetPackScanState('DITOLAK — Salah Produk / Tidak Cocok dengan Pesanan');
         Swal.fire({
             title: "&#10060; SALAH PRODUK!",
             html: `Anda men-scan barang yang <b>BERBEDA</b> dari daftar pesanan!<br><br>
@@ -1798,7 +1825,7 @@ function proceedPackingMatch(val, targetStatus, fromCamera = false) {
             if (!fromCamera) showPackingModal(targetStatus); 
         });
     } else {
-        resetPackScanState();
+        resetPackScanState('DITOLAK — Barcode Tidak Ditemukan di Daftar Pesanan');
         Swal.fire({
             icon: "error",
             title: "Tidak Ditemukan",
@@ -1844,6 +1871,6 @@ function proceedPackingMatch(val, targetStatus, fromCamera = false) {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="../assets/js/html5-qrcode.min.js?v=20261122c"></script>
 <script src="../assets/js/zxing-wasm-reader.js?v=20261122c"></script>
-<script src="../assets/js/zencare-barcode-boost.js?v=20261122c"></script>
+<script src="../assets/js/zencare-barcode-boost.js?v=20261122f"></script>
 
 <?php layoutEnd(); ?>
