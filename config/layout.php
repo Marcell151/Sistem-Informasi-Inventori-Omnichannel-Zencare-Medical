@@ -500,6 +500,7 @@ function layoutEnd()
           });
       });
     </script>
+    <script src="/inventory_zencare/assets/js/demo-preset-shortcut.js?v=20261123"></script>
     </body></html>';
 }
 
