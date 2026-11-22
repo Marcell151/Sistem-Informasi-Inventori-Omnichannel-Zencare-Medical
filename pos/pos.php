@@ -522,14 +522,31 @@ foreach ($riwayatKasirHariIni as $rTrx) {
             z-index: 20000 !important;
         }
 
+        /* Skala proporsional agar layar laptop 1280px–1536px tetap rapi seperti monitor 1920px */
+        html {
+            font-size: 16px;
+        }
+
+        @media (max-width: 1536px) and (min-width: 1367px) {
+            html {
+                font-size: 14.5px;
+            }
+        }
+
+        @media (max-width: 1366px) and (min-width: 1024px) {
+            html {
+                font-size: 13.5px;
+            }
+        }
+
         .text-\[9px\],
         .text-\[10px\] {
-            font-size: 11.5px !important;
+            font-size: 0.7rem !important;
             line-height: 1.4 !important;
         }
 
         .text-\[11px\] {
-            font-size: 12px !important;
+            font-size: 0.75rem !important;
             line-height: 1.45 !important;
         }
     </style>
@@ -753,11 +770,13 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                                     <td class="py-2 px-3 font-mono font-bold text-[#0f2d5a] text-[11px]">
                                         <?= htmlspecialchars($row['no_invoice'] ?? '-') ?>
                                         <div class="text-[10px] text-slate-400 font-normal">
-                                            <?= date('d/m H:i', strtotime($row['created_at'])) ?> WIB</div>
+                                            <?= date('d/m H:i', strtotime($row['created_at'])) ?> WIB
+                                        </div>
                                     </td>
                                     <td class="py-2 px-3">
                                         <div class="font-semibold text-slate-800">
-                                            <?= htmlspecialchars($row['nama_produk'] ?? '-') ?></div>
+                                            <?= htmlspecialchars($row['nama_produk'] ?? '-') ?>
+                                        </div>
                                         <div class="mt-0.5"><span
                                                 class="inline-block px-1.5 py-0.2 rounded text-[9px] font-semibold bg-slate-100 text-slate-600 border border-slate-200"><?= $isBesar ? 'Satuan Besar (Grosir)' : 'Satuan Kecil (Eceran)' ?></span>
                                         </div>
@@ -790,7 +809,8 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                                                 <span>Disesuaikan (<?= $qtyTotal ?>/<?= $qtyTotal ?>)</span>
                                             </span>
                                             <div class="text-[9px] text-slate-500 mt-0.5 font-mono">di
-                                                <?= htmlspecialchars($row['no_invoice_resolved'] ?? '-') ?></div>
+                                                <?= htmlspecialchars($row['no_invoice_resolved'] ?? '-') ?>
+                                            </div>
                                         <?php elseif ($rowStatus === 'sebagian'): ?>
                                             <span
                                                 class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-300">
@@ -802,7 +822,8 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                                                 <span>Sebagian (<?= $qtyDis ?>/<?= $qtyTotal ?>)</span>
                                             </span>
                                             <div class="text-[9px] text-amber-700 mt-0.5 font-medium">Sisa
-                                                <?= ($qtyTotal - $qtyDis) ?>             <?= htmlspecialchars($satLabel) ?> terlewat</div>
+                                                <?= ($qtyTotal - $qtyDis) ?>             <?= htmlspecialchars($satLabel) ?> terlewat
+                                            </div>
                                         <?php else: ?>
                                             <span
                                                 class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-300">
@@ -1282,7 +1303,8 @@ foreach ($riwayatKasirHariIni as $rTrx) {
             id="camera_modal_content">
             <div class="bg-[#0f2d5a] px-4 py-3 flex items-center justify-between text-white shrink-0">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+                    <div
+                        class="w-8 h-8 rounded bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
                         <svg class="w-4 h-4 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -1378,7 +1400,8 @@ foreach ($riwayatKasirHariIni as $rTrx) {
                 </div>
             </div>
 
-            <div class="px-4 py-3 border-t border-slate-200 bg-[#f8fafc] flex flex-wrap justify-between items-center gap-2 shrink-0">
+            <div
+                class="px-4 py-3 border-t border-slate-200 bg-[#f8fafc] flex flex-wrap justify-between items-center gap-2 shrink-0">
                 <span class="text-[11px] text-slate-500">Tahan stiker &plusmn;20&ndash;30 cm agar tidak buram &bull;
                     Otomatis bip saat terbaca.</span>
                 <div class="flex items-center gap-2">

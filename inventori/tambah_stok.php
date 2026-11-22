@@ -657,41 +657,55 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
                     table-layout: auto;
                 }
 
+                .table-penerimaan .select2-container {
+                    width: 100% !important;
+                    max-width: 260px;
+                }
+
+                .table-penerimaan .select2-selection__rendered {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
                 @media (max-width: 1366px) {
                     .table-penerimaan th {
                         font-size: 11px !important;
-                        padding-left: 3px !important;
-                        padding-right: 3px !important;
+                        padding-left: 5px !important;
+                        padding-right: 5px !important;
                     }
 
                     .table-penerimaan td {
-                        padding-left: 3px !important;
-                        padding-right: 3px !important;
+                        padding-left: 5px !important;
+                        padding-right: 5px !important;
                     }
 
                     .table-penerimaan input,
                     .table-penerimaan select {
-                        font-size: 11px !important;
+                        font-size: 11.5px !important;
                     }
                 }
             </style>
             <div class="border border-zcBrd rounded-xl overflow-x-auto shadow-xs">
-                <table class="w-full text-xs table-penerimaan min-w-[960px]">
+                <table class="w-full text-xs table-penerimaan min-w-[1180px]">
                     <thead class="bg-slate-50 border-b border-zcBrd">
                         <tr>
-                            <th class="text-left px-2 py-2.5 font-bold text-zcMut w-[22%]">Produk * (Ketik untuk Cari)
+                            <th class="text-left px-2 py-2.5 font-bold text-zcMut min-w-[220px] w-[20%]">Produk * (Ketik
+                                untuk Cari)
                             </th>
-                            <th class="text-center px-1 py-2.5 font-bold text-zcMut w-[7.5%]">Pesan *</th>
-                            <th class="text-center px-1 py-2.5 font-bold text-emerald-800 w-[7.5%] bg-emerald-50/60">
+                            <th class="text-center px-1.5 py-2.5 font-bold text-zcMut min-w-[78px]">Pesan *</th>
+                            <th
+                                class="text-center px-1.5 py-2.5 font-bold text-emerald-800 min-w-[78px] bg-emerald-50/60">
                                 Terima Baik *</th>
-                            <th class="text-center px-1 py-2.5 font-bold text-rose-700 w-[7.5%] bg-rose-50/60">
+                            <th class="text-center px-1.5 py-2.5 font-bold text-rose-700 min-w-[78px] bg-rose-50/60">
                                 Rusak/Retur</th>
-                            <th class="text-left px-2 py-2.5 font-bold text-zcMut w-[11%]">Nilai Beli Satuan *</th>
-                            <th class="text-left px-2 py-2.5 font-bold text-zcMut w-[9.5%]">Subtotal Diterima</th>
-                            <th class="text-left px-1.5 py-2.5 font-bold text-zcMut w-[10%]">No. Batch</th>
-                            <th class="text-left px-1.5 py-2.5 font-bold text-zcMut w-[11.5%]">Tgl Exp</th>
-                            <th class="text-left px-1.5 py-2.5 font-bold text-zcMut w-[10.5%]">SN (Khusus Alkes)</th>
-                            <th class="px-1 py-2.5 w-[3%]"></th>
+                            <th class="text-left px-2 py-2.5 font-bold text-zcMut min-w-[128px]">Nilai Beli Satuan *
+                            </th>
+                            <th class="text-left px-2 py-2.5 font-bold text-zcMut min-w-[110px]">Subtotal Diterima</th>
+                            <th class="text-left px-2 py-2.5 font-bold text-zcMut min-w-[140px]">No. Batch</th>
+                            <th class="text-left px-2 py-2.5 font-bold text-zcMut min-w-[132px]">Tgl Exp</th>
+                            <th class="text-left px-2 py-2.5 font-bold text-zcMut min-w-[175px]">SN (Khusus Alkes)</th>
+                            <th class="px-1 py-2.5 w-[32px]"></th>
                         </tr>
                     </thead>
                     <tbody id="items-body">
@@ -711,7 +725,8 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
                                             data-skuinduk="<?= htmlspecialchars($p['sku_induk'] ?? '') ?>"
                                             data-namaproduk="<?= htmlspecialchars($p['nama_produk'] ?? '') ?>">
                                             <?= htmlspecialchars($p['label']) ?>
-                                            (<?= htmlspecialchars($p['satuan_besar'] ?? 'Dus') ?>)</option>
+                                            (<?= htmlspecialchars($p['satuan_besar'] ?? 'Dus') ?>)
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
                             </td>
@@ -756,11 +771,11 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
                                 <div class="text-[9px] text-zcMut whitespace-nowrap">Subtotal Diterima</div>
                             </td>
                             <td class="px-1.5 py-2 align-top"><input type="text" name="no_batch[]" id="b-0"
-                                    class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100"
+                                    class="w-full min-w-[128px] border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs font-mono uppercase bg-slate-100"
                                     readonly placeholder="Wajib obat"></td>
                             <td class="px-1.5 py-2 align-top"><input type="date" name="tgl_exp[]" id="e-0"
                                     min="<?= date('Y-m-d', strtotime('+1 day')) ?>"
-                                    class="w-full border border-zcBrd rounded-lg px-1 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100"
+                                    class="w-full min-w-[122px] border border-zcBrd rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100"
                                     readonly></td>
                             <td class="px-1.5 py-2 align-top">
                                 <div id="sn-container-0" class="w-full">
@@ -1079,284 +1094,328 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
 
                     <!-- Table Item di dalam 1 PO yang sama -->
                     <div class="overflow-x-auto bg-white rounded-xl border border-zcBrd">
-                        <table class="w-full text-xs min-w-[780px]">
-                            <thead class="bg-slate-100/70 border-b border-zcBrd text-zcMut font-bold">
-                                <tr>
-                                    <th class="text-left px-3 py-2.5">Produk &amp; Variasi</th>
-                                    <th class="text-left px-3 py-2.5">Kategori</th>
-                                    <th class="text-left px-3 py-2.5">Kuantiti Masuk &amp; Retur</th>
-                                    <th class="text-left px-3 py-2.5">Nilai Beli Satuan</th>
-                                    <th class="text-left px-3 py-2.5">Subtotal Faktur &amp; Fisik</th>
-                                    <th class="text-left px-3 py-2.5">No. Batch / Exp (Obat)</th>
-                                    <th class="text-center px-3 py-2.5">Aksi Klaim &amp; Stiker Barcode</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-zcBrd/60">
-                                <?php foreach ($items as $it):
-                                    $isObat = ($it['kategori'] === 'Obat');
-                                    $qtyBesar = (int) $it['qty_terima'];
-                                    $hargaBeli = (float) ($it['harga_beli'] ?? 0);
-                                    $totalPcs = $qtyBesar * (int) ($it['rasio_konversi'] ?? 1);
-                                    $itQpesan = (int) ($it['qty_pesan'] ?: ($qtyBesar + (int) ($it['qty_rusak'] ?? 0)));
-                                    $itQrusak = (int) ($it['qty_rusak'] ?? 0);
-                                    $itSubtotalFaktur = $itQpesan * $hargaBeli;
-                                    $itSubtotalFisik = $qtyBesar * $hargaBeli;
-                                    $itSubtotalRetur = $itQrusak * $hargaBeli;
-                                    $stRetur = $it['status_retur'] ?? 'menunggu_pengganti';
-                                    ?>
-                                    <tr class="hover:bg-slate-50/50">
-                                        <td class="px-3 py-2.5 font-bold text-slate-800">
-                                            <?= htmlspecialchars($it['nama_produk'] . ' — ' . $it['nama_variasi']) ?>
-                                        </td>
-                                        <td class="px-3 py-2.5">
-                                            <span
-                                                class="px-2 py-0.5 rounded text-[10px] font-bold <?= $isObat ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700' ?>">
-                                                <?= htmlspecialchars($it['kategori']) ?>
-                                            </span>
-                                        </td>
-                                        <td class="px-3 py-2.5 text-center">
-                                            <div class="font-bold text-slate-800">
-                                                <?= $qtyBesar ?>             <?= htmlspecialchars($it['satuan_besar'] ?? 'Dus') ?>
-                                            </div>
-                                            <span class="block text-[10px] font-normal text-zcMut">(Total
-                                                <?= number_format($totalPcs) ?>
-                                                <?= htmlspecialchars($it['satuan_kecil'] ?? 'Pcs') ?> Masuk Stok)</span>
+                            <table class="w-full text-xs min-w-[1060px]">
+                                <thead class="bg-slate-100/70 border-b border-zcBrd text-zcMut font-bold">
+                                    <tr>
+                                        <th class="text-left px-3 py-2.5 min-w-[190px]">Produk &amp; Variasi</th>
+                                        <th class="text-left px-3 py-2.5 whitespace-nowrap">Kategori</th>
+                                        <th class="text-center px-3 py-2.5 min-w-[205px] whitespace-nowrap">Kuantiti Masuk &amp;
+                                            Retur</th>
+                                        <th class="text-left px-3 py-2.5 min-w-[105px] whitespace-nowrap">Nilai Beli Satuan</th>
+                                        <th class="text-left px-3 py-2.5 min-w-[175px] whitespace-nowrap">Subtotal Faktur &amp;
+                                            Fisik</th>
+                                        <th class="text-left px-3 py-2.5 min-w-[125px] whitespace-nowrap">No. Batch / Exp (Obat)
+                                        </th>
+                                        <th class="text-center px-3 py-2.5 min-w-[215px] whitespace-nowrap">Aksi Klaim &amp;
+                                            Stiker Barcode</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-zcBrd/60">
+                                    <?php foreach ($items as $it):
+                                        $isObat = ($it['kategori'] === 'Obat');
+                                        $qtyBesar = (int) $it['qty_terima'];
+                                        $hargaBeli = (float) ($it['harga_beli'] ?? 0);
+                                        $totalPcs = $qtyBesar * (int) ($it['rasio_konversi'] ?? 1);
+                                        $itQpesan = (int) ($it['qty_pesan'] ?: ($qtyBesar + (int) ($it['qty_rusak'] ?? 0)));
+                                        $itQrusak = (int) ($it['qty_rusak'] ?? 0);
+                                        $itSubtotalFaktur = $itQpesan * $hargaBeli;
+                                        $itSubtotalFisik = $qtyBesar * $hargaBeli;
+                                        $itSubtotalRetur = $itQrusak * $hargaBeli;
+                                        $stRetur = $it['status_retur'] ?? 'menunggu_pengganti';
+                                        ?>
+                                        <tr class="hover:bg-slate-50/50">
+                                            <td class="px-3 py-2.5 font-bold text-slate-800 align-middle">
+                                                <?= htmlspecialchars($it['nama_produk'] . ' — ' . $it['nama_variasi']) ?>
+                                            </td>
+                                            <td class="px-3 py-2.5 align-middle whitespace-nowrap">
+                                                <span
+                                                    class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold
+                                                    <?= $isObat ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700' ?>">
+                                                    <?= htmlspecialchars($it['kategori']) ?>
+                                                </span>
+                                            </td>
+                                            <td class="px-3 py-2.5 text-center align-middle">
+                                                <div class="font-bold text-slate-800 whitespace-nowrap">
+                                                    <?= $qtyBesar ?>             <?= htmlspecialchars($it['satuan_besar'] ?? 'Dus') ?>
+                                                </div>
+                                                    <span class="block text-[10px] font-normal text-zcMut whitespace-nowrap">(Total
+                                                        <?= number_format($totalPcs) ?>
+                                                        <?= htmlspecialchars($it['satuan_kecil'] ?? 'Pcs') ?> Masuk Stok)</span>
 
-                                            <?php if ($itQrusak > 0):
-                                                $qtyPesan = $itQpesan;
-                                                $qtyRusak = $itQrusak;
-                                                ?>
-                                                <div
-                                                    class="mt-1.5 pt-1.5 border-t border-slate-200 text-[10px] text-left bg-slate-50/90 p-1.5 rounded-lg space-y-1">
-                                                    <div class="flex items-center justify-between text-slate-500">
-                                                        <span>Pesan Faktur:</span>
-                                                        <strong class="text-slate-700"><?= $qtyPesan ?>
-                                                            <?= htmlspecialchars($it['satuan_besar'] ?? 'Dus') ?></strong>
-                                                    </div>
-                                                    <div class="flex items-center justify-between text-rose-600 font-semibold">
-                                                        <span>Retur Fisik Cacat:</span>
-                                                        <span><?= $qtyRusak ?>
-                                                            <?= htmlspecialchars($it['satuan_besar'] ?? 'Dus') ?></span>
-                                                    </div>
+                                                    <?php if ($itQrusak > 0):
+                                                        $qtyPesan = $itQpesan;
+                                                        $qtyRusak = $itQrusak;
+                                                        ?>
+                                                        <div
+                                                                class="mt-1.5 pt-1.5 border-t border-slate-200 text-[10px] text-left
+                                                                bg-slate-50/90 p-2 rounded-lg space-y-1">
+                                                                <div
+                                                                    class="flex items-center justify-between gap-2 text-slate-500 whitespace-nowrap">
+                                                                    <span>Pesan Faktur:</span>
+                                                                    <strong class="text-slate-700"><?= $qtyPesan ?>
+                                                                        <?= htmlspecialchars($it['satuan_besar'] ?? 'Dus') ?></strong>
+                                                                </div>
+                                                                    <div
+                                                                        class="flex items-center justify-between gap-2 text-rose-600 font-semibold whitespace-nowrap">
+                                                                        <span>Retur Fisik Cacat:</span>
+                                                                        <span><?= $qtyRusak ?>
+                                                                            <?= htmlspecialchars($it['satuan_besar'] ?? 'Dus') ?></span>
+                                                                    </div>
 
-                                                    <?php if ($stRetur === 'menunggu_pengganti'): ?>
-                                                        <div class="pt-0.5">
-                                                            <span
-                                                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                                                <span>Menunggu Klaim Pengganti</span>
-                                                            </span>
-                                                        </div>
-                                                    <?php elseif ($stRetur === 'selesai_tukar_barang'): ?>
-                                                        <div class="pt-0.5 p-1 bg-emerald-50 rounded border border-emerald-200 text-[10px]">
-                                                            <span class="font-bold text-emerald-800">✓ Diganti Unit Baru
-                                                                (<?= (int) $it['qty_pengganti_diterima'] ?>
-                                                                <?= htmlspecialchars($it['satuan_besar'] ?? 'Dus') ?>)</span>
-                                                            <?php if ($it['no_batch_pengganti']): ?>
-                                                                <div class="text-slate-700 font-mono text-[9px]">Batch:
-                                                                    <strong><?= htmlspecialchars($it['no_batch_pengganti']) ?></strong></div>
-                                                            <?php endif; ?>
-                                                            <?php if ($it['tgl_exp_pengganti']): ?>
-                                                                <div class="text-emerald-700 text-[9px]">Exp:
-                                                                    <?= date('d/m/Y', strtotime($it['tgl_exp_pengganti'])) ?></div>
-                                                            <?php endif; ?>
-                                                            <div class="text-[9px] text-zcMut mt-0.5">Selesai:
-                                                                <?= $it['tgl_selesai_retur'] ? date('d/m/Y H:i', strtotime($it['tgl_selesai_retur'])) : '-' ?>
+                                                                    <?php if ($stRetur === 'menunggu_pengganti'): ?>
+                                                                        <div class="pt-0.5">
+                                                                            <span
+                                                                                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded
+                                                                                text-[10px] font-semibold bg-amber-50 text-amber-800 border
+                                                                                border-amber-200 whitespace-nowrap">
+                                                                                <span
+                                                                                    class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                                                                                <span>Menunggu Klaim Pengganti</span>
+                                                                            </span>
+                                                                        </div>
+                                                                    <?php elseif ($stRetur === 'selesai_tukar_barang'): ?>
+                                                                                <div
+                                                                                    class="pt-0.5 p-1.5 bg-emerald-50 rounded border border-emerald-200 text-[10px]">
+                                                                                    <span
+                                                                                        class="font-bold text-emerald-800 whitespace-nowrap">✓
+                                                                                        Diganti Unit Baru
+                                                                                        (<?= (int) $it['qty_pengganti_diterima'] ?>
+                                                                                        <?= htmlspecialchars($it['satuan_besar'] ?? 'Dus') ?>)</span>
+                                                                                    <?php if ($it['no_batch_pengganti']): ?>
+                                                                                            <div
+                                                                                                class="text-slate-700 font-mono text-[9px] whitespace-nowrap">
+                                                                                                Batch:
+                                                                                                <strong><?= htmlspecialchars($it['no_batch_pengganti']) ?></strong>
+                                                                                            </div>
+                                                                                        <?php endif; ?>
+                                                                                        <?php if ($it['tgl_exp_pengganti']): ?>
+                                                                                                <div
+                                                                                                    class="text-emerald-700 text-[9px] whitespace-nowrap">
+                                                                                                    Exp:
+                                                                                                    <?= date('d/m/Y', strtotime($it['tgl_exp_pengganti'])) ?>
+                                                                                                </div>
+                                                                                            <?php endif; ?>
+                                                                                                <div
+                                                                                                    class="text-[9px] text-zcMut mt-0.5 whitespace-nowrap">
+                                                                                                    Selesai:
+                                                                                                    <?= $it['tgl_selesai_retur'] ? date('d/m/Y H:i', strtotime($it['tgl_selesai_retur'])) : '-' ?>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        <?php elseif ($stRetur === 'selesai_potong_faktur'): ?>
+                                                                                                <div
+                                                                                                    class="pt-0.5 p-1.5 bg-slate-100 rounded border border-slate-300 text-[10px]">
+                                                                                                    <span
+                                                                                                        class="font-bold text-slate-800 whitespace-nowrap">Selesai
+                                                                                                        Potong Tagihan</span>
+                                                                                                    <?php if (!empty($it['catatan_retur'])): ?>
+                                                                                                        <div
+                                                                                                            class="text-slate-600 italic text-[9px]">
+                                                                                                            <?= htmlspecialchars($it['catatan_retur']) ?>
+                                                                                                        </div>
+                                                                                                    <?php endif; ?>
+                                                                                                        <div
+                                                                                                            class="text-[9px] text-zcMut mt-0.5 whitespace-nowrap">
+                                                                                                            Selesai:
+                                                                                                            <?= $it['tgl_selesai_retur'] ? date('d/m/Y H:i', strtotime($it['tgl_selesai_retur'])) : '-' ?>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                <?php endif; ?>
+                                                                                            </div>
+                                                                                        <?php endif; ?>
+                                            </td>
+                                            <td class="px-3 py-2.5 font-semibold text-slate-700 align-middle whitespace-nowrap">
+                                                Rp <?= number_format($hargaBeli, 0, ',', '.') ?>
+                                                <span
+                                                    class="block text-[10px] text-zcMut font-normal">/<?= htmlspecialchars($it['satuan_besar'] ?? 'Dus') ?></span>
+                                            </td>
+                                            <td class="px-3 py-2.5 align-middle whitespace-nowrap">
+                                                <div class="font-bold text-slate-800">Rp
+                                                    <?= number_format($itSubtotalFaktur, 0, ',', '.') ?>
+                                                </div>
+                                                <div class="text-[10px] text-zcMut font-normal"><?= $itQpesan ?>
+                                                    <?= htmlspecialchars($it['satuan_besar'] ?? 'Dus') ?> &times; Rp
+                                                    <?= number_format($hargaBeli, 0, ',', '.') ?>
+                                                </div>
+                                                <?php if ($itQrusak > 0): ?>
+                                                    <div class="mt-1 pt-1 border-t border-slate-100 text-[10px] space-y-0.5">
+                                                            <div class="text-emerald-700 font-semibold whitespace-nowrap">&bull; Fisik
+                                                                Masuk: Rp
+                                                                <?= number_format($itSubtotalFisik, 0, ',', '.') ?>
                                                             </div>
-                                                        </div>
-                                                    <?php elseif ($stRetur === 'selesai_potong_faktur'): ?>
-                                                        <div class="pt-0.5 p-1 bg-slate-100 rounded border border-slate-300 text-[10px]">
-                                                            <span class="font-bold text-slate-800">Selesai Potong Tagihan</span>
-                                                            <?php if (!empty($it['catatan_retur'])): ?>
-                                                                <div class="text-slate-600 italic text-[9px]">
-                                                                    <?= htmlspecialchars($it['catatan_retur']) ?></div>
-                                                            <?php endif; ?>
-                                                            <div class="text-[9px] text-zcMut mt-0.5">Selesai:
-                                                                <?= $it['tgl_selesai_retur'] ? date('d/m/Y H:i', strtotime($it['tgl_selesai_retur'])) : '-' ?>
+                                                                <div class="text-rose-600 font-semibold whitespace-nowrap">&bull; Retur
+                                                                    Pending: Rp
+                                                                    <?= number_format($itSubtotalRetur, 0, ',', '.') ?>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                </div>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="px-3 py-2.5 font-semibold text-slate-700">
-                                            Rp <?= number_format($hargaBeli, 0, ',', '.') ?>
-                                            <span
-                                                class="block text-[10px] text-zcMut font-normal">/<?= htmlspecialchars($it['satuan_besar'] ?? 'Dus') ?></span>
-                                        </td>
-                                        <td class="px-3 py-2.5">
-                                            <div class="font-bold text-slate-800">Rp
-                                                <?= number_format($itSubtotalFaktur, 0, ',', '.') ?></div>
-                                            <div class="text-[10px] text-zcMut font-normal"><?= $itQpesan ?>
-                                                <?= htmlspecialchars($it['satuan_besar'] ?? 'Dus') ?> &times; Rp
-                                                <?= number_format($hargaBeli, 0, ',', '.') ?></div>
-                                            <?php if ($itQrusak > 0): ?>
-                                                <div class="mt-1 pt-1 border-t border-slate-100 text-[10px] space-y-0.5">
-                                                    <div class="text-emerald-700 font-semibold">• Fisik Masuk: Rp
-                                                        <?= number_format($itSubtotalFisik, 0, ',', '.') ?></div>
-                                                    <div class="text-rose-600 font-semibold">• Retur Pending: Rp
-                                                        <?= number_format($itSubtotalRetur, 0, ',', '.') ?></div>
-                                                </div>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="px-3 py-2.5">
-                                            <?php if ($it['no_batch']): ?>
-                                                <div class="font-mono font-bold text-slate-800 text-[11px]">
-                                                    <?= htmlspecialchars($it['no_batch']) ?></div>
-                                                <div class="text-[10px] text-emerald-700 font-semibold">Exp:
-                                                    <?= date('d/m/Y', strtotime($it['tgl_exp'])) ?></div>
-                                            <?php else: ?>
-                                                <span class="text-slate-400 italic">— Non Obat —</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="px-3 py-2.5 text-center">
-                                            <?php if ($itQrusak > 0 && $stRetur === 'menunggu_pengganti'): ?>
-                                                <div
-                                                    class="mb-2 p-1.5 bg-slate-50 border border-slate-200 rounded-lg flex flex-col gap-1 w-full max-w-[210px] mx-auto text-left shadow-2xs">
-                                                    <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider px-0.5">
-                                                        Tindakan Klaim Retur:</div>
-                                                    <?php if ($sesiOpnameAktif): ?>
-                                                        <button type="button" disabled
-                                                            class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-slate-100 border border-slate-300 text-slate-400 rounded text-[11px] font-semibold cursor-not-allowed shadow-2xs"
-                                                            title="Tindakan terima pengganti dibekukan karena Sesi Stok Opname sedang aktif">
-                                                            <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none"
-                                                                stroke="currentColor" stroke-width="2">
-                                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                                                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                                            </svg>
-                                                            <span>Terima Pengganti (Dibekukan)</span>
-                                                        </button>
-                                                        <button type="button" disabled
-                                                            class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-slate-100 border border-slate-300 text-slate-400 rounded text-[11px] font-semibold cursor-not-allowed shadow-2xs"
-                                                            title="Tindakan potong faktur dibekukan karena Sesi Stok Opname sedang aktif">
-                                                            <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none"
-                                                                stroke="currentColor" stroke-width="2">
-                                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                                                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                                            </svg>
-                                                            <span>Potong Tagihan (Dibekukan)</span>
-                                                        </button>
-                                                    <?php else: ?>
-                                                        <button type="button" onclick="openTerimaPenggantiModal(<?= htmlspecialchars(json_encode([
-                                                            'id_detail' => $it['id'],
-                                                            'no_referensi' => $p['no_referensi'],
-                                                            'nama_produk' => $it['nama_produk'] . ' — ' . $it['nama_variasi'],
-                                                            'kategori' => $it['kategori'],
-                                                            'satuan' => $it['satuan_besar'] ?? 'Dus',
-                                                            'qty_rusak' => $qtyRusak,
-                                                            'harga_beli' => $hargaBeli
-                                                        ]), ENT_QUOTES, 'UTF-8') ?>)"
-                                                            class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold transition shadow-2xs">
-                                                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                                stroke-width="2">
-                                                                <path
-                                                                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                                                                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                                                                <line x1="12" y1="22.08" x2="12" y2="12" />
-                                                            </svg>
-                                                            <span>Terima Unit Pengganti</span>
-                                                        </button>
-                                                        <button type="button" onclick="openPotongFakturModal(<?= htmlspecialchars(json_encode([
-                                                            'id_detail' => $it['id'],
-                                                            'no_referensi' => $p['no_referensi'],
-                                                            'nama_produk' => $it['nama_produk'] . ' — ' . $it['nama_variasi'],
-                                                            'satuan' => $it['satuan_besar'] ?? 'Dus',
-                                                            'qty_rusak' => $qtyRusak,
-                                                            'harga_beli' => $hargaBeli,
-                                                            'nilai_klaim' => $qtyRusak * $hargaBeli
-                                                        ]), ENT_QUOTES, 'UTF-8') ?>)"
-                                                            class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded text-[11px] font-semibold transition">
-                                                            <svg class="w-3.5 h-3.5 text-slate-600" viewBox="0 0 24 24" fill="none"
-                                                                stroke="currentColor" stroke-width="2">
-                                                                <circle cx="6" cy="6" r="3" />
-                                                                <circle cx="6" cy="18" r="3" />
-                                                                <line x1="20" y1="4" x2="8.12" y2="15.88" />
-                                                                <line x1="14.47" y1="14.48" x2="20" y2="20" />
-                                                                <line x1="8.12" y1="8.12" x2="12" y2="12" />
-                                                            </svg>
-                                                            <span>Potong Tagihan Faktur</span>
-                                                        </button>
-                                                    <?php endif; ?>
-                                                </div>
-                                            <?php endif; ?>
-
-                                            <?php if ($isObat && $it['no_batch'] && !empty($it['id_stok_batch'])): ?>
-                                                <a href="cetak_batch_stiker.php?tipe=batch&id=<?= $it['id_stok_batch'] ?>&qty=<?= $qtyBesar ?>"
-                                                    target="_blank"
-                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold transition shadow-2xs"
-                                                    title="Cetak <?= $qtyBesar ?> salinan stiker barcode batch ini">
-                                                    <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none"
-                                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                        stroke-linejoin="round">
-                                                        <path
-                                                            d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                                                        <rect x="6" y="14" width="12" height="8" />
-                                                    </svg>
-                                                    <span>Cetak (<?= $qtyBesar ?>x): <span
-                                                            class="font-mono"><?= htmlspecialchars($it['no_batch']) ?></span></span>
-                                                </a>
-                                            <?php elseif ($it['kategori'] === 'Alat Kesehatan'): ?>
-                                                <?php if ($qtyBesar > 0): ?>
-                                                    <a href="cetak_batch_stiker.php?id_penerimaan=<?= $p['id'] ?>&id_variasi=<?= $it['id_variasi'] ?>"
-                                                        target="_blank"
-                                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold transition shadow-2xs"
-                                                        title="Cetak <?= $qtyBesar ?> stiker barcode Serial Number (SN) unit alat kesehatan ini">
-                                                        <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none"
-                                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                            stroke-linejoin="round">
-                                                            <path
-                                                                d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                                                            <rect x="6" y="14" width="12" height="8" />
-                                                        </svg>
-                                                        <span>Cetak (<?= $qtyBesar ?>x) Stiker SN</span>
-                                                    </a>
+                                                        <?php endif; ?>
+                                            </td>
+                                            <td class="px-3 py-2.5 align-middle whitespace-nowrap">
+                                                <?php if ($it['no_batch']): ?>
+                                                    <div class="font-mono font-bold text-slate-800 text-[11px]">
+                                                        <?= htmlspecialchars($it['no_batch']) ?>
+                                                    </div>
+                                                    <div class="text-[10px] text-emerald-700 font-semibold">Exp:
+                                                        <?= date('d/m/Y', strtotime($it['tgl_exp'])) ?>
+                                                    </div>
                                                 <?php else: ?>
-                                                    <span class="text-slate-400 text-[11px] italic">Semua Diretur</span>
+                                                    <span class="text-slate-400 italic">— Non Obat —</span>
                                                 <?php endif; ?>
+                                            </td>
+                                            <td class="px-3 py-2.5 text-center align-middle">
+                                                <div class="flex flex-col items-center gap-1.5 w-full max-w-[215px] mx-auto">
+                                                    <?php if ($itQrusak > 0 && $stRetur === 'menunggu_pengganti'): ?>
+                                                        <div
+                                                                class="p-1.5 bg-slate-50 border border-slate-200 rounded-lg flex
+                                                                flex-col gap-1 w-full text-left shadow-2xs">
+                                                                <div
+                                                                    class="text-[9px] font-bold text-slate-500 uppercase tracking-wider px-0.5 whitespace-nowrap">
+                                                                    Tindakan Klaim Retur:</div>
+                                                                <?php if ($sesiOpnameAktif): ?>
+                                                                    <button type="button" disabled
+                                                                        class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-slate-100 border border-slate-300 text-slate-400 rounded text-[11px] font-semibold cursor-not-allowed shadow-2xs whitespace-nowrap"
+                                                                        title="Tindakan terima pengganti dibekukan karena Sesi Stok Opname sedang aktif">
+                                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                                            stroke-width="2">
+                                                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                                                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                                                        </svg>
+                                                                        <span>Terima Pengganti (Beku)</span>
+                                                                    </button>
+                                                                    <button type="button" disabled
+                                                                        class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-slate-100 border border-slate-300 text-slate-400 rounded text-[11px] font-semibold cursor-not-allowed shadow-2xs whitespace-nowrap"
+                                                                        title="Tindakan potong faktur dibekukan karena Sesi Stok Opname sedang aktif">
+                                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                                            stroke-width="2">
+                                                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                                                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                                                        </svg>
+                                                                        <span>Potong Tagihan (Beku)</span>
+                                                                    </button>
+                                                                <?php else: ?>
+                                                                    <button type="button" onclick="openTerimaPenggantiModal(<?= htmlspecialchars(json_encode([
+                                                                        'id_detail' => $it['id'],
+                                                                        'no_referensi' => $p['no_referensi'],
+                                                                        'nama_produk' => $it['nama_produk'] . ' — ' . $it['nama_variasi'],
+                                                                        'kategori' => $it['kategori'],
+                                                                        'satuan' => $it['satuan_besar'] ?? 'Dus',
+                                                                        'qty_rusak' => $qtyRusak,
+                                                                        'harga_beli' => $hargaBeli
+                                                                    ]), ENT_QUOTES, 'UTF-8') ?>)"
+                                                                            class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold transition shadow-2xs whitespace-nowrap">
+                                                                            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24"
+                                                                                fill="none" stroke="currentColor" stroke-width="2">
+                                                                                <path
+                                                                                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                                                                                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                                                                                <line x1="12" y1="22.08" x2="12" y2="12" />
+                                                                            </svg>
+                                                                            <span>Terima Unit Pengganti</span>
+                                                                    </button>
+                                                                    <button type="button" onclick="openPotongFakturModal(<?= htmlspecialchars(json_encode([
+                                                                        'id_detail' => $it['id'],
+                                                                        'no_referensi' => $p['no_referensi'],
+                                                                        'nama_produk' => $it['nama_produk'] . ' — ' . $it['nama_variasi'],
+                                                                        'satuan' => $it['satuan_besar'] ?? 'Dus',
+                                                                        'qty_rusak' => $qtyRusak,
+                                                                        'harga_beli' => $hargaBeli,
+                                                                        'nilai_klaim' => $qtyRusak * $hargaBeli
+                                                                    ]), ENT_QUOTES, 'UTF-8') ?>)"
+                                                                            class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded text-[11px] font-semibold transition whitespace-nowrap">
+                                                                            <svg class="w-3.5 h-3.5 text-slate-600 shrink-0"
+                                                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                                                stroke-width="2">
+                                                                                <circle cx="6" cy="6" r="3" />
+                                                                                <circle cx="6" cy="18" r="3" />
+                                                                                <line x1="20" y1="4" x2="8.12" y2="15.88" />
+                                                                                <line x1="14.47" y1="14.48" x2="20" y2="20" />
+                                                                                <line x1="8.12" y1="8.12" x2="12" y2="12" />
+                                                                            </svg>
+                                                                            <span>Potong Tagihan Faktur</span>
+                                                                    </button>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        <?php endif; ?>
+
+                                                        <?php if ($isObat && $it['no_batch'] && !empty($it['id_stok_batch'])): ?>
+                                                            <a href="cetak_batch_stiker.php?tipe=batch&id=<?= $it['id_stok_batch'] ?>&qty=<?= $qtyBesar ?>"
+                                                                target="_blank"
+                                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold transition shadow-2xs whitespace-nowrap"
+                                                                title="Cetak <?= $qtyBesar ?> salinan stiker barcode batch ini">
+                                                                <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24"
+                                                                    fill="none" stroke="currentColor" stroke-width="2"
+                                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path
+                                                                        d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                                                                    <rect x="6" y="14" width="12" height="8" />
+                                                                </svg>
+                                                                <span>Cetak (<?= $qtyBesar ?>x): <span
+                                                                        class="font-mono"><?= htmlspecialchars($it['no_batch']) ?></span></span>
+                                                            </a>
+                                                        <?php elseif ($it['kategori'] === 'Alat Kesehatan'): ?>
+                                                            <?php if ($qtyBesar > 0): ?>
+                                                                <a href="cetak_batch_stiker.php?id_penerimaan=<?= $p['id'] ?>&id_variasi=<?= $it['id_variasi'] ?>"
+                                                                    target="_blank"
+                                                                    class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-lg text-xs font-bold transition shadow-2xs whitespace-nowrap"
+                                                                    title="Cetak <?= $qtyBesar ?> stiker barcode Serial Number (SN) unit alat kesehatan ini">
+                                                                    <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" viewBox="0 0 24 24"
+                                                                        fill="none" stroke="currentColor" stroke-width="2"
+                                                                        stroke-linecap="round" stroke-linejoin="round">
+                                                                        <path
+                                                                            d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                                                                        <rect x="6" y="14" width="12" height="8" />
+                                                                    </svg>
+                                                                    <span>Cetak (<?= $qtyBesar ?>x) Stiker SN</span>
+                                                                </a>
+                                                            <?php else: ?>
+                                                                <span class="text-slate-400 text-[11px] italic whitespace-nowrap">Semua
+                                                                    Diretur</span>
+                                                            <?php endif; ?>
+                                                        <?php else: ?>
+                                                            <span class="text-slate-400 text-[11px]">—</span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                                <tfoot class="bg-slate-50/80 border-t border-zcBrd text-xs">
+                                    <tr>
+                                        <td colspan="4" class="px-3 py-2.5 text-right font-bold text-slate-700">
+                                            Total Nilai Faktur Asli (<?= $totalQtyPesanPO ?> Satuan Besar):
+                                        </td>
+                                        <td class="px-3 py-2.5 font-black text-slate-900">
+                                            Rp <?= number_format($totalNilaiFaktur, 0, ',', '.') ?>
+                                        </td>
+                                        <td colspan="2" class="px-3 py-2.5 text-[10px] text-zcMut">
+                                            <?php if ($totalQtyRusakPO > 0): ?>
+                                                <span class="text-emerald-700 font-bold block">• Fisik Diterima Baik: Rp
+                                                    <?= number_format($totalNilaiFisik, 0, ',', '.') ?> (<?= $totalQtyTerimaPO ?>
+                                                    Dus)</span>
+                                                <span class="text-rose-600 font-bold block">• Klaim Retur Pending: Rp
+                                                    <?= number_format($totalNilaiRetur, 0, ',', '.') ?> (<?= $totalQtyRusakPO ?>
+                                                    Dus)</span>
                                             <?php else: ?>
-                                                <span class="text-slate-400 text-[11px]">—</span>
+                                                <span class="text-emerald-700 font-semibold italic">✓ 100% Sesuai Tagihan Faktur
+                                                    Fisik</span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                            <tfoot class="bg-slate-50/80 border-t border-zcBrd text-xs">
-                                <tr>
-                                    <td colspan="4" class="px-3 py-2.5 text-right font-bold text-slate-700">
-                                        Total Nilai Faktur Asli (<?= $totalQtyPesanPO ?> Satuan Besar):
-                                    </td>
-                                    <td class="px-3 py-2.5 font-black text-slate-900">
-                                        Rp <?= number_format($totalNilaiFaktur, 0, ',', '.') ?>
-                                    </td>
-                                    <td colspan="2" class="px-3 py-2.5 text-[10px] text-zcMut">
-                                        <?php if ($totalQtyRusakPO > 0): ?>
-                                            <span class="text-emerald-700 font-bold block">• Fisik Diterima Baik: Rp
-                                                <?= number_format($totalNilaiFisik, 0, ',', '.') ?> (<?= $totalQtyTerimaPO ?>
-                                                Dus)</span>
-                                            <span class="text-rose-600 font-bold block">• Klaim Retur Pending: Rp
-                                                <?= number_format($totalNilaiRetur, 0, ',', '.') ?> (<?= $totalQtyRusakPO ?>
-                                                Dus)</span>
-                                        <?php else: ?>
-                                            <span class="text-emerald-700 font-semibold italic">✓ 100% Sesuai Tagihan Faktur
-                                                Fisik</span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                        <div
-                            class="px-3 py-2 bg-slate-50/50 border-t border-zcBrd/60 flex items-center justify-between text-[11px] text-zcMut">
-                            <div class="flex items-center gap-1.5">
-                                <svg class="w-3.5 h-3.5 text-blue-500 shrink-0" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <line x1="12" y1="16" x2="12" y2="12" />
-                                    <line x1="12" y1="8" x2="12.01" y2="8" />
-                                </svg>
-                                <span>Total harga dihitung dari <em>Qty Satuan Besar &times; Harga Beli</em> untuk verifikasi
-                                    kesesuaian faktur/nota saat barang masuk.</span>
+                                </tfoot>
+                            </table>
+                            <div
+                                class="px-3 py-2 bg-slate-50/50 border-t border-zcBrd/60 flex items-center justify-between text-[11px] text-zcMut">
+                                <div class="flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5 text-blue-500 shrink-0" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <line x1="12" y1="16" x2="12" y2="12" />
+                                        <line x1="12" y1="8" x2="12.01" y2="8" />
+                                    </svg>
+                                    <span>Total harga dihitung dari <em>Qty Satuan Besar &times; Harga Beli</em> untuk
+                                        verifikasi
+                                        kesesuaian faktur/nota saat barang masuk.</span>
+                                </div>
                             </div>
-                        </div>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -2158,8 +2217,8 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
             <div id="subtotal-${rC}" class="text-xs font-bold text-slate-800 pt-1.5 whitespace-nowrap">Rp 0</div>
             <div class="text-[9px] text-zcMut whitespace-nowrap">Subtotal Diterima</div>
         </td>
-        <td class="px-1.5 py-2 align-top"><input type="text" name="no_batch[]" id="b-${rC}" class="w-full border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly placeholder="Wajib obat"></td>
-        <td class="px-1.5 py-2 align-top"><input type="date" name="tgl_exp[]" id="e-${rC}" min="<?= date('Y-m-d', strtotime('+1 day')) ?>" class="w-full border border-zcBrd rounded-lg px-1 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly></td>
+        <td class="px-1.5 py-2 align-top"><input type="text" name="no_batch[]" id="b-${rC}" class="w-full min-w-[128px] border border-zcBrd rounded-lg px-2 py-1.5 focus:outline-none focus:border-zc text-xs font-mono uppercase bg-slate-100" readonly placeholder="Wajib obat"></td>
+        <td class="px-1.5 py-2 align-top"><input type="date" name="tgl_exp[]" id="e-${rC}" min="<?= date('Y-m-d', strtotime('+1 day')) ?>" class="w-full min-w-[122px] border border-zcBrd rounded-lg px-1.5 py-1.5 focus:outline-none focus:border-zc text-xs bg-slate-100" readonly></td>
         <td class="px-1.5 py-2 align-top">
             <div id="sn-container-${rC}" class="w-full">
                 <input type="hidden" name="serial_number[]" id="s-${rC}" value="">
@@ -3294,9 +3353,10 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
 
         // Reset state Obat
         [b, e].forEach(el => { if (el) { el.readOnly = true; el.classList.add('bg-slate-100'); el.required = false; } });
+        if (b) b.placeholder = (kat === 'Alat Kesehatan') ? '— Khusus Obat —' : 'Wajib obat';
 
         if (kat === 'Obat') {
-            if (b) { b.readOnly = false; b.classList.remove('bg-slate-100'); b.required = true; }
+            if (b) { b.readOnly = false; b.classList.remove('bg-slate-100'); b.required = true; b.placeholder = 'Contoh: HUF-2026'; }
             if (e) { e.readOnly = false; e.classList.remove('bg-slate-100'); e.required = true; }
         }
 
@@ -3340,9 +3400,9 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
         existingInputs.forEach(inp => existingVals.push(inp.value));
 
         let html = `
-        <div class="flex items-center justify-between text-[9px] font-bold text-slate-600 mb-1 px-0.5">
+        <div class="flex items-center justify-between gap-1.5 text-[9.5px] font-bold text-slate-600 mb-1 px-0.5 whitespace-nowrap">
             <span>Scan/SN (${qty} unit):</span>
-            <span class="text-teal-700 bg-teal-50 px-1 py-0.5 rounded text-[9px] border border-teal-200">Mandiri / Unit</span>
+            <span class="text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded text-[9px] border border-teal-200 whitespace-nowrap">Mandiri / Unit</span>
         </div>
     `;
 
@@ -3437,7 +3497,7 @@ layoutHeader('Penerimaan Barang', 'Catat barang masuk fisik ke dalam sistem dari
     function nextHistoryPage() {
         if (currentHistPage < totalPages) {
             currentHistPage++;
-            updateHistoryPagination();
+            updateHistoryPag ination();
         }
     }
 
