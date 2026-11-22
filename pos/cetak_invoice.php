@@ -1,6 +1,6 @@
 <?php
 // File: pos/cetak_invoice.php
-// Dual-Mode Document Generator: Faktur Resmi (A4) & Struk Kasir (Thermal 80mm/58mm)
+// Dual-Mode Document Generator: Faktur Resmi (A4) & Struk Kasir (Thermal 75mm)
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -139,10 +139,10 @@ if (in_array($reqFormat, ['thermal', 'struk', 'pos'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice #<?= htmlspecialchars($trx['no_invoice']) ?> - ZenCare Medical</title>
     
-    <!-- Dynamic Print Page Setup -->
+    <!-- Dynamic Print Page Setup (75mm Thermal Explicit Height agar Chrome tidak fallback ke A4/Letter) -->
     <style id="print-page-style">
         <?php if ($initialFormat === 'thermal'): ?>
-        @page { size: 80mm auto; margin: 3mm 4mm; }
+        @page { size: 75mm 180mm; margin: 0; }
         <?php else: ?>
         @page { size: A4 portrait; margin: 12mm 15mm; }
         <?php endif; ?>
@@ -455,17 +455,17 @@ if (in_array($reqFormat, ['thermal', 'struk', 'pos'])) {
             color: #94a3b8;
         }
 
-        /* ─── FORMAT 2: THERMAL RECEIPT STYLING (80mm) ─────────────────── */
+        /* ─── FORMAT 2: THERMAL RECEIPT STYLING (75mm) ─────────────────── */
         .invoice-thermal {
-            width: 76mm;
+            width: 75mm;
             max-width: 100%;
             margin: 0 auto;
             background: #ffffff;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
-            padding: 16px 14px;
+            padding: 4mm 3.5mm 6mm 3.5mm;
             font-family: 'Courier New', Courier, monospace, Arial;
-            font-size: 11px;
+            font-size: 10.5px;
             line-height: 1.35;
             color: #000;
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
@@ -565,17 +565,19 @@ if (in_array($reqFormat, ['thermal', 'struk', 'pos'])) {
             }
 
             body.mode-thermal {
-                width: 76mm !important;
-                margin: 0 auto !important;
+                width: 75mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
             body.mode-thermal .invoice-thermal {
                 display: block !important;
                 border: none !important;
+                border-radius: 0 !important;
                 box-shadow: none !important;
-                padding: 0 !important;
-                width: 76mm !important;
-                max-width: 76mm !important;
-                margin: 0 auto !important;
+                padding: 3mm 3.5mm 6mm 3.5mm !important;
+                width: 75mm !important;
+                max-width: 75mm !important;
+                margin: 0 !important;
             }
             body.mode-thermal .invoice-a4 {
                 display: none !important;
@@ -602,7 +604,7 @@ if (in_array($reqFormat, ['thermal', 'struk', 'pos'])) {
                 </button>
                 <button type="button" id="btn-mode-thermal" class="btn-switch <?= $initialFormat === 'thermal' ? 'active' : '' ?>" onclick="switchPrintFormat('thermal')">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="8" y1="10" x2="16" y2="10"></line><line x1="8" y1="14" x2="12" y2="14"></line><line x1="8" y1="18" x2="16" y2="18"></line></svg>
-                    <span>Struk Kasir (Thermal 80mm)</span>
+                    <span>Struk Kasir (Thermal 75mm)</span>
                 </button>
             </div>
 
@@ -828,8 +830,22 @@ if (in_array($reqFormat, ['thermal', 'struk', 'pos'])) {
         </div>
     </div>
 
-    <!-- Script Pengendali Format Switcher -->
+    <!-- Script Pengendali Format Switcher & Ukuran Kertas Thermal 75mm Presisi -->
     <script>
+        function applyThermalPageSize() {
+            const pageStyle = document.getElementById('print-page-style');
+            const thermalEl = document.querySelector('.invoice-thermal');
+            if (!pageStyle) return;
+            let heightMm = 180;
+            if (thermalEl) {
+                const px = thermalEl.scrollHeight || thermalEl.getBoundingClientRect().height || 0;
+                if (px > 0) {
+                    heightMm = Math.max(105, Math.ceil((px * 25.4) / 96) + 8);
+                }
+            }
+            pageStyle.innerHTML = `@page { size: 75mm ${heightMm}mm; margin: 0; }`;
+        }
+
         function switchPrintFormat(fmt) {
             const body = document.body;
             const pageStyle = document.getElementById('print-page-style');
@@ -839,9 +855,7 @@ if (in_array($reqFormat, ['thermal', 'struk', 'pos'])) {
             if (fmt === 'thermal') {
                 body.classList.remove('mode-a4');
                 body.classList.add('mode-thermal');
-                if (pageStyle) {
-                    pageStyle.innerHTML = '@page { size: 80mm auto; margin: 3mm 4mm; }';
-                }
+                applyThermalPageSize();
                 btnThermal.classList.add('active');
                 btnA4.classList.remove('active');
             } else {
@@ -859,6 +873,17 @@ if (in_array($reqFormat, ['thermal', 'struk', 'pos'])) {
             url.searchParams.set('format', fmt);
             window.history.replaceState({}, '', url);
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.body.classList.contains('mode-thermal')) {
+                applyThermalPageSize();
+            }
+        });
+        window.addEventListener('beforeprint', function() {
+            if (document.body.classList.contains('mode-thermal')) {
+                applyThermalPageSize();
+            }
+        });
     </script>
 </body>
 </html>
