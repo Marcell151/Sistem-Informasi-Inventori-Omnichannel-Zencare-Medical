@@ -29,16 +29,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
     if ($_POST['aksi'] === 'tolak_request_batal') {
         $idPesanan = intval($_POST['id_penjualan'] ?? 0);
         if ($idPesanan) {
-            $pdo->prepare("UPDATE penjualan SET request_batal = 0 WHERE id = ?")->execute([$idPesanan]);
+            $pdo->prepare("UPDATE penjualan SET request_batal = 0, refund_bank = NULL, refund_rekening = NULL, refund_atas_nama = NULL WHERE id = ?")->execute([$idPesanan]);
             $msg = "Permohonan pembatalan pesanan telah ditolak. Pesanan tetap berstatus Diproses dan siap dikirim.";
             $msgType = 'info';
+        }
+    } elseif ($_POST['aksi'] === 'konfirmasi_refund') {
+        $idPesanan = intval($_POST['id_penjualan'] ?? 0);
+        if ($idPesanan) {
+            $stmtRef = $pdo->prepare("SELECT no_invoice, refund_bank, refund_rekening, refund_atas_nama, status_pesanan, status_refund FROM penjualan WHERE id = ?");
+            $stmtRef->execute([$idPesanan]);
+            $refRow = $stmtRef->fetch();
+            if ($refRow && $refRow['status_pesanan'] === 'Dibatalkan' && $refRow['status_refund'] === 'Menunggu Transfer') {
+                $pdo->prepare("UPDATE penjualan SET status_refund = 'Selesai', waktu_refund = NOW() WHERE id = ?")->execute([$idPesanan]);
+                $msg = "Transfer refund untuk pesanan #{$refRow['no_invoice']} ({$refRow['refund_bank']} - {$refRow['refund_rekening']} a.n. {$refRow['refund_atas_nama']}) telah ditandai Selesai.";
+                $msgType = 'success';
+            } else {
+                $msg = "Pesanan tidak dalam status Menunggu Transfer Refund.";
+                $msgType = 'error';
+            }
         }
     } elseif ($_POST['aksi'] === 'setujui_request_batal') {
         $idPesanan = intval($_POST['id_penjualan'] ?? 0);
         if ($idPesanan) {
             $pdo->beginTransaction();
             try {
-                $stmtCek = $pdo->prepare("SELECT no_invoice, request_batal_alasan, status_pesanan FROM penjualan WHERE id = ? FOR UPDATE");
+                $stmtCek = $pdo->prepare("SELECT no_invoice, request_batal_alasan, status_pesanan, refund_bank, refund_rekening, refund_atas_nama, total_harga FROM penjualan WHERE id = ? FOR UPDATE");
                 $stmtCek->execute([$idPesanan]);
                 $ordData = $stmtCek->fetch();
                 if (!$ordData || $ordData['status_pesanan'] !== 'Diproses') {
@@ -51,8 +66,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'])) {
                 // Batalkan dan pulihkan stok menggunakan batalkanSatuPesananInternal
                 batalkanSatuPesananInternal($pdo, $idPesanan, $alasan, $pelaku);
 
+                // Tandai status refund Menunggu Transfer agar Admin dapat memproses pengembalian dana ke rekening pelanggan
+                $pdo->prepare("UPDATE penjualan SET status_refund = 'Menunggu Transfer' WHERE id = ?")->execute([$idPesanan]);
+
                 $pdo->commit();
-                $msg = "Permohonan pembatalan pesanan #{$ordData['no_invoice']} disetujui. Pesanan resmi Dibatalkan dan seluruh stok fisik & batch FEFO telah dipulihkan.";
+                $rekInfo = !empty($ordData['refund_rekening'])
+                    ? " Silakan proses transfer refund Rp " . number_format((float)$ordData['total_harga'], 0, ',', '.') . " ke {$ordData['refund_bank']} {$ordData['refund_rekening']} (a.n. {$ordData['refund_atas_nama']})."
+                    : "";
+                $msg = "Permohonan pembatalan pesanan #{$ordData['no_invoice']} disetujui. Seluruh stok fisik & batch FEFO telah dipulihkan.$rekInfo";
                 $msgType = 'success';
             } catch (Exception $e) {
                 $pdo->rollBack();
@@ -428,16 +449,90 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
     </div>
 <?php endif; ?>
 
+<?php
+// Hitung pengingat pesanan berstatus Diproses (limit kirim 1x24 jam) & refund tertunda
+$diprosesTotalCount = 0;
+$diprosesLewat24Count = 0;
+$diprosesMendesakCount = 0;
+$refundMenungguCount = 0;
+$nowTs = time();
+foreach ($orders as $ordCheck) {
+    if ($ordCheck['status_pesanan'] === 'Diproses') {
+        $diprosesTotalCount++;
+        $patokan = strtotime($ordCheck['paid_at'] ?: $ordCheck['created_at']);
+        $umurJam = ($nowTs - $patokan) / 3600;
+        if ($umurJam >= 24) {
+            $diprosesLewat24Count++;
+        } elseif ($umurJam >= 18) {
+            $diprosesMendesakCount++;
+        }
+    }
+    if ($ordCheck['status_pesanan'] === 'Dibatalkan' && ($ordCheck['status_refund'] ?? '') === 'Menunggu Transfer') {
+        $refundMenungguCount++;
+    }
+}
+?>
+
+<?php if ($diprosesTotalCount > 0 || $refundMenungguCount > 0): ?>
+    <?php
+    $isUrgentBanner = ($diprosesLewat24Count > 0);
+    $bannerCls = $isUrgentBanner
+        ? 'bg-rose-50 border-rose-300 text-rose-900'
+        : 'bg-amber-50 border-amber-300 text-amber-950';
+    ?>
+    <div class="mb-5 p-4 rounded-2xl border <?= $bannerCls ?> shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl <?= $isUrgentBanner ? 'bg-rose-600 text-white' : 'bg-amber-500 text-white' ?> flex items-center justify-center shrink-0 shadow-xs">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="text-xs leading-relaxed">
+                <div class="font-extrabold text-[13px]">
+                    Pengingat Operasional Pesanan (Limit Kirim 1&times;24 Jam)
+                </div>
+                <p class="mt-0.5">
+                    <?php if ($diprosesTotalCount > 0): ?>
+                        Terdapat <strong><?= $diprosesTotalCount ?> pesanan berstatus Diproses</strong> yang menunggu pengemasan &amp; pengiriman.
+                        <?php if ($diprosesLewat24Count > 0): ?>
+                            <span class="inline-block px-1.5 py-0.5 rounded bg-rose-600 text-white font-bold text-[10.5px] ml-1"><?= $diprosesLewat24Count ?> melewati batas 1&times;24 jam!</span>
+                        <?php elseif ($diprosesMendesakCount > 0): ?>
+                            <span class="inline-block px-1.5 py-0.5 rounded bg-amber-600 text-white font-bold text-[10.5px] ml-1"><?= $diprosesMendesakCount ?> mendekati batas 24 jam</span>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                    <?php if ($refundMenungguCount > 0): ?>
+                        <span class="<?= $diprosesTotalCount > 0 ? 'block mt-0.5' : '' ?>">
+                            Terdapat <strong class="text-rose-700"><?= $refundMenungguCount ?> pesanan dibatalkan menunggu transfer refund</strong> ke rekening pelanggan.
+                        </span>
+                    <?php endif; ?>
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 self-end md:self-center">
+            <?php if ($diprosesTotalCount > 0): ?>
+            <button type="button" onclick="filterType('diproses', document.getElementById('tab-diproses'))"
+                class="px-3.5 py-2 <?= $isUrgentBanner ? 'bg-rose-600 hover:bg-rose-700' : 'bg-amber-600 hover:bg-amber-700' ?> text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer whitespace-nowrap">
+                Lihat <?= $diprosesTotalCount ?> Pesanan Diproses &rarr;
+            </button>
+            <?php endif; ?>
+        </div>
+    </div>
+<?php endif; ?>
+
 <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-4">
     <div>
         <h2 class="text-base font-bold text-zcTxt">Daftar Transaksi Pesanan</h2>
         <p class="text-xs text-zcMut mt-0.5">Total: <span id="lbl_count"><?= count($orders) ?></span> pesanan terbaru</p>
     </div>
     
-    <div class="bg-white border border-zcBrd p-1 rounded-xl flex shadow-sm inline-flex">
-        <button onclick="filterType('semua', this)" class="tab-btn px-4 py-2 text-xs font-bold rounded-lg transition bg-slate-800 text-white shadow-md shadow-slate-800/20" data-target="semua">Semua</button>
-        <button onclick="filterType('ecommerce', this)" class="tab-btn px-4 py-2 text-xs font-bold rounded-lg transition text-slate-500 hover:text-zcTxt hover:bg-slate-50" data-target="ecommerce">E-Commerce</button>
-        <button onclick="filterType('pos', this)" class="tab-btn px-4 py-2 text-xs font-bold rounded-lg transition text-slate-500 hover:text-zcTxt hover:bg-slate-50" data-target="pos">Kasir POS</button>
+    <div class="bg-white border border-zcBrd p-1 rounded-xl flex flex-wrap shadow-sm inline-flex gap-0.5">
+        <button onclick="filterType('semua', this)" class="tab-btn px-3.5 py-2 text-xs font-bold rounded-lg transition bg-slate-800 text-white shadow-md shadow-slate-800/20" data-target="semua">Semua</button>
+        <button id="tab-diproses" onclick="filterType('diproses', this)" class="tab-btn px-3.5 py-2 text-xs font-bold rounded-lg transition text-slate-500 hover:text-zcTxt hover:bg-slate-50 flex items-center gap-1.5" data-target="diproses">
+            <span>Perlu Diproses</span>
+            <?php if ($diprosesTotalCount > 0): ?>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold <?= $diprosesLewat24Count > 0 ? 'bg-rose-600 text-white' : 'bg-amber-500 text-white' ?>"><?= $diprosesTotalCount ?></span>
+            <?php endif; ?>
+        </button>
+        <button onclick="filterType('ecommerce', this)" class="tab-btn px-3.5 py-2 text-xs font-bold rounded-lg transition text-slate-500 hover:text-zcTxt hover:bg-slate-50" data-target="ecommerce">E-Commerce</button>
+        <button onclick="filterType('pos', this)" class="tab-btn px-3.5 py-2 text-xs font-bold rounded-lg transition text-slate-500 hover:text-zcTxt hover:bg-slate-50" data-target="pos">Kasir POS</button>
     </div>
 </div>
 
@@ -495,7 +590,7 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                             ? 'h-8 w-[152px] text-[11px] border border-slate-200 rounded-lg px-2 bg-slate-50 text-slate-400 font-semibold cursor-not-allowed text-center'
                             : 'h-8 w-[152px] text-[11px] border border-zcBrd rounded-lg px-2 bg-white font-semibold text-slate-700 hover:border-zc focus:outline-none focus:ring-1 focus:ring-zc cursor-pointer transition text-center';
                         ?>
-                        <tr class="order-row hover:bg-slate-50/60 transition cursor-pointer" data-tipe="<?= htmlspecialchars($o['tipe_transaksi']) ?>" onclick="toggleDetail(<?= $o['id'] ?>)">
+                        <tr class="order-row hover:bg-slate-50/60 transition cursor-pointer" data-tipe="<?= htmlspecialchars($o['tipe_transaksi']) ?>" data-status="<?= htmlspecialchars($o['status_pesanan']) ?>" onclick="toggleDetail(<?= $o['id'] ?>)">
                             <td class="px-3 py-3.5 whitespace-nowrap">
                                 <div class="flex items-center gap-2">
                                     <svg id="icon-<?= $o['id'] ?>" class="w-4 h-4 text-zcMut transition-transform shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
@@ -529,9 +624,35 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                     <span class="inline-flex items-center justify-center min-w-[104px] px-3 py-1 rounded-full text-[11px] font-bold border shadow-2xs text-center whitespace-nowrap <?= $statusCls ?>">
                                         <?= htmlspecialchars($o['status_pesanan']) ?>
                                     </span>
+                                    <?php if ($o['status_pesanan'] === 'Diproses'):
+                                        $patokanAdm = strtotime($o['paid_at'] ?: $o['created_at']);
+                                        $sisaAdmDetik = ($patokanAdm + 86400) - time();
+                                        if ($sisaAdmDetik <= 0):
+                                            $lewatJam = max(1, (int) floor(abs($sisaAdmDetik) / 3600));
+                                    ?>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap" title="Pesanan melewati batas kirim 1×24 jam">
+                                            &#9888; Lewat 24j (+<?= $lewatJam ?>j)
+                                        </span>
+                                    <?php else:
+                                        $sisaJamAdm = (int) floor($sisaAdmDetik / 3600);
+                                        $sisaMntAdm = (int) floor(($sisaAdmDetik % 3600) / 60);
+                                        $slaCls = ($sisaJamAdm < 6) ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-sky-50 text-sky-800 border-sky-200';
+                                    ?>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold border <?= $slaCls ?> whitespace-nowrap" title="Sisa batas kirim 1×24 jam">
+                                            &#9201; Sisa <?= $sisaJamAdm ?>j <?= $sisaMntAdm ?>m
+                                        </span>
+                                    <?php endif; endif; ?>
                                     <?php if (!empty($o['request_batal']) && $o['status_pesanan'] === 'Diproses'): ?>
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-extrabold bg-amber-500 text-white shadow-2xs animate-pulse whitespace-nowrap" title="Pelanggan mengajukan pembatalan">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-extrabold bg-amber-500 text-white shadow-2xs animate-pulse whitespace-nowrap" title="Pelanggan mengajukan pembatalan & refund">
                                             Minta Batal
+                                        </span>
+                                    <?php elseif ($o['status_pesanan'] === 'Dibatalkan' && ($o['status_refund'] ?? '') === 'Menunggu Transfer'): ?>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-extrabold bg-rose-600 text-white shadow-2xs whitespace-nowrap" title="Menunggu transfer refund ke rekening pelanggan">
+                                            Perlu Refund
+                                        </span>
+                                    <?php elseif ($o['status_pesanan'] === 'Dibatalkan' && ($o['status_refund'] ?? '') === 'Selesai'): ?>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 whitespace-nowrap">
+                                            Refund Selesai
                                         </span>
                                     <?php endif; ?>
                                 </div>
@@ -579,16 +700,35 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                             <td colspan="7" class="px-8 py-4 border-t border-zcBrd/40 shadow-inner">
                                 <div class="text-xs">
                                     <?php if (!empty($o['request_batal']) && $o['status_pesanan'] === 'Diproses'): ?>
-                                    <div class="mb-3.5 p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-                                        <div class="flex items-start gap-2.5">
+                                    <div class="mb-3.5 p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3 shadow-xs">
+                                        <div class="flex items-start gap-2.5 flex-1">
                                             <svg class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                            <div>
-                                                <span class="font-extrabold text-amber-900 text-xs">Permohonan Pembatalan dari Pelanggan:</span>
+                                            <div class="w-full">
+                                                <span class="font-extrabold text-amber-900 text-xs">Permohonan Pembatalan &amp; Refund dari Pelanggan:</span>
                                                 <p class="font-semibold text-slate-800 mt-0.5 italic">"<?= htmlspecialchars($o['request_batal_alasan']) ?>"</p>
-                                                <span class="text-amber-800 text-[11px] block mt-1">Diajukan: <?= !empty($o['request_batal_waktu']) ? date('d/m/Y H:i', strtotime($o['request_batal_waktu'])) . ' WIB' : '-' ?>. Silakan periksa apakah barang sudah dikemas atau siap dikirim.</span>
+                                                <span class="text-amber-800 text-[11px] block mt-0.5">Diajukan: <?= !empty($o['request_batal_waktu']) ? date('d/m/Y H:i', strtotime($o['request_batal_waktu'])) . ' WIB' : '-' ?>.</span>
+                                                <?php if (!empty($o['refund_rekening'])): ?>
+                                                <div class="mt-2 p-2.5 rounded-lg bg-white border border-amber-200 text-slate-800 text-[11px]" onclick="event.stopPropagation()">
+                                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                                        <div>
+                                                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Rekening Tujuan Refund Pelanggan</span>
+                                                            <span class="font-bold text-[#0f2d5a]"><?= htmlspecialchars($o['refund_bank']) ?></span>
+                                                            <span class="mx-1 text-slate-300">|</span>
+                                                            <span class="font-mono font-extrabold text-slate-900 select-all"><?= htmlspecialchars($o['refund_rekening']) ?></span>
+                                                            <span class="mx-1 text-slate-300">|</span>
+                                                            <span>a.n. <strong><?= htmlspecialchars($o['refund_atas_nama'] ?: '-') ?></strong></span>
+                                                        </div>
+                                                        <div class="text-right">
+                                                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Nominal Refund</span>
+                                                            <span class="font-extrabold text-rose-700 text-xs">Rp <?= number_format((float)$o['total_harga'], 0, ',', '.') ?></span>
+                                                        </div>
+                                                    </div>
+                                                    <p class="text-[10px] text-slate-500 mt-1.5 border-t border-slate-100 pt-1">Pelanggan telah menyetujui disclaimer bahwa kesalahan input nomor rekening/bank sepenuhnya merupakan tanggung jawab pelanggan.</p>
+                                                </div>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
-                                        <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto" onclick="event.stopPropagation()">
+                                        <div class="flex items-center gap-2 shrink-0 self-end lg:self-center" onclick="event.stopPropagation()">
                                             <form method="POST" class="inline m-0" onsubmit="return confirm('Apakah Anda yakin ingin MENYETUJUI pembatalan pesanan ini? Seluruh stok fisik dan batch FEFO akan dikembalikan otomatis.');">
                                                 <input type="hidden" name="aksi" value="setujui_request_batal">
                                                 <input type="hidden" name="id_penjualan" value="<?= $o['id'] ?>">
@@ -610,12 +750,38 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
                                     <?php endif; ?>
 
                                     <?php if ($o['status_pesanan'] === 'Dibatalkan'): ?>
-                                    <div class="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2 shadow-2xs">
-                                        <svg class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                                        <div>
-                                            <span class="font-bold">Pesanan Dibatalkan:</span> <?= htmlspecialchars($o['alasan_batal'] ?: 'Pesanan dibatalkan.') ?><br>
-                                            <span class="text-rose-700 text-[11px]">Dibatalkan oleh: <strong><?= htmlspecialchars($o['dibatalkan_oleh'] ?: 'Admin/Sistem') ?></strong><?= !empty($o['waktu_batal']) ? ' pada ' . date('d/m/Y H:i', strtotime($o['waktu_batal'])) . ' WIB' : '' ?>. Seluruh alokasi stok telah dipulihkan ke stok fisik &amp; batch.</span>
+                                    <div class="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex flex-col gap-2 shadow-2xs">
+                                        <div class="flex items-start gap-2">
+                                            <svg class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                            <div>
+                                                <span class="font-bold">Pesanan Dibatalkan:</span> <?= htmlspecialchars($o['alasan_batal'] ?: 'Pesanan dibatalkan.') ?><br>
+                                                <span class="text-rose-700 text-[11px]">Dibatalkan oleh: <strong><?= htmlspecialchars($o['dibatalkan_oleh'] ?: 'Admin/Sistem') ?></strong><?= !empty($o['waktu_batal']) ? ' pada ' . date('d/m/Y H:i', strtotime($o['waktu_batal'])) . ' WIB' : '' ?>. Seluruh alokasi stok telah dipulihkan ke stok fisik &amp; batch.</span>
+                                            </div>
                                         </div>
+                                        <?php if (!empty($o['refund_rekening'])): ?>
+                                        <div class="p-2.5 rounded-lg bg-white border border-rose-200 text-slate-800 text-[11px] flex flex-col sm:flex-row sm:items-center justify-between gap-2" onclick="event.stopPropagation()">
+                                            <div>
+                                                <span class="font-bold text-[#0f2d5a]">Rekening Refund:</span>
+                                                <span class="font-bold"><?= htmlspecialchars($o['refund_bank']) ?></span> &mdash;
+                                                <span class="font-mono font-extrabold text-slate-900 select-all"><?= htmlspecialchars($o['refund_rekening']) ?></span>
+                                                (a.n. <strong><?= htmlspecialchars($o['refund_atas_nama'] ?: '-') ?></strong>)
+                                                &bull; Nominal: <strong class="text-rose-700">Rp <?= number_format((float)$o['total_harga'], 0, ',', '.') ?></strong>
+                                            </div>
+                                            <?php if (($o['status_refund'] ?? '') === 'Menunggu Transfer'): ?>
+                                            <form method="POST" class="inline m-0 shrink-0" onsubmit="return confirm('Konfirmasi bahwa dana refund sudah ditransfer ke rekening pelanggan?');">
+                                                <input type="hidden" name="aksi" value="konfirmasi_refund">
+                                                <input type="hidden" name="id_penjualan" value="<?= $o['id'] ?>">
+                                                <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] rounded-lg shadow-2xs transition cursor-pointer">
+                                                    &#10003; Tandai Refund Sudah Ditransfer
+                                                </button>
+                                            </form>
+                                            <?php elseif (($o['status_refund'] ?? '') === 'Selesai'): ?>
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-[11px] shrink-0">
+                                                &#10003; Refund Selesai Ditransfer<?= !empty($o['waktu_refund']) ? ' (' . date('d/m/Y H:i', strtotime($o['waktu_refund'])) . ' WIB)' : '' ?>
+                                            </span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php endif; ?>
                                     </div>
                                     <?php endif; ?>
                                     <h4 class="font-bold text-zcTxt mb-2 uppercase tracking-wide border-b border-zcBrd pb-1 inline-block">Detail Item Pesanan</h4>
@@ -907,15 +1073,20 @@ layoutHeader('Manajemen Pesanan E-Commerce & POS', 'Kelola status pesanan toko o
 <script>
 function filterType(type, btn) {
     document.querySelectorAll('.tab-btn').forEach(b => {
-        b.className = 'tab-btn px-4 py-2 text-xs font-bold rounded-lg transition text-slate-500 hover:text-zcTxt hover:bg-slate-50';
+        b.className = 'tab-btn px-3.5 py-2 text-xs font-bold rounded-lg transition text-slate-500 hover:text-zcTxt hover:bg-slate-50 flex items-center gap-1.5';
     });
-    btn.className = 'tab-btn px-4 py-2 text-xs font-bold rounded-lg transition bg-slate-800 text-white shadow-md shadow-slate-800/20';
+    if (btn) {
+        btn.className = 'tab-btn px-3.5 py-2 text-xs font-bold rounded-lg transition bg-slate-800 text-white shadow-md shadow-slate-800/20 flex items-center gap-1.5';
+    }
 
     let count = 0;
     document.querySelectorAll('.order-row').forEach(row => {
         const id = row.getAttribute('onclick').match(/\d+/)[0];
         const detailRow = document.getElementById('detail-' + id);
-        if (type === 'semua' || row.dataset.tipe === type) {
+        const match = (type === 'semua')
+            || (type === 'diproses' && row.dataset.status === 'Diproses')
+            || (row.dataset.tipe === type);
+        if (match) {
             row.style.display = '';
             count++;
         } else {
@@ -925,6 +1096,15 @@ function filterType(type, btn) {
     });
     document.getElementById('lbl_count').innerText = count;
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    const f = params.get('filter');
+    if (f === 'diproses') {
+        const btn = document.getElementById('tab-diproses');
+        if (btn) filterType('diproses', btn);
+    }
+});
 
 function toggleDetail(id) {
     const detailRow = document.getElementById('detail-' + id);

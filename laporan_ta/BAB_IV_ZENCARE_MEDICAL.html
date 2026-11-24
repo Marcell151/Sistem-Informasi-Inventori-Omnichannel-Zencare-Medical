@@ -202,7 +202,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Halaman <i>Dashboard</i> Operasional Admin (Gambar 4.2) menyajikan ringkasan kondisi toko harian bagi staf Admin. Pada bagian atas terdapat kartu indikator jumlah katalog produk, stok satuan besar dan kecil, item stok menipis di bawah batas minimum (<i>buffer stock</i>), barang mendekati kedaluwarsa, pesanan daring baru, anomali pengeluaran <i>FEFO</i>, serta status retur pemasok. Di bawahnya tersedia pintasan cepat menuju penerimaan stok baru, pengelolaan pesanan, dan etalase toko daring, diikuti daftar peringatan stok menipis, barang hampir kedaluwarsa, serta log pergerakan terbaru dari tabel <i>kartu_stok</i>.
+                            Halaman <i>Dashboard</i> Operasional Admin (Gambar 4.2) menyajikan ringkasan kondisi toko harian bagi staf Admin. Pada bagian atas terdapat kartu indikator jumlah katalog produk, stok satuan besar dan kecil, item stok menipis di bawah batas minimum (<i>buffer stock</i>), barang mendekati kedaluwarsa, pesanan daring baru, anomali pengeluaran <i>FEFO</i>, serta status retur pemasok. Di bawahnya tersedia pintasan cepat menuju penerimaan stok baru, pengelolaan pesanan, dan etalase toko daring, diikuti daftar peringatan stok menipis, barang hampir kedaluwarsa, serta log pergerakan terbaru dari tabel <i>kartu_stok</i>. Selain itu, pada bagian teratas <i>Dashboard</i> ditampilkan banner pengingat pesanan berstatus Diproses beserta kolom batas kirim <b>1&times;24 jam</b> sejak pembayaran terverifikasi agar pesanan daring yang telah dibayar tidak mengendap atau terlewat dari jadwal pengemasan.
                         </p>
                     </div>
 
@@ -256,7 +256,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Halaman Pengelolaan Transaksi Penjualan <i>Omnichannel</i> (Gambar 4.5) menyatukan pemantauan pesanan dari kasir toko fisik (<i>POS</i>) maupun toko daring (<i>E-Commerce</i>) dalam satu tampilan. Admin dapat mencari nomor pesanan dan menyaring daftar transaksi menurut statusnya, mulai dari Menunggu Pembayaran, Diproses, Siap Diambil, Dikirim, Selesai, hingga Dibatalkan. Apabila terdapat pesanan daring yang belum dibayar atau dibatalkan, Admin dapat mengeksekusi pembatalan dari halaman ini sehingga stok kuncian pada alokasi <i>batch</i> otomatis dilepaskan kembali ke stok aktif.
+                            Halaman Pengelolaan Transaksi Penjualan <i>Omnichannel</i> (Gambar 4.5) menyatukan pemantauan pesanan dari kasir toko fisik (<i>POS</i>) maupun toko daring (<i>E-Commerce</i>) dalam satu tampilan. Admin dapat mencari nomor pesanan dan menyaring daftar transaksi menurut statusnya, mulai dari Menunggu Pembayaran, Diproses, Siap Diambil, Dikirim, Selesai, hingga Dibatalkan. Apabila terdapat pesanan daring yang belum dibayar atau dibatalkan, Admin dapat mengeksekusi pembatalan dari halaman ini sehingga stok kuncian pada alokasi <i>batch</i> otomatis dilepaskan kembali ke stok aktif. Halaman ini turut dilengkapi banner pengingat operasional beserta <i>tab</i> filter cepat "Perlu Diproses" dan indikator batas waktu kirim 1&times;24 jam (tanda merah untuk pesanan yang melewati 24 jam). Apabila pelanggan mengajukan pembatalan dalam rentang 1&times;24 jam, panel peninjauan Admin menampilkan data lengkap Nama Bank, Nomor Rekening, Atas Nama Pemilik Rekening, dan nominal pengembalian dana (<i>refund</i>). Setelah pembatalan disetujui dan stok dipulihkan, status pengembalian dana tercatat sebagai Menunggu Transfer hingga Admin menekan tombol "Tandai Refund Sudah Ditransfer" untuk menyelesaikan pencatatan <i>refund</i>.
                         </p>
                     </div>
 
@@ -380,7 +380,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Setiap pembongkaran kemasan mengurangi saldo kemasan besar, menambah saldo eceran dengan nomor <i>batch</i> dan tanggal kedaluwarsa yang sama, lalu mencatat buktinya ke tabel <i>histori_konversi</i> serta <i>kartu_stok</i>. Catatan riwayat konversi tersebut ditampilkan berurutan pada halaman Histori Konversi Satuan (Gambar 4.13), lengkap dengan waktu eksekusi, nama produk, nomor <i>batch</i>, jumlah kemasan besar yang dibongkar, dan jumlah eceran yang dihasilkan.
+                            Setiap pembongkaran kemasan mengurangi saldo kemasan besar, menambah saldo eceran dengan nomor <i>batch</i> dan tanggal kedaluwarsa yang sama, lalu mencatat buktinya ke tabel <i>histori_konversi</i> serta <i>kartu_stok</i>. Catatan riwayat konversi tersebut ditampilkan berurutan pada halaman Histori Konversi Satuan (Gambar 4.13), lengkap dengan waktu eksekusi, nama produk, nomor <i>batch</i>, jumlah kemasan besar yang dibongkar, dan jumlah eceran yang dihasilkan. Mekanisme konversi satuan ini dirancang bersifat satu arah (<i>non-reverse</i>), yaitu hanya mendukung pembongkaran dari kemasan besar utuh ke satuan eceran guna menjaga keutuhan segel kemasan serta konsistensi nomor <i>batch</i> dan tanggal kedaluwarsa.
                         </p>
                     </div>
 
@@ -938,7 +938,20 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Pada halaman Profil dan Pemantauan Pesanan Pelanggan (Gambar 4.46), konsumen dapat memperbarui biodata, nomor telepon, dan alamat pengiriman utama serta melihat daftar transaksi daringnya. Riwayat pesanan menampilkan perubahan status mulai dari Menunggu Pembayaran, Diproses, Siap Diambil, Dikirim, Selesai, hingga Dibatalkan, disertai opsi pembatalan sebelum pembayaran agar stok kuncian dilepaskan kembali ke stok siap jual.
+                            Pada halaman Profil dan Pemantauan Pesanan Pelanggan (Gambar 4.46), konsumen dapat memperbarui biodata, nomor telepon, dan alamat pengiriman utama serta memantau daftar transaksi daringnya lengkap dengan informasi tanggal kedaluwarsa (<i>Exp</i>) obat yang dialokasikan tanpa menampilkan kode <i>barcode</i> internal. Untuk pesanan berstatus Diproses, sistem menerapkan batas waktu pengajuan pembatalan maksimal <b>1&times;24 jam</b> sejak pembayaran terverifikasi; apabila telah melewati batas tersebut, tombol pembatalan otomatis terkunci (<i>Batal Terkunci &gt;24 Jam</i>) baik pada antarmuka maupun validasi server.
+                        </p>
+                    </div>
+                        <div class="my-4 p-3 bg-white border border-slate-300 rounded shadow-sm text-center">
+                            <div class="max-w-4xl mx-auto border border-black p-1 bg-slate-50 mb-2 overflow-hidden">
+                                <img src="../lain/File PPT/UI_UX_Asli/21b_Modal_Form_Refund_Disclaimer.png" alt="Formulir Pengajuan Pembatalan dan Rekening Refund" class="w-full h-auto object-contain mx-auto" loading="lazy">
+                            </div>
+                            <p class="text-xs font-bold font-serif text-slate-900 mt-2">
+                                Gambar 4.46b Formulir Pengajuan Pembatalan Pesanan, Input Rekening <i>Refund</i>, dan <i>Disclaimer</i> Tanggung Jawab Pelanggan
+                            </p>
+                        </div>
+                    <div class="my-3 px-2">
+                        <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
+                            Apabila pelanggan mengajukan pembatalan pesanan yang masih berada dalam rentang batas waktu 1&times;24 jam, sistem menampilkan jendela Formulir Pengajuan Pembatalan Pesanan dan Rekening <i>Refund</i> (Gambar 4.46b). Pada formulir ini, pelanggan wajib mengisi alasan pembatalan serta data tujuan pengembalian dana manual berupa Nama Bank, Nomor Rekening, dan Nama Pemilik Rekening, disertai centang pernyataan persetujuan (<i>disclaimer</i>) bahwa karena sistem tidak menyediakan <i>deposit wallet</i>, kesalahan pengisian nomor rekening atau nama bank yang mengakibatkan salah transfer sepenuhnya menjadi tanggung jawab pelanggan.
                         </p>
                     </div>
 
@@ -958,7 +971,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Etalase utama toko daring ditampilkan melalui halaman Beranda <i>E-Commerce</i> (Gambar 4.47) yang menyajikan katalog produk obat dan alat kesehatan dalam kemasan satuan besar utuh. Pengunjung dapat menelusuri spanduk promosi, menyaring barang berdasarkan kategori dan produk induk, mencari nama produk lewat bilah pencarian, serta melihat status ketersediaan stok yang langsung mengikuti saldo gudang toko fisik.
+                            Etalase utama toko daring ditampilkan melalui halaman Beranda <i>E-Commerce</i> (Gambar 4.47) yang menyajikan katalog produk obat dan alat kesehatan dalam kemasan satuan besar utuh. Pengunjung dapat menelusuri spanduk promosi, menyaring barang berdasarkan kategori dan produk induk, mencari nama produk lewat bilah pencarian, serta melihat status ketersediaan stok yang langsung mengikuti saldo gudang toko fisik. Khusus untuk produk kategori Obat yang tersedia, setiap kartu katalog turut menampilkan informasi singkat tanggal kedaluwarsa (<i>Exp</i>) berdasarkan <i>batch FEFO</i> aktif tanpa menampilkan kode <i>barcode</i>.
                         </p>
                     </div>
 
@@ -978,7 +991,7 @@
                         </div>
                     <div class="my-3 px-2">
                         <p class="text-xs font-serif text-slate-700 text-justify indent-8 leading-relaxed">
-                            Ketika pelanggan memilih salah satu produk, sistem membuka halaman Rincian Informasi Produk (Gambar 4.48). Halaman ini menampilkan galeri foto produk, harga jual per kemasan besar beserta referensi harga eceran, status ketersediaan stok, deskripsi produk, tab spesifikasi teknis (kategori, <i>SKU</i> variasi, satuan penjualan, isi kemasan, serta berat pengiriman), ketentuan pengiriman, pilihan variasi kemasan lain, pengaturan jumlah pembelian, serta tombol Tambah ke Keranjang dan Beli Sekarang.
+                            Ketika pelanggan memilih salah satu produk, sistem membuka halaman Rincian Informasi Produk (Gambar 4.48). Halaman ini menampilkan galeri foto produk, harga jual per kemasan besar beserta referensi harga eceran, status ketersediaan stok, deskripsi produk, tab spesifikasi teknis (kategori, <i>SKU</i> variasi, satuan penjualan, isi kemasan, serta berat pengiriman), ketentuan pengiriman, pilihan variasi kemasan lain, pengaturan jumlah pembelian, serta tombol Tambah ke Keranjang dan Beli Sekarang. Khusus produk kategori Obat, sistem menampilkan satu bidang informasi <b>Tanggal Kedaluwarsa</b> yang diambil otomatis dari <i>batch</i> kemasan utuh terdekat sesuai prinsip <i>FEFO</i> (tanpa menampilkan kode <i>barcode</i> demi keamanan logistik internal) guna meyakinkan pembeli daring atas kelayakan masa simpan obat; adapun pada terminal kasir fisik (<i>POS</i>) tampilan tersebut tidak diperlukan karena pembeli dapat memeriksa langsung pada kemasan fisik di gerai.
                         </p>
                     </div>
 

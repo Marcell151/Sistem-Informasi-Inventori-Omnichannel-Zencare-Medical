@@ -101,10 +101,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $errorMsg = "Gagal membatalkan pesanan: " . $e->getMessage();
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'request_cancel') {
-    $reqInvoice = $_POST['no_invoice'] ?? '';
+    $reqInvoice     = $_POST['no_invoice'] ?? '';
     $alasanKategori = trim($_POST['alasan_kategori'] ?? '');
     $alasanDetail   = trim($_POST['alasan_detail'] ?? '');
-    
+    $refundBank     = trim($_POST['refund_bank'] ?? '');
+    $refundBankLain = trim($_POST['refund_bank_lain'] ?? '');
+    $refundRekening = preg_replace('/[^0-9]/', '', (string) ($_POST['refund_rekening'] ?? ''));
+    $refundAtasNama = trim($_POST['refund_atas_nama'] ?? '');
+    $disclaimerOk   = ($_POST['refund_disclaimer_ok'] ?? '') === '1';
+
+    if ($refundBank === 'Lainnya') {
+        $refundBank = $refundBankLain;
+    }
+
     if ($alasanKategori === 'Lainnya') {
         $finalReason = !empty($alasanDetail) ? 'Lainnya: ' . $alasanDetail : 'Lainnya';
     } elseif (!empty($alasanKategori)) {
@@ -114,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 
     try {
-        $stmtCek = $pdo->prepare("SELECT id, status_pesanan FROM penjualan WHERE no_invoice = ? AND id_user = ?");
+        $stmtCek = $pdo->prepare("SELECT id, status_pesanan, paid_at, created_at FROM penjualan WHERE no_invoice = ? AND id_user = ?");
         $stmtCek->execute([$reqInvoice, $userId]);
         $ord = $stmtCek->fetch();
 
@@ -123,17 +132,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             throw new Exception("Pengajuan pembatalan hanya dapat dilakukan untuk pesanan yang sedang diproses.");
         }
 
-        $pdo->prepare("UPDATE penjualan SET request_batal = 1, request_batal_alasan = ?, request_batal_waktu = NOW() WHERE id = ?")
-            ->execute([$finalReason, $ord['id']]);
+        // Validasi Batas Waktu Pembatalan 1 x 24 Jam sejak pembayaran (Limit Kirim 24 Jam)
+        $patokanWaktu = strtotime($ord['paid_at'] ?: $ord['created_at']);
+        if (time() > ($patokanWaktu + 86400)) {
+            throw new Exception("Batas waktu pengajuan pembatalan (1×24 jam sejak pembayaran) telah berakhir. Pesanan sudah terkunci dan tidak dapat dibatalkan.");
+        }
 
-        $successMsg = "Permohonan pembatalan pesanan $reqInvoice berhasil dikirim! Menunggu konfirmasi peninjauan dari Admin toko.";
+        if ($refundBank === '') {
+            throw new Exception("Nama Bank tujuan refund wajib diisi.");
+        }
+        if (strlen($refundRekening) < 5) {
+            throw new Exception("Nomor Rekening tujuan refund tidak valid (minimal 5 digit angka).");
+        }
+        if ($refundAtasNama === '') {
+            throw new Exception("Nama Pemilik Rekening (Atas Nama) wajib diisi.");
+        }
+        if (!$disclaimerOk) {
+            throw new Exception("Anda wajib menyetujui pernyataan tanggung jawab kebenaran nomor rekening refund.");
+        }
+
+        $pdo->prepare("
+            UPDATE penjualan
+            SET request_batal = 1,
+                request_batal_alasan = ?,
+                request_batal_waktu = NOW(),
+                refund_bank = ?,
+                refund_rekening = ?,
+                refund_atas_nama = ?
+            WHERE id = ?
+        ")->execute([$finalReason, $refundBank, $refundRekening, $refundAtasNama, $ord['id']]);
+
+        $successMsg = "Permohonan pembatalan pesanan $reqInvoice berhasil dikirim bersama rekening refund ($refundBank - $refundRekening a.n. $refundAtasNama). Menunggu konfirmasi peninjauan Admin.";
     } catch (Exception $e) {
         $errorMsg = "Gagal mengajukan pembatalan: " . $e->getMessage();
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'batal_request_cancel') {
     $reqInvoice = $_POST['no_invoice'] ?? '';
     try {
-        $pdo->prepare("UPDATE penjualan SET request_batal = 0, request_batal_alasan = NULL, request_batal_waktu = NULL WHERE no_invoice = ? AND id_user = ?")
+        $pdo->prepare("UPDATE penjualan SET request_batal = 0, request_batal_alasan = NULL, request_batal_waktu = NULL, refund_bank = NULL, refund_rekening = NULL, refund_atas_nama = NULL WHERE no_invoice = ? AND id_user = ?")
             ->execute([$reqInvoice, $userId]);
         $successMsg = "Permohonan pembatalan untuk pesanan $reqInvoice berhasil ditarik kembali (pesanan tetap diproses).";
     } catch (Exception $e) {
@@ -240,7 +276,18 @@ $orderDetails = [];
 if (!empty($orderIds)) {
     $inClause = implode(',', array_map('intval', $orderIds));
     $stmtItems = $pdo->query("
-        SELECT dp.*, pv.nama_variasi, pi.nama_produk, pv.satuan_besar
+        SELECT dp.*, pv.nama_variasi, pi.nama_produk, pi.kategori, pv.satuan_besar,
+               COALESCE(
+                   (SELECT GROUP_CONCAT(DISTINCT DATE_FORMAT(sb.tgl_exp, '%d/%m/%Y') ORDER BY sb.tgl_exp ASC SEPARATOR ', ')
+                    FROM pesanan_batch_alokasi pba
+                    JOIN stok_batch sb ON pba.id_batch = sb.id
+                    WHERE pba.id_detail_penjualan = dp.id),
+                   (SELECT DATE_FORMAT(sb2.tgl_exp, '%d/%m/%Y')
+                    FROM stok_batch sb2
+                    WHERE sb2.id_variasi = dp.id_variasi
+                      AND sb2.no_batch = TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(dp.catatan_logistik, '(', 1), ',', 1))
+                    LIMIT 1)
+               ) AS tgl_exp_pesanan
         FROM detail_penjualan dp
         JOIN produk_variasi pv ON dp.id_variasi = pv.id
         JOIN produk_induk pi ON pv.id_produk_induk = pi.id
@@ -421,7 +468,12 @@ if (!empty($orderIds)) {
                                        class="px-3 py-1 bg-white border border-slate-300 hover:border-[#0f2d5a] text-[#0f2d5a] text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1">
                                         Struk
                                     </a>
-                                <?php elseif ($status === 'Diproses'): ?>
+                                <?php elseif ($status === 'Diproses'):
+                                    $waktuPatokanBatal = strtotime($ord['paid_at'] ?: $ord['created_at']);
+                                    $batasBatalTs      = $waktuPatokanBatal + 86400; // Limit 1 x 24 Jam
+                                    $sisaBatalDetik    = $batasBatalTs - time();
+                                    $lewatBatasBatal   = ($sisaBatalDetik <= 0);
+                                ?>
                                     <?php if (!empty($ord['request_batal'])): ?>
                                         <form method="POST" class="m-0 p-0" onsubmit="return confirm('Tarik kembali permohonan pembatalan?');">
                                             <input type="hidden" name="action" value="batal_request_cancel">
@@ -430,9 +482,13 @@ if (!empty($orderIds)) {
                                                 Tarik Batal
                                             </button>
                                         </form>
-                                    <?php else: ?>
-                                        <button type="button" onclick="bukaModalRequestBatal('<?= htmlspecialchars($ord['no_invoice']) ?>')" class="px-3 py-1 bg-white border border-slate-300 hover:border-rose-400 hover:text-rose-600 text-slate-600 text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1">
+                                    <?php elseif (!$lewatBatasBatal): ?>
+                                        <button type="button" onclick="bukaModalRequestBatal('<?= htmlspecialchars($ord['no_invoice']) ?>', <?= (float) $ord['total_harga'] ?>)" class="px-3 py-1 bg-white border border-slate-300 hover:border-rose-400 hover:text-rose-600 text-slate-600 text-[10px] font-extrabold uppercase tracking-wider transition flex items-center gap-1">
                                             Ajukan Batal
+                                        </button>
+                                    <?php else: ?>
+                                        <button type="button" disabled title="Batas waktu pengajuan pembatalan (1×24 jam) telah berakhir" class="px-3 py-1 bg-slate-100 border border-slate-200 text-slate-400 text-[10px] font-extrabold uppercase tracking-wider cursor-not-allowed flex items-center gap-1">
+                                            Batal Terkunci (>24 Jam)
                                         </button>
                                     <?php endif; ?>
                                     <a href="../pos/cetak_invoice.php?no_invoice=<?= urlencode($ord['no_invoice']) ?>" target="_blank"
@@ -470,13 +526,38 @@ if (!empty($orderIds)) {
                             </div>
                             <?php endif; ?>
 
+                            <?php if ($status === 'Diproses' && empty($ord['request_batal'])): ?>
+                            <div class="mb-3 px-3 py-2 <?= $lewatBatasBatal ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-[#eef6fb]/70 border-[#1a75d2]/25 text-[#0f2d5a]' ?> border text-[11px] flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-3.5 h-3.5 shrink-0 <?= $lewatBatasBatal ? 'text-slate-400' : 'text-[#1a75d2]' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    <?php if ($lewatBatasBatal): ?>
+                                        <span><strong>Batas pembatalan 1×24 jam telah berakhir</strong> (dibayar <?= date('d/m/Y H:i', $waktuPatokanBatal) ?> WIB). Pesanan sedang diproses untuk pengiriman.</span>
+                                    <?php else: ?>
+                                        <span>Pesanan sedang disiapkan (Limit kirim <strong>1×24 jam</strong>). Batas ajukan batal: <strong><?= date('d/m/Y H:i', $batasBatalTs) ?> WIB</strong></span>
+                                    <?php endif; ?>
+                                </div>
+                                <?php if (!$lewatBatasBatal): ?>
+                                <div class="font-mono font-bold text-[11px] px-2 py-0.5 bg-white border border-[#1a75d2]/30 text-[#0f2d5a] countdown-timer shrink-0 self-start sm:self-auto" data-seconds="<?= max(0, $sisaBatalDetik) ?>" data-label-expired="Terkunci (>24 Jam)">
+                                    Sisa: <span class="countdown-text">--:--:--</span>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                            <?php endif; ?>
+
                             <?php if ($status === 'Diproses' && !empty($ord['request_batal'])): ?>
                             <div class="mb-3 p-3 bg-amber-50/80 border border-amber-300 text-amber-900 text-[11px] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                 <div class="flex items-start gap-2">
                                     <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                                     <div>
                                         <span class="font-bold">Permohonan Pembatalan Sedang Ditinjau Admin:</span> "<?= htmlspecialchars($ord['request_batal_alasan']) ?>"
-                                        <span class="text-amber-700 block text-[10px] mt-0.5">Admin toko sedang memeriksa status fisik paket Anda di meja pengemasan.</span>
+                                        <?php if (!empty($ord['refund_rekening'])): ?>
+                                            <div class="mt-1.5 px-2.5 py-1.5 bg-white/90 border border-amber-200 text-slate-700 text-[10.5px]">
+                                                <span class="font-bold text-[#0f2d5a]">Rekening Tujuan Refund:</span>
+                                                <span class="font-mono font-bold text-slate-900"><?= htmlspecialchars($ord['refund_bank']) ?> &mdash; <?= htmlspecialchars($ord['refund_rekening']) ?></span>
+                                                <span>(a.n. <strong><?= htmlspecialchars($ord['refund_atas_nama'] ?: '-') ?></strong>)</span>
+                                            </div>
+                                        <?php endif; ?>
+                                        <span class="text-amber-700 block text-[10px] mt-1">Admin toko sedang memeriksa status fisik paket Anda di meja pengemasan.</span>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-1.5 self-start sm:self-auto shrink-0">
@@ -490,9 +571,27 @@ if (!empty($orderIds)) {
                             <?php if ($status === 'Dibatalkan'): ?>
                             <div class="mb-3 p-3 bg-rose-50/80 border border-rose-200 text-rose-900 text-[11px] flex items-start gap-2">
                                 <svg class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                                <div class="leading-snug">
+                                <div class="leading-snug w-full">
                                     <span class="font-bold">Pesanan Dibatalkan:</span> <?= htmlspecialchars($ord['alasan_batal'] ?: 'Pesanan dibatalkan.') ?>
                                     <span class="text-rose-600 block text-[10px] mt-0.5">Dibatalkan oleh: <strong><?= htmlspecialchars($ord['dibatalkan_oleh'] ?: 'Pelanggan/Sistem') ?></strong><?= !empty($ord['waktu_batal']) ? ' pada ' . date('d/m/Y H:i', strtotime($ord['waktu_batal'])) . ' WIB' : '' ?></span>
+                                    <?php if (!empty($ord['refund_rekening'])): ?>
+                                        <div class="mt-2 p-2 bg-white border border-rose-200 text-slate-700 text-[10.5px] flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                                            <div>
+                                                <span class="font-bold text-[#0f2d5a]">Tujuan Refund:</span>
+                                                <span class="font-mono font-bold text-slate-900"><?= htmlspecialchars($ord['refund_bank']) ?> &mdash; <?= htmlspecialchars($ord['refund_rekening']) ?></span>
+                                                <span>(a.n. <strong><?= htmlspecialchars($ord['refund_atas_nama'] ?: '-') ?></strong>)</span>
+                                            </div>
+                                            <?php if (($ord['status_refund'] ?? '') === 'Selesai'): ?>
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-[10px] shrink-0">
+                                                    &#10003; Refund Sudah Ditransfer<?= !empty($ord['waktu_refund']) ? ' (' . date('d/m/Y H:i', strtotime($ord['waktu_refund'])) . ')' : '' ?>
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 border border-amber-300 text-amber-800 font-bold text-[10px] shrink-0">
+                                                    Menunggu Transfer Refund Admin
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <?php endif; ?>
@@ -501,10 +600,13 @@ if (!empty($orderIds)) {
                             <div class="divide-y divide-slate-100 text-xs">
                                 <?php foreach ($items as $it): ?>
                                 <div class="py-2.5 first:pt-0 last:pb-0 flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between text-slate-700 gap-1.5 min-[420px]:gap-3">
-                                    <div class="flex items-start min-[420px]:items-center gap-2 min-w-0">
-                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0 mt-1.5 min-[420px]:mt-0"></span>
+                                    <div class="flex flex-wrap items-center gap-1.5 min-w-0">
+                                        <span class="w-1.5 h-1.5 bg-[#1a75d2] shrink-0"></span>
                                         <span class="font-bold text-[#0f2d5a] line-clamp-2 min-[420px]:truncate"><?= htmlspecialchars($it['nama_produk']) ?> &mdash; <?= htmlspecialchars($it['nama_variasi']) ?></span>
                                         <span class="text-slate-500 text-[11px] font-semibold bg-slate-100 px-1.5 py-0.5 border border-slate-200 shrink-0">x<?= intval($it['qty']) ?> <?= htmlspecialchars($it['satuan_besar'] ?: 'Box') ?></span>
+                                        <?php if (($it['kategori'] ?? '') === 'Obat' && !empty($it['tgl_exp_pesanan'])): ?>
+                                            <span class="text-[11px] text-slate-500 shrink-0">&bull; Exp: <strong class="text-slate-700 font-semibold"><?= htmlspecialchars($it['tgl_exp_pesanan']) ?></strong></span>
+                                        <?php endif; ?>
                                     </div>
                                     <span class="font-bold text-[#0f2d5a] text-xs shrink-0 pl-3.5 min-[420px]:pl-0">
                                         Rp <?= number_format($it['harga_satuan'] * $it['qty'], 0, ',', '.') ?>
@@ -628,7 +730,8 @@ if (!empty($orderIds)) {
                 if (isNaN(sec)) return;
                 const txt = t.querySelector('.countdown-text') || t;
                 if (sec <= 0) {
-                    txt.innerHTML = '<span class="text-rose-600 font-bold">Waktu Habis (Otomatis Batal)</span>';
+                    const customLabel = t.getAttribute('data-label-expired');
+                    txt.innerHTML = '<span class="text-rose-600 font-bold">' + (customLabel || 'Waktu Habis (Otomatis Batal)') + '</span>';
                     if (!t.dataset.expiredTriggered) {
                         t.dataset.expiredTriggered = '1';
                         setTimeout(() => location.reload(), 1500);
@@ -724,41 +827,85 @@ if (!empty($orderIds)) {
         }
     }
 
-    function bukaModalRequestBatal(invoice) {
+    function bukaModalRequestBatal(invoice, totalBayar) {
+        const nominalFmt = 'Rp ' + Number(totalBayar || 0).toLocaleString('id-ID');
         Swal.fire({
-            title: 'Ajukan Pembatalan #' + invoice + '?',
+            title: 'Ajukan Pembatalan #' + invoice,
+            width: 560,
             html: `
-                <div class="text-left text-xs text-slate-700">
-                    <p class="mb-2 text-slate-500 font-medium">Pesanan ini sedang disiapkan oleh tim gudang. Pengajuan pembatalan memerlukan persetujuan Admin Toko:</p>
-                    <div class="space-y-2 mb-3">
-                        <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
+                <div class="text-left text-xs text-slate-700 max-h-[68vh] overflow-y-auto pr-1">
+                    <p class="mb-2.5 text-slate-500 font-medium">Pesanan ini sudah dibayar (<strong>${nominalFmt}</strong>) dan sedang disiapkan gudang. Pengajuan batal hanya berlaku maksimal <strong>1×24 jam</strong> sejak pembayaran dan memerlukan persetujuan Admin:</p>
+                    <div class="space-y-1.5 mb-3">
+                        <label class="block text-[11px] font-bold text-[#0f2d5a] mb-1">1. Alasan Pembatalan: *</label>
+                        <label class="flex items-center gap-2.5 p-2 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
                             <input type="radio" name="swal_req_alasan" value="Ingin mengubah rincian pesanan" class="text-[#0f2d5a] focus:ring-[#0f2d5a]" checked onchange="toggleSwalReqLainnya(false)">
                             <span class="font-medium text-slate-700">Ingin mengubah pesanan (varian/jumlah/alamat kirim)</span>
                         </label>
-                        <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
+                        <label class="flex items-center gap-2.5 p-2 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
                             <input type="radio" name="swal_req_alasan" value="Berubah pikiran / Tidak sengaja pesan" class="text-[#0f2d5a] focus:ring-[#0f2d5a]" onchange="toggleSwalReqLainnya(false)">
                             <span class="font-medium text-slate-700">Berubah pikiran / Tidak sengaja memesan</span>
                         </label>
-                        <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
+                        <label class="flex items-center gap-2.5 p-2 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
                             <input type="radio" name="swal_req_alasan" value="Waktu pengiriman terlalu lama" class="text-[#0f2d5a] focus:ring-[#0f2d5a]" onchange="toggleSwalReqLainnya(false)">
                             <span class="font-medium text-slate-700">Waktu pengemasan atau pengiriman diperkirakan terlalu lama</span>
                         </label>
-                        <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
+                        <label class="flex items-center gap-2.5 p-2 border border-slate-200 hover:bg-[#eef6fb]/50 hover:border-[#1a75d2]/40 cursor-pointer transition">
                             <input type="radio" name="swal_req_alasan" value="Lainnya" class="text-[#0f2d5a] focus:ring-[#0f2d5a]" onchange="toggleSwalReqLainnya(true)">
                             <span class="font-medium text-slate-700">Alasan lainnya...</span>
                         </label>
                     </div>
-                    <div id="swal_req_lainnya_box" class="hidden">
+                    <div id="swal_req_lainnya_box" class="hidden mb-3">
                         <label class="block text-[11px] font-bold text-[#0f2d5a] mb-1">Tuliskan alasan pengajuan batal: *</label>
-                        <textarea id="swal_req_alasan_detail" rows="2" placeholder="Tuliskan keterangan detail untuk admin..." class="w-full text-xs border border-slate-300 p-2.5 focus:outline-none focus:border-[#0f2d5a]"></textarea>
+                        <textarea id="swal_req_alasan_detail" rows="2" placeholder="Tuliskan keterangan detail untuk admin..." class="w-full text-xs border border-slate-300 p-2 focus:outline-none focus:border-[#0f2d5a]"></textarea>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 border border-slate-200 mb-3 space-y-2.5">
+                        <label class="block text-[11px] font-extrabold text-[#0f2d5a] uppercase tracking-wider">2. Data Rekening Pengembalian Dana (Refund) *</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10.5px] font-bold text-slate-600 mb-1">Nama Bank *</label>
+                                <select id="swal_refund_bank" onchange="toggleSwalBankLain(this.value === 'Lainnya')" class="w-full text-xs border border-slate-300 bg-white px-2.5 py-2 focus:outline-none focus:border-[#0f2d5a]">
+                                    <option value="">-- Pilih Bank --</option>
+                                    <option value="BCA">BCA</option>
+                                    <option value="BRI">BRI</option>
+                                    <option value="BNI">BNI</option>
+                                    <option value="Mandiri">Bank Mandiri</option>
+                                    <option value="BSI">BSI (Bank Syariah Indonesia)</option>
+                                    <option value="CIMB Niaga">CIMB Niaga</option>
+                                    <option value="Bank Jatim">Bank Jatim</option>
+                                    <option value="SeaBank">SeaBank</option>
+                                    <option value="Lainnya">Bank Lainnya...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10.5px] font-bold text-slate-600 mb-1">Nomor Rekening *</label>
+                                <input type="text" id="swal_refund_rekening" inputmode="numeric" placeholder="Contoh: 1234567890" oninput="this.value=this.value.replace(/[^0-9]/g,'')" class="w-full text-xs font-mono border border-slate-300 bg-white px-2.5 py-2 focus:outline-none focus:border-[#0f2d5a]">
+                            </div>
+                        </div>
+                        <div id="swal_bank_lain_box" class="hidden">
+                            <label class="block text-[10.5px] font-bold text-slate-600 mb-1">Tuliskan Nama Bank Lainnya *</label>
+                            <input type="text" id="swal_refund_bank_lain" placeholder="Contoh: Bank Danamon / Permata / OCBC" class="w-full text-xs border border-slate-300 bg-white px-2.5 py-2 focus:outline-none focus:border-[#0f2d5a]">
+                        </div>
+                        <div>
+                            <label class="block text-[10.5px] font-bold text-slate-600 mb-1">Nama Pemilik Rekening (Atas Nama) *</label>
+                            <input type="text" id="swal_refund_atas_nama" value="" placeholder="Nama sesuai buku tabungan" class="w-full text-xs border border-slate-300 bg-white px-2.5 py-2 focus:outline-none focus:border-[#0f2d5a]">
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-rose-50 border border-rose-300 text-rose-900 text-[11px] leading-relaxed">
+                        <p class="font-extrabold text-rose-800 mb-1">&#9888; Peringatan Tanggung Jawab Pengembalian Dana (Refund):</p>
+                        <p class="mb-2">Sistem ZenCare Medical <strong>tidak menyediakan fitur saldo/deposit wallet</strong>. Pengembalian dana akan ditransfer langsung oleh Admin ke nomor rekening yang Anda cantumkan di atas. <strong>Apabila pelanggan salah mengisi nama bank atau nomor rekening sehingga terjadi salah transfer, hal tersebut sepenuhnya menjadi tanggung jawab pelanggan (bukan tanggung jawab Admin/ZenCare Medical).</strong></p>
+                        <label class="flex items-start gap-2 cursor-pointer font-semibold text-rose-950 select-none">
+                            <input type="checkbox" id="swal_refund_disclaimer" class="mt-0.5 accent-rose-700">
+                            <span>Saya telah memeriksa kebenaran nomor rekening di atas dan menyetujui bahwa kesalahan input rekening sepenuhnya menjadi tanggung jawab saya.</span>
+                        </label>
                     </div>
                 </div>
             `,
-            icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#0f2d5a',
             cancelButtonColor: '#64748b',
-            confirmButtonText: 'Kirim Pengajuan Batal',
+            confirmButtonText: 'Kirim Pengajuan & Data Refund',
             cancelButtonText: 'Kembali',
             customClass: {
                 popup: 'rounded-none border border-slate-200',
@@ -777,13 +924,44 @@ if (!empty($orderIds)) {
                     Swal.showValidationMessage('Harap tuliskan alasan pada kolom teks.');
                     return false;
                 }
-                return { kategori, detail };
+                const bank = (document.getElementById('swal_refund_bank')?.value || '').trim();
+                const bankLain = (document.getElementById('swal_refund_bank_lain')?.value || '').trim();
+                const rekening = (document.getElementById('swal_refund_rekening')?.value || '').replace(/[^0-9]/g, '');
+                const atasNama = (document.getElementById('swal_refund_atas_nama')?.value || '').trim();
+                const disclaimer = document.getElementById('swal_refund_disclaimer')?.checked;
+
+                if (!bank) {
+                    Swal.showValidationMessage('Harap pilih Nama Bank tujuan refund.');
+                    return false;
+                }
+                if (bank === 'Lainnya' && !bankLain) {
+                    Swal.showValidationMessage('Harap tuliskan nama bank lainnya.');
+                    return false;
+                }
+                if (rekening.length < 5) {
+                    Swal.showValidationMessage('Nomor rekening tidak valid (minimal 5 digit angka).');
+                    return false;
+                }
+                if (!atasNama) {
+                    Swal.showValidationMessage('Harap isi Nama Pemilik Rekening (Atas Nama).');
+                    return false;
+                }
+                if (!disclaimer) {
+                    Swal.showValidationMessage('Anda wajib mencentang persetujuan tanggung jawab kebenaran rekening refund.');
+                    return false;
+                }
+                return { kategori, detail, bank, bankLain, rekening, atasNama };
             }
         }).then((result) => {
             if (result.isConfirmed) {
                 document.getElementById('req_cancel_invoice_inp').value = invoice;
                 document.getElementById('req_cancel_kategori_inp').value = result.value.kategori;
                 document.getElementById('req_cancel_detail_inp').value = result.value.detail;
+                document.getElementById('req_refund_bank_inp').value = result.value.bank;
+                document.getElementById('req_refund_bank_lain_inp').value = result.value.bankLain;
+                document.getElementById('req_refund_rekening_inp').value = result.value.rekening;
+                document.getElementById('req_refund_atas_nama_inp').value = result.value.atasNama;
+                document.getElementById('req_refund_disclaimer_inp').value = '1';
                 document.getElementById('form-request-cancel-customer').submit();
             }
         });
@@ -791,6 +969,14 @@ if (!empty($orderIds)) {
 
     function toggleSwalReqLainnya(show) {
         const box = document.getElementById('swal_req_lainnya_box');
+        if (box) {
+            if (show) box.classList.remove('hidden');
+            else box.classList.add('hidden');
+        }
+    }
+
+    function toggleSwalBankLain(show) {
+        const box = document.getElementById('swal_bank_lain_box');
         if (box) {
             if (show) box.classList.remove('hidden');
             else box.classList.add('hidden');
@@ -812,6 +998,11 @@ if (!empty($orderIds)) {
     <input type="hidden" name="no_invoice" id="req_cancel_invoice_inp">
     <input type="hidden" name="alasan_kategori" id="req_cancel_kategori_inp">
     <input type="hidden" name="alasan_detail" id="req_cancel_detail_inp">
+    <input type="hidden" name="refund_bank" id="req_refund_bank_inp">
+    <input type="hidden" name="refund_bank_lain" id="req_refund_bank_lain_inp">
+    <input type="hidden" name="refund_rekening" id="req_refund_rekening_inp">
+    <input type="hidden" name="refund_atas_nama" id="req_refund_atas_nama_inp">
+    <input type="hidden" name="refund_disclaimer_ok" id="req_refund_disclaimer_inp">
 </form>
 <script src="../assets/js/sweetalert2.all.min.js"></script>
 <script>if (typeof Swal === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"><\/script>'); }</script>

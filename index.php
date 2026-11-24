@@ -253,12 +253,27 @@ $kartuTerbaru = $pdo->query("
 ")->fetchAll();
 
 $pesananProses = $pdo->query("
-    SELECT p.no_invoice, p.status_pesanan, p.tipe_transaksi, p.total_harga, p.created_at,
+    SELECT p.no_invoice, p.status_pesanan, p.tipe_transaksi, p.total_harga, p.created_at, p.paid_at, p.request_batal,
            u.nama_lengkap AS nama_pelanggan
     FROM penjualan p LEFT JOIN users u ON p.id_user=u.id
     WHERE p.status_pesanan IN ('Menunggu Pembayaran','Diproses')
-    ORDER BY p.id DESC LIMIT 5
+    ORDER BY (p.status_pesanan = 'Diproses') DESC, COALESCE(p.paid_at, p.created_at) ASC
+    LIMIT 6
 ")->fetchAll();
+
+// Hitung statistik pengingat pesanan berstatus Diproses (Limit Kirim 1x24 Jam)
+$diprosesAlertRow = $pdo->query("
+    SELECT
+        COUNT(*) AS total_diproses,
+        SUM(CASE WHEN TIMESTAMPDIFF(SECOND, COALESCE(paid_at, created_at), NOW()) >= 86400 THEN 1 ELSE 0 END) AS lewat_24j,
+        SUM(CASE WHEN request_batal = 1 THEN 1 ELSE 0 END) AS minta_batal
+    FROM penjualan
+    WHERE status_pesanan = 'Diproses'
+")->fetch(PDO::FETCH_ASSOC);
+$dashDiprosesTotal   = (int)($diprosesAlertRow['total_diproses'] ?? 0);
+$dashDiprosesLewat24 = (int)($diprosesAlertRow['lewat_24j'] ?? 0);
+$dashDiprosesBatal   = (int)($diprosesAlertRow['minta_batal'] ?? 0);
+$dashRefundPending   = (int)$pdo->query("SELECT COUNT(*) FROM penjualan WHERE status_pesanan = 'Dibatalkan' AND status_refund = 'Menunggu Transfer'")->fetchColumn();
 
 $pesananPickup = $pdo->query("
     SELECT p.no_invoice, p.created_at, p.paid_at, u.nama_lengkap AS nama_pelanggan,
@@ -281,6 +296,37 @@ layoutHeader(
 );
 ?>
 <!-- ============================================================ -->
+<!-- PENGINGAT PESANAN DIPROSES (LIMIT KIRIM 1x24 JAM)            -->
+<!-- ============================================================ -->
+<?php if ($dashDiprosesTotal > 0 || $dashRefundPending > 0):
+    $isUrgentDash = ($dashDiprosesLewat24 > 0);
+?>
+<div style="margin-bottom:14px;padding:12px 16px;border-radius:10px;border:1px solid <?= $isUrgentDash ? '#fca5a5' : '#fcd34d' ?>;background:<?= $isUrgentDash ? '#fef2f2' : '#fffbeb' ?>;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:32px;height:32px;border-radius:8px;background:<?= $isUrgentDash ? '#dc2626' : '#d97706' ?>;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;font-size:14px;">!</div>
+        <div style="font-size:12px;color:<?= $isUrgentDash ? '#7f1d1d' : '#78350f' ?>;line-height:1.45;">
+            <strong>Pengingat Pesanan Diproses (Limit Kirim 1&times;24 Jam):</strong>
+            <?php if ($dashDiprosesTotal > 0): ?>
+                Ada <strong><?= $dashDiprosesTotal ?> pesanan</strong> sudah dibayar &amp; menunggu dikemas/dikirim
+                <?php if ($dashDiprosesLewat24 > 0): ?>
+                    — <span style="background:#dc2626;color:#fff;padding:1px 6px;border-radius:4px;font-weight:700;font-size:11px;"><?= $dashDiprosesLewat24 ?> melewati 24 jam!</span>
+                <?php endif; ?>
+                <?php if ($dashDiprosesBatal > 0): ?>
+                    &bull; <span style="background:#f59e0b;color:#fff;padding:1px 6px;border-radius:4px;font-weight:700;font-size:11px;"><?= $dashDiprosesBatal ?> pengajuan batal</span>
+                <?php endif; ?>
+            <?php endif; ?>
+            <?php if ($dashRefundPending > 0): ?>
+                <?= $dashDiprosesTotal > 0 ? '&bull;' : '' ?> <strong><?= $dashRefundPending ?> refund</strong> menunggu transfer ke rekening pelanggan.
+            <?php endif; ?>
+        </div>
+    </div>
+    <a href="admin/pesanan.php?filter=diproses" style="padding:7px 13px;border-radius:8px;background:<?= $isUrgentDash ? '#dc2626' : '#d97706' ?>;color:#fff;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">
+        Proses Pesanan Sekarang &rarr;
+    </a>
+</div>
+<?php endif; ?>
+
+<!-- ============================================================ -->
 <!-- ACTIONABLE ORDERS (Prioritas Utama) -->
 <!-- ============================================================ -->
 <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(340px, 1fr));gap:14px;margin-bottom:18px;">
@@ -288,7 +334,7 @@ layoutHeader(
     <div style="background:#fff;border:1px solid <?= !empty($pesananProses)?'#bfdbfe':'#e4e9f0' ?>;border-radius:10px;overflow:hidden;<?= !empty($pesananProses)?'box-shadow:0 4px 6px -1px rgba(59,130,246,0.1);':'' ?>">
         <div style="padding:13px 16px;border-bottom:1px solid <?= !empty($pesananProses)?'#bfdbfe':'#f1f5f9' ?>;background:<?= !empty($pesananProses)?'#eff6ff':'#fff' ?>;display:flex;justify-content:space-between;align-items:center;">
             <div style="font-size:12px;font-weight:700;color:<?= !empty($pesananProses)?'#1e3a8a':'#1e293b' ?>;">Pesanan Menunggu Proses</div>
-            <a href="admin/pesanan.php" style="font-size:11px;color:#1a75d2;text-decoration:none;font-weight:600;">Kelola Semua →</a>
+            <a href="admin/pesanan.php?filter=diproses" style="font-size:11px;color:#1a75d2;text-decoration:none;font-weight:600;">Kelola Semua →</a>
         </div>
         <?php if (empty($pesananProses)): ?>
         <div style="padding:28px 16px;text-align:center;color:#94a3b8;font-size:12px;">Antrean kosong</div>
@@ -298,7 +344,7 @@ layoutHeader(
                 <tr style="background:#f8fafc;">
                     <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">NO. INVOICE</th>
                     <th style="padding:7px 8px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">PELANGGAN</th>
-                    <th style="padding:7px 8px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">KANAL</th>
+                    <th style="padding:7px 8px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">BATAS KIRIM</th>
                     <th style="padding:7px 16px;text-align:left;font-size:10px;color:#64748b;font-weight:600;">STATUS</th>
                 </tr>
             </thead>
@@ -306,12 +352,31 @@ layoutHeader(
             <?php foreach ($pesananProses as $p):
                 $sc = ['Menunggu Pembayaran'=>'background:#fef3c7;color:#92400e','Diproses'=>'background:#dbeafe;color:#1e40af'];
                 $bgStyle = $sc[$p['status_pesanan']] ?? 'background:#f1f5f9;color:#334155';
+                $slaHtml = '<span style="color:#94a3b8;font-size:11px;">-</span>';
+                if ($p['status_pesanan'] === 'Diproses') {
+                    $patokanDash = strtotime($p['paid_at'] ?: $p['created_at']);
+                    $sisaDash = ($patokanDash + 86400) - time();
+                    if ($sisaDash <= 0) {
+                        $lewatJ = max(1, (int) floor(abs($sisaDash) / 3600));
+                        $slaHtml = '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:#fee2e2;color:#b91c1c;">Lewat 24j (+' . $lewatJ . 'j)</span>';
+                    } else {
+                        $sj = (int) floor($sisaDash / 3600);
+                        $sm = (int) floor(($sisaDash % 3600) / 60);
+                        $slaBg = ($sj < 6) ? 'background:#fef3c7;color:#92400e;' : 'background:#f0f9ff;color:#0369a1;';
+                        $slaHtml = '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;' . $slaBg . '">Sisa ' . $sj . 'j ' . $sm . 'm</span>';
+                    }
+                }
             ?>
             <tr style="border-top:1px solid #f1f5f9;">
                 <td style="padding:8px 16px;font-weight:600;color:#1e293b;font-family:monospace;"><?= htmlspecialchars($p['no_invoice']) ?></td>
                 <td style="padding:8px;color:#334155;"><?= htmlspecialchars($p['nama_pelanggan'] ?? 'Walk-in') ?></td>
-                <td style="padding:8px;color:#64748b;"><?= strtoupper($p['tipe_transaksi']) ?></td>
-                <td style="padding:8px 16px;"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;<?= $bgStyle ?>"><?= $p['status_pesanan'] ?></span></td>
+                <td style="padding:8px;"><?= $slaHtml ?></td>
+                <td style="padding:8px 16px;">
+                    <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;<?= $bgStyle ?>"><?= $p['status_pesanan'] ?></span>
+                    <?php if (!empty($p['request_batal']) && $p['status_pesanan'] === 'Diproses'): ?>
+                        <span style="font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;background:#f59e0b;color:#fff;margin-left:3px;">Minta Batal</span>
+                    <?php endif; ?>
+                </td>
             </tr>
             <?php endforeach; ?>
             </tbody>

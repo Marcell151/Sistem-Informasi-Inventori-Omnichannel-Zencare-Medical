@@ -1,0 +1,53 @@
+<mxfile host="app.diagrams.net" modified="2026-11-24T07:25:00.000Z" agent="Draw.io" version="24.0.0">
+  <diagram id="alur-penelitian-rad" name="Alur Penelitian RAD">
+    <mxGraphModel dx="1320" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1280" pageHeight="540" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="start" value="Mulai" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="20" y="168" width="88" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1" value="&lt;b&gt;1. Requirements Planning&lt;/b&gt;&lt;br&gt;(Perencanaan Kebutuhan)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="140" y="150" width="215" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1d" value="&lt;b&gt;Kegiatan &amp;amp; Pengumpulan Data&lt;/b&gt;&lt;hr&gt;&lt;div align=&quot;left&quot;&gt;• Identifikasi Masalah &amp;amp; Studi Literatur&lt;br&gt;&lt;b&gt;• Wawancara Langsung&lt;/b&gt; (Pemilik &amp;amp; Staf ZenCare)&lt;br&gt;&lt;b&gt;• Observasi Lapangan&lt;/b&gt; (POS, Gudang, Penerimaan)&lt;br&gt;• Analisis Workflow Berjalan&lt;br&gt;• Spesifikasi Kebutuhan Sistem&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;verticalAlign=top;spacing=6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="140" y="214" width="215" height="176" as="geometry"/>
+        </mxCell>
+        <mxCell id="loop" value="Siklus Iteratif RAD (Umpan Balik Pengguna)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#fafafa;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=11;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="396" y="42" width="494" height="366" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2" value="&lt;b&gt;2. User Design&lt;/b&gt;&lt;br&gt;(Perancangan Sistem)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="416" y="150" width="214" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2d" value="&lt;b&gt;Pemodelan &amp;amp; Rancangan&lt;/b&gt;&lt;hr&gt;&lt;div align=&quot;left&quot;&gt;• Workflow Usulan (Masuk &amp;amp; Keluar)&lt;br&gt;• Sitemap (4 Peran Pengguna)&lt;br&gt;• Use Case &amp;amp; 8 Activity Diagram&lt;br&gt;• Logical Database (20 Tabel)&lt;br&gt;• Kamus Data Relasional&lt;br&gt;• Wireframe UI/UX&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;verticalAlign=top;spacing=6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="416" y="214" width="214" height="176" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3" value="&lt;b&gt;3. Construction&lt;/b&gt;&lt;br&gt;(Pembangunan Sistem)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="658" y="150" width="214" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3d" value="&lt;b&gt;Implementasi Aplikasi Web&lt;/b&gt;&lt;hr&gt;&lt;div align=&quot;left&quot;&gt;• Pengkodean PHP &amp;amp; PDO MySQL&lt;br&gt;• Sinkronisasi POS &amp;amp; E-Commerce&lt;br&gt;• Modul Konversi Multi-UOM&lt;br&gt;• Scanner Barcode FEFO &amp;amp; SN&lt;br&gt;• Siklus Stok Opname &amp;amp; 6 Laporan&lt;br&gt;• API Midtrans &amp;amp; RajaOngkir (Sandbox)&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;verticalAlign=top;spacing=6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="658" y="214" width="214" height="176" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4" value="&lt;b&gt;4. Cutover&lt;/b&gt;&lt;br&gt;(Pengujian &amp;amp; Peralihan)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="926" y="150" width="210" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4d" value="&lt;b&gt;Pengujian &amp;amp; Evaluasi&lt;/b&gt;&lt;hr&gt;&lt;div align=&quot;left&quot;&gt;&lt;b&gt;• Pengujian UAT (16 Skenario)&lt;/b&gt;&lt;br&gt;(8 Modul, 4 Peran Pengguna)&lt;br&gt;• Analisis Hasil &amp;amp; Validasi&lt;br&gt;• Kesimpulan &amp;amp; Saran&lt;br&gt;• Finalisasi Laporan TA&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;verticalAlign=top;spacing=6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="926" y="214" width="210" height="148" as="geometry"/>
+        </mxCell>
+        <mxCell id="dec" value="Hasil UAT&lt;br&gt;Layak?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="977" y="396" width="108" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="end" value="Selesai" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1132" y="406" width="88" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="start" target="f1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#000000;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="f1" target="f2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#000000;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="f2" target="f3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#000000;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="f3" target="f4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#000000;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="f4d" target="dec" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#000000;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" value="Ya" edge="1" parent="1" source="dec" target="end" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#000000;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" value="Tidak (Perlu Perbaikan / Revisi)" edge="1" parent="1" source="dec" target="loop" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;endArrow=block;endFill=1;strokeColor=#333333;"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -28,6 +28,13 @@ $stmt = $pdo->prepare("
               AND sb.no_batch NOT LIKE '%.%' 
               AND sb.tgl_exp >= CURDATE()
            ) AS stok_batch_utuh,
+           (SELECT MIN(sb.tgl_exp)
+            FROM stok_batch sb
+            WHERE sb.id_variasi = v.id
+              AND sb.no_batch NOT LIKE '%.%'
+              AND sb.stok_sisa >= GREATEST(1, v.rasio_konversi)
+              AND sb.tgl_exp >= CURDATE()
+           ) AS exp_fefo_terdekat,
            v.satuan_besar, v.satuan_kecil, v.rasio_konversi
     FROM produk_variasi v
     JOIN produk_induk i ON v.id_produk_induk = i.id
@@ -289,6 +296,17 @@ $totalImages = count($formattedImages);
                             1 <?= htmlspecialchars($satBesar) ?><?= $rasio > 1 ? " (Isi $rasio " . htmlspecialchars($satKecil) . ")" : "" ?>
                         </span>
                     </div>
+
+                    <?php if ($p['kategori'] === 'Obat' && $stokBox > 0 && !empty($p['exp_fefo_terdekat'])):
+                        $bulanId = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                        $expTs = strtotime($p['exp_fefo_terdekat']);
+                        $expFmt = date('d', $expTs) . ' ' . $bulanId[(int)date('n', $expTs)] . ' ' . date('Y', $expTs);
+                    ?>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
+                        <span class="w-36 sm:w-40 shrink-0 font-bold text-[#0f2d5a]">Tanggal Kedaluwarsa:</span>
+                        <span class="text-slate-700 font-semibold"><?= htmlspecialchars($expFmt) ?></span>
+                    </div>
+                    <?php endif; ?>
 
                     <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
                         <span class="w-36 sm:w-40 shrink-0 font-bold text-[#0f2d5a]">Kode SKU:</span>

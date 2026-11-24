@@ -152,6 +152,11 @@ Table penjualan {
   request_batal boolean [not null, default: false]
   request_batal_alasan varchar(255)
   request_batal_waktu timestamp
+  refund_bank varchar(100)
+  refund_rekening varchar(50)
+  refund_atas_nama varchar(100)
+  status_refund varchar(30) [not null, default: 'Tidak Ada']
+  waktu_refund timestamp
   total_harga decimal(12,2) [not null, default: 0.00]
   metode_bayar_pos varchar(50)
   ongkir decimal(10,2) [not null, default: 0.00]

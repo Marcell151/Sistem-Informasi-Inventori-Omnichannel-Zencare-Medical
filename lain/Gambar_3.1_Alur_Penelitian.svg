@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 480" width="1240" height="480" style="background:#ffffff;font-family:Helvetica,Arial,sans-serif;">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#000000"/>
+    </marker>
+    <marker id="arr-iter" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#333333"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1240" height="480" fill="#ffffff"/>
+
+  <!-- ================= MULAI ================= -->
+  <ellipse cx="62" cy="172" rx="44" ry="22" fill="#f5f5f5" stroke="#666666" stroke-width="1.3"/>
+  <text x="62" y="176" text-anchor="middle" font-size="12" font-weight="bold" fill="#000000">Mulai</text>
+  <line x1="106" y1="172" x2="140" y2="172" stroke="#000000" stroke-width="1.3" marker-end="url(#arr)"/>
+
+  <!-- ================= FASE 1: REQUIREMENTS PLANNING ================= -->
+  <g id="fase1">
+    <rect x="142" y="150" width="215" height="44" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.3"/>
+    <text x="249" y="169" text-anchor="middle" font-size="12" font-weight="bold" fill="#000000">1. Requirements Planning</text>
+    <text x="249" y="184" text-anchor="middle" font-size="10.5" fill="#1a1a1a">(Perencanaan Kebutuhan)</text>
+
+    <line x1="249" y1="194" x2="249" y2="214" stroke="#666666" stroke-width="1.1" stroke-dasharray="3,2"/>
+
+    <rect x="142" y="214" width="215" height="154" fill="#ffffff" stroke="#666666" stroke-width="1.1"/>
+    <rect x="142" y="214" width="215" height="24" fill="#f5f5f5" stroke="#666666" stroke-width="1.1"/>
+    <text x="249" y="230" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#000000">Kegiatan &amp; Pengumpulan Data</text>
+
+    <text x="152" y="256" font-size="10.5" fill="#000000">&#8226; Identifikasi Masalah</text>
+    <text x="152" y="276" font-size="10.5" fill="#000000">&#8226; Studi Literatur</text>
+    <text x="152" y="296" font-size="10.5" font-weight="bold" fill="#000000">&#8226; Wawancara &amp; Observasi</text>
+    <text x="160" y="310" font-size="9.5" fill="#333333">(Pengumpulan Data Lapangan)</text>
+    <text x="152" y="330" font-size="10.5" fill="#000000">&#8226; Analisis Proses Bisnis Berjalan</text>
+    <text x="152" y="350" font-size="10.5" fill="#000000">&#8226; Perumusan Kebutuhan Sistem</text>
+  </g>
+
+  <line x1="357" y1="172" x2="394" y2="172" stroke="#000000" stroke-width="1.3" marker-end="url(#arr)"/>
+
+  <!-- ================= FASE 2 & 3: SIKLUS ITERATIF RAD ================= -->
+  <g id="rad_cycle">
+    <rect x="396" y="42" width="494" height="346" rx="4" fill="#fafafa" stroke="#666666" stroke-width="1.2" stroke-dasharray="5,4"/>
+    <text x="643" y="62" text-anchor="middle" font-size="11" font-weight="bold" fill="#333333">Siklus Iteratif RAD (Umpan Balik Pengguna)</text>
+
+    <!-- Forward arrow -->
+    <path d="M 505 150 L 505 92 L 748 92 L 748 148" fill="none" stroke="#333333" stroke-width="1.2" marker-end="url(#arr-iter)"/>
+    <rect x="560" y="82" width="134" height="18" fill="#fafafa"/>
+    <text x="627" y="95" text-anchor="middle" font-size="9.5" fill="#333333">Rancangan &amp; Prototipe</text>
+
+    <!-- Direct arrow between headers -->
+    <line x1="630" y1="172" x2="656" y2="172" stroke="#000000" stroke-width="1.3" marker-end="url(#arr)"/>
+
+    <!-- FASE 2: USER DESIGN -->
+    <rect x="416" y="150" width="214" height="44" fill="#fff2cc" stroke="#d6b656" stroke-width="1.3"/>
+    <text x="523" y="169" text-anchor="middle" font-size="12" font-weight="bold" fill="#000000">2. User Design</text>
+    <text x="523" y="184" text-anchor="middle" font-size="10.5" fill="#1a1a1a">(Perancangan Sistem)</text>
+
+    <line x1="523" y1="194" x2="523" y2="214" stroke="#666666" stroke-width="1.1" stroke-dasharray="3,2"/>
+
+    <rect x="416" y="214" width="214" height="154" fill="#ffffff" stroke="#666666" stroke-width="1.1"/>
+    <rect x="416" y="214" width="214" height="24" fill="#f5f5f5" stroke="#666666" stroke-width="1.1"/>
+    <text x="523" y="230" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#000000">Tahap Perancangan</text>
+
+    <text x="426" y="258" font-size="10.5" fill="#000000">&#8226; Pemodelan Proses Bisnis Usulan</text>
+    <text x="426" y="282" font-size="10.5" fill="#000000">&#8226; Perancangan Struktur &amp; UML</text>
+    <text x="426" y="306" font-size="10.5" fill="#000000">&#8226; Perancangan Basis Data</text>
+    <text x="434" y="320" font-size="9.5" fill="#333333">(Model Data &amp; Kamus Data)</text>
+    <text x="426" y="344" font-size="10.5" fill="#000000">&#8226; Perancangan Antarmuka (UI/UX)</text>
+
+    <!-- FASE 3: CONSTRUCTION -->
+    <rect x="658" y="150" width="214" height="44" fill="#d5e8d4" stroke="#82b366" stroke-width="1.3"/>
+    <text x="765" y="169" text-anchor="middle" font-size="12" font-weight="bold" fill="#000000">3. Construction</text>
+    <text x="765" y="184" text-anchor="middle" font-size="10.5" fill="#1a1a1a">(Pembangunan Sistem)</text>
+
+    <line x1="765" y1="194" x2="765" y2="214" stroke="#666666" stroke-width="1.1" stroke-dasharray="3,2"/>
+
+    <rect x="658" y="214" width="214" height="154" fill="#ffffff" stroke="#666666" stroke-width="1.1"/>
+    <rect x="658" y="214" width="214" height="24" fill="#f5f5f5" stroke="#666666" stroke-width="1.1"/>
+    <text x="765" y="230" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#000000">Tahap Implementasi</text>
+
+    <text x="668" y="258" font-size="10.5" fill="#000000">&#8226; Implementasi Basis Data</text>
+    <text x="668" y="282" font-size="10.5" fill="#000000">&#8226; Pengkodean Aplikasi Berbasis Web</text>
+    <text x="668" y="306" font-size="10.5" fill="#000000">&#8226; Integrasi Modul &amp; Layanan API</text>
+    <text x="668" y="330" font-size="10.5" fill="#000000">&#8226; Pengujian Fungsional Internal</text>
+    <text x="676" y="344" font-size="9.5" fill="#333333">(Verifikasi &amp; Perbaikan Kode)</text>
+
+    <!-- Iterative return arrow -->
+    <path d="M 782 150 L 782 122 L 540 122 L 540 148" fill="none" stroke="#333333" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#arr-iter)"/>
+    <rect x="590" y="112" width="142" height="17" fill="#fafafa"/>
+    <text x="661" y="124" text-anchor="middle" font-size="9.5" fill="#333333">Evaluasi &amp; Revisi Desain</text>
+  </g>
+
+  <line x1="890" y1="172" x2="924" y2="172" stroke="#000000" stroke-width="1.3" marker-end="url(#arr)"/>
+
+  <!-- ================= FASE 4: CUTOVER ================= -->
+  <g id="fase4">
+    <rect x="926" y="150" width="210" height="44" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.3"/>
+    <text x="1031" y="169" text-anchor="middle" font-size="12" font-weight="bold" fill="#000000">4. Cutover</text>
+    <text x="1031" y="184" text-anchor="middle" font-size="10.5" fill="#1a1a1a">(Pengujian &amp; Peralihan)</text>
+
+    <line x1="1031" y1="194" x2="1031" y2="214" stroke="#666666" stroke-width="1.1" stroke-dasharray="3,2"/>
+
+    <rect x="926" y="214" width="210" height="140" fill="#ffffff" stroke="#666666" stroke-width="1.1"/>
+    <rect x="926" y="214" width="210" height="24" fill="#f5f5f5" stroke="#666666" stroke-width="1.1"/>
+    <text x="1031" y="230" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#000000">Pengujian &amp; Evaluasi</text>
+
+    <text x="936" y="258" font-size="10.5" font-weight="bold" fill="#000000">&#8226; Pengujian Penerimaan</text>
+    <text x="944" y="272" font-size="9.5" fill="#333333">(User Acceptance Testing / UAT)</text>
+    <text x="936" y="294" font-size="10.5" fill="#000000">&#8226; Analisis Hasil &amp; Evaluasi</text>
+    <text x="936" y="316" font-size="10.5" fill="#000000">&#8226; Penarikan Kesimpulan &amp; Saran</text>
+    <text x="936" y="338" font-size="10.5" fill="#000000">&#8226; Penyusunan Laporan Akhir</text>
+  </g>
+
+  <!-- Decision Diamond -->
+  <line x1="1031" y1="354" x2="1031" y2="380" stroke="#000000" stroke-width="1.3" marker-end="url(#arr)"/>
+  <polygon points="1031,382 1085,414 1031,446 977,414" fill="#ffffff" stroke="#000000" stroke-width="1.3"/>
+  <text x="1031" y="411" text-anchor="middle" font-size="10" font-weight="bold" fill="#000000">Hasil UAT</text>
+  <text x="1031" y="424" text-anchor="middle" font-size="10" font-weight="bold" fill="#000000">Layak?</text>
+
+  <!-- Loop back -->
+  <path d="M 977 414 L 643 414 L 643 390" fill="none" stroke="#333333" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arr-iter)"/>
+  <text x="820" y="408" text-anchor="middle" font-size="10" fill="#333333">Tidak (Perlu Perbaikan / Revisi)</text>
+
+  <!-- Ya -> Selesai -->
+  <line x1="1085" y1="414" x2="1128" y2="414" stroke="#000000" stroke-width="1.3" marker-end="url(#arr)"/>
+  <text x="1104" y="406" text-anchor="middle" font-size="10" font-weight="bold" fill="#000000">Ya</text>
+
+  <ellipse cx="1176" cy="414" rx="44" ry="22" fill="#f5f5f5" stroke="#666666" stroke-width="1.3"/>
+  <text x="1176" y="418" text-anchor="middle" font-size="12" font-weight="bold" fill="#000000">Selesai</text>
+</svg>

@@ -383,6 +383,18 @@
 
                 </p>
 
+                <!-- Gambar Alur Penelitian (Revisi Wajib Bab III) -->
+                <p class="text-justify indent-8 mb-3">
+                    Alur pelaksanaan penelitian yang memadukan metode pengumpulan data lapangan (wawancara langsung dan observasi pada ZenCare Medical) dengan empat fase iteratif metode <i>Rapid Application Development</i> (RAD) hingga pengujian kelayakan sistem (UAT) disajikan secara visual pada Gambar Alur Penelitian berikut:
+                </p>
+                <div class="my-6 text-center">
+                    <div class="max-w-3xl mx-auto p-4 bg-white border border-slate-200 rounded">
+                        <img src="../lain/Gambar_3.1_Alur_Penelitian.svg" alt="Alur Penelitian ZenCare Medical (Metode RAD)" class="mx-auto max-w-full h-auto">
+                    </div>
+                    <p class="text-xs text-slate-500 font-sans mt-2"><b>Gambar 3.1</b> Alur Penelitian Sistem Informasi <i>Inventory Omnichannel</i> ZenCare Medical (Metode RAD)</p>
+                </div>
+
+
                 <ol class="list-decimal pl-12 space-y-2 mb-4 text-justify">
 
                     <li><b>Perencanaan Kebutuhan (<i>Requirements Planning</i>):</b> Mengidentifikasi kendala nyata di
@@ -403,11 +415,13 @@
 
                         pengguna.</li>
 
-                    <li><b>Peralihan (<i>Cutover</i>):</b> Menguji sistem secara menyeluruh (<i>Black Box Testing</i>
+                    <li><b>Peralihan (<i>Cutover</i>):</b> Melaksanakan pengujian penerimaan pengguna (<i>User
 
-                        dan <i>User Acceptance Testing</i>), melakukan instalasi modul, pelatihan staf, dan migrasi data
+                        Acceptance Testing</i> / UAT) langsung bersama pengelola dan pengguna sistem untuk memastikan
 
-                        persediaan menuju operasional penuh.</li>
+                        kesesuaian fungsional terhadap proses bisnis, melakukan evaluasi hasil pengujian, serta
+
+                        menyiapkan penerapan sistem dan pendampingan operasional bagi staf toko.</li>
 
                 </ol>
 
@@ -2359,13 +2373,13 @@
 
                         <p class="text-justify indent-8 mb-3">
 
-                            Diagram aktivitas Pesanan Daring memetakan interaksi transaksi pemesanan produk antara Pelanggan, Sistem <i>E-Commerce</i>, dan gerbang pembayaran digital (<i>Payment Gateway</i>). Alur diawali ketika pelanggan menekan tombol pemesanan (<i>checkout</i>) dari keranjang belanja. Sistem kemudian menyajikan ringkasan pesanan dan meminta pelanggan memilih metode pengambilan barang. Apabila pelanggan memilih pengiriman melalui kurir ekspedisi, sistem mewajibkan pengisian alamat tujuan untuk menghitung biaya ongkos kirim secara otomatis. Namun, apabila pelanggan memilih opsi Ambil di Toko (<i>Pick-up in Store</i>), tahapan perhitungan ongkos kirim dilewati dan sistem langsung menetapkan biaya kirim sebesar nol rupiah.
+                            Diagram aktivitas Pesanan Daring memetakan interaksi transaksi pemesanan produk antara Pelanggan, Sistem <i>E-Commerce</i>, dan gerbang pembayaran digital (<i>Payment Gateway</i>). Sebelum melakukan <i>checkout</i>, pelanggan dapat melihat informasi produk beserta <b>Tanggal Kedaluwarsa (<i>Expired Date</i>)</b> khusus produk kategori Obat yang bersumber dari alokasi <i>FEFO</i> aktif pada katalog maupun halaman detail produk (tanpa menampilkan kode <i>barcode</i> internal). Alur berlanjut saat pelanggan menekan tombol <i>checkout</i>, memilih metode pengambilan (Kurir Ekspedisi/Internal dengan hitung tarif otomatis atau <i>Pick-up in Store</i> Rp 0), hingga menyelesaikan pembayaran melalui Midtrans.
 
                         </p>
 
                         <p class="text-justify indent-8 mb-4">
 
-                            Setelah total tagihan akhir ditampilkan, sistem membuat transaksi pembayaran dan memberikan durasi batas waktu pelunasan kepada pelanggan. Pelanggan selanjutnya memilih metode pembayaran digital yang diinginkan. Pihak gerbang pembayaran kemudian memvalidasi status pembayaran tersebut. Apabila pembayaran gagal atau batas waktu pelunasan telah habis, sistem mengubah status pesanan menjadi dibatalkan dan mengirimkan notifikasi pemberitahuan kepada pelanggan. Sebaliknya, apabila pembayaran terverifikasi telah lunas, sistem secara otomatis menentukan alokasi persediaan barang berdasarkan kategori produk: untuk kategori Obat dialokasikan nomor <i>batch</i> terdekat dari tanggal kedaluwarsa (mengikuti kaidah <i>FEFO</i>), sedangkan untuk kategori Alat Kesehatan dialokasikan unit berdasarkan nomor seri unik (<i>Serial Number</i>). Sistem kemudian langsung mengunci stok barang tersebut (status terkunci sementara) agar kuantitas fisik tidak terjual secara bersamaan di meja kasir toko fisik, memperbarui status pesanan menjadi "Diproses", serta menyajikan faktur digital (<i>invoice</i>) yang dapat dipantau oleh pelanggan. Alur ini divisualisasikan pada Gambar 3.11.
+                            Apabila pembayaran gagal atau batas waktu pelunasan (2 jam) telah habis, sistem secara otomatis mengubah status pesanan menjadi "Dibatalkan", memulihkan stok <i>reserved</i>, dan mengirimkan notifikasi kepada pelanggan. Sebaliknya, apabila pembayaran terverifikasi telah lunas (<i>settlement</i>), sistem mengalokasikan persediaan berdasarkan kategori produk (<i>batch FEFO</i> untuk Obat atau <i>Serial Number</i> untuk Alat Kesehatan), mengunci stok (<i>reserved</i>), mencatat stempel waktu pelunasan (<code>paid_at</code>) sebagai acuan batas pembatalan <b>1&times;24 jam</b>, memperbarui status pesanan menjadi "Diproses", serta menampilkan faktur digital dan tanggal kedaluwarsa obat pada riwayat pesanan pelanggan. Selama masih berada dalam batas waktu 1&times;24 jam, pelanggan dapat mengajukan pembatalan dengan wajib mengisi alasan, <b>Nama Bank, Nomor Rekening, Atas Nama Pemilik Rekening</b>, serta menyetujui pernyataan tanggung jawab (<i>disclaimer</i>) apabila terjadi kesalahan input nomor rekening. Apabila batas waktu 1&times;24 jam telah terlewati, tombol pembatalan otomatis terkunci di antarmuka maupun validasi server.
 
                         </p>
 
@@ -2427,19 +2441,19 @@
 
                         <p class="text-justify indent-8 mb-3">
 
-                            Diagram aktivitas ini memetakan alur pemenuhan dan pembaruan status pesanan belanja daring oleh Admin Toko. Proses diawali saat Admin membuka menu Transaksi dan menyaring daftar pesanan pada <i>tab</i> "<i>E-Commerce</i>". Sistem menampilkan antrean pesanan yang perlu ditindaklanjuti.
+                            Diagram aktivitas ini memetakan alur pemenuhan, pengingat batas kirim <b>1&times;24 jam</b>, serta penanganan pembatalan dan pengembalian dana (<i>refund</i>) pesanan belanja daring oleh Admin Toko. Proses diawali saat Admin membuka <i>Dashboard</i> atau menu Transaksi dan menyaring daftar pesanan pada <i>tab</i> "Perlu Diproses / <i>E-Commerce</i>". Sistem menampilkan banner pengingat pesanan berstatus "Diproses" beserta indikator sisa atau keterlambatan batas kirim 1&times;24 jam, permohonan pembatalan pelanggan (beserta nama bank, nomor rekening, dan atas nama tujuan <i>refund</i>), serta panduan pengambilan fisik barang (Nomor <i>Batch FEFO</i> atau <i>Serial Number</i>).
 
                         </p>
 
                         <p class="text-justify indent-8 mb-4">
 
-                            Alur kemudian memeriksa kondisi pesanan: apabila pesanan berstatus baru dan belum disiapkan, Admin membuka rincian pesanan dan sistem menyajikan instruksi pengambilan fisik barang (Nomor <i>Batch</i> <i>FEFO</i> atau <i>Serial Number</i>). Admin menyiapkan fisik barang dari rak penyimpanan gudang dan memindai kode barang. Jika nomor <i>batch</i> obat yang diambil berbeda dengan rekomendasi sistem, kejadian tersebut otomatis dicatat ke dalam log anomali <i>FEFO</i>. Sebaliknya, apabila pesanan tidak memerlukan penyiapan barang fisik ulang, tahapan persiapan ini langsung dilewati.
+                            Alur kemudian memeriksa kondisi pesanan: apabila pesanan berstatus baru dan belum disiapkan, Admin mencetak label pengiriman, menyiapkan fisik barang dari rak gudang, dan memindai kode barang saat pengemasan. Jika nomor <i>batch</i> obat yang diambil berbeda dengan rekomendasi sistem, kejadian tersebut otomatis dicatat ke dalam log anomali <i>FEFO</i>. Sebaliknya, apabila pesanan tidak memerlukan penyiapan fisik ulang, tahapan persiapan ini langsung dilewati.
 
                         </p>
 
                         <p class="text-justify indent-8 mb-4">
 
-                            Selanjutnya, Admin menentukan perubahan status pesanan. Apabila pesanan dibatalkan, Admin memilih status batal sehingga sistem seketika melepaskan kuncian stok barang kembali menjadi persediaan aktif di toko dan memperbarui status pesanan menjadi "Dibatalkan". Apabila pesanan diteruskan, Admin memilih status lanjutan berdasarkan metode pengambilan barang. Untuk pesanan yang dikirim via kurir ekspedisi, Admin mencetak label pengiriman, memperbarui status menjadi "Dikirim", dan sistem mencatat mutasi keluar penjualan pada buku Kartu Stok. Untuk pesanan Ambil di Toko (<i>Pick-up in Store</i>), Admin memperbarui status menjadi "Siap Diambil", dan pencatatan mutasi keluar ke Kartu Stok baru dilakukan saat pembeli mengambil barang di toko dan status diubah menjadi "Selesai". Alur diakhiri dengan sistem menampilkan notifikasi keberhasilan pembaruan status kepada Admin. Alur ini divisualisasikan pada Gambar 3.13.
+                            Selanjutnya, Admin menentukan tindakan operasional pesanan. Apabila terdapat permohonan pembatalan dari pelanggan dan disetujui Admin setelah meninjau alasan beserta data rekening tujuan, sistem seketika melepaskan kuncian stok <i>reserved</i> kembali menjadi persediaan aktif toko, memperbarui status pesanan menjadi "Dibatalkan", serta menetapkan status <i>refund</i> menjadi "Menunggu Transfer". Setelah Admin melakukan transfer pengembalian dana secara manual ke rekening yang dicantumkan pelanggan dan menekan tombol "Tandai Refund Sudah Ditransfer", sistem memperbarui status <i>refund</i> menjadi "Selesai" beserta stempel waktunya. Apabila pesanan diteruskan, Admin memproses pengiriman kurir ("Dikirim") atau penyerahan ambil di toko ("Siap Diambil" hingga "Selesai") yang sekaligus membukukan mutasi keluar penjualan pada Kartu Stok.
 
                         </p>
 
@@ -4564,302 +4578,39 @@
                         </thead>
 
                         <tbody>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">1</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>id_penjualan</i> <span class="text-red-700 font-bold font-sans text-[10px]">(PK)</span></td>
-
-                                <td class="border border-black px-2 py-1">Integer</td>
-
-                                <td class="border border-black px-2 py-1 text-center">11</td>
-
-                                <td class="border border-black px-2 py-1"><i>Primary Key</i>, Auto Increment. ID unik dokumen penjualan.</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">2</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>no_invoice</i></td>
-
-                                <td class="border border-black px-2 py-1">Varchar</td>
-
-                                <td class="border border-black px-2 py-1 text-center">50</td>
-
-                                <td class="border border-black px-2 py-1">Nomor faktur penjualan resmi toko (ZNC-YYYYMMDD-XXXX).</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">3</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>id_user</i> <span class="text-blue-700 font-bold font-sans text-[10px]">(FK)</span></td>
-
-                                <td class="border border-black px-2 py-1">Integer</td>
-
-                                <td class="border border-black px-2 py-1 text-center">11</td>
-
-                                <td class="border border-black px-2 py-1"><i>Foreign Key</i> ke <i>users</i>.<i>id_user</i> (pelanggan pembeli atau kasir).</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">4</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>tipe_transaksi</i></td>
-
-                                <td class="border border-black px-2 py-1">Enum</td>
-
-                                <td class="border border-black px-2 py-1 text-center">-</td>
-
-                                <td class="border border-black px-2 py-1">Pemetaan saluran asal transaksi ('pos', 'ecommerce').</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">5</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>metode_pengambilan</i></td>
-
-                                <td class="border border-black px-2 py-1">Enum</td>
-
-                                <td class="border border-black px-2 py-1 text-center">-</td>
-
-                                <td class="border border-black px-2 py-1">Jalur serah terima barang ('Kurir', 'Pick-up').</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">6</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>status_pesanan</i></td>
-
-                                <td class="border border-black px-2 py-1">Enum</td>
-
-                                <td class="border border-black px-2 py-1 text-center">-</td>
-
-                                <td class="border border-black px-2 py-1">Tahapan siklus pesanan (Menunggu Bayar, Diproses, Dikirim, Selesai, Batal).</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">7</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>total_harga</i></td>
-
-                                <td class="border border-black px-2 py-1">Decimal</td>
-
-                                <td class="border border-black px-2 py-1 text-center">12,2</td>
-
-                                <td class="border border-black px-2 py-1">Total nilai tagihan pembelanjaan barang.</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">8</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>metode_bayar_pos</i></td>
-
-                                <td class="border border-black px-2 py-1">Varchar</td>
-
-                                <td class="border border-black px-2 py-1 text-center">50</td>
-
-                                <td class="border border-black px-2 py-1">Metode pembayaran kasir luring (Tunai, Debit, QRIS).</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">9</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">ongkir</td>
-
-                                <td class="border border-black px-2 py-1">Decimal</td>
-
-                                <td class="border border-black px-2 py-1 text-center">10,2</td>
-
-                                <td class="border border-black px-2 py-1">Beban biaya logistik kurir ekspedisi hasil kalkulasi API.</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">10</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>nama_penerima</i></td>
-
-                                <td class="border border-black px-2 py-1">Varchar</td>
-
-                                <td class="border border-black px-2 py-1 text-center">100</td>
-
-                                <td class="border border-black px-2 py-1">Nama lengkap penerima pesanan paket pengiriman.</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">11</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>telepon_penerima</i></td>
-
-                                <td class="border border-black px-2 py-1">Varchar</td>
-
-                                <td class="border border-black px-2 py-1 text-center">20</td>
-
-                                <td class="border border-black px-2 py-1">Nomor kontak telepon penerima paket pengiriman.</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">12</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>alamat_lengkap</i></td>
-
-                                <td class="border border-black px-2 py-1">Text</td>
-
-                                <td class="border border-black px-2 py-1 text-center">-</td>
-
-                                <td class="border border-black px-2 py-1">Alamat lengkap destinasi pengantaran paket kurir.</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">13</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>kota_tujuan</i></td>
-
-                                <td class="border border-black px-2 py-1">Varchar</td>
-
-                                <td class="border border-black px-2 py-1 text-center">100</td>
-
-                                <td class="border border-black px-2 py-1">Nama kota tujuan destinasi pengiriman paket pesanan.</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">14</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">kurir</td>
-
-                                <td class="border border-black px-2 py-1">Varchar</td>
-
-                                <td class="border border-black px-2 py-1 text-center">50</td>
-
-                                <td class="border border-black px-2 py-1">Label perusahaan kurir ekspedisi mitra pengiriman.</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">15</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold">layanan</td>
-
-                                <td class="border border-black px-2 py-1">Varchar</td>
-
-                                <td class="border border-black px-2 py-1 text-center">50</td>
-
-                                <td class="border border-black px-2 py-1">Klasifikasi paket layanan pengiriman yang dipilih pelanggan.</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">16</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>snap_token</i></td>
-
-                                <td class="border border-black px-2 py-1">Varchar</td>
-
-                                <td class="border border-black px-2 py-1 text-center">255</td>
-
-                                <td class="border border-black px-2 py-1"><i>Token</i> transaksi Payment Gateway Midtrans untuk pembayaran daring.</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">17</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>payment_method_ecommerce</i></td>
-
-                                <td class="border border-black px-2 py-1">Varchar</td>
-
-                                <td class="border border-black px-2 py-1 text-center">50</td>
-
-                                <td class="border border-black px-2 py-1">Kanal pembayaran daring hasil callback otomatis gateway.</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">18</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>paid_at</i></td>
-
-                                <td class="border border-black px-2 py-1"><i>Timestamp</i></td>
-
-                                <td class="border border-black px-2 py-1 text-center">-</td>
-
-                                <td class="border border-black px-2 py-1">Bukti stempel waktu pelunasan pembayaran terverifikasi.</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">19</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>kode_pickup</i></td>
-
-                                <td class="border border-black px-2 py-1">Varchar</td>
-
-                                <td class="border border-black px-2 py-1 text-center">20</td>
-
-                                <td class="border border-black px-2 py-1">Kode verifikasi rahasia bagi pelanggan opsi Pick-up in Store.</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">20</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>created_at</i></td>
-
-                                <td class="border border-black px-2 py-1"><i>Timestamp</i></td>
-
-                                <td class="border border-black px-2 py-1 text-center">-</td>
-
-                                <td class="border border-black px-2 py-1">Waktu pembentukan transaksi pesanan pertama kali.</td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td class="border border-black px-2 py-1 text-center font-bold">21</td>
-
-                                <td class="border border-black px-2 py-1 font-mono font-semibold"><i>updated_at</i></td>
-
-                                <td class="border border-black px-2 py-1"><i>Timestamp</i></td>
-
-                                <td class="border border-black px-2 py-1 text-center">-</td>
-
-                                <td class="border border-black px-2 py-1">Waktu pembaruan siklus pesanan terakhir dibukukan.</td>
-
-                            </tr>
-
-                        </tbody>
+<tr><td class="border border-black px-2 py-1 text-center">1</td><td class="border border-black px-2 py-1 font-mono">id_penjualan</td><td class="border border-black px-2 py-1">Integer</td><td class="border border-black px-2 py-1 text-center">11</td><td class="border border-black px-2 py-1">Primary Key, Auto Increment. ID unik dokumen penjualan.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">2</td><td class="border border-black px-2 py-1 font-mono">no_invoice</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">50</td><td class="border border-black px-2 py-1">Nomor faktur penjualan resmi toko (POS/WEB-YYYYMMDD-XXXX).</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">3</td><td class="border border-black px-2 py-1 font-mono">id_user</td><td class="border border-black px-2 py-1">Integer</td><td class="border border-black px-2 py-1 text-center">11</td><td class="border border-black px-2 py-1">Foreign Key ke users.id_user (pelanggan pembeli atau kasir).</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">4</td><td class="border border-black px-2 py-1 font-mono">tipe_transaksi</td><td class="border border-black px-2 py-1">Enum</td><td class="border border-black px-2 py-1 text-center">-</td><td class="border border-black px-2 py-1">Pemetaan saluran asal transaksi ('pos', 'ecommerce').</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">5</td><td class="border border-black px-2 py-1 font-mono">metode_pengambilan</td><td class="border border-black px-2 py-1">Enum</td><td class="border border-black px-2 py-1 text-center">-</td><td class="border border-black px-2 py-1">Jalur serah terima barang ('Kurir', 'Pick-up').</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">6</td><td class="border border-black px-2 py-1 font-mono">status_pesanan</td><td class="border border-black px-2 py-1">Enum</td><td class="border border-black px-2 py-1 text-center">-</td><td class="border border-black px-2 py-1">Tahapan siklus pesanan (Menunggu Pembayaran, Diproses, Dikirim, Siap Diambil, Selesai, Dibatalkan).</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">7</td><td class="border border-black px-2 py-1 font-mono">alasan_batal</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">255</td><td class="border border-black px-2 py-1">Alasan pembatalan pesanan yang dicatat oleh pelanggan, admin, atau sistem.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">8</td><td class="border border-black px-2 py-1 font-mono">dibatalkan_oleh</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">50</td><td class="border border-black px-2 py-1">Identitas pihak yang mengeksekusi pembatalan pesanan (Pelanggan/Admin/Sistem).</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">9</td><td class="border border-black px-2 py-1 font-mono">waktu_batal</td><td class="border border-black px-2 py-1">Timestamp</td><td class="border border-black px-2 py-1 text-center">-</td><td class="border border-black px-2 py-1">Stempel waktu resmi saat pesanan dibatalkan dan stok dipulihkan.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">10</td><td class="border border-black px-2 py-1 font-mono">request_batal</td><td class="border border-black px-2 py-1">TinyInt</td><td class="border border-black px-2 py-1 text-center">1</td><td class="border border-black px-2 py-1">Penanda pengajuan pembatalan pelanggan pada pesanan Diproses (0=Tidak, 1=Diajukan).</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">11</td><td class="border border-black px-2 py-1 font-mono">request_batal_alasan</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">255</td><td class="border border-black px-2 py-1">Alasan pengajuan pembatalan yang dikirimkan pelanggan (dalam batas 1×24 jam).</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">12</td><td class="border border-black px-2 py-1 font-mono">request_batal_waktu</td><td class="border border-black px-2 py-1">Timestamp</td><td class="border border-black px-2 py-1 text-center">-</td><td class="border border-black px-2 py-1">Stempel waktu pelanggan mengajukan permohonan pembatalan pesanan.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">13</td><td class="border border-black px-2 py-1 font-mono">refund_bank</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">100</td><td class="border border-black px-2 py-1">Nama bank tujuan pengembalian dana (refund) manual yang diinput pelanggan saat mengajukan batal.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">14</td><td class="border border-black px-2 py-1 font-mono">refund_rekening</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">50</td><td class="border border-black px-2 py-1">Nomor rekening tujuan transfer refund yang wajib diisi pelanggan (tanggung jawab pelanggan jika salah input).</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">15</td><td class="border border-black px-2 py-1 font-mono">refund_atas_nama</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">100</td><td class="border border-black px-2 py-1">Nama pemilik rekening (atas nama) sesuai buku tabungan tujuan transfer refund.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">16</td><td class="border border-black px-2 py-1 font-mono">status_refund</td><td class="border border-black px-2 py-1">Enum</td><td class="border border-black px-2 py-1 text-center">-</td><td class="border border-black px-2 py-1">Status proses pengembalian dana manual oleh Admin ('Tidak Ada', 'Menunggu Transfer', 'Selesai').</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">17</td><td class="border border-black px-2 py-1 font-mono">waktu_refund</td><td class="border border-black px-2 py-1">Timestamp</td><td class="border border-black px-2 py-1 text-center">-</td><td class="border border-black px-2 py-1">Stempel waktu konfirmasi Admin bahwa dana refund telah selesai ditransfer ke rekening pelanggan.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">18</td><td class="border border-black px-2 py-1 font-mono">total_harga</td><td class="border border-black px-2 py-1">Decimal</td><td class="border border-black px-2 py-1 text-center">12,2</td><td class="border border-black px-2 py-1">Total nilai tagihan pembelanjaan barang (termasuk ongkos kirim untuk e-commerce).</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">19</td><td class="border border-black px-2 py-1 font-mono">metode_bayar_pos</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">50</td><td class="border border-black px-2 py-1">Metode pembayaran kasir luring (Tunai, Debit, QRIS).</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">20</td><td class="border border-black px-2 py-1 font-mono">ongkir</td><td class="border border-black px-2 py-1">Decimal</td><td class="border border-black px-2 py-1 text-center">10,2</td><td class="border border-black px-2 py-1">Beban biaya logistik kurir ekspedisi hasil kalkulasi API RajaOngkir / Kurir Internal.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">21</td><td class="border border-black px-2 py-1 font-mono">nama_penerima</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">100</td><td class="border border-black px-2 py-1">Nama lengkap penerima pesanan paket pengiriman.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">22</td><td class="border border-black px-2 py-1 font-mono">telepon_penerima</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">20</td><td class="border border-black px-2 py-1">Nomor kontak telepon penerima paket pengiriman.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">23</td><td class="border border-black px-2 py-1 font-mono">alamat_lengkap</td><td class="border border-black px-2 py-1">Text</td><td class="border border-black px-2 py-1 text-center">-</td><td class="border border-black px-2 py-1">Alamat lengkap destinasi pengantaran paket kurir.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">24</td><td class="border border-black px-2 py-1 font-mono">kota_tujuan</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">100</td><td class="border border-black px-2 py-1">Nama kota tujuan destinasi pengiriman paket pesanan.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">25</td><td class="border border-black px-2 py-1 font-mono">kurir</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">50</td><td class="border border-black px-2 py-1">Label perusahaan kurir ekspedisi mitra pengiriman atau kurir internal toko.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">26</td><td class="border border-black px-2 py-1 font-mono">layanan</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">50</td><td class="border border-black px-2 py-1">Klasifikasi paket layanan pengiriman yang dipilih pelanggan.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">27</td><td class="border border-black px-2 py-1 font-mono">snap_token</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">255</td><td class="border border-black px-2 py-1">Token transaksi Payment Gateway Midtrans untuk pembayaran daring.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">28</td><td class="border border-black px-2 py-1 font-mono">payment_method_ecommerce</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">50</td><td class="border border-black px-2 py-1">Kanal pembayaran daring hasil callback otomatis gateway Midtrans.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">29</td><td class="border border-black px-2 py-1 font-mono">paid_at</td><td class="border border-black px-2 py-1">Timestamp</td><td class="border border-black px-2 py-1 text-center">-</td><td class="border border-black px-2 py-1">Bukti stempel waktu pelunasan pembayaran terverifikasi (sekaligus acuan batas batal 1×24 jam).</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">30</td><td class="border border-black px-2 py-1 font-mono">kode_pickup</td><td class="border border-black px-2 py-1">Varchar</td><td class="border border-black px-2 py-1 text-center">20</td><td class="border border-black px-2 py-1">Kode verifikasi rahasia bagi pelanggan opsi Pick-up in Store.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">31</td><td class="border border-black px-2 py-1 font-mono">created_at</td><td class="border border-black px-2 py-1">Timestamp</td><td class="border border-black px-2 py-1 text-center">-</td><td class="border border-black px-2 py-1">Waktu pembentukan transaksi pesanan pertama kali.</td></tr>
+<tr><td class="border border-black px-2 py-1 text-center">32</td><td class="border border-black px-2 py-1 font-mono">updated_at</td><td class="border border-black px-2 py-1">Timestamp</td><td class="border border-black px-2 py-1 text-center">-</td><td class="border border-black px-2 py-1">Waktu pembaruan siklus pesanan terakhir dibukukan.</td></tr>
+</tbody>
 
                     </table>
 

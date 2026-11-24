@@ -27,6 +27,13 @@ $sql = "
               AND sb.no_batch NOT LIKE '%.%' 
               AND sb.tgl_exp >= CURDATE()
            ) AS stok_batch_utuh,
+           (SELECT MIN(sb.tgl_exp)
+            FROM stok_batch sb
+            WHERE sb.id_variasi = v.id
+              AND sb.no_batch NOT LIKE '%.%'
+              AND sb.stok_sisa >= GREATEST(1, v.rasio_konversi)
+              AND sb.tgl_exp >= CURDATE()
+           ) AS exp_fefo_terdekat,
            v.satuan_besar, v.satuan_kecil, v.rasio_konversi
     FROM produk_variasi v
     JOIN produk_induk i ON v.id_produk_induk = i.id
@@ -360,6 +367,13 @@ foreach ($stmtSidebar->fetchAll() as $row) {
                                     <?= htmlspecialchars($p['nama_induk']) ?>
                                 </h3>
                                 <p class="text-[11px] sm:text-xs text-slate-500 line-clamp-1 mt-0.5"><?= htmlspecialchars($p['nama_variasi']) ?></p>
+                                <?php if ($p['kategori'] === 'Obat' && $stokBox > 0 && !empty($p['exp_fefo_terdekat'])):
+                                    $blnShortK = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                                    $tsExpKat = strtotime($p['exp_fefo_terdekat']);
+                                    $expKatLbl = date('d', $tsExpKat) . ' ' . $blnShortK[(int)date('n', $tsExpKat)] . ' ' . date('Y', $tsExpKat);
+                                ?>
+                                <p class="text-[10.5px] sm:text-[11px] text-slate-500 mt-0.5">Exp: <span class="font-semibold text-slate-700"><?= $expKatLbl ?></span></p>
+                                <?php endif; ?>
                             </a>
 
                             <!-- Price -->

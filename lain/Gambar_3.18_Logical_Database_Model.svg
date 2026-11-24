@@ -243,7 +243,7 @@
     </g>
     <!-- Table: penjualan -->
     <g id="table_penjualan" filter="url(#card-shadow)">
-      <rect x="70" y="810" width="260" height="394" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="70" y="810" width="260" height="674" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
       <path d="M 70 816 Q 70 810 76 810 L 324 810 Q 330 810 330 816 L 330 838 L 70 838 Z" fill="#2b5a84"/>
       <g transform="translate(80, 818)" fill="#93c5fd">
         <rect width="11" height="11" rx="1.5" fill="none" stroke="#ffffff" stroke-width="1.2"/>
@@ -251,12 +251,9 @@
         <line x1="4.5" y1="4" x2="4.5" y2="11" stroke="#ffffff" stroke-width="1"/>
       </g>
       <text x="98" y="828" font-size="11.5" font-weight="700" fill="#ffffff" font-family="monospace">penjualan</text>
-      <text x="320" y="828" font-size="9" font-weight="600" fill="#cbd5e1" text-anchor="end">18 cols</text>
+      <text x="320" y="828" font-size="9" font-weight="600" fill="#cbd5e1" text-anchor="end">32 cols</text>
       <line x1="70" y1="838" x2="330" y2="838" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(78, 842)">
-        <rect width="14" height="11" rx="2" fill="#ef4444"/>
-        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">PK</text>
-      </g>
+      <g transform="translate(78, 842)"><rect width="14" height="11" rx="2" fill="#ef4444"/><text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">PK</text></g>
       <text x="97" y="851.5" font-size="9.5" font-weight="700" fill="#0f172a" font-family="monospace">id_penjualan</text>
       <text x="304" y="851.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
       <text x="322" y="851.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
@@ -267,96 +264,146 @@
       <text x="304" y="871.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
       <text x="322" y="871.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
       <line x1="70" y1="878" x2="330" y2="878" stroke="#f1f5f9" stroke-width="1"/>
-      <g transform="translate(78, 882)">
-        <rect width="14" height="11" rx="2" fill="#3b82f6"/>
-        <text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
-      </g>
-      <text x="97" y="891.5" font-size="9.5" font-weight="600" fill="#1e293b" font-family="monospace">id_user</text>
+      <g transform="translate(78, 882)"><rect width="14" height="11" rx="2" fill="#f59e0b"/><text x="7" y="8.5" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text></g>
+      <text x="97" y="891.5" font-size="9.5" font-weight="600" fill="#0f172a" font-family="monospace">id_user</text>
       <text x="304" y="891.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">int</text>
-      <text x="322" y="891.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
       <rect x="71" y="898" width="258" height="20" fill="#f8fafc"/>
       <line x1="70" y1="898" x2="330" y2="898" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="85" cy="908" r="1.5" fill="#94a3b8"/>
       <text x="97" y="911.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">tipe_transaksi</text>
-      <text x="304" y="911.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
+      <text x="304" y="911.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">enum</text>
       <text x="322" y="911.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
       <line x1="70" y1="918" x2="330" y2="918" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="85" cy="928" r="1.5" fill="#94a3b8"/>
       <text x="97" y="931.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">metode_pengambilan</text>
-      <text x="304" y="931.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
-      <text x="322" y="931.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <text x="304" y="931.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">enum</text>
       <rect x="71" y="938" width="258" height="20" fill="#f8fafc"/>
       <line x1="70" y1="938" x2="330" y2="938" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="85" cy="948" r="1.5" fill="#94a3b8"/>
       <text x="97" y="951.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">status_pesanan</text>
-      <text x="304" y="951.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
+      <text x="304" y="951.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">enum</text>
       <text x="322" y="951.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
       <line x1="70" y1="958" x2="330" y2="958" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="85" cy="968" r="1.5" fill="#94a3b8"/>
-      <text x="97" y="971.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">total_harga</text>
-      <text x="304" y="971.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">decimal(12,2)</text>
-      <text x="322" y="971.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <text x="97" y="971.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">alasan_batal</text>
+      <text x="304" y="971.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(255)</text>
       <rect x="71" y="978" width="258" height="20" fill="#f8fafc"/>
       <line x1="70" y1="978" x2="330" y2="978" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="85" cy="988" r="1.5" fill="#94a3b8"/>
-      <text x="97" y="991.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">metode_bayar_pos</text>
+      <text x="97" y="991.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">dibatalkan_oleh</text>
       <text x="304" y="991.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
-      <text x="322" y="991.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
       <line x1="70" y1="998" x2="330" y2="998" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="85" cy="1008" r="1.5" fill="#94a3b8"/>
-      <text x="97" y="1011.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">ongkir</text>
-      <text x="304" y="1011.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">decimal(10,2)</text>
-      <text x="322" y="1011.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <text x="97" y="1011.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">waktu_batal</text>
+      <text x="304" y="1011.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
       <rect x="71" y="1018" width="258" height="20" fill="#f8fafc"/>
       <line x1="70" y1="1018" x2="330" y2="1018" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="85" cy="1028" r="1.5" fill="#94a3b8"/>
-      <text x="97" y="1031.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">nama_penerima</text>
-      <text x="304" y="1031.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(100)</text>
+      <text x="97" y="1031.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">request_batal</text>
+      <text x="304" y="1031.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">tinyint(1)</text>
       <text x="322" y="1031.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
       <line x1="70" y1="1038" x2="330" y2="1038" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="85" cy="1048" r="1.5" fill="#94a3b8"/>
-      <text x="97" y="1051.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">telepon_penerima</text>
-      <text x="304" y="1051.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(20)</text>
-      <text x="322" y="1051.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <text x="97" y="1051.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">request_batal_alasan</text>
+      <text x="304" y="1051.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(255)</text>
       <rect x="71" y="1058" width="258" height="20" fill="#f8fafc"/>
       <line x1="70" y1="1058" x2="330" y2="1058" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="85" cy="1068" r="1.5" fill="#94a3b8"/>
-      <text x="97" y="1071.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">alamat_lengkap</text>
-      <text x="304" y="1071.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">text</text>
-      <text x="322" y="1071.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <text x="97" y="1071.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">request_batal_waktu</text>
+      <text x="304" y="1071.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
       <line x1="70" y1="1078" x2="330" y2="1078" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="85" cy="1088" r="1.5" fill="#94a3b8"/>
-      <text x="97" y="1091.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">kota_tujuan</text>
+      <text x="97" y="1091.5" font-size="9.5" font-weight="600" fill="#0f2d5a" font-family="monospace">refund_bank</text>
       <text x="304" y="1091.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(100)</text>
-      <text x="322" y="1091.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
       <rect x="71" y="1098" width="258" height="20" fill="#f8fafc"/>
       <line x1="70" y1="1098" x2="330" y2="1098" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="85" cy="1108" r="1.5" fill="#94a3b8"/>
-      <text x="97" y="1111.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">kurir</text>
+      <text x="97" y="1111.5" font-size="9.5" font-weight="600" fill="#0f2d5a" font-family="monospace">refund_rekening</text>
       <text x="304" y="1111.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
-      <text x="322" y="1111.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
       <line x1="70" y1="1118" x2="330" y2="1118" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="85" cy="1128" r="1.5" fill="#94a3b8"/>
-      <text x="97" y="1131.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">snap_token</text>
-      <text x="304" y="1131.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(255)</text>
-      <text x="322" y="1131.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <text x="97" y="1131.5" font-size="9.5" font-weight="600" fill="#0f2d5a" font-family="monospace">refund_atas_nama</text>
+      <text x="304" y="1131.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(100)</text>
       <rect x="71" y="1138" width="258" height="20" fill="#f8fafc"/>
       <line x1="70" y1="1138" x2="330" y2="1138" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="85" cy="1148" r="1.5" fill="#94a3b8"/>
-      <text x="97" y="1151.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">paid_at</text>
-      <text x="304" y="1151.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
+      <text x="97" y="1151.5" font-size="9.5" font-weight="600" fill="#0f2d5a" font-family="monospace">status_refund</text>
+      <text x="304" y="1151.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">enum</text>
       <text x="322" y="1151.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
       <line x1="70" y1="1158" x2="330" y2="1158" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="85" cy="1168" r="1.5" fill="#94a3b8"/>
-      <text x="97" y="1171.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">kode_pickup</text>
-      <text x="304" y="1171.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(20)</text>
-      <text x="322" y="1171.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <text x="97" y="1171.5" font-size="9.5" font-weight="600" fill="#0f2d5a" font-family="monospace">waktu_refund</text>
+      <text x="304" y="1171.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
       <rect x="71" y="1178" width="258" height="20" fill="#f8fafc"/>
       <line x1="70" y1="1178" x2="330" y2="1178" stroke="#f1f5f9" stroke-width="1"/>
       <circle cx="85" cy="1188" r="1.5" fill="#94a3b8"/>
-      <text x="97" y="1191.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">created_at</text>
-      <text x="304" y="1191.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
+      <text x="97" y="1191.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">total_harga</text>
+      <text x="304" y="1191.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">decimal(12,2)</text>
       <text x="322" y="1191.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <line x1="70" y1="1198" x2="330" y2="1198" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="85" cy="1208" r="1.5" fill="#94a3b8"/>
+      <text x="97" y="1211.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">metode_bayar_pos</text>
+      <text x="304" y="1211.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
+      <rect x="71" y="1218" width="258" height="20" fill="#f8fafc"/>
+      <line x1="70" y1="1218" x2="330" y2="1218" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="85" cy="1228" r="1.5" fill="#94a3b8"/>
+      <text x="97" y="1231.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">ongkir</text>
+      <text x="304" y="1231.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">decimal(10,2)</text>
+      <line x1="70" y1="1238" x2="330" y2="1238" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="85" cy="1248" r="1.5" fill="#94a3b8"/>
+      <text x="97" y="1251.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">nama_penerima</text>
+      <text x="304" y="1251.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(100)</text>
+      <rect x="71" y="1258" width="258" height="20" fill="#f8fafc"/>
+      <line x1="70" y1="1258" x2="330" y2="1258" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="85" cy="1268" r="1.5" fill="#94a3b8"/>
+      <text x="97" y="1271.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">telepon_penerima</text>
+      <text x="304" y="1271.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(20)</text>
+      <line x1="70" y1="1278" x2="330" y2="1278" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="85" cy="1288" r="1.5" fill="#94a3b8"/>
+      <text x="97" y="1291.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">alamat_lengkap</text>
+      <text x="304" y="1291.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">text</text>
+      <rect x="71" y="1298" width="258" height="20" fill="#f8fafc"/>
+      <line x1="70" y1="1298" x2="330" y2="1298" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="85" cy="1308" r="1.5" fill="#94a3b8"/>
+      <text x="97" y="1311.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">kota_tujuan</text>
+      <text x="304" y="1311.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(100)</text>
+      <line x1="70" y1="1318" x2="330" y2="1318" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="85" cy="1328" r="1.5" fill="#94a3b8"/>
+      <text x="97" y="1331.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">kurir</text>
+      <text x="304" y="1331.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
+      <rect x="71" y="1338" width="258" height="20" fill="#f8fafc"/>
+      <line x1="70" y1="1338" x2="330" y2="1338" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="85" cy="1348" r="1.5" fill="#94a3b8"/>
+      <text x="97" y="1351.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">layanan</text>
+      <text x="304" y="1351.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
+      <line x1="70" y1="1358" x2="330" y2="1358" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="85" cy="1368" r="1.5" fill="#94a3b8"/>
+      <text x="97" y="1371.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">snap_token</text>
+      <text x="304" y="1371.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(255)</text>
+      <rect x="71" y="1378" width="258" height="20" fill="#f8fafc"/>
+      <line x1="70" y1="1378" x2="330" y2="1378" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="85" cy="1388" r="1.5" fill="#94a3b8"/>
+      <text x="97" y="1391.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">payment_method_ecommerce</text>
+      <text x="304" y="1391.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(50)</text>
+      <line x1="70" y1="1398" x2="330" y2="1398" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="85" cy="1408" r="1.5" fill="#94a3b8"/>
+      <text x="97" y="1411.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">paid_at</text>
+      <text x="304" y="1411.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
+      <rect x="71" y="1418" width="258" height="20" fill="#f8fafc"/>
+      <line x1="70" y1="1418" x2="330" y2="1418" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="85" cy="1428" r="1.5" fill="#94a3b8"/>
+      <text x="97" y="1431.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">kode_pickup</text>
+      <text x="304" y="1431.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">varchar(20)</text>
+      <line x1="70" y1="1438" x2="330" y2="1438" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="85" cy="1448" r="1.5" fill="#94a3b8"/>
+      <text x="97" y="1451.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">created_at</text>
+      <text x="304" y="1451.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
+      <text x="322" y="1451.5" font-size="7.5" font-weight="bold" fill="#94a3b8" text-anchor="end">NN</text>
+      <rect x="71" y="1458" width="258" height="20" fill="#f8fafc"/>
+      <line x1="70" y1="1458" x2="330" y2="1458" stroke="#f1f5f9" stroke-width="1"/>
+      <circle cx="85" cy="1468" r="1.5" fill="#94a3b8"/>
+      <text x="97" y="1471.5" font-size="9.5" font-weight="400" fill="#0f172a" font-family="monospace">updated_at</text>
+      <text x="304" y="1471.5" font-size="8.5" fill="#64748b" text-anchor="end" font-family="monospace">timestamp</text>
     </g>
     <!-- Table: penerimaan_detail -->
     <g id="table_penerimaan_detail" filter="url(#card-shadow)">
