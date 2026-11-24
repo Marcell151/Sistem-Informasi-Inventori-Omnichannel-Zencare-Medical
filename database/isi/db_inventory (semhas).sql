@@ -1,0 +1,2329 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Waktu pembuatan: 24 Nov 2026 pada 14.14
+-- Versi server: 10.4.32-MariaDB
+-- Versi PHP: 8.0.30
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `db_inventory`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `detail_opname_batch`
+--
+
+CREATE TABLE `detail_opname_batch` (
+  `id` int(11) NOT NULL,
+  `id_sesi` int(11) NOT NULL,
+  `id_batch` int(11) DEFAULT NULL,
+  `id_variasi` int(11) NOT NULL,
+  `jenis_komoditas` enum('Obat','Alkes') NOT NULL DEFAULT 'Obat',
+  `satuan_tipe` enum('besar','kecil') NOT NULL DEFAULT 'kecil',
+  `nama_satuan` varchar(50) NOT NULL DEFAULT 'Unit',
+  `stok_tersedia_sistem` int(11) NOT NULL,
+  `stok_reserved` int(11) NOT NULL,
+  `stok_sistem_fisik` int(11) NOT NULL,
+  `fisik_baik` int(11) DEFAULT NULL,
+  `fisik_rusak` int(11) DEFAULT NULL,
+  `fisik_expired` int(11) DEFAULT NULL,
+  `status_hitung` enum('Belum','Sudah') DEFAULT 'Belum',
+  `hitung_fisik` int(11) DEFAULT NULL,
+  `selisih` int(11) DEFAULT NULL,
+  `status_mutasi` enum('Belum Dimutasi','Sudah Dimutasi','Sesuai') NOT NULL DEFAULT 'Belum Dimutasi',
+  `alasan_mutasi` varchar(255) DEFAULT NULL,
+  `keterangan_mutasi` text DEFAULT NULL,
+  `id_kartu_stok` int(11) DEFAULT NULL,
+  `dihitung_oleh` int(11) DEFAULT NULL,
+  `waktu_hitung` timestamp NULL DEFAULT NULL,
+  `dimutasi_oleh` int(11) DEFAULT NULL,
+  `waktu_mutasi` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data untuk tabel `detail_opname_batch`
+--
+
+INSERT INTO `detail_opname_batch` (`id`, `id_sesi`, `id_batch`, `id_variasi`, `jenis_komoditas`, `satuan_tipe`, `nama_satuan`, `stok_tersedia_sistem`, `stok_reserved`, `stok_sistem_fisik`, `fisik_baik`, `fisik_rusak`, `fisik_expired`, `status_hitung`, `hitung_fisik`, `selisih`, `status_mutasi`, `alasan_mutasi`, `keterangan_mutasi`, `id_kartu_stok`, `dihitung_oleh`, `waktu_hitung`, `dimutasi_oleh`, `waktu_mutasi`) VALUES
+(5, 3, 66, 51, 'Alkes', 'kecil', 'Tube', 15, 0, 15, NULL, 0, 0, 'Belum', 5, -10, 'Belum Dimutasi', NULL, '', NULL, 1, '2026-10-31 19:35:30', 1, '2026-10-31 19:43:01'),
+(6, 3, 67, 52, 'Alkes', 'kecil', 'Tube', 15, 0, 15, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(7, 3, 63, 48, 'Alkes', 'kecil', 'Botol', 55, 0, 55, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(9, 3, 7, 1, 'Obat', 'kecil', 'Strip', 30, 0, 30, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(10, 3, 8, 1, 'Obat', 'kecil', 'Strip', 8, 0, 8, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(11, 3, 81, 26, 'Obat', 'kecil', 'Sachet', 12, 0, 12, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(12, 3, 40, 26, 'Obat', 'kecil', 'Sachet', 2148, 0, 2148, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(13, 3, 30, 18, 'Obat', 'kecil', 'Botol', 180, 0, 180, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(14, 3, 4, 31, 'Obat', 'kecil', 'Strip', 100, 0, 100, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(15, 3, 45, 31, 'Obat', 'kecil', 'Strip', 6250, 0, 6250, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(16, 3, 41, 27, 'Obat', 'kecil', 'Tube', 100, 0, 100, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(17, 3, 55, 41, 'Obat', 'kecil', 'Strip', 80, 0, 80, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(18, 3, 56, 41, 'Obat', 'kecil', 'Strip', 20, 0, 20, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(19, 3, 58, 43, 'Obat', 'kecil', 'Strip', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(20, 3, 54, 40, 'Obat', 'kecil', 'Botol', 2160, 0, 2160, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(21, 3, 31, 19, 'Obat', 'kecil', 'Tube', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(22, 3, 5, 42, 'Obat', 'kecil', 'Strip', 80, 0, 80, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(23, 3, 57, 42, 'Obat', 'kecil', 'Strip', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(24, 3, 52, 38, 'Obat', 'kecil', 'Botol', 8640, 0, 8640, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(25, 3, 47, 33, 'Obat', 'kecil', 'Strip', 200, 0, 200, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(26, 3, 34, 22, 'Obat', 'kecil', 'Strip', 500, 0, 500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(27, 3, 43, 29, 'Obat', 'kecil', 'Strip', 375, 0, 375, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(28, 3, 35, 23, 'Obat', 'kecil', 'Strip', 6000, 0, 6000, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(29, 3, 60, 45, 'Alkes', 'kecil', 'Lembar', 15, 0, 15, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(30, 3, 80, 7, 'Obat', 'kecil', 'Botol', 48, 0, 48, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(31, 3, 82, 7, 'Obat', 'kecil', 'Botol', 48, 0, 48, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(32, 3, 16, 7, 'Obat', 'kecil', 'Botol', 34950, 0, 34950, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(33, 3, 68, 60, 'Obat', 'kecil', 'Botol', 37500, 0, 37500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(34, 3, 17, 8, 'Obat', 'kecil', 'Botol', 32450, 0, 32450, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(35, 3, 18, 9, 'Obat', 'kecil', 'Botol', 37500, 0, 37500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(36, 3, 6, 6, 'Obat', 'kecil', 'Botol', 500, 0, 500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(37, 3, 12, 6, 'Obat', 'kecil', 'Botol', 300, 0, 300, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(38, 3, 13, 6, 'Obat', 'kecil', 'Botol', 47, 0, 47, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(39, 3, 14, 6, 'Obat', 'kecil', 'Botol', 400, 0, 400, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(40, 3, 15, 6, 'Obat', 'kecil', 'Botol', 47, 0, 47, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(41, 3, 44, 30, 'Obat', 'kecil', 'Strip', 174, 0, 174, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(42, 3, 29, 17, 'Obat', 'kecil', 'Botol', 2160, 0, 2160, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(43, 3, 62, 47, 'Alkes', 'kecil', 'Kotak', 65, 0, 65, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(44, 3, 39, 25, 'Obat', 'kecil', 'Sachet', 13500, 0, 13500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(45, 3, 59, 44, 'Alkes', 'kecil', 'Box', 65, 0, 65, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(46, 3, 28, 16, 'Obat', 'kecil', 'Botol', 8640, 0, 8640, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(47, 3, 46, 32, 'Obat', 'kecil', 'Strip', 9375, 0, 9375, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(48, 3, 32, 20, 'Obat', 'kecil', 'Strip', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(49, 3, 48, 34, 'Obat', 'kecil', 'Botol', 8640, 0, 8640, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(50, 3, 26, 14, 'Obat', 'kecil', 'Strip', 250, 0, 250, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(51, 3, 23, 12, 'Obat', 'kecil', 'Strip', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(52, 3, 22, 11, 'Obat', 'kecil', 'Strip', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(54, 3, 19, 10, 'Obat', 'kecil', 'Strip', 230, 0, 230, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(55, 3, 20, 10, 'Obat', 'kecil', 'Strip', 7, 0, 7, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(56, 3, 21, 10, 'Obat', 'kecil', 'Strip', 8, 0, 8, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(57, 3, 61, 46, 'Alkes', 'kecil', 'Pcs', 115, 0, 115, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(58, 3, 53, 39, 'Obat', 'kecil', 'Strip', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(59, 3, 65, 50, 'Alkes', 'kecil', 'Botol', 15, 0, 15, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(60, 3, 24, 13, 'Obat', 'kecil', 'Strip', 348, 0, 348, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(61, 3, 25, 13, 'Obat', 'kecil', 'Strip', 12, 0, 12, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(62, 3, 42, 28, 'Obat', 'kecil', 'Tube', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(63, 3, 64, 49, 'Alkes', 'kecil', 'Botol', 15, 0, 15, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(64, 3, 49, 35, 'Obat', 'kecil', 'Sachet', 24000, 0, 24000, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(65, 3, 33, 21, 'Obat', 'kecil', 'Strip', 9375, 0, 9375, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(66, 3, 3, 2, 'Obat', 'kecil', 'Botol', 120, 0, 120, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(67, 3, 9, 2, 'Obat', 'kecil', 'Botol', 240, 0, 240, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(68, 3, 10, 2, 'Obat', 'kecil', 'Botol', 24, 0, 24, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(69, 3, 11, 3, 'Alkes', 'kecil', 'Tube', 15, 0, 15, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(70, 3, 27, 15, 'Obat', 'kecil', 'Sachet', 2160, 0, 2160, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(71, 3, 51, 37, 'Obat', 'kecil', 'Sachet', 2160, 0, 2160, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(72, 3, 50, 36, 'Obat', 'kecil', 'Pot', 8640, 0, 8640, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(73, 3, 38, 24, 'Obat', 'kecil', 'Botol', 24, 0, 24, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(74, 3, 36, 24, 'Obat', 'kecil', 'Botol', 192, 0, 192, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(75, 3, 37, 24, 'Obat', 'kecil', 'Botol', 72, 0, 72, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(81, 3, NULL, 53, 'Alkes', 'kecil', 'Unit', 2, 0, 2, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(83, 3, NULL, 56, 'Alkes', 'kecil', 'Unit', 6, 0, 6, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(86, 3, NULL, 55, 'Alkes', 'kecil', 'Unit', 3, 0, 3, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(88, 3, NULL, 58, 'Alkes', 'kecil', 'Unit', 3, 0, 3, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(90, 3, NULL, 54, 'Alkes', 'kecil', 'Tabung', 4, 0, 4, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(91, 3, NULL, 4, 'Alkes', 'kecil', 'Unit', 8, 0, 8, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(92, 3, NULL, 5, 'Alkes', 'kecil', 'Unit', 11, 0, 11, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(93, 3, NULL, 57, 'Alkes', 'kecil', 'Unit', 6, 0, 6, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(97, 6, 66, 51, 'Alkes', 'kecil', 'Tube', 15, 0, 15, NULL, 0, 0, 'Belum', 20, 5, 'Belum Dimutasi', NULL, NULL, NULL, 1, '2026-10-31 20:49:09', NULL, NULL),
+(98, 6, 67, 52, 'Alkes', 'kecil', 'Tube', 15, 0, 15, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(99, 6, 63, 48, 'Alkes', 'kecil', 'Botol', 55, 0, 55, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(101, 6, 7, 1, 'Obat', 'kecil', 'Strip', 40, 0, 40, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(102, 6, 8, 1, 'Obat', 'kecil', 'Strip', 8, 0, 8, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(103, 6, 81, 26, 'Obat', 'kecil', 'Sachet', 12, 0, 12, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(104, 6, 40, 26, 'Obat', 'kecil', 'Sachet', 2148, 0, 2148, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(105, 6, 30, 18, 'Obat', 'kecil', 'Botol', 180, 0, 180, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(106, 6, 4, 31, 'Obat', 'kecil', 'Strip', 100, 0, 100, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(107, 6, 45, 31, 'Obat', 'kecil', 'Strip', 6250, 0, 6250, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(108, 6, 41, 27, 'Obat', 'kecil', 'Tube', 100, 0, 100, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(109, 6, 55, 41, 'Obat', 'kecil', 'Strip', 80, 0, 80, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(110, 6, 56, 41, 'Obat', 'kecil', 'Strip', 20, 0, 20, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(111, 6, 58, 43, 'Obat', 'kecil', 'Strip', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(112, 6, 54, 40, 'Obat', 'kecil', 'Botol', 2160, 0, 2160, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(113, 6, 31, 19, 'Obat', 'kecil', 'Tube', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(114, 6, 5, 42, 'Obat', 'kecil', 'Strip', 80, 0, 80, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(115, 6, 57, 42, 'Obat', 'kecil', 'Strip', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(116, 6, 52, 38, 'Obat', 'kecil', 'Botol', 8640, 0, 8640, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(117, 6, 47, 33, 'Obat', 'kecil', 'Strip', 200, 0, 200, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(118, 6, 34, 22, 'Obat', 'kecil', 'Strip', 500, 0, 500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(119, 6, 43, 29, 'Obat', 'kecil', 'Strip', 375, 0, 375, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(120, 6, 35, 23, 'Obat', 'kecil', 'Strip', 6000, 0, 6000, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(121, 6, 60, 45, 'Alkes', 'kecil', 'Lembar', 15, 0, 15, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(122, 6, 16, 7, 'Obat', 'kecil', 'Botol', 34950, 0, 34950, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(123, 6, 80, 7, 'Obat', 'kecil', 'Botol', 48, 0, 48, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(124, 6, 82, 7, 'Obat', 'kecil', 'Botol', 48, 0, 48, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(125, 6, 68, 60, 'Obat', 'kecil', 'Botol', 37500, 0, 37500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(126, 6, 17, 8, 'Obat', 'kecil', 'Botol', 32450, 0, 32450, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(127, 6, 18, 9, 'Obat', 'kecil', 'Botol', 37500, 0, 37500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(128, 6, 6, 6, 'Obat', 'kecil', 'Botol', 500, 0, 500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(129, 6, 12, 6, 'Obat', 'kecil', 'Botol', 300, 0, 300, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(130, 6, 13, 6, 'Obat', 'kecil', 'Botol', 47, 0, 47, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(131, 6, 14, 6, 'Obat', 'kecil', 'Botol', 400, 0, 400, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(132, 6, 15, 6, 'Obat', 'kecil', 'Botol', 47, 0, 47, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(133, 6, 44, 30, 'Obat', 'kecil', 'Strip', 174, 0, 174, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(134, 6, 29, 17, 'Obat', 'kecil', 'Botol', 2160, 0, 2160, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(135, 6, 62, 47, 'Alkes', 'kecil', 'Kotak', 65, 0, 65, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(136, 6, 39, 25, 'Obat', 'kecil', 'Sachet', 13500, 0, 13500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(137, 6, 59, 44, 'Alkes', 'kecil', 'Box', 65, 0, 65, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(138, 6, 28, 16, 'Obat', 'kecil', 'Botol', 8640, 0, 8640, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(139, 6, 46, 32, 'Obat', 'kecil', 'Strip', 9375, 0, 9375, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(140, 6, 32, 20, 'Obat', 'kecil', 'Strip', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(141, 6, 48, 34, 'Obat', 'kecil', 'Botol', 8640, 0, 8640, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(142, 6, 26, 14, 'Obat', 'kecil', 'Strip', 250, 0, 250, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(143, 6, 23, 12, 'Obat', 'kecil', 'Strip', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(144, 6, 22, 11, 'Obat', 'kecil', 'Strip', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(146, 6, 19, 10, 'Obat', 'kecil', 'Strip', 230, 0, 230, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(147, 6, 20, 10, 'Obat', 'kecil', 'Strip', 7, 0, 7, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(148, 6, 21, 10, 'Obat', 'kecil', 'Strip', 8, 0, 8, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(149, 6, 61, 46, 'Alkes', 'kecil', 'Pcs', 115, 0, 115, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(150, 6, 53, 39, 'Obat', 'kecil', 'Strip', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(151, 6, 65, 50, 'Alkes', 'kecil', 'Botol', 15, 0, 15, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(152, 6, 24, 13, 'Obat', 'kecil', 'Strip', 348, 0, 348, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(153, 6, 25, 13, 'Obat', 'kecil', 'Strip', 12, 0, 12, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(154, 6, 42, 28, 'Obat', 'kecil', 'Tube', 1500, 0, 1500, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(155, 6, 64, 49, 'Alkes', 'kecil', 'Botol', 15, 0, 15, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(156, 6, 49, 35, 'Obat', 'kecil', 'Sachet', 24000, 0, 24000, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(157, 6, 33, 21, 'Obat', 'kecil', 'Strip', 9375, 0, 9375, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(158, 6, 3, 2, 'Obat', 'kecil', 'Botol', 120, 0, 120, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(159, 6, 9, 2, 'Obat', 'kecil', 'Botol', 240, 0, 240, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(160, 6, 10, 2, 'Obat', 'kecil', 'Botol', 24, 0, 24, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(161, 6, 11, 3, 'Alkes', 'kecil', 'Tube', 15, 0, 15, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(162, 6, 27, 15, 'Obat', 'kecil', 'Sachet', 2160, 0, 2160, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(163, 6, 51, 37, 'Obat', 'kecil', 'Sachet', 2160, 0, 2160, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(164, 6, 50, 36, 'Obat', 'kecil', 'Pot', 8640, 0, 8640, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(165, 6, 36, 24, 'Obat', 'kecil', 'Botol', 192, 0, 192, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(166, 6, 38, 24, 'Obat', 'kecil', 'Botol', 24, 0, 24, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(167, 6, 37, 24, 'Obat', 'kecil', 'Botol', 72, 0, 72, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(168, 6, NULL, 53, 'Alkes', 'kecil', 'Unit', 2, 0, 2, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(169, 6, NULL, 56, 'Alkes', 'kecil', 'Unit', 6, 0, 6, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(170, 6, NULL, 55, 'Alkes', 'kecil', 'Unit', 3, 0, 3, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(171, 6, NULL, 58, 'Alkes', 'kecil', 'Unit', 3, 0, 3, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(172, 6, NULL, 54, 'Alkes', 'kecil', 'Tabung', 4, 0, 4, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(173, 6, NULL, 4, 'Alkes', 'kecil', 'Unit', 8, 0, 8, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(174, 6, NULL, 5, 'Alkes', 'kecil', 'Unit', 11, 0, 11, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(175, 6, NULL, 57, 'Alkes', 'kecil', 'Unit', 6, 0, 6, NULL, 0, 0, 'Belum', NULL, NULL, 'Belum Dimutasi', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(176, 7, 8, 1, 'Obat', 'kecil', 'Strip', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(177, 7, 1, 1, 'Obat', 'besar', 'Box', 0, 0, 0, NULL, 0, 0, 'Belum', 0, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(178, 7, 7, 1, 'Obat', 'besar', 'Box', 4, 0, 4, NULL, 0, 0, 'Belum', 4, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(179, 7, 81, 26, 'Obat', 'kecil', 'Sachet', 12, 0, 12, NULL, 0, 0, 'Belum', 11, -1, 'Sudah Dimutasi', 'Barang Rusak', NULL, NULL, 2, '2026-10-14 20:30:00', 1, '2026-10-14 21:10:00'),
+(180, 7, 40, 26, 'Obat', 'besar', 'Box', 179, 0, 179, NULL, 0, 0, 'Belum', 179, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(181, 7, 30, 18, 'Obat', 'besar', 'Box', 15, 0, 15, NULL, 0, 0, 'Belum', 15, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(182, 7, 45, 31, 'Obat', 'besar', 'Box', 250, 0, 250, NULL, 0, 0, 'Belum', 250, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(183, 7, 4, 31, 'Obat', 'besar', 'Box', 4, 0, 4, NULL, 0, 0, 'Belum', 2, -2, 'Sudah Dimutasi', 'Barang Kedaluwarsa', NULL, NULL, 2, '2026-10-14 20:30:00', 1, '2026-10-14 21:15:00'),
+(184, 7, 41, 27, 'Obat', 'besar', 'Karton', 10, 0, 10, NULL, 0, 0, 'Belum', 10, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(185, 7, 55, 41, 'Obat', 'besar', 'Box', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(186, 7, 56, 41, 'Obat', 'besar', 'Box', 2, 0, 2, NULL, 0, 0, 'Belum', 2, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(187, 7, 58, 43, 'Obat', 'besar', 'Box', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(188, 7, 54, 40, 'Obat', 'besar', 'Box', 180, 0, 180, NULL, 0, 0, 'Belum', 180, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(189, 7, 31, 19, 'Obat', 'besar', 'Box', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(190, 7, 5, 42, 'Obat', 'besar', 'Box', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(191, 7, 57, 42, 'Obat', 'besar', 'Box', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(192, 7, 52, 38, 'Obat', 'besar', 'Karton', 360, 0, 360, NULL, 0, 0, 'Belum', 360, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(193, 7, 47, 33, 'Obat', 'besar', 'Box', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(194, 7, 34, 22, 'Obat', 'besar', 'Box', 20, 0, 20, NULL, 0, 0, 'Belum', 20, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(195, 7, 43, 29, 'Obat', 'besar', 'Box', 15, 0, 15, NULL, 0, 0, 'Belum', 15, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(196, 7, 35, 23, 'Obat', 'besar', 'Box', 300, 0, 300, NULL, 0, 0, 'Belum', 300, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(197, 7, 82, 7, 'Obat', 'kecil', 'Botol', 48, 0, 48, NULL, 0, 0, 'Belum', 48, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(198, 7, 16, 7, 'Obat', 'besar', 'Karton', 699, 0, 699, NULL, 0, 0, 'Belum', 699, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(199, 7, 80, 7, 'Obat', 'kecil', 'Botol', 48, 0, 48, NULL, 0, 0, 'Belum', 48, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(200, 7, 68, 60, 'Obat', 'besar', 'Karton', 750, 0, 750, NULL, 0, 0, 'Belum', 750, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(201, 7, 17, 8, 'Obat', 'besar', 'Karton', 649, 0, 649, NULL, 0, 0, 'Belum', 649, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(202, 7, 18, 9, 'Obat', 'besar', 'Karton', 750, 0, 750, NULL, 0, 0, 'Belum', 750, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(203, 7, 12, 6, 'Obat', 'besar', 'Karton', 6, 0, 6, NULL, 0, 0, 'Belum', 6, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(204, 7, 15, 6, 'Obat', 'kecil', 'Botol', 47, 0, 47, NULL, 0, 0, 'Belum', 47, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(205, 7, 6, 6, 'Obat', 'besar', 'Karton', 10, 0, 10, NULL, 0, 0, 'Belum', 10, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(206, 7, 13, 6, 'Obat', 'kecil', 'Botol', 47, 0, 47, NULL, 0, 0, 'Belum', 47, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(207, 7, 14, 6, 'Obat', 'besar', 'Karton', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(208, 7, 44, 30, 'Obat', 'besar', 'Box', 58, 0, 58, NULL, 0, 0, 'Belum', 58, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(209, 7, 29, 17, 'Obat', 'besar', 'Box', 180, 0, 180, NULL, 0, 0, 'Belum', 180, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(210, 7, 39, 25, 'Obat', 'besar', 'Box', 450, 0, 450, NULL, 0, 0, 'Belum', 450, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(211, 7, 28, 16, 'Obat', 'besar', 'Karton', 360, 0, 360, NULL, 0, 0, 'Belum', 360, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(212, 7, 46, 32, 'Obat', 'besar', 'Box', 375, 0, 375, NULL, 0, 0, 'Belum', 375, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(213, 7, 32, 20, 'Obat', 'besar', 'Box', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(214, 7, 48, 34, 'Obat', 'besar', 'Karton', 360, 0, 360, NULL, 0, 0, 'Belum', 360, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(215, 7, 26, 14, 'Obat', 'besar', 'Box', 25, 0, 25, NULL, 0, 0, 'Belum', 25, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(216, 7, 23, 12, 'Obat', 'besar', 'Box', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(217, 7, 22, 11, 'Obat', 'besar', 'Box', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(218, 7, 2, 10, 'Obat', 'besar', 'Box', 0, 0, 0, NULL, 0, 0, 'Belum', 0, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(219, 7, 21, 10, 'Obat', 'kecil', 'Strip', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(220, 7, 19, 10, 'Obat', 'besar', 'Box', 23, 0, 23, NULL, 0, 0, 'Belum', 23, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(221, 7, 20, 10, 'Obat', 'kecil', 'Strip', 7, 0, 7, NULL, 0, 0, 'Belum', 7, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(222, 7, 53, 39, 'Obat', 'besar', 'Box', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(223, 7, 24, 13, 'Obat', 'besar', 'Box', 29, 0, 29, NULL, 0, 0, 'Belum', 29, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(224, 7, 25, 13, 'Obat', 'kecil', 'Strip', 12, 0, 12, NULL, 0, 0, 'Belum', 12, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(225, 7, 42, 28, 'Obat', 'besar', 'Karton', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(226, 7, 49, 35, 'Obat', 'besar', 'Box', 600, 0, 600, NULL, 0, 0, 'Belum', 600, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(227, 7, 33, 21, 'Obat', 'besar', 'Box', 375, 0, 375, NULL, 0, 0, 'Belum', 375, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(228, 7, 3, 2, 'Obat', 'besar', 'Karton', 5, 0, 5, NULL, 0, 0, 'Belum', 5, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(229, 7, 9, 2, 'Obat', 'besar', 'Karton', 10, 0, 10, NULL, 0, 0, 'Belum', 10, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(230, 7, 10, 2, 'Obat', 'kecil', 'Botol', 24, 0, 24, NULL, 0, 0, 'Belum', 24, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(231, 7, 27, 15, 'Obat', 'besar', 'Box', 180, 0, 180, NULL, 0, 0, 'Belum', 180, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(232, 7, 51, 37, 'Obat', 'besar', 'Box', 180, 0, 180, NULL, 0, 0, 'Belum', 180, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(233, 7, 50, 36, 'Obat', 'besar', 'Box', 360, 0, 360, NULL, 0, 0, 'Belum', 360, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(234, 7, 38, 24, 'Obat', 'kecil', 'Botol', 24, 0, 24, NULL, 0, 0, 'Belum', 24, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(235, 7, 36, 24, 'Obat', 'besar', 'Karton', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(236, 7, 37, 24, 'Obat', 'besar', 'Karton', 3, 0, 3, NULL, 0, 0, 'Belum', 3, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(237, 7, NULL, 51, 'Alkes', 'kecil', 'Tube', 15, 0, 15, NULL, 0, 0, 'Belum', 15, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(238, 7, NULL, 52, 'Alkes', 'kecil', 'Tube', 15, 0, 15, NULL, 0, 0, 'Belum', 15, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(239, 7, NULL, 48, 'Alkes', 'kecil', 'Botol', 55, 0, 55, NULL, 0, 0, 'Belum', 54, -1, 'Sudah Dimutasi', 'Barang Rusak', NULL, NULL, 2, '2026-10-14 20:30:00', 1, '2026-10-14 21:20:00'),
+(240, 7, NULL, 45, 'Alkes', 'kecil', 'Lembar', 15, 0, 15, NULL, 0, 0, 'Belum', 15, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(241, 7, NULL, 47, 'Alkes', 'kecil', 'Kotak', 65, 0, 65, NULL, 0, 0, 'Belum', 65, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(242, 7, NULL, 53, 'Alkes', 'kecil', 'Unit', 2, 0, 2, NULL, 0, 0, 'Belum', 2, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(243, 7, NULL, 44, 'Alkes', 'kecil', 'Box', 65, 0, 65, NULL, 0, 0, 'Belum', 65, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(244, 7, NULL, 56, 'Alkes', 'kecil', 'Unit', 6, 0, 6, NULL, 0, 0, 'Belum', 6, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(245, 7, NULL, 46, 'Alkes', 'kecil', 'Pcs', 115, 0, 115, NULL, 0, 0, 'Belum', 115, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(246, 7, NULL, 50, 'Alkes', 'kecil', 'Botol', 15, 0, 15, NULL, 0, 0, 'Belum', 15, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(247, 7, NULL, 55, 'Alkes', 'kecil', 'Unit', 3, 0, 3, NULL, 0, 0, 'Belum', 3, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(248, 7, NULL, 49, 'Alkes', 'kecil', 'Botol', 15, 0, 15, NULL, 0, 0, 'Belum', 15, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(249, 7, NULL, 58, 'Alkes', 'kecil', 'Unit', 3, 0, 3, NULL, 0, 0, 'Belum', 3, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(250, 7, NULL, 3, 'Alkes', 'kecil', 'Tube', 15, 0, 15, NULL, 0, 0, 'Belum', 15, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(251, 7, NULL, 54, 'Alkes', 'kecil', 'Tabung', 4, 0, 4, NULL, 0, 0, 'Belum', 4, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(252, 7, NULL, 4, 'Alkes', 'kecil', 'Unit', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(253, 7, NULL, 5, 'Alkes', 'kecil', 'Unit', 11, 0, 11, NULL, 0, 0, 'Belum', 11, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(254, 7, NULL, 57, 'Alkes', 'kecil', 'Unit', 6, 0, 6, NULL, 0, 0, 'Belum', 6, 0, 'Belum Dimutasi', NULL, NULL, NULL, 2, '2026-10-14 20:30:00', NULL, NULL),
+(260, 11, 66, 51, 'Alkes', 'kecil', 'Tube', 14, 0, 14, NULL, 0, 0, 'Belum', 14, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(261, 11, 67, 52, 'Alkes', 'kecil', 'Tube', 15, 0, 15, NULL, 0, 0, 'Belum', 15, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(262, 11, 63, 48, 'Alkes', 'kecil', 'Botol', 55, 0, 55, NULL, 0, 0, 'Belum', 55, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(264, 11, 7, 1, 'Obat', 'besar', 'Box', 4, 0, 4, NULL, 0, 0, 'Belum', 4, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', 1, '2026-11-03 02:57:57'),
+(265, 11, 8, 1, 'Obat', 'kecil', 'Strip', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(266, 11, 81, 26, 'Obat', 'kecil', 'Sachet', 9, 0, 9, NULL, 0, 0, 'Belum', 9, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(267, 11, 40, 26, 'Obat', 'besar', 'Box', 179, 0, 179, NULL, 0, 0, 'Belum', 179, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', 1, '2026-11-03 02:58:02'),
+(268, 11, 30, 18, 'Obat', 'besar', 'Box', 15, 0, 15, NULL, 0, 0, 'Belum', 15, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(269, 11, 4, 31, 'Obat', 'besar', 'Box', 4, 0, 4, NULL, 0, 0, 'Belum', 4, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(270, 11, 45, 31, 'Obat', 'besar', 'Box', 250, 0, 250, NULL, 0, 0, 'Belum', 250, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(271, 11, 41, 27, 'Obat', 'besar', 'Karton', 10, 0, 10, NULL, 0, 0, 'Belum', 10, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(272, 11, 55, 41, 'Obat', 'besar', 'Box', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(273, 11, 56, 41, 'Obat', 'besar', 'Box', 2, 0, 2, NULL, 0, 0, 'Belum', 2, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(274, 11, 58, 43, 'Obat', 'besar', 'Box', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(275, 11, 54, 40, 'Obat', 'besar', 'Box', 180, 0, 180, NULL, 0, 0, 'Belum', 180, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(276, 11, 31, 19, 'Obat', 'besar', 'Box', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(277, 11, 5, 42, 'Obat', 'besar', 'Box', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(278, 11, 57, 42, 'Obat', 'besar', 'Box', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(279, 11, 52, 38, 'Obat', 'besar', 'Karton', 360, 0, 360, NULL, 0, 0, 'Belum', 360, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(280, 11, 47, 33, 'Obat', 'besar', 'Box', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(281, 11, 34, 22, 'Obat', 'besar', 'Box', 20, 0, 20, NULL, 0, 0, 'Belum', 20, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(282, 11, 43, 29, 'Obat', 'besar', 'Box', 15, 0, 15, NULL, 0, 0, 'Belum', 15, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(283, 11, 35, 23, 'Obat', 'besar', 'Box', 300, 0, 300, NULL, 0, 0, 'Belum', 300, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(284, 11, 60, 45, 'Alkes', 'kecil', 'Lembar', 14, 0, 14, NULL, 0, 0, 'Belum', 14, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(285, 11, 82, 7, 'Obat', 'kecil', 'Botol', 48, 0, 48, NULL, 0, 0, 'Belum', 48, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(286, 11, 16, 7, 'Obat', 'besar', 'Karton', 698, 0, 698, NULL, 0, 0, 'Belum', 698, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(287, 11, 80, 7, 'Obat', 'kecil', 'Botol', 48, 0, 48, NULL, 0, 0, 'Belum', 48, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(288, 11, 68, 60, 'Obat', 'besar', 'Karton', 750, 0, 750, NULL, 0, 0, 'Belum', 750, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(289, 11, 17, 8, 'Obat', 'besar', 'Karton', 649, 0, 649, NULL, 0, 0, 'Belum', 649, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(290, 11, 18, 9, 'Obat', 'besar', 'Karton', 750, 0, 750, NULL, 0, 0, 'Belum', 750, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(291, 11, 6, 6, 'Obat', 'besar', 'Karton', 6, 0, 6, NULL, 0, 0, 'Belum', 6, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(292, 11, 12, 6, 'Obat', 'besar', 'Karton', 6, 0, 6, NULL, 0, 0, 'Belum', 6, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(293, 11, 13, 6, 'Obat', 'kecil', 'Botol', 45, 0, 45, NULL, 0, 0, 'Belum', 45, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(294, 11, 14, 6, 'Obat', 'besar', 'Karton', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(295, 11, 15, 6, 'Obat', 'kecil', 'Botol', 47, 0, 47, NULL, 0, 0, 'Belum', 47, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(296, 11, 44, 30, 'Obat', 'besar', 'Box', 58, 0, 58, NULL, 0, 0, 'Belum', 58, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(297, 11, 29, 17, 'Obat', 'besar', 'Box', 180, 0, 180, NULL, 0, 0, 'Belum', 180, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(298, 11, 62, 47, 'Alkes', 'kecil', 'Kotak', 65, 0, 65, NULL, 0, 0, 'Belum', 65, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(299, 11, 39, 25, 'Obat', 'besar', 'Box', 450, 0, 450, NULL, 0, 0, 'Belum', 450, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(300, 11, 59, 44, 'Alkes', 'kecil', 'Box', 65, 0, 65, NULL, 0, 0, 'Belum', 65, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(301, 11, 28, 16, 'Obat', 'besar', 'Karton', 360, 0, 360, NULL, 0, 0, 'Belum', 360, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(302, 11, 46, 32, 'Obat', 'besar', 'Box', 375, 0, 375, NULL, 0, 0, 'Belum', 375, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(303, 11, 32, 20, 'Obat', 'besar', 'Box', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(304, 11, 48, 34, 'Obat', 'besar', 'Karton', 360, 0, 360, NULL, 0, 0, 'Belum', 360, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(305, 11, 26, 14, 'Obat', 'besar', 'Box', 25, 0, 25, NULL, 0, 0, 'Belum', 25, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(306, 11, 23, 12, 'Obat', 'besar', 'Box', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(307, 11, 22, 11, 'Obat', 'besar', 'Box', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(309, 11, 19, 10, 'Obat', 'besar', 'Box', 21, 0, 21, NULL, 0, 0, 'Belum', 21, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(310, 11, 20, 10, 'Obat', 'kecil', 'Strip', 7, 0, 7, NULL, 0, 0, 'Belum', 7, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(311, 11, 21, 10, 'Obat', 'kecil', 'Strip', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(312, 11, 61, 46, 'Alkes', 'kecil', 'Pcs', 115, 0, 115, NULL, 0, 0, 'Belum', 115, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(313, 11, 53, 39, 'Obat', 'besar', 'Box', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(314, 11, 65, 50, 'Alkes', 'kecil', 'Botol', 15, 0, 15, NULL, 0, 0, 'Belum', 15, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(315, 11, 25, 13, 'Obat', 'kecil', 'Strip', 12, 0, 12, NULL, 0, 0, 'Belum', 12, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(316, 11, 24, 13, 'Obat', 'besar', 'Box', 29, 0, 29, NULL, 0, 0, 'Belum', 29, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(317, 11, 42, 28, 'Obat', 'besar', 'Karton', 150, 0, 150, NULL, 0, 0, 'Belum', 150, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(318, 11, 64, 49, 'Alkes', 'kecil', 'Botol', 15, 0, 15, NULL, 0, 0, 'Belum', 15, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(319, 11, 49, 35, 'Obat', 'besar', 'Box', 600, 0, 600, NULL, 0, 0, 'Belum', 600, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(320, 11, 33, 21, 'Obat', 'besar', 'Box', 375, 0, 375, NULL, 0, 0, 'Belum', 375, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(321, 11, 3, 2, 'Obat', 'besar', 'Karton', 5, 0, 5, NULL, 0, 0, 'Belum', 5, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(322, 11, 9, 2, 'Obat', 'besar', 'Karton', 10, 0, 10, NULL, 0, 0, 'Belum', 10, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(323, 11, 10, 2, 'Obat', 'kecil', 'Botol', 24, 0, 24, NULL, 0, 0, 'Belum', 24, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(324, 11, 11, 3, 'Alkes', 'kecil', 'Tube', 15, 0, 15, NULL, 0, 0, 'Belum', 15, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(325, 11, 27, 15, 'Obat', 'besar', 'Box', 180, 0, 180, NULL, 0, 0, 'Belum', 180, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(326, 11, 51, 37, 'Obat', 'besar', 'Box', 180, 0, 180, NULL, 0, 0, 'Belum', 180, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(327, 11, 50, 36, 'Obat', 'besar', 'Box', 360, 0, 360, NULL, 0, 0, 'Belum', 360, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(328, 11, 38, 24, 'Obat', 'kecil', 'Botol', 24, 0, 24, NULL, 0, 0, 'Belum', 24, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(329, 11, 36, 24, 'Obat', 'besar', 'Karton', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(330, 11, 37, 24, 'Obat', 'besar', 'Karton', 3, 0, 3, NULL, 0, 0, 'Belum', 3, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(331, 11, NULL, 53, 'Alkes', 'kecil', 'Unit', 2, 0, 2, NULL, 0, 0, 'Belum', 2, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', 1, '2026-11-03 02:58:17'),
+(332, 11, NULL, 56, 'Alkes', 'kecil', 'Unit', 6, 0, 6, NULL, 0, 0, 'Belum', 6, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', 1, '2026-11-03 02:58:37'),
+(333, 11, NULL, 55, 'Alkes', 'kecil', 'Unit', 3, 0, 3, NULL, 0, 0, 'Belum', 3, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(334, 11, NULL, 58, 'Alkes', 'kecil', 'Unit', 3, 0, 3, NULL, 0, 0, 'Belum', 3, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(335, 11, NULL, 54, 'Alkes', 'kecil', 'Tabung', 4, 0, 4, NULL, 0, 0, 'Belum', 4, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(336, 11, NULL, 4, 'Alkes', 'kecil', 'Unit', 8, 0, 8, NULL, 0, 0, 'Belum', 8, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(337, 11, NULL, 5, 'Alkes', 'kecil', 'Unit', 11, 0, 11, NULL, 0, 0, 'Belum', 11, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(338, 11, NULL, 57, 'Alkes', 'kecil', 'Unit', 6, 0, 6, NULL, 0, 0, 'Belum', 6, 0, 'Sesuai', NULL, NULL, NULL, 2, '2026-10-31 21:00:00', NULL, NULL),
+(3349, 41, 66, 51, 'Obat', 'kecil', 'Tube', 14, 0, 14, 14, 0, 0, 'Sudah', 14, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:47', NULL, NULL),
+(3350, 41, 67, 52, 'Obat', 'kecil', 'Tube', 15, 0, 15, 15, 0, 0, 'Sudah', 15, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:47', NULL, NULL),
+(3351, 41, 63, 48, 'Obat', 'kecil', 'Botol', 55, 0, 55, 55, 0, 0, 'Sudah', 55, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:47', NULL, NULL),
+(3352, 41, 7, 1, 'Obat', 'besar', 'Box', 1, 0, 1, 1, 0, 0, 'Sudah', 1, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:47', NULL, NULL),
+(3353, 41, 8, 1, 'Obat', 'kecil', 'Strip', 8, 0, 8, 6, 0, 0, 'Sudah', 6, -2, 'Sudah Dimutasi', 'Barang Hilang (2 Strip)', 'Selisih kurang 2 strip tidak ditemukan saat pemeriksaan fisik rak etalase', NULL, 4, '2026-11-23 02:21:47', 2, '2026-11-23 02:21:58'),
+(3354, 41, 81, 26, 'Obat', 'kecil', 'Sachet', 8, 0, 8, 8, 0, 0, 'Sudah', 8, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:47', NULL, NULL),
+(3355, 41, 116, 26, 'Obat', 'kecil', 'Sachet', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:48', NULL, NULL),
+(3356, 41, 148, 26, 'Obat', 'kecil', 'Sachet', 12, 0, 12, 12, 0, 0, 'Sudah', 12, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:48', NULL, NULL),
+(3357, 41, 40, 26, 'Obat', 'besar', 'Box', 176, 0, 176, 176, 0, 0, 'Sudah', 176, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:48', NULL, NULL),
+(3358, 41, 30, 18, 'Obat', 'besar', 'Box', 13, 0, 13, 13, 0, 0, 'Sudah', 13, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:48', NULL, NULL),
+(3359, 41, 91, 18, 'Obat', 'kecil', 'Botol', 12, 0, 12, 14, 0, 0, 'Sudah', 14, 2, 'Sudah Dimutasi', 'Kelebihan Kirim Supplier (2 Botol)', 'Kelebihan fisik +2 botol dari pengiriman supplier batch BET-15-26.1', NULL, 4, '2026-11-23 02:21:48', 2, '2026-11-23 02:21:58'),
+(3360, 41, 140, 18, 'Obat', 'kecil', 'Botol', 12, 0, 12, 12, 0, 0, 'Sudah', 12, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:48', NULL, NULL),
+(3361, 41, 4, 31, 'Obat', 'besar', 'Box', 3, 0, 3, 3, 0, 0, 'Sudah', 3, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:48', NULL, NULL),
+(3362, 41, 153, 31, 'Obat', 'kecil', 'Strip', 25, 0, 25, 25, 0, 0, 'Sudah', 25, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:48', NULL, NULL),
+(3363, 41, 45, 31, 'Obat', 'besar', 'Box', 249, 0, 249, 249, 0, 0, 'Sudah', 249, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:48', NULL, NULL),
+(3364, 41, 102, 31, 'Obat', 'kecil', 'Strip', 25, 0, 25, 25, 0, 0, 'Sudah', 25, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:48', NULL, NULL),
+(3365, 41, 149, 27, 'Obat', 'kecil', 'Tube', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:49', NULL, NULL),
+(3366, 41, 41, 27, 'Obat', 'besar', 'Karton', 2, 0, 2, 2, 0, 0, 'Sudah', 2, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:49', NULL, NULL),
+(3367, 41, 98, 27, 'Obat', 'kecil', 'Tube', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:49', NULL, NULL),
+(3368, 41, 55, 41, 'Obat', 'besar', 'Box', 6, 0, 6, 6, 0, 0, 'Sudah', 6, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:49', NULL, NULL);
+INSERT INTO `detail_opname_batch` (`id`, `id_sesi`, `id_batch`, `id_variasi`, `jenis_komoditas`, `satuan_tipe`, `nama_satuan`, `stok_tersedia_sistem`, `stok_reserved`, `stok_sistem_fisik`, `fisik_baik`, `fisik_rusak`, `fisik_expired`, `status_hitung`, `hitung_fisik`, `selisih`, `status_mutasi`, `alasan_mutasi`, `keterangan_mutasi`, `id_kartu_stok`, `dihitung_oleh`, `waktu_hitung`, `dimutasi_oleh`, `waktu_mutasi`) VALUES
+(3369, 41, 112, 41, 'Obat', 'kecil', 'Strip', 10, 0, 10, 8, 2, 0, 'Sudah', 8, -2, 'Sudah Dimutasi', 'Barang Rusak (2 Strip)', 'Kemasan blister lembab dan rusak fisik di rak etalase', NULL, 4, '2026-11-23 02:21:49', 2, '2026-11-23 02:21:58'),
+(3370, 41, 163, 41, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:49', NULL, NULL),
+(3371, 41, 56, 41, 'Obat', 'besar', 'Box', 2, 0, 2, 2, 0, 0, 'Sudah', 2, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:49', NULL, NULL),
+(3372, 41, 114, 43, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:49', NULL, NULL),
+(3373, 41, 165, 43, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:49', NULL, NULL),
+(3374, 41, 58, 43, 'Obat', 'besar', 'Box', 148, 0, 148, 148, 0, 0, 'Sudah', 148, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:49', NULL, NULL),
+(3375, 41, 54, 40, 'Obat', 'besar', 'Box', 178, 0, 178, 178, 0, 0, 'Sudah', 178, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:49', NULL, NULL),
+(3376, 41, 111, 40, 'Obat', 'kecil', 'Botol', 12, 0, 12, 12, 0, 0, 'Sudah', 12, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:49', NULL, NULL),
+(3377, 41, 162, 40, 'Obat', 'kecil', 'Botol', 12, 0, 12, 12, 0, 0, 'Sudah', 12, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:49', NULL, NULL),
+(3378, 41, 92, 19, 'Obat', 'kecil', 'Tube', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:49', NULL, NULL),
+(3379, 41, 141, 19, 'Obat', 'kecil', 'Tube', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:49', NULL, NULL),
+(3380, 41, 31, 19, 'Obat', 'besar', 'Box', 148, 0, 148, 148, 0, 0, 'Sudah', 148, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3381, 41, 164, 42, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3382, 41, 5, 42, 'Obat', 'besar', 'Box', 7, 0, 7, 7, 0, 0, 'Sudah', 7, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3383, 41, 57, 42, 'Obat', 'besar', 'Box', 149, 0, 149, 149, 0, 0, 'Sudah', 149, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3384, 41, 113, 42, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3385, 41, 52, 38, 'Obat', 'besar', 'Karton', 358, 0, 358, 358, 0, 0, 'Sudah', 358, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3386, 41, 109, 38, 'Obat', 'kecil', 'Botol', 24, 0, 24, 24, 0, 0, 'Sudah', 24, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3387, 41, 160, 38, 'Obat', 'kecil', 'Botol', 24, 0, 24, 24, 0, 0, 'Sudah', 24, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3388, 41, 104, 33, 'Obat', 'kecil', 'Strip', 25, 0, 25, 25, 0, 0, 'Sudah', 25, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3389, 41, 155, 33, 'Obat', 'kecil', 'Strip', 25, 0, 25, 25, 0, 0, 'Sudah', 25, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3390, 41, 47, 33, 'Obat', 'besar', 'Box', 2, 0, 2, 2, 0, 0, 'Sudah', 2, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3391, 41, 95, 22, 'Obat', 'kecil', 'Strip', 25, 0, 25, 25, 0, 0, 'Sudah', 25, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3392, 41, 144, 22, 'Obat', 'kecil', 'Strip', 25, 0, 25, 25, 0, 0, 'Sudah', 25, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3393, 41, 34, 22, 'Obat', 'besar', 'Box', 18, 0, 18, 18, 0, 0, 'Sudah', 18, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3394, 41, 100, 29, 'Obat', 'kecil', 'Strip', 25, 0, 25, 25, 0, 0, 'Sudah', 25, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3395, 41, 151, 29, 'Obat', 'kecil', 'Strip', 25, 0, 25, 25, 0, 0, 'Sudah', 25, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3396, 41, 43, 29, 'Obat', 'besar', 'Box', 13, 0, 13, 13, 0, 0, 'Sudah', 13, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3397, 41, 145, 23, 'Obat', 'kecil', 'Strip', 40, 0, 40, 40, 0, 0, 'Sudah', 40, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:50', NULL, NULL),
+(3398, 41, 35, 23, 'Obat', 'besar', 'Box', 297, 0, 297, 297, 0, 0, 'Sudah', 297, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3399, 41, 96, 23, 'Obat', 'kecil', 'Strip', 20, 0, 20, 20, 0, 0, 'Sudah', 20, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3400, 41, 60, 45, 'Obat', 'kecil', 'Lembar', 14, 0, 14, 14, 0, 0, 'Sudah', 14, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3401, 41, 16, 7, 'Obat', 'besar', 'Karton', 10, 1, 11, 11, 0, 0, 'Sudah', 11, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3402, 41, 80, 7, 'Obat', 'kecil', 'Botol', 5, 0, 5, 5, 0, 0, 'Sudah', 5, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3403, 41, 115, 60, 'Obat', 'kecil', 'Botol', 50, 0, 50, 50, 0, 0, 'Sudah', 50, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3404, 41, 166, 60, 'Obat', 'kecil', 'Botol', 100, 0, 100, 100, 0, 0, 'Sudah', 100, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3405, 41, 68, 60, 'Obat', 'besar', 'Karton', 747, 0, 747, 747, 0, 0, 'Sudah', 747, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3406, 41, 126, 8, 'Obat', 'kecil', 'Botol', 50, 0, 50, 50, 0, 0, 'Sudah', 50, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3407, 41, 17, 8, 'Obat', 'besar', 'Karton', 646, 0, 646, 646, 0, 0, 'Sudah', 646, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3408, 41, 83, 8, 'Obat', 'kecil', 'Botol', 50, 0, 50, 50, 0, 0, 'Sudah', 50, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3409, 41, 125, 8, 'Obat', 'kecil', 'Botol', 50, 0, 50, 50, 0, 0, 'Sudah', 50, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3410, 41, 18, 9, 'Obat', 'besar', 'Karton', 748, 0, 748, 748, 0, 0, 'Sudah', 748, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3411, 41, 84, 9, 'Obat', 'kecil', 'Botol', 50, 0, 50, 50, 0, 0, 'Sudah', 50, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3412, 41, 127, 9, 'Obat', 'kecil', 'Botol', 50, 0, 50, 50, 0, 0, 'Sudah', 50, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3413, 41, 6, 6, 'Obat', 'besar', 'Karton', 1, 2, 3, 3, 0, 0, 'Sudah', 3, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3414, 41, 122, 6, 'Obat', 'kecil', 'Botol', 50, 0, 50, 50, 0, 0, 'Sudah', 50, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3415, 41, 12, 6, 'Obat', 'besar', 'Karton', 1, 0, 1, 1, 0, 0, 'Sudah', 1, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3416, 41, 152, 30, 'Obat', 'kecil', 'Strip', 6, 0, 6, 6, 0, 0, 'Sudah', 6, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3417, 41, 44, 30, 'Obat', 'besar', 'Box', 55, 0, 55, 55, 0, 0, 'Sudah', 55, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:51', NULL, NULL),
+(3418, 41, 101, 30, 'Obat', 'kecil', 'Strip', 3, 0, 3, 3, 0, 0, 'Sudah', 3, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3419, 41, 139, 17, 'Obat', 'kecil', 'Botol', 12, 0, 12, 12, 0, 0, 'Sudah', 12, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3420, 41, 29, 17, 'Obat', 'besar', 'Box', 178, 0, 178, 178, 0, 0, 'Sudah', 178, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3421, 41, 90, 17, 'Obat', 'kecil', 'Botol', 12, 0, 12, 12, 0, 0, 'Sudah', 12, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3422, 41, 62, 47, 'Obat', 'kecil', 'Kotak', 65, 0, 65, 65, 0, 0, 'Sudah', 65, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3423, 41, 39, 25, 'Obat', 'besar', 'Box', 447, 0, 447, 447, 0, 0, 'Sudah', 447, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3424, 41, 97, 25, 'Obat', 'kecil', 'Sachet', 30, 0, 30, 30, 0, 0, 'Sudah', 30, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3425, 41, 147, 25, 'Obat', 'kecil', 'Sachet', 60, 0, 60, 60, 0, 0, 'Sudah', 60, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3426, 41, 59, 44, 'Obat', 'kecil', 'Box', 65, 0, 65, 65, 0, 0, 'Sudah', 65, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3427, 41, 28, 16, 'Obat', 'besar', 'Karton', 358, 0, 358, 358, 0, 0, 'Sudah', 358, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3428, 41, 89, 16, 'Obat', 'kecil', 'Botol', 24, 0, 24, 24, 0, 0, 'Sudah', 24, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3429, 41, 138, 16, 'Obat', 'kecil', 'Botol', 24, 0, 24, 24, 0, 0, 'Sudah', 24, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3430, 41, 46, 32, 'Obat', 'besar', 'Box', 373, 0, 373, 373, 0, 0, 'Sudah', 373, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3431, 41, 103, 32, 'Obat', 'kecil', 'Strip', 25, 0, 25, 25, 0, 0, 'Sudah', 25, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3432, 41, 154, 32, 'Obat', 'kecil', 'Strip', 25, 0, 25, 25, 0, 0, 'Sudah', 25, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3433, 41, 142, 20, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3434, 41, 32, 20, 'Obat', 'besar', 'Box', 148, 0, 148, 148, 0, 0, 'Sudah', 148, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3435, 41, 93, 20, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:52', NULL, NULL),
+(3436, 41, 48, 34, 'Obat', 'besar', 'Karton', 358, 0, 358, 358, 0, 0, 'Sudah', 358, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3437, 41, 105, 34, 'Obat', 'kecil', 'Botol', 24, 0, 24, 24, 0, 0, 'Sudah', 24, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3438, 41, 156, 34, 'Obat', 'kecil', 'Botol', 24, 0, 24, 24, 0, 0, 'Sudah', 24, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3439, 41, 26, 14, 'Obat', 'besar', 'Box', 19, 0, 19, 19, 0, 0, 'Sudah', 19, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3440, 41, 87, 14, 'Obat', 'kecil', 'Strip', 7, 0, 7, 7, 0, 0, 'Sudah', 7, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3441, 41, 134, 14, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3442, 41, 135, 14, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3443, 41, 131, 12, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3444, 41, 23, 12, 'Obat', 'besar', 'Box', 148, 0, 148, 148, 0, 0, 'Sudah', 148, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3445, 41, 86, 12, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3446, 41, 22, 11, 'Obat', 'besar', 'Box', 148, 0, 148, 148, 0, 0, 'Sudah', 148, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3447, 41, 85, 11, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3448, 41, 130, 11, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3449, 41, 20, 10, 'Obat', 'kecil', 'Strip', 7, 0, 7, 7, 0, 0, 'Sudah', 7, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3450, 41, 21, 10, 'Obat', 'kecil', 'Strip', 8, 0, 8, 8, 0, 0, 'Sudah', 8, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3451, 41, 128, 10, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:53', NULL, NULL),
+(3452, 41, 129, 10, 'Obat', 'kecil', 'Strip', 20, 0, 20, 20, 0, 0, 'Sudah', 20, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3453, 41, 19, 10, 'Obat', 'besar', 'Box', 18, 2, 20, 20, 0, 0, 'Sudah', 20, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3454, 41, 61, 46, 'Obat', 'kecil', 'Pcs', 115, 0, 115, 115, 0, 0, 'Sudah', 115, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3455, 41, 161, 39, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3456, 41, 53, 39, 'Obat', 'besar', 'Box', 148, 0, 148, 148, 0, 0, 'Sudah', 148, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3457, 41, 110, 39, 'Obat', 'kecil', 'Strip', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3458, 41, 65, 50, 'Obat', 'kecil', 'Botol', 15, 0, 15, 15, 0, 0, 'Sudah', 15, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3459, 41, 133, 13, 'Obat', 'kecil', 'Strip', 24, 0, 24, 24, 0, 0, 'Sudah', 24, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3460, 41, 24, 13, 'Obat', 'besar', 'Box', 24, 2, 26, 26, 0, 0, 'Sudah', 26, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3461, 41, 25, 13, 'Obat', 'kecil', 'Strip', 8, 0, 8, 8, 0, 0, 'Sudah', 8, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3462, 41, 132, 13, 'Obat', 'kecil', 'Strip', 12, 0, 12, 12, 0, 0, 'Sudah', 12, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3463, 41, 42, 28, 'Obat', 'besar', 'Karton', 148, 0, 148, 148, 0, 0, 'Sudah', 148, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3464, 41, 99, 28, 'Obat', 'kecil', 'Tube', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3465, 41, 150, 28, 'Obat', 'kecil', 'Tube', 10, 0, 10, 10, 0, 0, 'Sudah', 10, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3466, 41, 64, 49, 'Obat', 'kecil', 'Botol', 15, 0, 15, 15, 0, 0, 'Sudah', 15, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3467, 41, 49, 35, 'Obat', 'besar', 'Box', 597, 0, 597, 597, 0, 0, 'Sudah', 597, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3468, 41, 106, 35, 'Obat', 'kecil', 'Sachet', 40, 0, 40, 40, 0, 0, 'Sudah', 40, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3469, 41, 157, 35, 'Obat', 'kecil', 'Sachet', 80, 0, 80, 80, 0, 0, 'Sudah', 80, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:54', NULL, NULL),
+(3470, 41, 33, 21, 'Obat', 'besar', 'Box', 373, 0, 373, 373, 0, 0, 'Sudah', 373, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:55', NULL, NULL),
+(3471, 41, 94, 21, 'Obat', 'kecil', 'Strip', 25, 0, 25, 25, 0, 0, 'Sudah', 25, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:55', NULL, NULL),
+(3472, 41, 143, 21, 'Obat', 'kecil', 'Strip', 25, 0, 25, 25, 0, 0, 'Sudah', 25, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:55', NULL, NULL),
+(3473, 41, 3, 2, 'Obat', 'besar', 'Karton', 5, 0, 5, 0, 0, 5, 'Sudah', 0, -5, 'Sudah Dimutasi', 'Barang Kedaluwarsa (5 Karton)', 'Batch SNM-24K061 telah melewati tanggal kedaluwarsa dan ditarik ke karantina', NULL, 4, '2026-11-23 02:21:55', 2, '2026-11-23 02:21:58'),
+(3474, 41, 9, 2, 'Obat', 'besar', 'Karton', 7, 0, 7, 7, 0, 0, 'Sudah', 7, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:55', NULL, NULL),
+(3475, 41, 10, 2, 'Obat', 'kecil', 'Botol', 24, 0, 24, 24, 0, 0, 'Sudah', 24, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:55', NULL, NULL),
+(3476, 41, 120, 2, 'Obat', 'kecil', 'Botol', 24, 0, 24, 24, 0, 0, 'Sudah', 24, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:55', NULL, NULL),
+(3477, 41, 121, 2, 'Obat', 'kecil', 'Botol', 24, 0, 24, 24, 0, 0, 'Sudah', 24, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:55', NULL, NULL),
+(3478, 41, 11, 3, 'Obat', 'kecil', 'Tube', 15, 0, 15, 15, 0, 0, 'Sudah', 15, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:55', NULL, NULL),
+(3479, 41, 27, 15, 'Obat', 'besar', 'Box', 175, 0, 175, 175, 0, 0, 'Sudah', 175, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:55', NULL, NULL),
+(3480, 41, 88, 15, 'Obat', 'kecil', 'Sachet', 7, 0, 7, 7, 0, 0, 'Sudah', 7, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:55', NULL, NULL),
+(3481, 41, 136, 15, 'Obat', 'kecil', 'Sachet', 24, 0, 24, 24, 0, 0, 'Sudah', 24, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:56', NULL, NULL),
+(3482, 41, 137, 15, 'Obat', 'kecil', 'Sachet', 12, 0, 12, 12, 0, 0, 'Sudah', 12, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:56', NULL, NULL),
+(3483, 41, 51, 37, 'Obat', 'besar', 'Box', 178, 0, 178, 178, 0, 0, 'Sudah', 178, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:56', NULL, NULL),
+(3484, 41, 108, 37, 'Obat', 'kecil', 'Sachet', 12, 0, 12, 12, 0, 0, 'Sudah', 12, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:56', NULL, NULL),
+(3485, 41, 159, 37, 'Obat', 'kecil', 'Sachet', 12, 0, 12, 12, 0, 0, 'Sudah', 12, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:56', NULL, NULL),
+(3486, 41, 107, 36, 'Obat', 'kecil', 'Pot', 24, 0, 24, 24, 0, 0, 'Sudah', 24, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:56', NULL, NULL),
+(3487, 41, 158, 36, 'Obat', 'kecil', 'Pot', 24, 0, 24, 24, 0, 0, 'Sudah', 24, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:56', NULL, NULL),
+(3488, 41, 50, 36, 'Obat', 'besar', 'Box', 358, 0, 358, 358, 0, 0, 'Sudah', 358, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:56', NULL, NULL),
+(3489, 41, 36, 24, 'Obat', 'besar', 'Karton', 7, 0, 7, 7, 0, 0, 'Sudah', 7, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:56', NULL, NULL),
+(3490, 41, 38, 24, 'Obat', 'kecil', 'Botol', 24, 0, 24, 24, 0, 0, 'Sudah', 24, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:56', NULL, NULL),
+(3491, 41, 146, 24, 'Obat', 'kecil', 'Botol', 24, 0, 24, 24, 0, 0, 'Sudah', 24, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:57', NULL, NULL),
+(3492, 41, 37, 24, 'Obat', 'besar', 'Karton', 3, 0, 3, 3, 0, 0, 'Sudah', 3, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:57', NULL, NULL),
+(3493, 41, NULL, 53, 'Alkes', 'besar', 'Unit', 1, 0, 1, 1, 0, 0, 'Sudah', 1, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:57', NULL, NULL),
+(3494, 41, NULL, 56, 'Alkes', 'besar', 'Unit', 5, 0, 5, 5, 0, 0, 'Sudah', 5, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:57', NULL, NULL),
+(3495, 41, NULL, 55, 'Alkes', 'besar', 'Unit', 3, 0, 3, 3, 0, 0, 'Sudah', 3, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:57', NULL, NULL),
+(3496, 41, NULL, 58, 'Alkes', 'besar', 'Unit', 3, 0, 3, 3, 0, 0, 'Sudah', 3, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:57', NULL, NULL),
+(3497, 41, NULL, 54, 'Alkes', 'besar', 'Tabung', 4, 0, 4, 4, 0, 0, 'Sudah', 4, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:57', NULL, NULL),
+(3498, 41, NULL, 4, 'Alkes', 'besar', 'Unit', 2, 0, 2, 1, 0, 0, 'Sudah', 1, -1, 'Sudah Dimutasi', 'Barang Hilang (1 Unit)', '1 unit nomor seri OMR-7120-103 tidak ditemukan di etalase alat kesehatan', NULL, 4, '2026-11-23 02:21:57', 2, '2026-11-23 02:21:58'),
+(3499, 41, NULL, 5, 'Alkes', 'besar', 'Unit', 5, 0, 5, 4, 1, 0, 'Sudah', 4, -1, 'Sudah Dimutasi', 'Barang Rusak (1 Unit)', '1 unit nomor seri OMR-MC246-06 mengalami kerusakan layar LCD pecah', NULL, 4, '2026-11-23 02:21:57', 2, '2026-11-23 02:21:58'),
+(3500, 41, NULL, 57, 'Alkes', 'besar', 'Unit', 6, 0, 6, 6, 0, 0, 'Sudah', 6, 0, 'Sesuai', NULL, NULL, NULL, 4, '2026-11-23 02:21:58', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `detail_opname_sn`
+--
+
+CREATE TABLE `detail_opname_sn` (
+  `id` int(11) NOT NULL,
+  `id_detail_opname` int(11) NOT NULL,
+  `id_unit_serial` int(11) DEFAULT NULL,
+  `serial_number` varchar(100) NOT NULL,
+  `jenis_tindakan` enum('Kurang_Rusak','Kurang_Hilang','Tambah_Ditemukan') NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data untuk tabel `detail_opname_sn`
+--
+
+INSERT INTO `detail_opname_sn` (`id`, `id_detail_opname`, `id_unit_serial`, `serial_number`, `jenis_tindakan`, `created_at`) VALUES
+(6, 331, 25, 'SLL-CR809-01', 'Kurang_Rusak', '2026-11-03 02:58:17'),
+(7, 332, 38, 'OMR-C104-03', 'Kurang_Hilang', '2026-11-03 02:58:37'),
+(24, 3498, 3, 'OMR-7120-103', 'Kurang_Hilang', '2026-11-23 02:21:58'),
+(25, 3499, 17, 'OMR-MC246-06', 'Kurang_Rusak', '2026-11-23 02:21:58');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `detail_penjualan`
+--
+
+CREATE TABLE `detail_penjualan` (
+  `id` int(11) NOT NULL,
+  `id_penjualan` int(11) NOT NULL,
+  `id_variasi` int(11) NOT NULL,
+  `qty` int(11) NOT NULL,
+  `harga_satuan` decimal(12,2) NOT NULL,
+  `catatan_logistik` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `detail_penjualan`
+--
+
+INSERT INTO `detail_penjualan` (`id`, `id_penjualan`, `id_variasi`, `qty`, `harga_satuan`, `catatan_logistik`) VALUES
+(1, 1, 1, 2, 5000.00, 'AMX-2026-01.A (2x)'),
+(2, 1, 5, 1, 85000.00, 'OMR-MC246-01'),
+(3, 2, 10, 5, 3500.00, 'PCT-500-26.A (3x), PCT-500-26.B (2x)'),
+(4, 3, 6, 5, 18000.00, 'HUF-TMP-26.A (2x), HUF-TMP-27.A (3x)'),
+(5, 3, 6, 1, 850000.00, 'HUF-TMP-27 (1 Karton = 50 Botol)'),
+(6, 4, 30, 2, 85000.00, 'IMB-FRC-26 (2x)'),
+(7, 5, 2, 1, 350000.00, 'SNM-2026-A (1 Karton = 24 Botol)'),
+(8, 5, 4, 1, 550000.00, 'OMR-7120-101'),
+(9, 6, 56, 1, 850000.00, 'OMR-NEB-99'),
+(28, 13, 1, 1, 48000.00, 'AMX-2026-01 (1 Box = 10 Strip)'),
+(29, 14, 1, 1, 48000.00, 'AMX-2026-01 (1 Box = 10 Strip)'),
+(30, 15, 8, 2, 850000.00, 'HUFBP-2027-01 (2 Karton = 100 Botol)'),
+(42, 21, 7, 2, 18000.00, 'HUFPIL-2027-01.B (2 Botol)'),
+(43, 21, 6, 1, 18000.00, 'HUF-TMP-26.A (1 Botol)'),
+(44, 21, 8, 1, 850000.00, 'HUFBP-2027-01 (1 Karton)'),
+(45, 22, 7, 2, 18000.00, 'HUFPIL-2027-01.A (2 Botol)'),
+(73, 32, 1, 1, 48000.00, 'AMX-2026-01 (1 Box = 10 Strip)'),
+(107, 44, 6, 2, 18000.00, 'HUF-TMP-26.A (2 Botol)'),
+(108, 44, 26, 3, 4000.00, 'ANTJRG-2027-01.A (3 Sachet)'),
+(109, 44, 6, 2, 850000.00, 'HUF-24J089 (2 Karton)'),
+(110, 44, 45, 1, 800.00, 'BMHP-HNSPLS-28 (1 Lembar)'),
+(111, 44, 51, 1, 95000.00, 'BMHP-ESYUA-28 (1 Tube)'),
+(112, 45, 1, 1, 48000.00, 'AMX-2026-01 (1 Box = 10 Strip)'),
+(113, 45, 6, 1, 850000.00, 'HUF-24J089 (1 Karton = 50 Botol)'),
+(114, 46, 6, 2, 850000.00, 'HUF-24J089 (2 Karton = 100 Botol)'),
+(115, 46, 7, 1, 850000.00, 'HUFPIL-2027-01 (1 Karton = 50 Botol)'),
+(116, 46, 10, 2, 30000.00, 'PCT-500-26 (2 Box = 20 Strip)'),
+(141, 55, 7, 1, 850000.00, 'HUFPIL-2027-01 (1 Karton = 50 Botol)'),
+(162, 66, 1, 1, 48000.00, 'AMX-2026-01 (1 Box = 10 Strip)'),
+(181, 80, 26, 2, 4000.00, 'ANTJRG-2027-01.B (2 Sachet)'),
+(182, 81, 26, 1, 4000.00, 'ANTJRG-2027-01.A (1 Sachet)'),
+(184, 86, 1, 1, 48000.00, 'AMX-2026-01 (1 Box = 10 Strip)'),
+(187, 89, 14, 1, 120000.00, 'PND-KLK-26 (1 Box)'),
+(188, 89, 14, 3, 12500.00, 'PND-KLK-26.1 (3 Strip)'),
+(189, 90, 13, 4, 9500.00, 'PRM-KLK-26.A (4 Strip)'),
+(190, 90, 15, 5, 4500.00, 'TLKANG-2027-01.1 (5 Sachet)'),
+(191, 91, 1, 2, 48000.00, 'AMX-2026-01 (2 Box)'),
+(192, 92, 33, 4, 72000.00, 'DCL-GEN-26 (4 Box)'),
+(193, 92, 27, 6, 630000.00, 'CDR-EFT-26 (6 Karton)'),
+(194, 93, 4, 6, 550000.00, 'OMR-7120-104, OMR-7120-105, OMR-7120-106, OMR-7120-107, OMR-7120-108, OMR-7120-109'),
+(195, 94, 5, 6, 85000.00, 'OMR-MC246-07, OMR-MC246-08, OMR-MC246-09, OMR-MC246-10, OMR-MC246-11, OMR-MC246-12'),
+(196, 95, 14, 2, 120000.00, 'PND-KLK-26 (2 Box = 20 Strip)'),
+(197, 96, 13, 2, 110000.00, 'PRM-KLK-26 (2 Box = 24 Strip)'),
+(198, 97, 15, 1, 52000.00, 'TLKANG-2027-01 (1 Box = 12 Sachet)'),
+(199, 98, 2, 1, 350000.00, 'SNM-2026-A (1 Karton = 24 Botol)'),
+(200, 99, 6, 2, 850000.00, 'HUF-24J089 (1 Karton = 50 Botol), HUF-TMP-26 (1 Karton = 50 Botol)'),
+(201, 100, 6, 1, 18000.00, 'HUF-24J089.A (1 Botol)'),
+(202, 101, 53, 1, 1400000.00, 'SLL-CR809-02'),
+(203, 101, 4, 1, 2600000.00, 'OMR-7120-102'),
+(204, 102, 7, 4, 850000.00, 'HUFPIL-2027-01 (4 Karton = 200 Botol)'),
+(205, 102, 5, 3, 800000.00, 'OMR-MC246-02, OMR-MC246-03, OMR-MC246-04'),
+(206, 103, 2, 2, 350000.00, 'SNM-2026-A (2 Karton = 48 Botol)'),
+(207, 104, 7, 1, 850000.00, 'HUFPIL-2027-01 (1 Karton = 50 Botol)'),
+(208, 105, 6, 2, 850000.00, 'HUF-24J089 (1 Karton = 50 Botol), HUF-TMP-26 (1 Karton = 50 Botol)'),
+(209, 106, 7, 1, 850000.00, 'HUFPIL-2027-01 (1 Karton = 50 Botol)');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `histori_konversi`
+--
+
+CREATE TABLE `histori_konversi` (
+  `id` int(11) NOT NULL,
+  `id_variasi` int(11) NOT NULL,
+  `batch_asal` varchar(100) NOT NULL,
+  `batch_hasil` varchar(100) NOT NULL,
+  `qty_box_buka` int(11) NOT NULL,
+  `qty_pcs_hasil` int(11) NOT NULL,
+  `sisa_dus_akhir` int(11) DEFAULT 0,
+  `dibuat_oleh` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data untuk tabel `histori_konversi`
+--
+
+INSERT INTO `histori_konversi` (`id`, `id_variasi`, `batch_asal`, `batch_hasil`, `qty_box_buka`, `qty_pcs_hasil`, `sisa_dus_akhir`, `dibuat_oleh`, `created_at`) VALUES
+(1, 1, 'AMX-2026-01', 'AMX-2026-01.A', 1, 10, 14, 1, '2026-10-05 02:15:00'),
+(2, 2, 'SNM-2026-A', 'SNM-2026-A.A', 1, 24, 11, 2, '2026-10-07 03:30:00'),
+(3, 10, 'PCT-500-26', 'PCT-500-26.A', 1, 10, 24, 2, '2026-10-08 04:00:00'),
+(4, 10, 'PCT-500-26', 'PCT-500-26.B', 1, 10, 23, 2, '2026-10-10 07:20:00'),
+(5, 6, 'HUF-TMP-26', 'HUF-TMP-26.A', 1, 50, 6, 4, '2026-10-09 06:45:00'),
+(6, 6, 'HUF-TMP-27', 'HUF-TMP-27.A', 1, 50, 9, 2, '2026-10-11 08:30:00'),
+(7, 13, 'PRM-KLK-26', 'PRM-KLK-26.A', 1, 12, 29, 2, '2026-10-21 04:00:00'),
+(8, 24, 'WOD-PEP-26', 'WOD-PEP-26.A', 1, 24, 11, 2, '2026-10-23 09:30:00'),
+(15, 7, 'HUFPIL-2027-01', 'HUFPIL-2027-01.A', 1, 50, 14, 4, '2026-10-28 04:40:56'),
+(16, 26, 'ANTJRG-2027-01', 'ANTJRG-2027-01.A', 1, 12, 179, 2, '2026-10-28 23:30:34'),
+(17, 7, 'HUFPIL-2027-01', 'HUFPIL-2027-01.B', 1, 50, 699, 1, '2026-10-28 23:48:22'),
+(18, 8, 'HUFBP-2027-01', 'HUFBP-2027-01.1', 1, 50, 648, 2, '2026-10-24 19:00:00'),
+(19, 9, 'HUFFLU-2027-01', 'HUFFLU-2027-01.1', 1, 50, 749, 4, '2026-10-24 19:00:00'),
+(20, 11, 'PCT250-2027-01', 'PCT250-2027-01.1', 1, 10, 149, 2, '2026-10-24 19:00:00'),
+(21, 12, 'PCT125-2027-01', 'PCT125-2027-01.1', 1, 10, 149, 2, '2026-10-24 19:00:00'),
+(22, 14, 'PND-KLK-26', 'PND-KLK-26.1', 1, 10, 24, 2, '2026-10-24 19:00:00'),
+(23, 15, 'TLKANG-2027-01', 'TLKANG-2027-01.1', 1, 12, 179, 4, '2026-10-24 19:00:00'),
+(24, 16, 'MYL150-2027-01', 'MYL150-2027-01.1', 1, 24, 359, 2, '2026-10-24 19:00:00'),
+(25, 17, 'INSREG-2027-01', 'INSREG-2027-01.1', 1, 12, 179, 2, '2026-10-24 19:00:00'),
+(26, 18, 'BET-15-26', 'BET-15-26.1', 1, 12, 14, 2, '2026-10-24 19:00:00'),
+(27, 19, 'CTP30-2027-01', 'CTP30-2027-01.1', 1, 10, 149, 1, '2026-10-24 19:00:00'),
+(28, 20, 'NEUFRT-2027-01', 'NEUFRT-2027-01.1', 1, 10, 149, 2, '2026-10-24 19:00:00'),
+(29, 21, 'SNGCAP-2027-01', 'SNGCAP-2027-01.1', 1, 25, 374, 2, '2026-10-24 19:00:00'),
+(30, 22, 'DPT-CAP-26', 'DPT-CAP-26.1', 1, 25, 19, 2, '2026-10-24 19:00:00'),
+(31, 23, 'ENTDSW-2027-01', 'ENTDSW-2027-01.1', 1, 20, 299, 4, '2026-10-24 19:00:00'),
+(32, 25, 'KMXHRB-2027-01', 'KMXHRB-2027-01.1', 1, 30, 449, 2, '2026-10-24 19:00:00'),
+(33, 27, 'CDR-EFT-26', 'CDR-EFT-26.1', 1, 10, 9, 2, '2026-10-24 19:00:00'),
+(34, 28, 'RDXDBL-2027-01', 'RDXDBL-2027-01.1', 1, 10, 149, 2, '2026-10-24 19:00:00'),
+(35, 29, 'ENV-C-26', 'ENV-C-26.1', 1, 25, 14, 4, '2026-10-24 19:00:00'),
+(36, 30, 'IMB-FRC-26', 'IMB-FRC-26.1', 1, 3, 57, 2, '2026-10-24 19:00:00'),
+(37, 31, 'BDR-2028', 'BDR-2028.1', 1, 25, 249, 1, '2026-10-24 19:00:00'),
+(38, 32, 'NZPFRT-2027-01', 'NZPFRT-2027-01.1', 1, 25, 374, 2, '2026-10-24 19:00:00'),
+(39, 33, 'DCL-GEN-26', 'DCL-GEN-26.1', 1, 25, 7, 4, '2026-10-24 19:00:00'),
+(40, 34, 'OBHCPL-2027-01', 'OBHCPL-2027-01.1', 1, 24, 359, 2, '2026-10-24 19:00:00'),
+(41, 35, 'SLNPAS-2027-01', 'SLNPAS-2027-01.1', 1, 40, 599, 2, '2026-10-24 19:00:00'),
+(42, 36, 'VKVP10-2027-01', 'VKVP10-2027-01.1', 1, 24, 359, 2, '2026-10-24 19:00:00'),
+(43, 37, 'TLKLNU-2027-01', 'TLKLNU-2027-01.1', 1, 12, 179, 4, '2026-10-24 19:00:00'),
+(44, 38, 'DCD-27A01', 'DCD-27A01.1', 1, 24, 359, 2, '2026-10-24 19:00:00'),
+(45, 39, 'PLSCAP-2027-01', 'PLSCAP-2027-01.1', 1, 10, 149, 2, '2026-10-24 19:00:00'),
+(46, 40, 'CMBJRK-2027-01', 'CMBJRK-2027-01.1', 1, 12, 179, 2, '2026-10-24 19:00:00'),
+(47, 41, 'CFD-500-26', 'CFD-500-26.1', 1, 10, 7, 1, '2026-10-24 19:00:00'),
+(48, 42, 'CTMALR-2027-01', 'CTMALR-2027-01.1', 1, 10, 149, 2, '2026-10-24 19:00:00'),
+(49, 43, 'CTR10-2027-01', 'CTR10-2027-01.1', 1, 10, 149, 2, '2026-10-24 19:00:00'),
+(50, 60, 'HUFBPA-2027-01', 'HUFBPA-2027-01.1', 1, 50, 749, 2, '2026-10-24 19:00:00'),
+(51, 26, 'ANTJRG-2027-01', 'ANTJRG-2027-01.B', 1, 12, 177, 1, '2026-11-03 05:48:38'),
+(52, 2, 'SNM-2026-A', 'SNM-2026-A.B', 1, 24, 14, 4, '2026-11-04 19:18:12'),
+(53, 2, 'SNM-2026-A', 'SNM-2026-A.C', 1, 24, 13, 2, '2026-11-12 00:22:05'),
+(54, 6, 'HUF-24J089', 'HUF-24J089.A', 1, 50, 19, 4, '2026-11-04 21:05:30'),
+(55, 6, 'HUF-TMP-26', 'HUF-TMP-26.B', 2, 100, 17, 2, '2026-11-13 20:15:44'),
+(56, 7, 'HUFPIL-2027-01', 'HUFPIL-2027-01.C', 1, 50, 697, 4, '2026-11-05 18:45:10'),
+(57, 8, 'HUFBP-2027-01', 'HUFBP-2027-01.A', 1, 50, 647, 2, '2026-11-05 23:20:19'),
+(58, 8, 'HUFBP-2027-01', 'HUFBP-2027-01.B', 1, 50, 646, 4, '2026-11-15 02:40:22'),
+(59, 9, 'HUFFLU-2027-01', 'HUFFLU-2027-01.A', 1, 50, 748, 2, '2026-11-06 19:30:00'),
+(60, 10, 'PCT-500-26', 'PCT-500-26.C', 1, 10, 20, 4, '2026-11-07 01:12:41'),
+(61, 10, 'PCT-500-26', 'PCT-500-26.D', 2, 20, 18, 2, '2026-11-15 20:08:55'),
+(62, 11, 'PCT250-2027-01', 'PCT250-2027-01.A', 1, 10, 148, 4, '2026-11-07 20:14:20'),
+(63, 12, 'PCT125-2027-01', 'PCT125-2027-01.A', 1, 10, 148, 2, '2026-11-08 00:50:11'),
+(64, 13, 'PRM-KLK-26', 'PRM-KLK-26.B', 1, 12, 28, 4, '2026-11-08 19:05:33'),
+(65, 13, 'PRM-KLK-26', 'PRM-KLK-26.C', 2, 24, 26, 1, '2026-11-16 21:32:18'),
+(66, 14, 'PND-KLK-26', 'PND-KLK-26.A', 1, 10, 23, 4, '2026-11-09 02:18:45'),
+(67, 14, 'PND-KLK-26', 'PND-KLK-26.B', 1, 10, 22, 2, '2026-11-17 19:42:10'),
+(68, 15, 'TLKANG-2027-01', 'TLKANG-2027-01.A', 2, 24, 177, 2, '2026-11-09 18:55:27'),
+(69, 15, 'TLKANG-2027-01', 'TLKANG-2027-01.B', 1, 12, 176, 4, '2026-11-18 00:15:03'),
+(70, 16, 'MYL150-2027-01', 'MYL150-2027-01.A', 1, 24, 358, 2, '2026-11-09 23:40:12'),
+(71, 17, 'INSREG-2027-01', 'INSREG-2027-01.A', 1, 12, 178, 4, '2026-11-10 20:25:50'),
+(72, 18, 'BET-15-26', 'BET-15-26.A', 1, 12, 13, 2, '2026-11-11 01:10:08'),
+(73, 19, 'CTP30-2027-01', 'CTP30-2027-01.A', 1, 10, 148, 4, '2026-11-11 19:12:34'),
+(74, 20, 'NEUFRT-2027-01', 'NEUFRT-2027-01.A', 1, 10, 148, 2, '2026-11-12 02:05:19'),
+(75, 21, 'SNGCAP-2027-01', 'SNGCAP-2027-01.A', 1, 25, 373, 4, '2026-11-12 19:48:21'),
+(76, 22, 'DPT-CAP-26', 'DPT-CAP-26.A', 1, 25, 18, 2, '2026-11-13 00:20:47'),
+(77, 23, 'ENTDSW-2027-01', 'ENTDSW-2027-01.A', 2, 40, 297, 2, '2026-11-13 19:00:15'),
+(78, 24, 'WOD-PEP-26', 'WOD-PEP-26.B', 1, 24, 10, 4, '2026-11-14 01:35:09'),
+(79, 25, 'KMXHRB-2027-01', 'KMXHRB-2027-01.A', 2, 60, 447, 2, '2026-11-14 20:12:00'),
+(80, 26, 'ANTJRG-2027-01', 'ANTJRG-2027-01.C', 1, 12, 176, 4, '2026-11-15 00:25:33'),
+(81, 27, 'CDR-EFT-26', 'CDR-EFT-26.A', 1, 10, 8, 2, '2026-11-15 19:18:44'),
+(82, 28, 'RDXDBL-2027-01', 'RDXDBL-2027-01.A', 1, 10, 148, 4, '2026-11-16 01:40:28'),
+(83, 29, 'ENV-C-26', 'ENV-C-26.A', 1, 25, 13, 2, '2026-11-16 19:05:12'),
+(84, 30, 'IMB-FRC-26', 'IMB-FRC-26.A', 2, 6, 55, 4, '2026-11-17 00:30:55'),
+(85, 31, 'BDR-25D110', 'BDR-25D110.A', 1, 25, 252, 2, '2026-11-17 20:15:20'),
+(86, 32, 'NZPFRT-2027-01', 'NZPFRT-2027-01.A', 1, 25, 373, 4, '2026-11-18 02:02:11'),
+(87, 33, 'DCL-GEN-26', 'DCL-GEN-26.A', 1, 25, 6, 2, '2026-11-18 19:20:36'),
+(88, 34, 'OBHCPL-2027-01', 'OBHCPL-2027-01.A', 1, 24, 358, 4, '2026-11-18 21:45:19'),
+(89, 35, 'SLNPAS-2027-01', 'SLNPAS-2027-01.A', 2, 80, 597, 2, '2026-11-19 00:10:05'),
+(90, 36, 'VKVP10-2027-01', 'VKVP10-2027-01.A', 1, 24, 358, 4, '2026-11-19 02:28:40'),
+(91, 37, 'TLKLNU-2027-01', 'TLKLNU-2027-01.A', 1, 12, 178, 2, '2026-11-19 18:50:14'),
+(92, 38, 'DCD-27A01', 'DCD-27A01.A', 1, 24, 358, 4, '2026-11-19 20:12:30'),
+(93, 39, 'PLSCAP-2027-01', 'PLSCAP-2027-01.A', 1, 10, 148, 2, '2026-11-19 21:35:22'),
+(94, 40, 'CMBJRK-2027-01', 'CMBJRK-2027-01.A', 1, 12, 178, 4, '2026-11-19 23:18:09'),
+(95, 41, 'CFD-500-26', 'CFD-500-26.A', 1, 10, 8, 2, '2026-11-20 00:40:51'),
+(96, 42, 'CTM-25E080', 'CTM-25E080.A', 1, 10, 156, 4, '2026-11-20 01:25:17'),
+(97, 43, 'CTR10-2027-01', 'CTR10-2027-01.A', 1, 10, 148, 1, '2026-11-20 02:10:42'),
+(98, 60, 'HUFBPA-2027-01', 'HUFBPA-2027-01.A', 2, 100, 747, 2, '2026-11-20 03:05:00');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `kartu_stok`
+--
+
+CREATE TABLE `kartu_stok` (
+  `id` int(11) NOT NULL,
+  `id_variasi` int(11) NOT NULL,
+  `id_batch` int(11) DEFAULT NULL,
+  `satuan_tipe` enum('besar','kecil') NOT NULL DEFAULT 'kecil',
+  `jenis_mutasi` enum('Masuk','Keluar','Penyesuaian') NOT NULL,
+  `kanal` enum('POS','E-Commerce','Manual','Penerimaan','PO') NOT NULL DEFAULT 'Manual',
+  `alasan_mutasi` enum('Penerimaan Barang','Penjualan POS','Penjualan E-Commerce','Retur Barang Rusak','Klaim Garansi SN','Selisih Stok Opname','Barang Rusak','Barang Kedaluwarsa','Barang Hilang','Koreksi Salah Catat / Ditemukan','Koreksi Manual') NOT NULL DEFAULT 'Selisih Stok Opname',
+  `no_ref_dokumen` varchar(100) DEFAULT NULL,
+  `qty` int(11) NOT NULL,
+  `sisa_stok` int(11) NOT NULL,
+  `keterangan` text DEFAULT NULL,
+  `dibuat_oleh` int(11) DEFAULT NULL,
+  `tanggal` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `kartu_stok`
+--
+
+INSERT INTO `kartu_stok` (`id`, `id_variasi`, `id_batch`, `satuan_tipe`, `jenis_mutasi`, `kanal`, `alasan_mutasi`, `no_ref_dokumen`, `qty`, `sisa_stok`, `keterangan`, `dibuat_oleh`, `tanggal`) VALUES
+(1, 1, NULL, 'besar', 'Keluar', 'Manual', 'Barang Kedaluwarsa', 'MUT-EXP-20260901-01', 15, 2, 'Pemusnahan Batch Kadaluarsa [Batch: AMX-24C081]', 2, '2026-09-01 03:00:00'),
+(2, 10, NULL, 'besar', 'Keluar', 'Manual', 'Barang Kedaluwarsa', 'MUT-EXP-20260901-02', 20, 20, 'Pemusnahan Batch Kadaluarsa [Batch: PCT-24D012]', 2, '2026-09-01 03:15:00'),
+(3, 1, NULL, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', NULL, 1, 14, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: AMX-2026-01]', 4, '2026-10-05 02:15:00'),
+(4, 1, NULL, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', NULL, 10, 10, 'Lahir Sub-Batch AMX-2026-01.A (Masuk 10 Strip)', 4, '2026-10-05 02:15:00'),
+(5, 2, NULL, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', NULL, 1, 11, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: SNM-2026-A]', 2, '2026-10-07 03:30:00'),
+(6, 2, NULL, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', NULL, 24, 24, 'Lahir Sub-Batch SNM-2026-A.A (Masuk 24 Botol)', 2, '2026-10-07 03:30:00'),
+(7, 10, NULL, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', NULL, 1, 24, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: PCT-500-26]', 4, '2026-10-08 04:00:00'),
+(8, 10, NULL, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', NULL, 10, 10, 'Lahir Sub-Batch PCT-500-26.A (Masuk 10 Strip)', 4, '2026-10-08 04:00:00'),
+(9, 10, NULL, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', NULL, 1, 23, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: PCT-500-26]', 4, '2026-10-10 07:20:00'),
+(10, 10, NULL, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', NULL, 10, 10, 'Lahir Sub-Batch PCT-500-26.B (Masuk 10 Strip)', 4, '2026-10-10 07:20:00'),
+(11, 6, NULL, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', NULL, 1, 6, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: HUF-TMP-26]', 4, '2026-10-09 06:45:00'),
+(12, 6, NULL, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', NULL, 50, 50, 'Lahir Sub-Batch HUF-TMP-26.A (Masuk 50 Botol)', 4, '2026-10-09 06:45:00'),
+(13, 6, NULL, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', NULL, 1, 9, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: HUF-TMP-27]', 2, '2026-10-11 08:30:00'),
+(14, 6, NULL, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', NULL, 50, 50, 'Lahir Sub-Batch HUF-TMP-27.A (Masuk 50 Botol)', 2, '2026-10-11 08:30:00'),
+(15, 13, NULL, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', NULL, 1, 29, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: PRM-KLK-26]', 4, '2026-10-21 04:00:00'),
+(16, 13, NULL, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', NULL, 12, 12, 'Lahir Sub-Batch PRM-KLK-26.A (Masuk 12 Strip)', 4, '2026-10-21 04:00:00'),
+(17, 24, NULL, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', NULL, 1, 11, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: WOD-PEP-26]', 2, '2026-10-23 09:30:00'),
+(18, 24, NULL, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', NULL, 24, 24, 'Lahir Sub-Batch WOD-PEP-26.A (Masuk 24 Botol)', 2, '2026-10-23 09:30:00'),
+(19, 56, NULL, 'besar', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261012-0901', 1, 4, 'Penjualan Luring POS-20261012-0901 [SN: OMR-NEB-99]', 4, '2026-10-12 09:10:00'),
+(20, 56, NULL, 'besar', 'Masuk', 'Manual', 'Retur Barang Rusak', 'POS-20261012-0901', 1, 5, 'Retur Pelanggan: Kompresor macet & uap tidak keluar (Klaim Garansi) [SN: OMR-NEB-99]', 2, '2026-10-15 04:20:00'),
+(21, 1, NULL, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261014-1001', 2, 8, 'Penjualan Luring POS-20261014-1001 [Batch: AMX-2026-01.A (2x)]', 4, '2026-10-14 03:15:20'),
+(22, 5, NULL, 'besar', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261014-1001', 1, 4, 'Penjualan Luring POS-20261014-1001 [SN: OMR-MC246-01]', 4, '2026-10-14 03:15:20'),
+(23, 10, NULL, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261016-1002', 3, 7, 'Penjualan Luring POS-20261016-1002 [Batch: PCT-500-26.A (3 Tablet)]', 4, '2026-10-16 07:22:10'),
+(24, 10, NULL, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261016-1002', 2, 8, 'Penjualan Luring POS-20261016-1002 [Batch: PCT-500-26.B (2 Tablet)]', 4, '2026-10-16 07:22:10'),
+(25, 6, NULL, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261017-1003', 2, 48, 'Penjualan Luring POS-20261017-1003 [Batch: HUF-TMP-26.A (2 Botol)]', 4, '2026-10-17 04:40:05'),
+(26, 6, NULL, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261017-1003', 3, 47, 'Penjualan Luring POS-20261017-1003 [Batch: HUF-TMP-27.A (3 Botol)]', 4, '2026-10-17 04:40:05'),
+(27, 6, NULL, 'besar', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261017-1003', 1, 8, 'Penjualan Luring POS-20261017-1003 [Batch: HUF-TMP-27 (1 Karton = 50 Botol)]', 4, '2026-10-17 04:40:05'),
+(28, 30, NULL, 'kecil', 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', 'INV-20261018-041', 2, 58, 'Pengiriman via Ekspedisi (Kurir) [Batch: IMB-FRC-26 (2x)]', 2, '2026-10-18 02:30:00'),
+(29, 2, NULL, 'besar', 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', 'INV-20261019-052', 1, 10, 'Pengiriman via Ekspedisi (Kurir) [Batch: SNM-2026-A (1 Karton = 24 Botol)]', 2, '2026-10-19 06:20:00'),
+(30, 4, NULL, 'besar', 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', 'INV-20261019-052', 1, 8, 'Pengiriman via Ekspedisi (Kurir) [SN: OMR-7120-101]', 2, '2026-10-19 06:20:00'),
+(31, 1, NULL, 'kecil', 'Masuk', 'Manual', 'Selisih Stok Opname', 'SO-20261020-01', 5, 13, 'Penyesuaian Opname Fisik: Ditemukan selisih fisik lebih 5 strip pada rak display [Batch: AMX-2026-01.A]', 2, '2026-10-20 02:30:00'),
+(32, 10, NULL, 'besar', 'Keluar', 'Manual', 'Selisih Stok Opname', 'SO-20261020-02', 1, 22, 'Penyesuaian Opname Fisik: Selisih fisik kurang 1 box kemasan rusak saat pemeriksaan fisik gudang [Batch: PCT-500-26]', 2, '2026-10-20 03:15:00'),
+(33, 1, NULL, 'besar', 'Masuk', 'PO', 'Penerimaan Barang', 'PO-20261015-OBAT5', 15, 15, 'Penerimaan PO Distribusi Kimia Farma [Batch: AMX-2026-01]', 2, '2026-10-15 01:30:00'),
+(34, 10, NULL, 'besar', 'Masuk', 'PO', 'Penerimaan Barang', 'PO-20261015-OBAT5', 25, 25, 'Penerimaan PO Distribusi Kimia Farma [Batch: PCT-500-26]', 2, '2026-10-15 01:30:00'),
+(35, 4, NULL, 'besar', 'Masuk', 'PO', 'Penerimaan Barang', 'PO-20261018-ALKES4', 5, 5, 'Penerimaan PO Alat Kesehatan Omron [SN: OMR-7120-101 s/d 05]', 2, '2026-10-18 02:15:00'),
+(36, 13, NULL, 'besar', 'Masuk', 'Penerimaan', 'Penerimaan Barang', 'KUL-20261020-CAMPUR', 30, 30, 'Kulakan OneMed [Batch: PRM-KLK-26]', 4, '2026-10-20 03:00:00'),
+(37, 41, NULL, 'besar', 'Masuk', 'PO', 'Penerimaan Barang', 'PO-20261022-OBAT-RETUR', 8, 8, 'Penerimaan PO Obat Awal [Batch: CFD-500-26] (2 box rusak)', 2, '2026-10-22 04:20:00'),
+(38, 41, NULL, 'besar', 'Masuk', 'PO', 'Retur Barang Rusak', 'PO-20261022-OBAT-RETUR', 2, 10, 'Penerimaan Barang Pengganti Retur Selesai (2 Box) [Batch: CFD-GNT-26]', 2, '2026-10-25 03:30:00'),
+(39, 4, NULL, 'besar', 'Masuk', 'PO', 'Penerimaan Barang', 'PO-20261023-ALKES-RETUR', 4, 9, 'Penerimaan PO Alkes Omron [4 Unit Diterima, 2 Unit Cacat Menunggu Pengganti]', 2, '2026-10-23 06:45:00'),
+(50, 7, 16, 'besar', 'Keluar', 'Manual', '', NULL, 1, 14, 'Bongkar 1 Karton (Rp0 - Konversi POS) [Batch: HUFPIL-2027-01]', 4, '2026-10-28 04:40:56'),
+(51, 7, 80, 'kecil', 'Masuk', 'Manual', '', NULL, 50, 50, 'Lahir Sub-Batch HUFPIL-2027-01.A (Masuk 50 Botol)', 4, '2026-10-28 04:40:56'),
+(52, 1, 7, 'besar', 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', 'WEB-20261029-191', 1, 13, 'Pengiriman via Ekspedisi (Kurir) [Batch: AMX-2026-01 (1 Box)]', 1, '2026-10-28 21:31:47'),
+(56, 26, 40, 'besar', 'Keluar', 'Manual', '', NULL, 1, 179, 'Bongkar 1 Box (Rp0 - Konversi POS) [Batch: ANTJRG-2027-01]', 1, '2026-10-28 23:30:34'),
+(57, 26, 81, 'kecil', 'Masuk', 'Manual', '', NULL, 12, 12, 'Lahir Sub-Batch ANTJRG-2027-01.A (Masuk 12 Sachet)', 1, '2026-10-28 23:30:34'),
+(64, 7, 16, 'besar', 'Keluar', 'Manual', '', NULL, 1, 699, 'Bongkar 1 Karton (Rp0 - Konversi POS) [Batch: HUFPIL-2027-01]', 4, '2026-10-28 23:48:22'),
+(65, 7, 82, 'kecil', 'Masuk', 'Manual', '', NULL, 50, 100, 'Lahir Sub-Batch HUFPIL-2027-01.B (Masuk 50 Botol)', 4, '2026-10-28 23:48:22'),
+(66, 7, 82, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261029-6744', 2, 37498, 'Penjualan Luring POS-20261029-6744 [Batch: HUFPIL-2027-01.B (2 Botol)]', 4, '2026-10-28 23:52:03'),
+(67, 6, 13, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261029-6744', 1, 1294, 'Penjualan Luring POS-20261029-6744 [Batch: HUF-TMP-26.A (1 Botol)]', 4, '2026-10-28 23:52:03'),
+(68, 8, 17, 'besar', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261029-6744', 1, 747, 'Penjualan Luring POS-20261029-6744 [Batch: HUFBP-2027-01 (1 Karton)]', 4, '2026-10-28 23:52:03'),
+(69, 7, 80, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261029-6112', 2, 37496, 'Penjualan Luring POS-20261029-6112 [Batch: HUFPIL-2027-01.A (2 Botol)]', 4, '2026-10-28 23:52:33'),
+(115, 51, 66, 'besar', 'Keluar', 'Manual', 'Selisih Stok Opname', 'OPN-20261029-999', 10, 5, '[Stok Opname: OPN-20261029-999] Batch: BMHP-ESYUA-28 | Barang Hilang', 1, '2026-10-31 19:43:01'),
+(116, 51, 66, 'besar', 'Masuk', 'Manual', 'Koreksi Manual', 'OPN-20261029-999', 10, 15, '[Rollback] Pembatalan Sesi Opname OPN-20261029-999: Pengembalian stok selisih yang dibatalkan', 1, '2026-10-31 19:48:38'),
+(123, 26, 81, 'kecil', 'Keluar', 'Manual', 'Selisih Stok Opname', 'OPN-20261015-001', 1, 12, '[Stok Opname: OPN-20261015-001] Batch: ANTJRG-2027-01.A | Barang Rusak - Kemasan pecah saat penataan', 1, '2026-10-14 21:10:00'),
+(124, 31, 4, 'kecil', 'Keluar', 'Manual', 'Selisih Stok Opname', 'OPN-20261015-001', 2, 100, '[Stok Opname: OPN-20261015-001] Batch: BDR-25D110 | Barang Kedaluwarsa - Pemusnahan obat expired', 1, '2026-10-14 21:15:00'),
+(125, 48, NULL, 'besar', 'Keluar', 'Manual', 'Selisih Stok Opname', 'OPN-20261015-001', 1, 55, '[Stok Opname: OPN-20261015-001] SN: OMR-7120-R01 | Barang Rusak - Cacat pabrik display bergaris', 1, '2026-10-14 21:20:00'),
+(138, 6, 13, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261101-2875', 2, 1292, 'Penjualan Luring POS-20261101-2875 [Batch: HUF-TMP-26.A (2 Botol)]', 4, '2026-10-31 23:35:08'),
+(139, 26, 81, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261101-2875', 3, 2157, 'Penjualan Luring POS-20261101-2875 [Batch: ANTJRG-2027-01.A (3 Sachet)]', 4, '2026-10-31 23:35:08'),
+(140, 6, 6, 'besar', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261101-2875', 2, 23, 'Penjualan Luring POS-20261101-2875 [Batch: HUF-24J089 (2 Karton)]', 4, '2026-10-31 23:35:08'),
+(141, 45, 60, 'besar', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261101-2875', 1, 14, 'Penjualan Luring POS-20261101-2875 [SN: BMHP-HNSPLS-28 (1 Lembar)]', 4, '2026-10-31 23:35:08'),
+(142, 51, 66, 'besar', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261101-2875', 1, 14, 'Penjualan Luring POS-20261101-2875 [SN: BMHP-ESYUA-28 (1 Tube)]', 4, '2026-10-31 23:35:08'),
+(182, 8, 17, 'besar', 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', 'WEB-20261029-294', 2, 747, 'Pengiriman via Ekspedisi (Kurir) [Batch: HUFBP-2027-01 (2 Karton)]', 1, '2026-11-02 22:03:04'),
+(199, 1, 7, 'besar', 'Keluar', 'Manual', 'Barang Rusak', 'OPN-20261103-440', 2, 118, '[Stok Opname: OPN-20261103-440] Batch: AMX-2026-01 | Barang Rusak (2 Box = 20 pcs)', 1, '2026-11-03 02:57:57'),
+(200, 26, 40, 'besar', 'Keluar', 'Manual', 'Barang Rusak', 'OPN-20261103-440', 1, 2145, '[Stok Opname: OPN-20261103-440] Batch: ANTJRG-2027-01 | Barang Rusak (1 Box = 12 pcs)', 1, '2026-11-03 02:58:02'),
+(201, 53, NULL, 'besar', 'Keluar', 'Manual', 'Barang Rusak', 'OPN-20261103-440', 1, 1, '[Stok Opname: OPN-20261103-440] SN: SLL-CR809-01 (Barang Rusak) | Barang Rusak', 1, '2026-11-03 02:58:17'),
+(202, 56, NULL, 'besar', 'Keluar', 'Manual', 'Barang Hilang', 'OPN-20261103-440', 1, 5, '[Stok Opname: OPN-20261103-440] SN: OMR-C104-03 (Barang Hilang) | Barang Hilang', 1, '2026-11-03 02:58:37'),
+(203, 8, 17, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 648, 'Pemecahan 1 Karton menjadi 50 Botol [Sub-Batch: HUFBP-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(204, 8, 17, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 50, 50, 'Penerimaan 50 Botol hasil pemecahan konversi dari Batch HUFBP-2027-01', 4, '2026-10-24 19:00:00'),
+(205, 9, 18, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 749, 'Pemecahan 1 Karton menjadi 50 Botol [Sub-Batch: HUFFLU-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(206, 9, 18, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 50, 50, 'Penerimaan 50 Botol hasil pemecahan konversi dari Batch HUFFLU-2027-01', 2, '2026-10-24 19:00:00'),
+(207, 11, 22, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 149, 'Pemecahan 1 Box menjadi 10 Strip [Sub-Batch: PCT250-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(208, 11, 22, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 10, 10, 'Penerimaan 10 Strip hasil pemecahan konversi dari Batch PCT250-2027-01', 4, '2026-10-24 19:00:00'),
+(209, 12, 23, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 149, 'Pemecahan 1 Box menjadi 10 Strip [Sub-Batch: PCT125-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(210, 12, 23, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 10, 10, 'Penerimaan 10 Strip hasil pemecahan konversi dari Batch PCT125-2027-01', 2, '2026-10-24 19:00:00'),
+(211, 14, 26, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 24, 'Pemecahan 1 Box menjadi 10 Strip [Sub-Batch: PND-KLK-26.1]', 2, '2026-10-24 19:00:00'),
+(212, 14, 26, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 10, 10, 'Penerimaan 10 Strip hasil pemecahan konversi dari Batch PND-KLK-26', 4, '2026-10-24 19:00:00'),
+(213, 15, 27, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 179, 'Pemecahan 1 Box menjadi 12 Sachet [Sub-Batch: TLKANG-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(214, 15, 27, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 12, 12, 'Penerimaan 12 Sachet hasil pemecahan konversi dari Batch TLKANG-2027-01', 2, '2026-10-24 19:00:00'),
+(215, 16, 28, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 359, 'Pemecahan 1 Karton menjadi 24 Botol [Sub-Batch: MYL150-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(216, 16, 28, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 24, 24, 'Penerimaan 24 Botol hasil pemecahan konversi dari Batch MYL150-2027-01', 4, '2026-10-24 19:00:00'),
+(217, 17, 29, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 179, 'Pemecahan 1 Box menjadi 12 Botol [Sub-Batch: INSREG-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(218, 17, 29, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 12, 12, 'Penerimaan 12 Botol hasil pemecahan konversi dari Batch INSREG-2027-01', 2, '2026-10-24 19:00:00'),
+(219, 18, 30, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 14, 'Pemecahan 1 Box menjadi 12 Botol [Sub-Batch: BET-15-26.1]', 2, '2026-10-24 19:00:00'),
+(220, 18, 30, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 12, 12, 'Penerimaan 12 Botol hasil pemecahan konversi dari Batch BET-15-26', 4, '2026-10-24 19:00:00'),
+(221, 19, 31, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 149, 'Pemecahan 1 Box menjadi 10 Tube [Sub-Batch: CTP30-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(222, 19, 31, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 10, 10, 'Penerimaan 10 Tube hasil pemecahan konversi dari Batch CTP30-2027-01', 2, '2026-10-24 19:00:00'),
+(223, 20, 32, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 149, 'Pemecahan 1 Box menjadi 10 Strip [Sub-Batch: NEUFRT-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(224, 20, 32, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 10, 10, 'Penerimaan 10 Strip hasil pemecahan konversi dari Batch NEUFRT-2027-01', 4, '2026-10-24 19:00:00'),
+(225, 21, 33, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 374, 'Pemecahan 1 Box menjadi 25 Strip [Sub-Batch: SNGCAP-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(226, 21, 33, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 25, 25, 'Penerimaan 25 Strip hasil pemecahan konversi dari Batch SNGCAP-2027-01', 2, '2026-10-24 19:00:00'),
+(227, 22, 34, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 19, 'Pemecahan 1 Box menjadi 25 Strip [Sub-Batch: DPT-CAP-26.1]', 2, '2026-10-24 19:00:00'),
+(228, 22, 34, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 25, 25, 'Penerimaan 25 Strip hasil pemecahan konversi dari Batch DPT-CAP-26', 4, '2026-10-24 19:00:00'),
+(229, 23, 35, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 299, 'Pemecahan 1 Box menjadi 20 Strip [Sub-Batch: ENTDSW-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(230, 23, 35, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 20, 20, 'Penerimaan 20 Strip hasil pemecahan konversi dari Batch ENTDSW-2027-01', 2, '2026-10-24 19:00:00'),
+(231, 25, 39, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 449, 'Pemecahan 1 Box menjadi 30 Sachet [Sub-Batch: KMXHRB-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(232, 25, 39, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 30, 30, 'Penerimaan 30 Sachet hasil pemecahan konversi dari Batch KMXHRB-2027-01', 4, '2026-10-24 19:00:00'),
+(233, 27, 41, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 9, 'Pemecahan 1 Karton menjadi 10 Tube [Sub-Batch: CDR-EFT-26.1]', 2, '2026-10-24 19:00:00'),
+(234, 27, 41, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 10, 10, 'Penerimaan 10 Tube hasil pemecahan konversi dari Batch CDR-EFT-26', 2, '2026-10-24 19:00:00'),
+(235, 28, 42, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 149, 'Pemecahan 1 Karton menjadi 10 Tube [Sub-Batch: RDXDBL-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(236, 28, 42, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 10, 10, 'Penerimaan 10 Tube hasil pemecahan konversi dari Batch RDXDBL-2027-01', 4, '2026-10-24 19:00:00'),
+(237, 29, 43, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 14, 'Pemecahan 1 Box menjadi 25 Strip [Sub-Batch: ENV-C-26.1]', 2, '2026-10-24 19:00:00'),
+(238, 29, 43, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 25, 25, 'Penerimaan 25 Strip hasil pemecahan konversi dari Batch ENV-C-26', 2, '2026-10-24 19:00:00'),
+(239, 30, 44, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 57, 'Pemecahan 1 Box menjadi 3 Strip [Sub-Batch: IMB-FRC-26.1]', 2, '2026-10-24 19:00:00'),
+(240, 30, 44, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 3, 3, 'Penerimaan 3 Strip hasil pemecahan konversi dari Batch IMB-FRC-26', 4, '2026-10-24 19:00:00'),
+(241, 31, 45, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 249, 'Pemecahan 1 Box menjadi 25 Strip [Sub-Batch: BDR-2028.1]', 2, '2026-10-24 19:00:00'),
+(242, 31, 45, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 25, 25, 'Penerimaan 25 Strip hasil pemecahan konversi dari Batch BDR-2028', 2, '2026-10-24 19:00:00'),
+(243, 32, 46, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 374, 'Pemecahan 1 Box menjadi 25 Strip [Sub-Batch: NZPFRT-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(244, 32, 46, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 25, 25, 'Penerimaan 25 Strip hasil pemecahan konversi dari Batch NZPFRT-2027-01', 4, '2026-10-24 19:00:00'),
+(245, 33, 47, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 7, 'Pemecahan 1 Box menjadi 25 Strip [Sub-Batch: DCL-GEN-26.1]', 2, '2026-10-24 19:00:00'),
+(246, 33, 47, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 25, 25, 'Penerimaan 25 Strip hasil pemecahan konversi dari Batch DCL-GEN-26', 2, '2026-10-24 19:00:00'),
+(247, 34, 48, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 359, 'Pemecahan 1 Karton menjadi 24 Botol [Sub-Batch: OBHCPL-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(248, 34, 48, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 24, 24, 'Penerimaan 24 Botol hasil pemecahan konversi dari Batch OBHCPL-2027-01', 4, '2026-10-24 19:00:00'),
+(249, 35, 49, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 599, 'Pemecahan 1 Box menjadi 40 Sachet [Sub-Batch: SLNPAS-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(250, 35, 49, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 40, 40, 'Penerimaan 40 Sachet hasil pemecahan konversi dari Batch SLNPAS-2027-01', 2, '2026-10-24 19:00:00'),
+(251, 36, 50, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 359, 'Pemecahan 1 Box menjadi 24 Pot [Sub-Batch: VKVP10-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(252, 36, 50, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 24, 24, 'Penerimaan 24 Pot hasil pemecahan konversi dari Batch VKVP10-2027-01', 4, '2026-10-24 19:00:00'),
+(253, 37, 51, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 179, 'Pemecahan 1 Box menjadi 12 Sachet [Sub-Batch: TLKLNU-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(254, 37, 51, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 12, 12, 'Penerimaan 12 Sachet hasil pemecahan konversi dari Batch TLKLNU-2027-01', 2, '2026-10-24 19:00:00'),
+(255, 38, 52, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 359, 'Pemecahan 1 Karton menjadi 24 Botol [Sub-Batch: DCD-27A01.1]', 2, '2026-10-24 19:00:00'),
+(256, 38, 52, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 24, 24, 'Penerimaan 24 Botol hasil pemecahan konversi dari Batch DCD-27A01', 4, '2026-10-24 19:00:00'),
+(257, 39, 53, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 149, 'Pemecahan 1 Box menjadi 10 Strip [Sub-Batch: PLSCAP-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(258, 39, 53, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 10, 10, 'Penerimaan 10 Strip hasil pemecahan konversi dari Batch PLSCAP-2027-01', 2, '2026-10-24 19:00:00'),
+(259, 40, 54, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 179, 'Pemecahan 1 Box menjadi 12 Botol [Sub-Batch: CMBJRK-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(260, 40, 54, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 12, 12, 'Penerimaan 12 Botol hasil pemecahan konversi dari Batch CMBJRK-2027-01', 4, '2026-10-24 19:00:00'),
+(261, 41, 55, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 7, 'Pemecahan 1 Box menjadi 10 Strip [Sub-Batch: CFD-500-26.1]', 2, '2026-10-24 19:00:00'),
+(262, 41, 55, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 10, 10, 'Penerimaan 10 Strip hasil pemecahan konversi dari Batch CFD-500-26', 2, '2026-10-24 19:00:00'),
+(263, 42, 57, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 149, 'Pemecahan 1 Box menjadi 10 Strip [Sub-Batch: CTMALR-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(264, 42, 57, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 10, 10, 'Penerimaan 10 Strip hasil pemecahan konversi dari Batch CTMALR-2027-01', 4, '2026-10-24 19:00:00'),
+(265, 43, 58, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 149, 'Pemecahan 1 Box menjadi 10 Strip [Sub-Batch: CTR10-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(266, 43, 58, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 10, 10, 'Penerimaan 10 Strip hasil pemecahan konversi dari Batch CTR10-2027-01', 2, '2026-10-24 19:00:00'),
+(267, 60, 68, 'besar', 'Keluar', 'Manual', 'Koreksi Manual', 'KNV-INIT', 1, 749, 'Pemecahan 1 Karton menjadi 50 Botol [Sub-Batch: HUFBPA-2027-01.1]', 2, '2026-10-24 19:00:00'),
+(268, 60, 68, 'kecil', 'Masuk', 'Manual', 'Koreksi Manual', 'KNV-INIT', 50, 50, 'Penerimaan 50 Botol hasil pemecahan konversi dari Batch HUFBPA-2027-01', 4, '2026-10-24 19:00:00'),
+(269, 26, 40, 'besar', 'Keluar', 'Manual', '', NULL, 1, 177, 'Bongkar 1 Box (Rp0 - Konversi POS) [Batch: ANTJRG-2027-01]', 1, '2026-11-03 05:48:38'),
+(270, 26, 116, 'kecil', 'Masuk', 'Manual', '', NULL, 12, 21, 'Lahir Sub-Batch ANTJRG-2027-01.B (Masuk 12 Sachet)', 1, '2026-11-03 05:48:38'),
+(271, 26, 116, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261103-4157', 2, 2143, 'Penjualan Luring POS-20261103-4157 [Batch: ANTJRG-2027-01.B (2 Sachet)]', 1, '2026-11-03 05:48:57'),
+(272, 26, 81, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261103-1988', 1, 2142, 'Penjualan Luring POS-20261103-1988 [Batch: ANTJRG-2027-01.A (1 Sachet)]', 1, '2026-11-03 05:49:36'),
+(338, 8, 17, 'besar', 'Keluar', 'Manual', '', NULL, 1, 648, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: HUFBP-2027-01]', 2, '2026-10-24 19:00:00'),
+(339, 9, 18, 'besar', 'Keluar', 'Manual', '', NULL, 1, 749, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: HUFFLU-2027-01]', 4, '2026-10-24 19:00:00'),
+(340, 11, 22, 'besar', 'Keluar', 'Manual', '', NULL, 1, 149, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: PCT250-2027-01]', 2, '2026-10-24 19:00:00'),
+(341, 12, 23, 'besar', 'Keluar', 'Manual', '', NULL, 1, 149, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: PCT125-2027-01]', 2, '2026-10-24 19:00:00'),
+(342, 14, 26, 'besar', 'Keluar', 'Manual', '', NULL, 1, 24, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: PND-KLK-26]', 2, '2026-10-24 19:00:00'),
+(343, 15, 27, 'besar', 'Keluar', 'Manual', '', NULL, 1, 179, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: TLKANG-2027-01]', 4, '2026-10-24 19:00:00'),
+(344, 16, 28, 'besar', 'Keluar', 'Manual', '', NULL, 1, 359, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: MYL150-2027-01]', 2, '2026-10-24 19:00:00'),
+(345, 17, 29, 'besar', 'Keluar', 'Manual', '', NULL, 1, 179, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: INSREG-2027-01]', 2, '2026-10-24 19:00:00'),
+(346, 18, 30, 'besar', 'Keluar', 'Manual', '', NULL, 1, 14, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: BET-15-26]', 2, '2026-10-24 19:00:00'),
+(347, 19, 31, 'besar', 'Keluar', 'Manual', '', NULL, 1, 149, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: CTP30-2027-01]', 1, '2026-10-24 19:00:00'),
+(348, 20, 32, 'besar', 'Keluar', 'Manual', '', NULL, 1, 149, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: NEUFRT-2027-01]', 2, '2026-10-24 19:00:00'),
+(349, 21, 33, 'besar', 'Keluar', 'Manual', '', NULL, 1, 374, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: SNGCAP-2027-01]', 2, '2026-10-24 19:00:00'),
+(350, 22, 34, 'besar', 'Keluar', 'Manual', '', NULL, 1, 19, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: DPT-CAP-26]', 2, '2026-10-24 19:00:00'),
+(351, 23, 35, 'besar', 'Keluar', 'Manual', '', NULL, 1, 299, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: ENTDSW-2027-01]', 4, '2026-10-24 19:00:00'),
+(352, 25, 39, 'besar', 'Keluar', 'Manual', '', NULL, 1, 449, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: KMXHRB-2027-01]', 2, '2026-10-24 19:00:00'),
+(353, 27, 41, 'besar', 'Keluar', 'Manual', '', NULL, 1, 9, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: CDR-EFT-26]', 2, '2026-10-24 19:00:00'),
+(354, 28, 42, 'besar', 'Keluar', 'Manual', '', NULL, 1, 149, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: RDXDBL-2027-01]', 2, '2026-10-24 19:00:00'),
+(355, 29, 43, 'besar', 'Keluar', 'Manual', '', NULL, 1, 14, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: ENV-C-26]', 4, '2026-10-24 19:00:00'),
+(356, 30, 44, 'besar', 'Keluar', 'Manual', '', NULL, 1, 57, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: IMB-FRC-26]', 2, '2026-10-24 19:00:00'),
+(357, 31, 45, 'besar', 'Keluar', 'Manual', '', NULL, 1, 249, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: BDR-2028]', 1, '2026-10-24 19:00:00'),
+(358, 32, 46, 'besar', 'Keluar', 'Manual', '', NULL, 1, 374, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: NZPFRT-2027-01]', 2, '2026-10-24 19:00:00'),
+(359, 33, 47, 'besar', 'Keluar', 'Manual', '', NULL, 1, 7, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: DCL-GEN-26]', 4, '2026-10-24 19:00:00'),
+(360, 34, 48, 'besar', 'Keluar', 'Manual', '', NULL, 1, 359, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: OBHCPL-2027-01]', 2, '2026-10-24 19:00:00'),
+(361, 35, 49, 'besar', 'Keluar', 'Manual', '', NULL, 1, 599, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: SLNPAS-2027-01]', 2, '2026-10-24 19:00:00'),
+(362, 36, 50, 'besar', 'Keluar', 'Manual', '', NULL, 1, 359, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: VKVP10-2027-01]', 2, '2026-10-24 19:00:00'),
+(363, 37, 51, 'besar', 'Keluar', 'Manual', '', NULL, 1, 179, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: TLKLNU-2027-01]', 4, '2026-10-24 19:00:00'),
+(364, 38, 52, 'besar', 'Keluar', 'Manual', '', NULL, 1, 359, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: DCD-27A01]', 2, '2026-10-24 19:00:00'),
+(365, 39, 53, 'besar', 'Keluar', 'Manual', '', NULL, 1, 149, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: PLSCAP-2027-01]', 2, '2026-10-24 19:00:00'),
+(366, 40, 54, 'besar', 'Keluar', 'Manual', '', NULL, 1, 179, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: CMBJRK-2027-01]', 2, '2026-10-24 19:00:00'),
+(367, 41, 55, 'besar', 'Keluar', 'Manual', '', NULL, 1, 7, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: CFD-500-26]', 1, '2026-10-24 19:00:00'),
+(368, 42, 57, 'besar', 'Keluar', 'Manual', '', NULL, 1, 149, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: CTMALR-2027-01]', 2, '2026-10-24 19:00:00'),
+(369, 43, 58, 'besar', 'Keluar', 'Manual', '', NULL, 1, 149, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: CTR10-2027-01]', 2, '2026-10-24 19:00:00'),
+(370, 60, 68, 'besar', 'Keluar', 'Manual', '', NULL, 1, 749, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: HUFBPA-2027-01]', 2, '2026-10-24 19:00:00'),
+(371, 2, 9, 'besar', 'Keluar', 'Manual', '', NULL, 1, 14, 'Bongkar 1 Karton (Rp0 - Konversi POS) [Batch: SNM-2026-A]', 4, '2026-11-04 19:18:12'),
+(372, 2, 120, 'kecil', 'Masuk', 'Manual', '', NULL, 24, 48, 'Lahir Sub-Batch SNM-2026-A.B (Masuk 24 Botol)', 4, '2026-11-04 19:18:12'),
+(373, 2, 9, 'besar', 'Keluar', 'Manual', '', NULL, 1, 13, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: SNM-2026-A]', 2, '2026-11-12 00:22:05'),
+(374, 2, 121, 'kecil', 'Masuk', 'Manual', '', NULL, 24, 72, 'Lahir Sub-Batch SNM-2026-A.C (Masuk 24 Botol)', 2, '2026-11-12 00:22:05'),
+(375, 6, 6, 'besar', 'Keluar', 'Manual', '', NULL, 1, 19, 'Bongkar 1 Karton (Rp0 - Konversi POS) [Batch: HUF-24J089]', 4, '2026-11-04 21:05:30'),
+(376, 6, 122, 'kecil', 'Masuk', 'Manual', '', NULL, 50, 142, 'Lahir Sub-Batch HUF-24J089.A (Masuk 50 Botol)', 4, '2026-11-04 21:05:30'),
+(377, 6, 12, 'besar', 'Keluar', 'Manual', '', NULL, 2, 17, 'Bongkar 2 Karton (Rp0 - Konversi) [Batch: HUF-TMP-26]', 2, '2026-11-13 20:15:44'),
+(378, 6, 123, 'kecil', 'Masuk', 'Manual', '', NULL, 100, 242, 'Lahir Sub-Batch HUF-TMP-26.B (Masuk 100 Botol)', 2, '2026-11-13 20:15:44'),
+(379, 7, 16, 'besar', 'Keluar', 'Manual', '', NULL, 1, 697, 'Bongkar 1 Karton (Rp0 - Konversi POS) [Batch: HUFPIL-2027-01]', 4, '2026-11-05 18:45:10'),
+(380, 7, 124, 'kecil', 'Masuk', 'Manual', '', NULL, 50, 146, 'Lahir Sub-Batch HUFPIL-2027-01.C (Masuk 50 Botol)', 4, '2026-11-05 18:45:10'),
+(381, 8, 17, 'besar', 'Keluar', 'Manual', '', NULL, 1, 647, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: HUFBP-2027-01]', 2, '2026-11-05 23:20:19'),
+(382, 8, 125, 'kecil', 'Masuk', 'Manual', '', NULL, 50, 100, 'Lahir Sub-Batch HUFBP-2027-01.A (Masuk 50 Botol)', 2, '2026-11-05 23:20:19'),
+(383, 8, 17, 'besar', 'Keluar', 'Manual', '', NULL, 1, 646, 'Bongkar 1 Karton (Rp0 - Konversi POS) [Batch: HUFBP-2027-01]', 4, '2026-11-15 02:40:22'),
+(384, 8, 126, 'kecil', 'Masuk', 'Manual', '', NULL, 50, 150, 'Lahir Sub-Batch HUFBP-2027-01.B (Masuk 50 Botol)', 4, '2026-11-15 02:40:22'),
+(385, 9, 18, 'besar', 'Keluar', 'Manual', '', NULL, 1, 748, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: HUFFLU-2027-01]', 2, '2026-11-06 19:30:00'),
+(386, 9, 127, 'kecil', 'Masuk', 'Manual', '', NULL, 50, 100, 'Lahir Sub-Batch HUFFLU-2027-01.A (Masuk 50 Botol)', 2, '2026-11-06 19:30:00'),
+(387, 10, 19, 'besar', 'Keluar', 'Manual', '', NULL, 1, 20, 'Bongkar 1 Box (Rp0 - Konversi POS) [Batch: PCT-500-26]', 4, '2026-11-07 01:12:41'),
+(388, 10, 128, 'kecil', 'Masuk', 'Manual', '', NULL, 10, 25, 'Lahir Sub-Batch PCT-500-26.C (Masuk 10 Strip)', 4, '2026-11-07 01:12:41'),
+(389, 10, 19, 'besar', 'Keluar', 'Manual', '', NULL, 2, 18, 'Bongkar 2 Box (Rp0 - Konversi) [Batch: PCT-500-26]', 2, '2026-11-15 20:08:55'),
+(390, 10, 129, 'kecil', 'Masuk', 'Manual', '', NULL, 20, 45, 'Lahir Sub-Batch PCT-500-26.D (Masuk 20 Strip)', 2, '2026-11-15 20:08:55'),
+(391, 11, 22, 'besar', 'Keluar', 'Manual', '', NULL, 1, 148, 'Bongkar 1 Box (Rp0 - Konversi POS) [Batch: PCT250-2027-01]', 4, '2026-11-07 20:14:20'),
+(392, 11, 130, 'kecil', 'Masuk', 'Manual', '', NULL, 10, 20, 'Lahir Sub-Batch PCT250-2027-01.A (Masuk 10 Strip)', 4, '2026-11-07 20:14:20'),
+(393, 12, 23, 'besar', 'Keluar', 'Manual', '', NULL, 1, 148, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: PCT125-2027-01]', 2, '2026-11-08 00:50:11'),
+(394, 12, 131, 'kecil', 'Masuk', 'Manual', '', NULL, 10, 20, 'Lahir Sub-Batch PCT125-2027-01.A (Masuk 10 Strip)', 2, '2026-11-08 00:50:11'),
+(395, 13, 24, 'besar', 'Keluar', 'Manual', '', NULL, 1, 28, 'Bongkar 1 Box (Rp0 - Konversi POS) [Batch: PRM-KLK-26]', 4, '2026-11-08 19:05:33'),
+(396, 13, 132, 'kecil', 'Masuk', 'Manual', '', NULL, 12, 24, 'Lahir Sub-Batch PRM-KLK-26.B (Masuk 12 Strip)', 4, '2026-11-08 19:05:33'),
+(397, 13, 24, 'besar', 'Keluar', 'Manual', '', NULL, 2, 26, 'Bongkar 2 Box (Rp0 - Konversi) [Batch: PRM-KLK-26]', 1, '2026-11-16 21:32:18'),
+(398, 13, 133, 'kecil', 'Masuk', 'Manual', '', NULL, 24, 48, 'Lahir Sub-Batch PRM-KLK-26.C (Masuk 24 Strip)', 1, '2026-11-16 21:32:18'),
+(399, 14, 26, 'besar', 'Keluar', 'Manual', '', NULL, 1, 23, 'Bongkar 1 Box (Rp0 - Konversi POS) [Batch: PND-KLK-26]', 4, '2026-11-09 02:18:45'),
+(400, 14, 134, 'kecil', 'Masuk', 'Manual', '', NULL, 10, 20, 'Lahir Sub-Batch PND-KLK-26.A (Masuk 10 Strip)', 4, '2026-11-09 02:18:45'),
+(401, 14, 26, 'besar', 'Keluar', 'Manual', '', NULL, 1, 22, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: PND-KLK-26]', 2, '2026-11-17 19:42:10'),
+(402, 14, 135, 'kecil', 'Masuk', 'Manual', '', NULL, 10, 30, 'Lahir Sub-Batch PND-KLK-26.B (Masuk 10 Strip)', 2, '2026-11-17 19:42:10'),
+(403, 15, 27, 'besar', 'Keluar', 'Manual', '', NULL, 2, 177, 'Bongkar 2 Box (Rp0 - Konversi) [Batch: TLKANG-2027-01]', 2, '2026-11-09 18:55:27'),
+(404, 15, 136, 'kecil', 'Masuk', 'Manual', '', NULL, 24, 36, 'Lahir Sub-Batch TLKANG-2027-01.A (Masuk 24 Sachet)', 2, '2026-11-09 18:55:27'),
+(405, 15, 27, 'besar', 'Keluar', 'Manual', '', NULL, 1, 176, 'Bongkar 1 Box (Rp0 - Konversi POS) [Batch: TLKANG-2027-01]', 4, '2026-11-18 00:15:03'),
+(406, 15, 137, 'kecil', 'Masuk', 'Manual', '', NULL, 12, 48, 'Lahir Sub-Batch TLKANG-2027-01.B (Masuk 12 Sachet)', 4, '2026-11-18 00:15:03'),
+(407, 16, 28, 'besar', 'Keluar', 'Manual', '', NULL, 1, 358, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: MYL150-2027-01]', 2, '2026-11-09 23:40:12'),
+(408, 16, 138, 'kecil', 'Masuk', 'Manual', '', NULL, 24, 48, 'Lahir Sub-Batch MYL150-2027-01.A (Masuk 24 Botol)', 2, '2026-11-09 23:40:12'),
+(409, 17, 29, 'besar', 'Keluar', 'Manual', '', NULL, 1, 178, 'Bongkar 1 Box (Rp0 - Konversi POS) [Batch: INSREG-2027-01]', 4, '2026-11-10 20:25:50'),
+(410, 17, 139, 'kecil', 'Masuk', 'Manual', '', NULL, 12, 24, 'Lahir Sub-Batch INSREG-2027-01.A (Masuk 12 Botol)', 4, '2026-11-10 20:25:50'),
+(411, 18, 30, 'besar', 'Keluar', 'Manual', '', NULL, 1, 13, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: BET-15-26]', 2, '2026-11-11 01:10:08'),
+(412, 18, 140, 'kecil', 'Masuk', 'Manual', '', NULL, 12, 24, 'Lahir Sub-Batch BET-15-26.A (Masuk 12 Botol)', 2, '2026-11-11 01:10:08'),
+(413, 19, 31, 'besar', 'Keluar', 'Manual', '', NULL, 1, 148, 'Bongkar 1 Box (Rp0 - Konversi POS) [Batch: CTP30-2027-01]', 4, '2026-11-11 19:12:34'),
+(414, 19, 141, 'kecil', 'Masuk', 'Manual', '', NULL, 10, 20, 'Lahir Sub-Batch CTP30-2027-01.A (Masuk 10 Tube)', 4, '2026-11-11 19:12:34'),
+(415, 20, 32, 'besar', 'Keluar', 'Manual', '', NULL, 1, 148, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: NEUFRT-2027-01]', 2, '2026-11-12 02:05:19'),
+(416, 20, 142, 'kecil', 'Masuk', 'Manual', '', NULL, 10, 20, 'Lahir Sub-Batch NEUFRT-2027-01.A (Masuk 10 Strip)', 2, '2026-11-12 02:05:19'),
+(417, 21, 33, 'besar', 'Keluar', 'Manual', '', NULL, 1, 373, 'Bongkar 1 Box (Rp0 - Konversi POS) [Batch: SNGCAP-2027-01]', 4, '2026-11-12 19:48:21'),
+(418, 21, 143, 'kecil', 'Masuk', 'Manual', '', NULL, 25, 50, 'Lahir Sub-Batch SNGCAP-2027-01.A (Masuk 25 Strip)', 4, '2026-11-12 19:48:21'),
+(419, 22, 34, 'besar', 'Keluar', 'Manual', '', NULL, 1, 18, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: DPT-CAP-26]', 2, '2026-11-13 00:20:47'),
+(420, 22, 144, 'kecil', 'Masuk', 'Manual', '', NULL, 25, 50, 'Lahir Sub-Batch DPT-CAP-26.A (Masuk 25 Strip)', 2, '2026-11-13 00:20:47'),
+(421, 23, 35, 'besar', 'Keluar', 'Manual', '', NULL, 2, 297, 'Bongkar 2 Box (Rp0 - Konversi) [Batch: ENTDSW-2027-01]', 2, '2026-11-13 19:00:15'),
+(422, 23, 145, 'kecil', 'Masuk', 'Manual', '', NULL, 40, 60, 'Lahir Sub-Batch ENTDSW-2027-01.A (Masuk 40 Strip)', 2, '2026-11-13 19:00:15'),
+(423, 24, 36, 'besar', 'Keluar', 'Manual', '', NULL, 1, 10, 'Bongkar 1 Karton (Rp0 - Konversi POS) [Batch: WOD-PEP-26]', 4, '2026-11-14 01:35:09'),
+(424, 24, 146, 'kecil', 'Masuk', 'Manual', '', NULL, 24, 48, 'Lahir Sub-Batch WOD-PEP-26.B (Masuk 24 Botol)', 4, '2026-11-14 01:35:09'),
+(425, 25, 39, 'besar', 'Keluar', 'Manual', '', NULL, 2, 447, 'Bongkar 2 Box (Rp0 - Konversi) [Batch: KMXHRB-2027-01]', 2, '2026-11-14 20:12:00'),
+(426, 25, 147, 'kecil', 'Masuk', 'Manual', '', NULL, 60, 90, 'Lahir Sub-Batch KMXHRB-2027-01.A (Masuk 60 Sachet)', 2, '2026-11-14 20:12:00'),
+(427, 26, 40, 'besar', 'Keluar', 'Manual', '', NULL, 1, 176, 'Bongkar 1 Box (Rp0 - Konversi POS) [Batch: ANTJRG-2027-01]', 4, '2026-11-15 00:25:33'),
+(428, 26, 148, 'kecil', 'Masuk', 'Manual', '', NULL, 12, 30, 'Lahir Sub-Batch ANTJRG-2027-01.C (Masuk 12 Sachet)', 4, '2026-11-15 00:25:33'),
+(429, 27, 41, 'besar', 'Keluar', 'Manual', '', NULL, 1, 8, 'Bongkar 1 Karton (Rp0 - Konversi) [Batch: CDR-EFT-26]', 2, '2026-11-15 19:18:44'),
+(430, 27, 149, 'kecil', 'Masuk', 'Manual', '', NULL, 10, 20, 'Lahir Sub-Batch CDR-EFT-26.A (Masuk 10 Tube)', 2, '2026-11-15 19:18:44'),
+(431, 28, 42, 'besar', 'Keluar', 'Manual', '', NULL, 1, 148, 'Bongkar 1 Karton (Rp0 - Konversi POS) [Batch: RDXDBL-2027-01]', 4, '2026-11-16 01:40:28'),
+(432, 28, 150, 'kecil', 'Masuk', 'Manual', '', NULL, 10, 20, 'Lahir Sub-Batch RDXDBL-2027-01.A (Masuk 10 Tube)', 4, '2026-11-16 01:40:28'),
+(433, 29, 43, 'besar', 'Keluar', 'Manual', '', NULL, 1, 13, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: ENV-C-26]', 2, '2026-11-16 19:05:12'),
+(434, 29, 151, 'kecil', 'Masuk', 'Manual', '', NULL, 25, 50, 'Lahir Sub-Batch ENV-C-26.A (Masuk 25 Strip)', 2, '2026-11-16 19:05:12'),
+(435, 30, 44, 'besar', 'Keluar', 'Manual', '', NULL, 2, 55, 'Bongkar 2 Box (Rp0 - Konversi POS) [Batch: IMB-FRC-26]', 4, '2026-11-17 00:30:55'),
+(436, 30, 152, 'kecil', 'Masuk', 'Manual', '', NULL, 6, 9, 'Lahir Sub-Batch IMB-FRC-26.A (Masuk 6 Strip)', 4, '2026-11-17 00:30:55'),
+(437, 31, 4, 'besar', 'Keluar', 'Manual', '', NULL, 1, 252, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: BDR-25D110]', 2, '2026-11-17 20:15:20'),
+(438, 31, 153, 'kecil', 'Masuk', 'Manual', '', NULL, 25, 50, 'Lahir Sub-Batch BDR-25D110.A (Masuk 25 Strip)', 2, '2026-11-17 20:15:20'),
+(439, 32, 46, 'besar', 'Keluar', 'Manual', '', NULL, 1, 373, 'Bongkar 1 Box (Rp0 - Konversi POS) [Batch: NZPFRT-2027-01]', 4, '2026-11-18 02:02:11'),
+(440, 32, 154, 'kecil', 'Masuk', 'Manual', '', NULL, 25, 50, 'Lahir Sub-Batch NZPFRT-2027-01.A (Masuk 25 Strip)', 4, '2026-11-18 02:02:11'),
+(441, 33, 47, 'besar', 'Keluar', 'Manual', '', NULL, 1, 6, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: DCL-GEN-26]', 2, '2026-11-18 19:20:36'),
+(442, 33, 155, 'kecil', 'Masuk', 'Manual', '', NULL, 25, 50, 'Lahir Sub-Batch DCL-GEN-26.A (Masuk 25 Strip)', 2, '2026-11-18 19:20:36'),
+(443, 34, 48, 'besar', 'Keluar', 'Manual', '', NULL, 1, 358, 'Bongkar 1 Karton (Rp0 - Konversi POS) [Batch: OBHCPL-2027-01]', 4, '2026-11-18 21:45:19'),
+(444, 34, 156, 'kecil', 'Masuk', 'Manual', '', NULL, 24, 48, 'Lahir Sub-Batch OBHCPL-2027-01.A (Masuk 24 Botol)', 4, '2026-11-18 21:45:19'),
+(445, 35, 49, 'besar', 'Keluar', 'Manual', '', NULL, 2, 597, 'Bongkar 2 Box (Rp0 - Konversi) [Batch: SLNPAS-2027-01]', 2, '2026-11-19 00:10:05'),
+(446, 35, 157, 'kecil', 'Masuk', 'Manual', '', NULL, 80, 120, 'Lahir Sub-Batch SLNPAS-2027-01.A (Masuk 80 Sachet)', 2, '2026-11-19 00:10:05'),
+(447, 36, 50, 'besar', 'Keluar', 'Manual', '', NULL, 1, 358, 'Bongkar 1 Box (Rp0 - Konversi POS) [Batch: VKVP10-2027-01]', 4, '2026-11-19 02:28:40'),
+(448, 36, 158, 'kecil', 'Masuk', 'Manual', '', NULL, 24, 48, 'Lahir Sub-Batch VKVP10-2027-01.A (Masuk 24 Pot)', 4, '2026-11-19 02:28:40'),
+(449, 37, 51, 'besar', 'Keluar', 'Manual', '', NULL, 1, 178, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: TLKLNU-2027-01]', 2, '2026-11-19 18:50:14'),
+(450, 37, 159, 'kecil', 'Masuk', 'Manual', '', NULL, 12, 24, 'Lahir Sub-Batch TLKLNU-2027-01.A (Masuk 12 Sachet)', 2, '2026-11-19 18:50:14'),
+(451, 38, 52, 'besar', 'Keluar', 'Manual', '', NULL, 1, 358, 'Bongkar 1 Karton (Rp0 - Konversi POS) [Batch: DCD-27A01]', 4, '2026-11-19 20:12:30'),
+(452, 38, 160, 'kecil', 'Masuk', 'Manual', '', NULL, 24, 48, 'Lahir Sub-Batch DCD-27A01.A (Masuk 24 Botol)', 4, '2026-11-19 20:12:30'),
+(453, 39, 53, 'besar', 'Keluar', 'Manual', '', NULL, 1, 148, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: PLSCAP-2027-01]', 2, '2026-11-19 21:35:22'),
+(454, 39, 161, 'kecil', 'Masuk', 'Manual', '', NULL, 10, 20, 'Lahir Sub-Batch PLSCAP-2027-01.A (Masuk 10 Strip)', 2, '2026-11-19 21:35:22'),
+(455, 40, 54, 'besar', 'Keluar', 'Manual', '', NULL, 1, 178, 'Bongkar 1 Box (Rp0 - Konversi POS) [Batch: CMBJRK-2027-01]', 4, '2026-11-19 23:18:09'),
+(456, 40, 162, 'kecil', 'Masuk', 'Manual', '', NULL, 12, 24, 'Lahir Sub-Batch CMBJRK-2027-01.A (Masuk 12 Botol)', 4, '2026-11-19 23:18:09'),
+(457, 41, 55, 'besar', 'Keluar', 'Manual', '', NULL, 1, 8, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: CFD-500-26]', 2, '2026-11-20 00:40:51'),
+(458, 41, 163, 'kecil', 'Masuk', 'Manual', '', NULL, 10, 20, 'Lahir Sub-Batch CFD-500-26.A (Masuk 10 Strip)', 2, '2026-11-20 00:40:51'),
+(459, 42, 5, 'besar', 'Keluar', 'Manual', '', NULL, 1, 156, 'Bongkar 1 Box (Rp0 - Konversi POS) [Batch: CTM-25E080]', 4, '2026-11-20 01:25:17'),
+(460, 42, 164, 'kecil', 'Masuk', 'Manual', '', NULL, 10, 20, 'Lahir Sub-Batch CTM-25E080.A (Masuk 10 Strip)', 4, '2026-11-20 01:25:17'),
+(461, 43, 58, 'besar', 'Keluar', 'Manual', '', NULL, 1, 148, 'Bongkar 1 Box (Rp0 - Konversi) [Batch: CTR10-2027-01]', 1, '2026-11-20 02:10:42'),
+(462, 43, 165, 'kecil', 'Masuk', 'Manual', '', NULL, 10, 20, 'Lahir Sub-Batch CTR10-2027-01.A (Masuk 10 Strip)', 1, '2026-11-20 02:10:42'),
+(463, 60, 68, 'besar', 'Keluar', 'Manual', '', NULL, 2, 747, 'Bongkar 2 Karton (Rp0 - Konversi) [Batch: HUFBPA-2027-01]', 2, '2026-11-20 03:05:00'),
+(464, 60, 166, 'kecil', 'Masuk', 'Manual', '', NULL, 100, 150, 'Lahir Sub-Batch HUFBPA-2027-01.A (Masuk 100 Botol)', 2, '2026-11-20 03:05:00'),
+(465, 14, 26, 'besar', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261121-1012', 1, 21, 'Penjualan Luring (Kasir POS) [Batch: PND-KLK-26 (1 Box)]', 4, '2026-11-20 19:15:20'),
+(466, 14, 87, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261121-1012', 3, 27, 'Penjualan Luring (Kasir POS) [Batch: PND-KLK-26.1 (3 Strip)]', 4, '2026-11-20 19:15:20'),
+(467, 13, 25, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261121-1045', 4, 44, 'Penjualan Luring (Kasir POS) [Batch: PRM-KLK-26.A (4 Strip)]', 4, '2026-11-20 20:05:44'),
+(468, 15, 88, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261121-1045', 5, 43, 'Penjualan Luring (Kasir POS) [Batch: TLKANG-2027-01.1 (5 Sachet)]', 4, '2026-11-20 20:05:44'),
+(469, 1, 7, 'besar', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261121-1108', 2, 1, 'Penjualan Luring (Kasir POS) [Batch: AMX-2026-01 (2 Box)]', 4, '2026-11-20 20:42:10'),
+(470, 33, 47, 'besar', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261121-1120', 4, 2, 'Penjualan Luring (Kasir POS) [Batch: DCL-GEN-26 (4 Box)]', 4, '2026-11-20 21:02:15'),
+(471, 27, 41, 'besar', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261121-1120', 6, 2, 'Penjualan Luring (Kasir POS) [Batch: CDR-EFT-26 (6 Karton)]', 4, '2026-11-20 21:02:15'),
+(472, 4, NULL, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261121-1130', 6, 2, 'Penjualan Luring (Kasir POS) [SN: OMR-7120-104, OMR-7120-105, OMR-7120-106, OMR-7120-107, OMR-7120-108, OMR-7120-109]', 4, '2026-11-20 21:15:00'),
+(473, 5, NULL, 'kecil', 'Keluar', 'POS', 'Penjualan POS', 'POS-20261121-1135', 6, 5, 'Penjualan Luring (Kasir POS) [SN: OMR-MC246-07, OMR-MC246-08, OMR-MC246-09, OMR-MC246-10, OMR-MC246-11, OMR-MC246-12]', 4, '2026-11-20 21:22:00'),
+(474, 14, 26, 'besar', 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', 'WEB-20261121-201', 2, 19, 'Pengiriman via Ekspedisi (Kurir) [Batch: PND-KLK-26 (2 Box)]', 2, '2026-11-20 19:40:00'),
+(484, 41, 112, 'kecil', 'Keluar', 'Manual', 'Barang Rusak', 'OPN-20261123-379', 2, 98, '[Stok Opname: OPN-20261123-379] Batch: CFD-500-26.1 | Barang Rusak - Kemasan blister lembab dan rusak fisik di rak etalase', 2, '2026-11-23 02:21:58'),
+(485, 2, 3, 'besar', 'Keluar', 'Manual', 'Barang Kedaluwarsa', 'OPN-20261123-379', 5, 240, '[Stok Opname: OPN-20261123-379] Batch: SNM-24K061 | Barang Kedaluwarsa (5 Karton = 120 pcs) - Batch SNM-24K061 telah melewati tanggal kedaluwarsa dan ditarik ke karantina', 2, '2026-11-23 02:21:58'),
+(486, 1, 8, 'kecil', 'Keluar', 'Manual', 'Barang Hilang', 'OPN-20261123-379', 2, 16, '[Stok Opname: OPN-20261123-379] Batch: AMX-2026-01.A | Barang Hilang - Selisih kurang 2 strip tidak ditemukan saat pemeriksaan fisik rak etalase', 2, '2026-11-23 02:21:58'),
+(487, 4, NULL, 'besar', 'Keluar', 'Manual', 'Barang Hilang', 'OPN-20261123-379', 1, 1, '[Stok Opname: OPN-20261123-379] SN: OMR-7120-103 (Barang Hilang) | Barang Hilang - 1 unit nomor seri OMR-7120-103 tidak ditemukan di etalase alat kesehatan', 2, '2026-11-23 02:21:58'),
+(488, 5, NULL, 'besar', 'Keluar', 'Manual', 'Barang Rusak', 'OPN-20261123-379', 1, 4, '[Stok Opname: OPN-20261123-379] SN: OMR-MC246-06 (Barang Rusak) | Barang Rusak - 1 unit nomor seri OMR-MC246-06 mengalami kerusakan layar LCD pecah', 2, '2026-11-23 02:21:58'),
+(489, 18, 91, 'kecil', 'Masuk', 'Manual', 'Koreksi Salah Catat / Ditemukan', 'OPN-20261123-379', 2, 182, '[Stok Opname: OPN-20261123-379] Batch: BET-15-26.1 | Kelebihan Kirim Supplier - Kelebihan fisik +2 botol dari pengiriman supplier batch BET-15-26.1', 2, '2026-11-23 02:21:58'),
+(490, 6, 6, 'besar', 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', 'WEB-20261123-442', 1, 1, 'Pengiriman via Ekspedisi (Kurir) [Batch: HUF-24J089 (1 Karton)]', 2, '2026-11-23 03:01:23'),
+(491, 6, 12, 'besar', 'Keluar', 'E-Commerce', 'Penjualan E-Commerce', 'WEB-20261123-442', 1, 1, 'Pengiriman via Ekspedisi (Kurir) [Batch: HUF-TMP-26 (1 Karton)]', 2, '2026-11-23 03:01:23');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `log_anomali_fefo`
+--
+
+CREATE TABLE `log_anomali_fefo` (
+  `id` int(11) NOT NULL,
+  `id_penjualan` int(11) DEFAULT NULL,
+  `id_user` int(11) NOT NULL,
+  `id_variasi` int(11) NOT NULL,
+  `batch_diambil` varchar(100) DEFAULT NULL,
+  `batch_seharusnya` varchar(100) DEFAULT NULL,
+  `qty` int(11) DEFAULT NULL,
+  `satuan_tipe` varchar(20) NOT NULL DEFAULT 'kecil',
+  `status` enum('terlewat','sebagian','disesuaikan') NOT NULL DEFAULT 'terlewat',
+  `qty_disesuaikan` int(11) NOT NULL DEFAULT 0,
+  `resolved_in_penjualan` int(11) DEFAULT NULL,
+  `resolved_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `log_anomali_fefo`
+--
+
+INSERT INTO `log_anomali_fefo` (`id`, `id_penjualan`, `id_user`, `id_variasi`, `batch_diambil`, `batch_seharusnya`, `qty`, `satuan_tipe`, `status`, `qty_disesuaikan`, `resolved_in_penjualan`, `resolved_at`, `created_at`) VALUES
+(3, 21, 4, 7, 'HUFPIL-2027-01.B', 'HUFPIL-2027-01.A', 2, 'kecil', 'disesuaikan', 2, 22, '2026-10-29 13:58:00', '2026-10-28 23:52:03'),
+(4, 80, 1, 26, 'ANTJRG-2027-01.B', 'ANTJRG-2027-01.A', 2, 'kecil', 'sebagian', 1, 81, '2026-11-03 19:49:36', '2026-11-03 05:48:57');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `penerimaan_detail`
+--
+
+CREATE TABLE `penerimaan_detail` (
+  `id` int(11) NOT NULL,
+  `id_penerimaan` int(11) NOT NULL,
+  `id_variasi` int(11) NOT NULL,
+  `qty_pesan` int(11) NOT NULL DEFAULT 0,
+  `qty_terima` int(11) NOT NULL,
+  `qty_rusak` int(11) NOT NULL DEFAULT 0,
+  `harga_beli` decimal(15,2) DEFAULT NULL,
+  `no_batch` varchar(50) DEFAULT NULL,
+  `tgl_exp` date DEFAULT NULL,
+  `status_retur` varchar(30) NOT NULL DEFAULT 'tidak_ada',
+  `qty_pengganti_diterima` int(11) NOT NULL DEFAULT 0,
+  `no_batch_pengganti` varchar(50) DEFAULT NULL,
+  `tgl_exp_pengganti` date DEFAULT NULL,
+  `tgl_selesai_retur` datetime DEFAULT NULL,
+  `catatan_retur` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `penerimaan_detail`
+--
+
+INSERT INTO `penerimaan_detail` (`id`, `id_penerimaan`, `id_variasi`, `qty_pesan`, `qty_terima`, `qty_rusak`, `harga_beli`, `no_batch`, `tgl_exp`, `status_retur`, `qty_pengganti_diterima`, `no_batch_pengganti`, `tgl_exp_pengganti`, `tgl_selesai_retur`, `catatan_retur`) VALUES
+(1, 1, 1, 15, 15, 0, 40000.00, 'AMX-2026-01', '2027-12-15', 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(2, 1, 10, 25, 25, 0, 25000.00, 'PCT-500-26', '2027-11-20', 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(3, 1, 2, 12, 12, 0, 300000.00, 'SNM-2026-A', '2028-05-10', 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(4, 1, 6, 10, 10, 0, 750000.00, 'HUF-TMP-27', '2028-06-20', 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(5, 1, 30, 20, 20, 0, 210000.00, 'IMB-FRC-26', '2027-09-15', 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(6, 2, 4, 5, 5, 0, 450000.00, NULL, NULL, 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(7, 2, 5, 5, 5, 0, 65000.00, NULL, NULL, 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(8, 2, 56, 4, 4, 0, 680000.00, NULL, NULL, 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(9, 2, 57, 6, 6, 0, 95000.00, NULL, NULL, 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(10, 3, 13, 30, 30, 0, 95000.00, 'PRM-KLK-26', '2027-11-30', 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(11, 3, 14, 25, 25, 0, 105000.00, 'PND-KLK-26', '2027-11-30', 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(12, 3, 44, 50, 50, 0, 20000.00, NULL, NULL, 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(13, 3, 48, 40, 40, 0, 6500.00, NULL, NULL, 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(14, 4, 41, 10, 8, 2, 150000.00, 'CFD-500-26', '2027-11-30', 'selesai_tukar_barang', 2, 'CFD-GNT-26', '2028-02-15', '2026-10-25 10:30:00', '2 box blister rusak penyok telah ditukar 2 box pengganti utuh batch CFD-GNT-26'),
+(15, 4, 24, 12, 9, 3, 780000.00, 'WOD-PEP-26', '2028-04-10', 'selesai_tukar_barang', 3, 'WOD-GNT-26', '2028-05-20', '2026-10-25 11:15:00', '3 karton botol pecah di kardus telah diganti 3 karton baru batch WOD-GNT-26'),
+(16, 4, 27, 10, 10, 0, 550000.00, 'CDR-EFT-26', '2027-11-30', 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(17, 4, 29, 15, 15, 0, 125000.00, 'ENV-C-26', '2028-03-15', 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(18, 5, 4, 6, 4, 2, 450000.00, NULL, NULL, 'menunggu_pengganti', 0, NULL, NULL, NULL, '2 unit layar LCD mati/garis [SN Cacat: OMR-TENS-RET1, OMR-TENS-RET2]. Menunggu replacement unit dari Omron.'),
+(19, 5, 5, 8, 7, 1, 65000.00, NULL, NULL, 'menunggu_pengganti', 0, NULL, NULL, NULL, '1 unit tombol power macet [SN Cacat: OMR-TH-RET1]. Menunggu tukar guling.'),
+(20, 5, 56, 3, 3, 0, 680000.00, NULL, NULL, 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(21, 5, 58, 3, 3, 0, 1500000.00, NULL, NULL, 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(22, 5, 53, 2, 2, 0, 1200000.00, NULL, NULL, 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(23, 6, 33, 10, 8, 2, 62000.00, 'DCL-GEN-26', '2027-10-15', 'menunggu_pengganti', 0, NULL, NULL, NULL, '2 box kemasan basah rembes saat ekspedisi toko, diajukan penukaran ke PBF OneMed'),
+(24, 6, 18, 15, 15, 0, 120000.00, 'BET-15-26', '2027-11-30', 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(25, 6, 22, 20, 20, 0, 90000.00, 'DPT-CAP-26', '2027-09-10', 'tidak_ada', 0, NULL, NULL, NULL, NULL),
+(26, 6, 54, 5, 4, 1, 650000.00, NULL, NULL, 'menunggu_pengganti', 0, NULL, NULL, NULL, '1 tabung drat kran valve bocor gas [SN Cacat: O21M3-RET1]. Menunggu penggantian tabung baru dari depot OneMed.'),
+(27, 6, 55, 3, 3, 0, 210000.00, NULL, NULL, 'selesai_potong_faktur', 0, NULL, NULL, '2026-10-25 15:30:00', 'Kompensasi disepakati potong tagihan faktur tunai karena stok distributor pengganti habis'),
+(28, 6, 47, 50, 50, 0, 9500.00, NULL, NULL, 'tidak_ada', 0, NULL, NULL, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `penerimaan_stok`
+--
+
+CREATE TABLE `penerimaan_stok` (
+  `id` int(11) NOT NULL,
+  `no_referensi` varchar(50) NOT NULL,
+  `sumber` enum('PO','Pembelian Langsung') NOT NULL,
+  `id_supplier` int(11) DEFAULT NULL,
+  `tanggal_terima` date NOT NULL,
+  `catatan` text DEFAULT NULL,
+  `file_nota` varchar(255) DEFAULT NULL,
+  `dibuat_oleh` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `penerimaan_stok`
+--
+
+INSERT INTO `penerimaan_stok` (`id`, `no_referensi`, `sumber`, `id_supplier`, `tanggal_terima`, `catatan`, `file_nota`, `dibuat_oleh`, `created_at`) VALUES
+(1, 'PO-20261015-OBAT5', 'PO', 1, '2026-10-15', 'Penerimaan stok awal 5 jenis obat resmi dari PT Kimia Farma Trading & Distribution', NULL, 2, '2026-10-15 01:30:00'),
+(2, 'PO-20261018-ALKES4', 'PO', 2, '2026-10-18', 'Penerimaan 4 jenis alat kesehatan diagnostik bergaransi resmi PT Omron Healthcare (Nomor Seri unit terdaftar)', NULL, 2, '2026-10-18 02:15:00'),
+(3, 'KUL-20261020-CAMPUR', 'Pembelian Langsung', 3, '2026-10-20', 'Kulakan langsung sediaan obat maag & flu serta BMHP alat kesehatan habis pakai volume besar dari PT OneMed', NULL, 4, '2026-10-20 03:00:00'),
+(4, 'PO-20261022-OBAT-RETUR', 'PO', 1, '2026-10-22', 'PO 4 jenis obat - Ditemukan 2 box Cefadroxil dan 3 karton Woods pecah/rusak. Pihak Kimia Farma telah mengganti penuh barang pengganti (Klaim Tukar Selesai 100%).', NULL, 2, '2026-10-22 04:20:00'),
+(5, 'PO-20261023-ALKES-RETUR', 'PO', 2, '2026-10-23', 'PO 5 jenis alat kesehatan - Ditemukan 2 unit Tensimeter (LCD garis) dan 1 unit Termometer (sensor mati). Berkas klaim telah diproses ke PT Omron (Menunggu Pengganti).', NULL, 2, '2026-10-23 06:45:00'),
+(6, 'KUL-20261024-CAMPUR-RETUR', 'Pembelian Langsung', 3, '2026-10-24', 'Kulakan 3 obat & 3 alkes - 2 box Decolgen basah rembes dan 1 Tabung O2 katup bocor. Sedang proses klaim garansi retur ke OneMed (Menunggu Pengganti).', NULL, 4, '2026-10-24 08:30:00');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `pengaturan_web`
+--
+
+CREATE TABLE `pengaturan_web` (
+  `id` int(11) NOT NULL,
+  `nama_toko` varchar(100) NOT NULL DEFAULT 'ZenCare Medical',
+  `deskripsi` text DEFAULT NULL,
+  `telepon` varchar(20) DEFAULT NULL,
+  `whatsapp` varchar(20) DEFAULT NULL,
+  `alamat` text DEFAULT NULL,
+  `logo` varchar(255) DEFAULT NULL,
+  `banner_promosi` varchar(255) DEFAULT NULL,
+  `email_cs` varchar(150) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `pengaturan_web`
+--
+
+INSERT INTO `pengaturan_web` (`id`, `nama_toko`, `deskripsi`, `telepon`, `whatsapp`, `alamat`, `logo`, `banner_promosi`, `email_cs`) VALUES
+(1, 'ZenCare Medical', 'ZenCare Medical Alat Kesehatan & Obat-Obatan Terpercaya di Malang', '0895343436025', '62895343436025', 'Jl. Muharto No. 55D, Jodipan, Kec. Blimbing, Kota Malang, Jawa Timur 65127', NULL, NULL, 'zencare.id@gmail.com');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `penjualan`
+--
+
+CREATE TABLE `penjualan` (
+  `id` int(11) NOT NULL,
+  `no_invoice` varchar(50) NOT NULL,
+  `id_user` int(11) DEFAULT NULL,
+  `tipe_transaksi` enum('pos','ecommerce') NOT NULL,
+  `metode_pengambilan` enum('Kurir','Pick-up') DEFAULT NULL,
+  `status_pesanan` enum('Menunggu Pembayaran','Diproses','Dikirim','Siap Diambil','Selesai','Dibatalkan') NOT NULL DEFAULT 'Menunggu Pembayaran',
+  `alasan_batal` varchar(255) DEFAULT NULL,
+  `dibatalkan_oleh` varchar(50) DEFAULT NULL,
+  `waktu_batal` timestamp NULL DEFAULT NULL,
+  `request_batal` tinyint(1) NOT NULL DEFAULT 0,
+  `request_batal_alasan` varchar(255) DEFAULT NULL,
+  `request_batal_waktu` timestamp NULL DEFAULT NULL,
+  `total_harga` decimal(12,2) NOT NULL,
+  `metode_bayar_pos` varchar(50) DEFAULT 'Tunai',
+  `ongkir` decimal(10,2) DEFAULT 0.00,
+  `nama_penerima` varchar(100) DEFAULT NULL,
+  `telepon_penerima` varchar(20) DEFAULT NULL,
+  `alamat_lengkap` text DEFAULT NULL,
+  `kota_tujuan` varchar(100) DEFAULT NULL,
+  `kurir` varchar(50) DEFAULT NULL,
+  `layanan` varchar(50) DEFAULT NULL,
+  `snap_token` varchar(255) DEFAULT NULL,
+  `payment_method_ecommerce` varchar(50) DEFAULT NULL,
+  `paid_at` timestamp NULL DEFAULT NULL,
+  `kode_pickup` varchar(20) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `penjualan`
+--
+
+INSERT INTO `penjualan` (`id`, `no_invoice`, `id_user`, `tipe_transaksi`, `metode_pengambilan`, `status_pesanan`, `alasan_batal`, `dibatalkan_oleh`, `waktu_batal`, `request_batal`, `request_batal_alasan`, `request_batal_waktu`, `total_harga`, `metode_bayar_pos`, `ongkir`, `nama_penerima`, `telepon_penerima`, `alamat_lengkap`, `kota_tujuan`, `kurir`, `layanan`, `snap_token`, `payment_method_ecommerce`, `paid_at`, `kode_pickup`, `created_at`, `updated_at`) VALUES
+(1, 'POS-20261014-1001', 4, 'pos', 'Pick-up', 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 95000.00, 'Tunai', 0.00, 'Pelanggan Langsung (Toko Fisik)', '081299887766', 'ZenCare Toko Fisik (Muharto)', 'KOTA MALANG', NULL, NULL, NULL, NULL, '2026-10-14 03:15:20', NULL, '2026-10-14 03:15:20', '2026-10-14 03:15:20'),
+(2, 'POS-20261016-1002', 4, 'pos', 'Pick-up', 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 17500.00, 'QRIS', 0.00, 'Pelanggan Langsung (Toko Fisik)', '081344556677', 'ZenCare Toko Fisik (Muharto)', 'KOTA MALANG', NULL, NULL, NULL, NULL, '2026-10-16 07:22:10', NULL, '2026-10-16 07:22:10', '2026-10-16 07:22:10'),
+(3, 'POS-20261017-1003', 4, 'pos', 'Pick-up', 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 940000.00, 'Tunai', 0.00, 'Klinik Sehat Bersama (Grosir & Eceran)', '081122334455', 'ZenCare Toko Fisik (Muharto)', 'KOTA MALANG', NULL, NULL, NULL, NULL, '2026-10-17 04:40:05', NULL, '2026-10-17 04:40:05', '2026-10-17 04:40:05'),
+(4, 'INV-20261018-041', 3, 'ecommerce', 'Kurir', 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 188000.00, 'Midtrans Payment', 18000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No. 12, Lowokwaru', 'KOTA MALANG', 'jne', 'REG', 'snap-token-inv-041-midtrans', 'bank_transfer', '2026-10-18 02:35:00', NULL, '2026-10-18 02:30:00', '2026-10-18 04:00:00'),
+(5, 'INV-20261019-052', 3, 'ecommerce', 'Kurir', 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 945000.00, 'Midtrans Payment', 45000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No. 12, Lowokwaru', 'KOTA MALANG', 'sicepat', 'REG', 'snap-token-inv-052-midtrans', 'qris', '2026-10-19 06:25:00', NULL, '2026-10-19 06:20:00', '2026-10-19 08:40:00'),
+(6, 'POS-20261012-0901', 4, 'pos', 'Pick-up', 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 850000.00, 'Tunai', 0.00, 'dr. Hendra Setiawan', '081234567890', 'Klinik Pratama Medika', 'KOTA MALANG', NULL, NULL, NULL, NULL, '2026-10-12 09:10:00', NULL, '2026-10-12 09:10:00', '2026-10-12 09:10:00'),
+(13, 'WEB-20261028-544', 3, 'ecommerce', 'Kurir', 'Dibatalkan', 'Auto-Cancel: Batas waktu pembayaran 2 jam telah habis', 'Sistem', '2026-10-28 00:00:00', 0, NULL, NULL, 143000.00, 'Tunai', 95000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'BATU', 'jne', 'JTR', '348d8f32-3f25-4980-afa7-83d98fde4e78', 'qris', NULL, NULL, '2026-10-28 04:38:54', '2026-11-03 03:25:05'),
+(14, 'WEB-20261029-191', 3, 'ecommerce', 'Kurir', 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 143000.00, 'Tunai', 95000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'BATU', 'jne', 'JTR', '6dd65636-3b96-4135-8bfc-97b29b5e338c', 'qris', '2026-10-28 21:30:30', NULL, '2026-10-28 21:29:39', '2026-10-28 21:32:19'),
+(15, 'WEB-20261029-294', 3, 'ecommerce', 'Kurir', 'Dikirim', NULL, NULL, NULL, 0, NULL, NULL, 1714000.00, 'Tunai', 14000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'BATU', 'jne', 'REG', '61158892-fe96-4b07-b5df-69b59b4d3007', 'bank_transfer', '2026-10-28 21:33:10', NULL, '2026-10-28 21:32:54', '2026-11-02 22:03:04'),
+(21, 'POS-20261029-6744', 4, 'pos', NULL, 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 904000.00, 'QRIS', 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-10-28 23:52:03', '2026-10-28 23:52:03'),
+(22, 'POS-20261029-6112', 4, 'pos', NULL, 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 36000.00, 'Tunai', 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-10-28 23:52:33', '2026-10-28 23:52:33'),
+(32, 'WEB-20261029-308', 3, 'ecommerce', 'Kurir', 'Dibatalkan', 'Pelanggan: Ingin Mengubah Alamat Pengiriman', 'Pelanggan', '2026-10-28 21:30:00', 0, NULL, NULL, 60000.00, 'Tunai', 12000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'KOTA BATU', 'jne', 'REG', '62af6b3c-d70a-47a1-aeca-ec9173574183', 'qris', NULL, NULL, '2026-10-29 03:17:02', '2026-11-03 03:25:05'),
+(44, 'POS-20261101-2875', 4, 'pos', NULL, 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 1843800.00, 'QRIS', 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-10-31 23:35:08', '2026-10-31 23:35:08'),
+(45, 'WEB-20261101-670', 3, 'ecommerce', 'Kurir', 'Dibatalkan', 'Permohonan Pelanggan Disetujui Admin: Salah memilih variasi kemasan obat', 'Admin Toko', '2026-10-31 20:45:00', 1, 'Salah memilih variasi kemasan obat', '2026-10-31 20:15:00', 934000.00, 'Tunai', 36000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'KOTA BATU', 'jne', 'REG', '36756eb3-4bbd-4980-9cb1-f3956133369b', 'midtrans', NULL, NULL, '2026-10-31 23:37:37', '2026-11-03 03:37:37'),
+(46, 'WEB-20261101-726', 3, 'ecommerce', 'Kurir', 'Diproses', NULL, NULL, NULL, 1, 'Ingin mengganti kurir pengiriman ke Grab Instant', '2026-11-03 00:30:00', 2646000.00, 'Tunai', 36000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'KOTA BATU', 'jne', 'REG', 'aabb6370-2d0e-4171-a027-2f299017d22f', 'bank_transfer', '2026-10-31 23:39:41', NULL, '2026-10-31 23:39:16', '2026-11-03 03:25:05'),
+(55, 'WEB-20261102-818', 3, 'ecommerce', 'Kurir', 'Dibatalkan', 'Admin Toko: Konfirmasi Pelanggan Salah Memasukkan Alamat Pengiriman', 'Admin Toko', '2026-11-02 02:20:00', 0, NULL, NULL, 860000.00, 'Tunai', 10000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'KOTA MALANG', 'internal', 'ZenCare Direct Delivery (0.0 km, 100g)', '141684cf-0478-487d-8166-afb0be23918b', 'midtrans', NULL, NULL, '2026-11-02 00:53:25', '2026-11-03 03:37:37'),
+(66, 'WEB-20261103-677', 3, 'ecommerce', 'Kurir', 'Dibatalkan', 'Waktu pembayaran habis (Expired)', 'Sistem (Timer)', '2026-11-03 05:24:27', 0, 'Berubah pikiran / Tidak sengaja pesan', '2026-11-02 22:44:45', 58000.00, 'Tunai', 10000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'KOTA MALANG', 'internal', 'ZenCare Direct Delivery (1.1 km, 100g)', 'ed0da30b-0c4e-49d5-a861-b0ac8fc2aaca', 'qris', '2026-11-02 22:00:37', NULL, '2026-11-03 02:50:05', '2026-11-03 05:24:27'),
+(80, 'POS-20261103-4157', 1, 'pos', NULL, 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 8000.00, 'Tunai', 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-11-03 05:48:57', '2026-11-03 05:48:57'),
+(81, 'POS-20261103-1988', 1, 'pos', NULL, 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 4000.00, 'Tunai', 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-11-03 05:49:36', '2026-11-03 05:49:36'),
+(86, 'WEB-20261104-878', 3, 'ecommerce', 'Kurir', 'Dibatalkan', 'Waktu pembayaran habis (Expired)', 'Sistem (Timer)', '2026-11-04 20:18:16', 0, NULL, NULL, 96000.00, 'Tunai', 48000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'KOTA MALANG', 'internal', 'REG', '81bb4e60-8536-46aa-b937-0efc99dd80a0', 'midtrans', NULL, NULL, '2026-11-03 19:44:27', '2026-11-04 20:18:16'),
+(89, 'POS-20261121-1012', 4, 'pos', NULL, 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 157500.00, 'Tunai', 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-11-20 19:15:20', NULL),
+(90, 'POS-20261121-1045', 4, 'pos', NULL, 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 60500.00, 'Tunai', 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-11-20 20:05:44', NULL),
+(91, 'POS-20261121-1108', 4, 'pos', NULL, 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 96000.00, 'Tunai', 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-11-20 20:42:10', NULL),
+(92, 'POS-20261121-1120', 4, 'pos', NULL, 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 4068000.00, 'Tunai', 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-11-20 21:02:15', NULL),
+(93, 'POS-20261121-1130', 4, 'pos', NULL, 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 3300000.00, 'Tunai', 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-11-20 21:15:00', NULL),
+(94, 'POS-20261121-1135', 4, 'pos', NULL, 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 510000.00, 'Tunai', 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-11-20 21:22:00', NULL),
+(95, 'WEB-20261121-201', 7, 'ecommerce', 'Kurir', 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 258000.00, 'Tunai', 18000.00, 'Andi Wijaya', '081355667788', 'Jl. Raya Darmo No. 74, Wonokromo, Kota Surabaya', 'KOTA SURABAYA', 'jne', 'JNE REG - Rp 18.000', NULL, 'midtrans', NULL, NULL, '2026-11-20 19:40:00', NULL),
+(96, 'WEB-20261121-204', 6, 'ecommerce', 'Kurir', 'Diproses', NULL, NULL, NULL, 0, NULL, NULL, 232000.00, 'Tunai', 12000.00, 'Siti Rahmawati', '081233445566', 'Jl. Ijen No. 28, Klojen, Kota Malang', 'KOTA MALANG', 'internal', 'Kurir Internal ZenCare Direct', NULL, 'midtrans', NULL, NULL, '2026-11-20 20:30:00', NULL),
+(97, 'WEB-20261121-208', 3, 'ecommerce', 'Pick-up', 'Dibatalkan', 'Waktu pembayaran habis (Expired)', 'Sistem (Timer)', '2026-11-23 01:46:57', 0, NULL, NULL, 52000.00, 'Tunai', 0.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'KOTA MALANG', 'pickup', 'Ambil Sendiri di Toko', NULL, 'midtrans', NULL, NULL, '2026-11-21 20:20:06', '2026-11-23 01:46:57'),
+(98, 'WEB-20261121-211', 7, 'ecommerce', 'Kurir', 'Dibatalkan', 'Waktu pembayaran habis (Expired)', 'Sistem (Timer)', '2026-11-23 01:46:57', 0, NULL, NULL, 368000.00, 'Tunai', 18000.00, 'Andi Wijaya', '081355667788', 'Jl. Raya Darmo No. 74, Wonokromo, Kota Surabaya', 'KOTA SURABAYA', 'jne', 'JNE REG - Rp 18.000', NULL, 'midtrans', NULL, NULL, '2026-11-21 20:20:06', '2026-11-23 01:46:57'),
+(99, 'WEB-20261123-535', 3, 'ecommerce', 'Kurir', 'Dikirim', NULL, NULL, NULL, 0, NULL, NULL, 1709000.00, 'Tunai', 9000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'KOTA SURABAYA', 'jne', 'REG', 'ab5f65ab-233c-4cde-b3b3-4fd55f104d1a', 'qris', '2026-11-23 02:18:48', NULL, '2026-11-23 02:18:31', '2026-11-23 02:19:29'),
+(100, 'POS-20261123-1726', 4, 'pos', NULL, 'Selesai', NULL, NULL, NULL, 0, NULL, NULL, 18000.00, 'Tunai', 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-11-23 02:19:58', '2026-11-23 02:19:59'),
+(101, 'WEB-20261123-232', 3, 'ecommerce', 'Kurir', 'Diproses', NULL, NULL, NULL, 0, NULL, NULL, 4009000.00, 'Tunai', 9000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'KOTA SURABAYA', 'jne', 'REG', '18021156-a2b4-4e4e-bc14-d30b82bd9b60', 'bank_transfer', '2026-11-23 02:33:39', NULL, '2026-11-23 02:33:25', '2026-11-23 02:33:39'),
+(102, 'WEB-20261123-855', 3, 'ecommerce', 'Kurir', 'Dibatalkan', 'Permohonan Pelanggan: Ingin mengubah rincian pesanan', 'Admin (Admin Toko) - Persetujuan Pelanggan', '2026-11-23 02:44:41', 0, 'Ingin mengubah rincian pesanan', '2026-11-23 02:44:27', 5809000.00, 'Tunai', 9000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'KOTA SURABAYA', 'jne', 'REG', '93aa7856-33e7-45fe-ba26-b3cac422dcbd', 'bank_transfer', '2026-11-23 02:42:06', NULL, '2026-11-23 02:38:56', '2026-11-23 02:44:41'),
+(103, 'WEB-20261123-526', 3, 'ecommerce', 'Kurir', 'Diproses', NULL, NULL, NULL, 0, NULL, NULL, 710000.00, 'Tunai', 10000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'KOTA MALANG', 'internal', 'ZenCare Direct Delivery (0.0 km, 200g)', '80fbfc6b-7f4e-4b2b-95a6-718bc2c3b95d', 'bank_transfer', '2026-11-23 02:41:11', NULL, '2026-11-23 02:40:58', '2026-11-23 02:41:11'),
+(104, 'WEB-20261123-126', 3, 'ecommerce', 'Kurir', 'Menunggu Pembayaran', NULL, NULL, NULL, 0, NULL, NULL, 865000.00, 'Tunai', 15000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'KOTA MALANG', 'internal', 'REG (Reguler 1kg)', 'a45cc08b-11c1-40e3-a52d-98e5c0cd4056', 'midtrans', NULL, NULL, '2026-11-23 02:48:48', '2026-11-23 02:48:49'),
+(105, 'WEB-20261123-442', 3, 'ecommerce', 'Kurir', 'Dikirim', NULL, NULL, NULL, 0, NULL, NULL, 1715000.00, 'Tunai', 15000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'KOTA MALANG', 'internal', 'REG (Reguler 1kg)', 'be3a6135-74cd-42ed-9278-fac389847ade', 'bank_transfer', '2026-11-23 02:59:43', NULL, '2026-11-23 02:58:06', '2026-11-23 03:01:23'),
+(106, 'WEB-20261123-090', 3, 'ecommerce', 'Kurir', 'Diproses', NULL, NULL, NULL, 0, NULL, NULL, 865000.00, 'Tunai', 15000.00, 'Budi Santoso', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 'KOTA MALANG', 'internal', 'REG (Reguler 1kg)', 'db265f99-d8df-452d-a9d5-85a50f3da7ea', 'bank_transfer', '2026-11-23 02:59:26', NULL, '2026-11-23 02:59:09', '2026-11-23 02:59:26');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `pesanan_batch_alokasi`
+--
+
+CREATE TABLE `pesanan_batch_alokasi` (
+  `id` int(11) NOT NULL,
+  `id_penjualan` int(11) NOT NULL,
+  `id_detail_penjualan` int(11) NOT NULL,
+  `id_batch` int(11) NOT NULL,
+  `qty_satuan_kecil` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data untuk tabel `pesanan_batch_alokasi`
+--
+
+INSERT INTO `pesanan_batch_alokasi` (`id`, `id_penjualan`, `id_detail_penjualan`, `id_batch`, `qty_satuan_kecil`, `created_at`) VALUES
+(5, 14, 29, 7, 10, '2026-10-28 21:29:39'),
+(6, 15, 30, 17, 100, '2026-10-28 21:32:54'),
+(15, 21, 42, 82, 2, '2026-10-28 23:52:03'),
+(16, 21, 43, 13, 1, '2026-10-28 23:52:03'),
+(17, 21, 44, 17, 50, '2026-10-28 23:52:03'),
+(18, 22, 45, 80, 2, '2026-10-28 23:52:33'),
+(60, 44, 107, 13, 2, '2026-10-31 23:35:08'),
+(61, 44, 108, 81, 3, '2026-10-31 23:35:08'),
+(62, 44, 109, 6, 100, '2026-10-31 23:35:08'),
+(63, 44, 110, 60, 1, '2026-10-31 23:35:08'),
+(64, 44, 111, 66, 1, '2026-10-31 23:35:08'),
+(67, 46, 114, 6, 100, '2026-10-31 23:39:16'),
+(68, 46, 115, 16, 50, '2026-10-31 23:39:16'),
+(69, 46, 116, 19, 20, '2026-10-31 23:39:16'),
+(118, 80, 181, 116, 2, '2026-11-03 05:48:57'),
+(119, 81, 182, 81, 1, '2026-11-03 05:49:36'),
+(125, 95, 196, 26, 20, '2026-11-21 20:20:06'),
+(126, 96, 197, 24, 24, '2026-11-21 20:20:06'),
+(129, 99, 200, 6, 50, '2026-11-23 02:18:31'),
+(130, 99, 200, 12, 50, '2026-11-23 02:18:31'),
+(131, 100, 201, 122, 1, '2026-11-23 02:19:59'),
+(133, 103, 206, 9, 48, '2026-11-23 02:40:58'),
+(134, 104, 207, 16, 50, '2026-11-23 02:48:48'),
+(135, 105, 208, 6, 50, '2026-11-23 02:58:06'),
+(136, 105, 208, 12, 50, '2026-11-23 02:58:06'),
+(137, 106, 209, 16, 50, '2026-11-23 02:59:09');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `produk_induk`
+--
+
+CREATE TABLE `produk_induk` (
+  `id` int(11) NOT NULL,
+  `sku_induk` varchar(50) NOT NULL,
+  `nama_produk` varchar(150) NOT NULL,
+  `deskripsi` text DEFAULT NULL,
+  `spesifikasi` text DEFAULT NULL COMMENT 'Spesifikasi teknis medis',
+  `info_pengiriman` text DEFAULT NULL,
+  `kategori` enum('Obat','Alat Kesehatan') NOT NULL,
+  `gambar` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `batas_hari_expired` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `produk_induk`
+--
+
+INSERT INTO `produk_induk` (`id`, `sku_induk`, `nama_produk`, `deskripsi`, `spesifikasi`, `info_pengiriman`, `kategori`, `gambar`, `is_active`, `batas_hari_expired`, `created_at`) VALUES
+(1, 'IND-D4853B', 'Amoxicillin 500mg', 'Antibiotik Kapsul (Wajib Resep)', NULL, NULL, 'Obat', 'assets/img/produk/var_1.jpg', 1, 90, '2026-10-06 21:39:14'),
+(2, 'IND-B42BD2', 'Sanmol Sirup Anak 60ml', 'Obat Demam Anak Rasa Stroberi', NULL, NULL, 'Obat', 'assets/img/produk/var_2.jpg', 1, 180, '2026-10-06 21:39:14'),
+(3, 'IND-B35E3A', 'Strip Gula Darah EasyTouch', 'BMHP Gula Darah - Isi 25', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_3.jpg', 1, 90, '2026-10-06 21:39:14'),
+(4, 'IND-4422CC', 'Tensimeter Digital Omron', 'Alat Ukur Tekanan Darah Lengan', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_4.jpg', 1, 0, '2026-10-06 21:39:14'),
+(5, 'IND-BE2154', 'Termometer Digital Omron', 'Termometer Badan Digital MC-246', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_5.jpg', 1, 0, '2026-10-06 21:39:14'),
+(6, 'IND-9929D6', 'Hufagrip', 'Obat Flu Anak', NULL, NULL, 'Obat', 'assets/img/produk/var_6.jpg', 1, 180, '2026-10-06 21:39:14'),
+(7, 'IND-5EE388', 'Paracetamol', 'Pereda Nyeri / Penurun Panas', NULL, NULL, 'Obat', 'assets/img/produk/var_10.jpg', 1, 90, '2026-10-06 21:39:14'),
+(8, 'IND-E859E3', 'Promag Tablet', 'Obat Sakit Maag & Kembung', NULL, NULL, 'Obat', 'assets/img/produk/var_13.jpg', 1, 90, '2026-10-06 21:39:14'),
+(9, 'IND-9D679C', 'Panadol Extra', 'Pereda Sakit Kepala Membandel', NULL, NULL, 'Obat', 'assets/img/produk/var_14.jpg', 1, 90, '2026-10-06 21:39:14'),
+(10, 'IND-CBA5E0', 'Tolak Angin Cair', 'Obat Masuk Angin', NULL, NULL, 'Obat', 'assets/img/produk/var_15.jpg', 1, 90, '2026-10-06 21:39:14'),
+(11, 'IND-80EAC6', 'Mylanta Cair 150ml', 'Obat Maag Cair', NULL, NULL, 'Obat', 'assets/img/produk/var_16.jpg', 1, 90, '2026-10-06 21:39:14'),
+(12, 'IND-38F7DB', 'Insto Reguler 7.5ml', 'Tetes Mata Merah', NULL, NULL, 'Obat', 'assets/img/produk/var_17.jpg', 1, 90, '2026-10-06 21:39:14'),
+(13, 'IND-70AB72', 'Betadine Solution 15ml', 'Antiseptik Luka', NULL, NULL, 'Obat', 'assets/img/produk/var_18.jpg', 1, 90, '2026-10-06 21:39:14'),
+(14, 'IND-ABF94E', 'Counterpain Krim 30g', 'Krim Pereda Nyeri Otot', NULL, NULL, 'Obat', 'assets/img/produk/var_19.jpg', 1, 90, '2026-10-06 21:39:14'),
+(15, 'IND-E8639A', 'Neurobion Forte', 'Vitamin B Kompleks', NULL, NULL, 'Obat', 'assets/img/produk/var_20.jpg', 1, 90, '2026-10-06 21:39:14'),
+(16, 'IND-E26D93', 'Sangobion Kapsul', 'Suplemen Zat Besi', NULL, NULL, 'Obat', 'assets/img/produk/var_21.jpg', 1, 90, '2026-10-06 21:39:14'),
+(17, 'IND-7F92A0', 'Diapet Kapsul', 'Obat Diare', NULL, NULL, 'Obat', 'assets/img/produk/var_22.jpg', 1, 90, '2026-10-06 21:39:14'),
+(18, 'IND-D23520', 'Entrostop', 'Obat Diare Dewasa', NULL, NULL, 'Obat', 'assets/img/produk/var_23.jpg', 1, 90, '2026-10-06 21:39:14'),
+(19, 'IND-FCA962', 'Woods Peppermint Syr', 'Obat Batuk Antitusif', NULL, NULL, 'Obat', 'assets/img/produk/var_24.jpg', 1, 90, '2026-10-06 21:39:14'),
+(20, 'IND-681C6D', 'Komix Herbal', 'Sirup Obat Batuk Tube', NULL, NULL, 'Obat', 'assets/img/produk/var_25.jpg', 1, 90, '2026-10-06 21:39:14'),
+(21, 'IND-E6B0E1', 'Antangin JRG', 'Obat Herbal Masuk Angin', NULL, NULL, 'Obat', 'assets/img/produk/var_26.jpg', 1, 90, '2026-10-06 21:39:14'),
+(22, 'IND-429941', 'CDR Effervescent', 'Vitamin C & Kalsium', NULL, NULL, 'Obat', 'assets/img/produk/var_27.jpg', 1, 90, '2026-10-06 21:39:14'),
+(23, 'IND-619525', 'Redoxon Double Action', 'Multivitamin C & Zinc', NULL, NULL, 'Obat', 'assets/img/produk/var_28.jpg', 1, 90, '2026-10-06 21:39:14'),
+(24, 'IND-F85AB5', 'Enervon-C Multivitamin', 'Vitamin C & B Kompleks', NULL, NULL, 'Obat', 'assets/img/produk/var_29.jpg', 1, 90, '2026-10-06 21:39:14'),
+(25, 'IND-72ECA5', 'Imboost Force', 'Suplemen Daya Tahan Tubuh', NULL, NULL, 'Obat', 'assets/img/produk/var_30.jpg', 1, 90, '2026-10-06 21:39:14'),
+(26, 'IND-95AB80', 'Bodrex Migra', 'Obat Sakit Kepala Migrain', NULL, NULL, 'Obat', 'assets/img/produk/var_31.jpg', 1, 90, '2026-10-06 21:39:14'),
+(27, 'IND-EDAB79', 'Neozep Forte', 'Obat Flu & Pilek', NULL, NULL, 'Obat', 'assets/img/produk/var_32.jpg', 1, 90, '2026-10-06 21:39:14'),
+(28, 'IND-CDE41C', 'Decolgen', 'Obat Flu Ringan', NULL, NULL, 'Obat', 'assets/img/produk/var_33.jpg', 1, 90, '2026-10-06 21:39:14'),
+(29, 'IND-6C721E', 'OBH Combi Plus', 'Sirup Batuk & Flu', NULL, NULL, 'Obat', 'assets/img/produk/var_34.jpg', 1, 90, '2026-10-06 21:39:14'),
+(30, 'IND-2EDE6B', 'Salonpas Koyo', 'Koyo Pereda Nyeri', NULL, NULL, 'Obat', 'assets/img/produk/var_35.jpg', 1, 90, '2026-10-06 21:39:14'),
+(31, 'IND-516FBF', 'Vicks VapoRub 10g', 'Balsem Pelega Tenggorokan', NULL, NULL, 'Obat', 'assets/img/produk/var_36.jpg', 1, 90, '2026-10-06 21:39:14'),
+(32, 'IND-75F1A9', 'Tolak Linu', 'Obat Pegal Linu Cair', NULL, NULL, 'Obat', 'assets/img/produk/var_37.jpg', 1, 90, '2026-10-06 21:39:14'),
+(33, 'IND-B79B70', 'Decadryl Expectorant', 'Obat Batuk Berdahak', NULL, NULL, 'Obat', 'assets/img/produk/var_38.jpg', 1, 90, '2026-10-06 21:39:14'),
+(34, 'IND-1E6A32', 'Polysilane Kapsul', 'Obat Asam Lambung', NULL, NULL, 'Obat', 'assets/img/produk/var_39.jpg', 1, 90, '2026-10-06 21:39:14'),
+(35, 'IND-A35F8F', 'Combantrin Jeruk 10ml', 'Obat Cacing Sirup Anak', NULL, NULL, 'Obat', 'assets/img/produk/var_40.jpg', 1, 90, '2026-10-06 21:39:14'),
+(36, 'IND-2A3D66', 'Cefadroxil 500mg', 'Antibiotik (Resep Dokter)', NULL, NULL, 'Obat', 'assets/img/produk/var_41.jpg', 1, 90, '2026-10-06 21:39:14'),
+(37, 'IND-9D0FFA', 'CTM', 'Obat Alergi Ringan', NULL, NULL, 'Obat', 'assets/img/produk/var_42.jpg', 1, 90, '2026-10-06 21:39:14'),
+(38, 'IND-0DA012', 'Cetirizine 10mg', 'Obat Alergi / Antihistamin', NULL, NULL, 'Obat', 'assets/img/produk/var_43.jpg', 1, 90, '2026-10-06 21:39:14'),
+(39, 'IND-3EFAA1', 'Masker Sensi Earloop', 'Masker Medis 3 Ply (Isi 50)', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_44.jpg', 1, 90, '2026-10-06 21:39:14'),
+(40, 'IND-04864C', 'Hansaplast Kain Elastis', 'Plester Luka', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_45.jpg', 1, 90, '2026-10-06 21:39:14'),
+(41, 'IND-25FD84', 'Plester Dermafix', 'Plester Anti Air Transparan', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_46.jpg', 1, 90, '2026-10-06 21:39:14'),
+(42, 'IND-195AD9', 'Kasa Steril Onemed', 'Kasa Luka Steril 16x16', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_47.jpg', 1, 90, '2026-10-06 21:39:14'),
+(43, 'IND-DDF14F', 'Alkohol Onemed 70% 100ml', 'Cairan Antiseptik', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_48.jpg', 1, 90, '2026-10-06 21:39:14'),
+(44, 'IND-6F0C4A', 'Rivanol 100ml', 'Cairan Pembersih Luka', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_49.jpg', 1, 90, '2026-10-06 21:39:14'),
+(45, 'IND-6C597D', 'Povidone Iodine 1 Liter', 'Betadine Literan RS', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_50.jpg', 1, 90, '2026-10-06 21:39:14'),
+(46, 'IND-9EBAEB', 'Alat Cek Asam Urat EasyTouch', 'BMHP Asam Urat - Isi 25', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_51.jpg', 1, 90, '2026-10-06 21:39:14'),
+(47, 'IND-64BBB0', 'Alat Cek Kolesterol Nesco', 'BMHP Kolesterol - Isi 10', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_52.jpg', 1, 90, '2026-10-06 21:39:14'),
+(48, 'IND-FC6027', 'Kursi Roda Standard Sella', 'Kursi Roda Lipat Ringan', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_53.jpg', 1, 0, '2026-10-06 21:39:14'),
+(49, 'IND-CE2685', 'Tabung Oksigen 1m3', 'Tabung O2 Medis Kosong', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_54.jpg', 1, 0, '2026-10-06 21:39:14'),
+(50, 'IND-26584F', 'Regulator Oksigen', 'Regulator Medis O2', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_55.jpg', 1, 0, '2026-10-06 21:39:14'),
+(51, 'IND-A7E800', 'Nebulizer Omron', 'Alat Terapi Uap Asma NE-C104', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_56.jpg', 1, 0, '2026-10-06 21:39:14'),
+(52, 'IND-3DB28F', 'Termometer Infra Merah', 'Thermometer Tembak Dahi', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_57.jpg', 1, 0, '2026-10-06 21:39:14'),
+(53, 'IND-D92462', 'Stetoskop Littmann', 'Stethoscope Classic III Medis', NULL, NULL, 'Alat Kesehatan', 'assets/img/produk/var_58.jpg', 1, 0, '2026-10-06 21:39:14');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `produk_variasi`
+--
+
+CREATE TABLE `produk_variasi` (
+  `id` int(11) NOT NULL,
+  `id_produk_induk` int(11) DEFAULT NULL,
+  `sku_variasi` varchar(50) NOT NULL,
+  `nama_variasi` varchar(100) NOT NULL,
+  `satuan_kecil` varchar(50) NOT NULL DEFAULT 'Pcs',
+  `satuan_besar` varchar(50) NOT NULL DEFAULT 'Box',
+  `rasio_konversi` smallint(6) NOT NULL DEFAULT 1,
+  `harga_jual_kecil` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `harga_jual_besar` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `stok_minimum_kecil` int(11) DEFAULT 0,
+  `stok_minimum_besar` int(11) DEFAULT 0,
+  `berat` int(11) NOT NULL DEFAULT 100,
+  `tampil_di_online` tinyint(1) DEFAULT 1,
+  `is_active` tinyint(1) DEFAULT 1,
+  `gambar` varchar(500) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `produk_variasi`
+--
+
+INSERT INTO `produk_variasi` (`id`, `id_produk_induk`, `sku_variasi`, `nama_variasi`, `satuan_kecil`, `satuan_besar`, `rasio_konversi`, `harga_jual_kecil`, `harga_jual_besar`, `stok_minimum_kecil`, `stok_minimum_besar`, `berat`, `tampil_di_online`, `is_active`, `gambar`) VALUES
+(1, 1, 'AMX-500', 'Tablet 500mg', 'Strip', 'Box', 10, 5000.00, 48000.00, 10, 2, 100, 1, 1, 'assets/img/produk/var_1_1.jpg,assets/img/produk/var_1_2.jpg,assets/img/produk/var_1_3.jpg,assets/img/produk/var_1_4.jpg'),
+(2, 2, 'SAN-SYR', 'Botol 60ml', 'Botol', 'Karton', 24, 15000.00, 350000.00, 5, 2, 100, 1, 1, 'assets/img/produk/var_2_1.jpg,assets/img/produk/var_2_2.jpg,assets/img/produk/var_2_3.jpg,assets/img/produk/var_2_4.jpg'),
+(3, 3, 'ESY-GLU', 'Tube (25 Pcs)', 'Tube', 'Tube', 1, 85000.00, 800000.00, NULL, 5, 100, 1, 1, 'assets/img/produk/var_3_1.jpg,assets/img/produk/var_3_2.jpg,assets/img/produk/var_3_3.jpg,assets/img/produk/var_3_4.jpg'),
+(4, 4, 'OMR-TENS', 'Unit HEM-7120', 'Unit', 'Unit', 1, 550000.00, 2600000.00, 5, 5, 100, 1, 1, 'assets/img/produk/var_4_1.jpg,assets/img/produk/var_4_2.jpg,assets/img/produk/var_4_3.jpg,assets/img/produk/var_4_4.jpg'),
+(5, 5, 'OMR-THER', 'Unit MC-246', 'Unit', 'Unit', 1, 85000.00, 800000.00, 5, 5, 100, 1, 1, 'assets/img/produk/var_5_1.jpg,assets/img/produk/var_5_2.jpg,assets/img/produk/var_5_3.jpg,assets/img/produk/var_5_4.jpg'),
+(6, 6, 'HUF-TMP', 'Hufagrip Merah (TMP)', 'Botol', 'Karton', 50, 18000.00, 850000.00, 5, 2, 100, 1, 1, 'assets/img/produk/var_6_1.jpg,assets/img/produk/var_6_2.jpg,assets/img/produk/var_6_3.jpg,assets/img/produk/var_6_4.jpg'),
+(7, 6, 'HUF-PIL', 'Hufagrip Biru (Pilek)', 'Botol', 'Karton', 50, 18000.00, 850000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_7_1.jpg,assets/img/produk/var_7_2.jpg,assets/img/produk/var_7_3.jpg,assets/img/produk/var_7_4.jpg'),
+(8, 6, 'HUF-BP', 'Hufagrip Hijau (BP)', 'Botol', 'Karton', 50, 18000.00, 850000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_8_1.jpg,assets/img/produk/var_8_2.jpg,assets/img/produk/var_8_3.jpg,assets/img/produk/var_8_4.jpg'),
+(9, 6, 'HUF-FLU', 'Hufagrip Kuning (Flu Batuk)', 'Botol', 'Karton', 50, 18000.00, 850000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_9_1.jpg,assets/img/produk/var_9_2.jpg,assets/img/produk/var_9_3.jpg,assets/img/produk/var_9_4.jpg'),
+(10, 7, 'PCT-500', 'Tablet 500mg', 'Strip', 'Box', 10, 3500.00, 30000.00, 5, 2, 100, 1, 1, 'assets/img/produk/var_10_1.jpg,assets/img/produk/var_10_2.jpg,assets/img/produk/var_10_3.jpg,assets/img/produk/var_10_4.jpg'),
+(11, 7, 'PCT-250', 'Tablet 250mg', 'Strip', 'Box', 10, 2500.00, 22000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_11_1.jpg,assets/img/produk/var_11_2.jpg,assets/img/produk/var_11_3.jpg,assets/img/produk/var_11_4.jpg'),
+(12, 7, 'PCT-125', 'Tablet 125mg', 'Strip', 'Box', 10, 2000.00, 18000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_12_1.jpg,assets/img/produk/var_12_2.jpg,assets/img/produk/var_12_3.jpg,assets/img/produk/var_12_4.jpg'),
+(13, 8, 'PRM-01', 'Tablet Kunyah', 'Strip', 'Box', 12, 9500.00, 110000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_13_1.jpg,assets/img/produk/var_13_2.jpg,assets/img/produk/var_13_3.jpg,assets/img/produk/var_13_4.jpg'),
+(14, 9, 'PND-EXT', 'Kaplet Merah', 'Strip', 'Box', 10, 12500.00, 120000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_14_1.jpg,assets/img/produk/var_14_2.jpg,assets/img/produk/var_14_3.jpg,assets/img/produk/var_14_4.jpg'),
+(15, 10, 'TLK-ANG', 'Sachet 15ml', 'Sachet', 'Box', 12, 4500.00, 52000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_15_1.jpg,assets/img/produk/var_15_2.jpg,assets/img/produk/var_15_3.jpg,assets/img/produk/var_15_4.jpg'),
+(16, 11, 'MYL-150', 'Botol 150ml', 'Botol', 'Karton', 24, 45000.00, 1050000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_16_1.jpg,assets/img/produk/var_16_2.jpg,assets/img/produk/var_16_3.jpg,assets/img/produk/var_16_4.jpg'),
+(17, 12, 'INS-REG', 'Botol 7.5ml', 'Botol', 'Box', 12, 16000.00, 185000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_17_1.jpg,assets/img/produk/var_17_2.jpg,assets/img/produk/var_17_3.jpg,assets/img/produk/var_17_4.jpg'),
+(18, 13, 'BET-15', 'Botol 15ml', 'Botol', 'Box', 12, 12500.00, 145000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_18_1.jpg,assets/img/produk/var_18_2.jpg,assets/img/produk/var_18_3.jpg,assets/img/produk/var_18_4.jpg'),
+(19, 14, 'CTP-30', 'Tube 30g', 'Tube', 'Box', 10, 55000.00, 530000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_19_1.jpg,assets/img/produk/var_19_2.jpg,assets/img/produk/var_19_3.jpg,assets/img/produk/var_19_4.jpg'),
+(20, 15, 'NEU-FRT', 'Tablet Merah', 'Strip', 'Box', 10, 48000.00, 460000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_20_1.jpg,assets/img/produk/var_20_2.jpg,assets/img/produk/var_20_3.jpg,assets/img/produk/var_20_4.jpg'),
+(21, 16, 'SNG-CAP', 'Kapsul Merah', 'Strip', 'Box', 25, 18500.00, 450000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_21_1.jpg,assets/img/produk/var_21_2.jpg,assets/img/produk/var_21_3.jpg,assets/img/produk/var_21_4.jpg'),
+(22, 17, 'DPT-CAP', 'Kapsul Isi 10', 'Strip', 'Box', 25, 4500.00, 105000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_22_1.jpg,assets/img/produk/var_22_2.jpg,assets/img/produk/var_22_3.jpg,assets/img/produk/var_22_4.jpg'),
+(23, 18, 'ENT-DSW', 'Tablet', 'Strip', 'Box', 20, 9500.00, 180000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_23_1.jpg,assets/img/produk/var_23_2.jpg,assets/img/produk/var_23_3.jpg,assets/img/produk/var_23_4.jpg'),
+(24, 19, 'WOD-PEP', 'Botol 100ml', 'Botol', 'Karton', 24, 38000.00, 890000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_24_1.jpg,assets/img/produk/var_24_2.jpg,assets/img/produk/var_24_3.jpg,assets/img/produk/var_24_4.jpg'),
+(25, 20, 'KMX-HRB', 'Sachet 15ml', 'Sachet', 'Box', 30, 2500.00, 70000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_25_1.jpg,assets/img/produk/var_25_2.jpg,assets/img/produk/var_25_3.jpg,assets/img/produk/var_25_4.jpg'),
+(26, 21, 'ANT-JRG', 'Sachet 15ml', 'Sachet', 'Box', 12, 4000.00, 46000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_26_1.jpg,assets/img/produk/var_26_2.jpg,assets/img/produk/var_26_3.jpg,assets/img/produk/var_26_4.jpg'),
+(27, 22, 'CDR-EFT', 'Tube Isi 15', 'Tube', 'Karton', 10, 65000.00, 630000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_27_1.jpg,assets/img/produk/var_27_2.jpg,assets/img/produk/var_27_3.jpg,assets/img/produk/var_27_4.jpg'),
+(28, 23, 'RDX-DBL', 'Tube Isi 10', 'Tube', 'Karton', 10, 55000.00, 530000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_28_1.jpg,assets/img/produk/var_28_2.jpg,assets/img/produk/var_28_3.jpg,assets/img/produk/var_28_4.jpg'),
+(29, 24, 'ENV-C', 'Strip Isi 4', 'Strip', 'Box', 25, 6000.00, 145000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_29_1.jpg,assets/img/produk/var_29_2.jpg,assets/img/produk/var_29_3.jpg,assets/img/produk/var_29_4.jpg'),
+(30, 25, 'IMB-FRC', 'Strip Isi 10', 'Strip', 'Box', 3, 85000.00, 245000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_30_1.jpg,assets/img/produk/var_30_2.jpg,assets/img/produk/var_30_3.jpg,assets/img/produk/var_30_4.jpg'),
+(31, 26, 'BDR-MGR', 'Strip Isi 4', 'Strip', 'Box', 25, 3500.00, 85000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_31_1.jpg,assets/img/produk/var_31_2.jpg,assets/img/produk/var_31_3.jpg,assets/img/produk/var_31_4.jpg'),
+(32, 27, 'NZP-FRT', 'Strip Isi 4', 'Strip', 'Box', 25, 3500.00, 85000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_32_1.jpg,assets/img/produk/var_32_2.jpg,assets/img/produk/var_32_3.jpg,assets/img/produk/var_32_4.jpg'),
+(33, 28, 'DCL-GEN', 'Strip Isi 4', 'Strip', 'Box', 25, 3000.00, 72000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_33_1.jpg,assets/img/produk/var_33_2.jpg,assets/img/produk/var_33_3.jpg,assets/img/produk/var_33_4.jpg'),
+(34, 29, 'OBH-CPL', 'Botol 100ml', 'Botol', 'Karton', 24, 25000.00, 580000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_34_1.jpg,assets/img/produk/var_34_2.jpg,assets/img/produk/var_34_3.jpg,assets/img/produk/var_34_4.jpg'),
+(35, 30, 'SLN-PAS', 'Sachet Isi 10', 'Sachet', 'Box', 40, 8500.00, 320000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_35_1.jpg,assets/img/produk/var_35_2.jpg,assets/img/produk/var_35_3.jpg,assets/img/produk/var_35_4.jpg'),
+(36, 31, 'VK-VP10', 'Pot 10g', 'Pot', 'Box', 24, 12000.00, 275000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_36_1.jpg,assets/img/produk/var_36_2.jpg,assets/img/produk/var_36_3.jpg,assets/img/produk/var_36_4.jpg'),
+(37, 32, 'TLK-LNU', 'Sachet 15ml', 'Sachet', 'Box', 12, 4500.00, 52000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_37_1.jpg,assets/img/produk/var_37_2.jpg,assets/img/produk/var_37_3.jpg,assets/img/produk/var_37_4.jpg'),
+(38, 33, 'DCD-EXP', 'Botol 120ml', 'Botol', 'Karton', 24, 22000.00, 510000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_38_1.jpg,assets/img/produk/var_38_2.jpg,assets/img/produk/var_38_3.jpg,assets/img/produk/var_38_4.jpg'),
+(39, 34, 'PLS-CAP', 'Strip Isi 10', 'Strip', 'Box', 10, 12000.00, 115000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_39_1.jpg,assets/img/produk/var_39_2.jpg,assets/img/produk/var_39_3.jpg,assets/img/produk/var_39_4.jpg'),
+(40, 35, 'CMB-JRK', 'Botol 10ml', 'Botol', 'Box', 12, 21000.00, 245000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_40_1.jpg,assets/img/produk/var_40_2.jpg,assets/img/produk/var_40_3.jpg,assets/img/produk/var_40_4.jpg'),
+(41, 36, 'CFD-500', 'Strip Isi 10', 'Strip', 'Box', 10, 18000.00, 170000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_41_1.jpg,assets/img/produk/var_41_2.jpg,assets/img/produk/var_41_3.jpg,assets/img/produk/var_41_4.jpg'),
+(42, 37, 'CTM-ALR', 'Strip Isi 12', 'Strip', 'Box', 10, 2500.00, 23000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_42_1.jpg,assets/img/produk/var_42_2.jpg,assets/img/produk/var_42_3.jpg,assets/img/produk/var_42_4.jpg'),
+(43, 38, 'CTR-10', 'Strip Isi 10', 'Strip', 'Box', 10, 8500.00, 80000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_43_1.jpg,assets/img/produk/var_43_2.jpg,assets/img/produk/var_43_3.jpg,assets/img/produk/var_43_4.jpg'),
+(44, 39, 'SNS-MSK', 'Box Isi 50', 'Box', 'Box', 1, 25000.00, 950000.00, NULL, 5, 100, 1, 1, 'assets/img/produk/var_44_1.jpg,assets/img/produk/var_44_2.jpg,assets/img/produk/var_44_3.jpg,assets/img/produk/var_44_4.jpg'),
+(45, 40, 'HNS-PLS', 'Box Isi 100', 'Lembar', 'Lembar', 1, 800.00, 75000.00, NULL, 5, 100, 1, 1, 'assets/img/produk/var_45_1.jpg,assets/img/produk/var_45_2.jpg,assets/img/produk/var_45_3.jpg,assets/img/produk/var_45_4.jpg'),
+(46, 41, 'DRM-FIX', 'Pcs 5x7cm', 'Pcs', 'Pcs', 1, 4500.00, 105000.00, NULL, 5, 100, 1, 1, 'assets/img/produk/var_46_1.jpg,assets/img/produk/var_46_2.jpg,assets/img/produk/var_46_3.jpg,assets/img/produk/var_46_4.jpg'),
+(47, 42, 'OM-KSA', 'Kotak Isi 10', 'Kotak', 'Kotak', 1, 12000.00, 580000.00, NULL, 5, 100, 1, 1, 'assets/img/produk/var_47_1.jpg,assets/img/produk/var_47_2.jpg,assets/img/produk/var_47_3.jpg,assets/img/produk/var_47_4.jpg'),
+(48, 43, 'OM-ALK', 'Botol 100ml', 'Botol', 'Botol', 1, 8500.00, 195000.00, NULL, 5, 100, 1, 1, 'assets/img/produk/var_48_1.jpg,assets/img/produk/var_48_2.jpg,assets/img/produk/var_48_3.jpg,assets/img/produk/var_48_4.jpg'),
+(49, 44, 'RVN-100', 'Botol 100ml', 'Botol', 'Botol', 1, 7500.00, 175000.00, NULL, 5, 100, 1, 1, 'assets/img/produk/var_49_1.jpg,assets/img/produk/var_49_2.jpg,assets/img/produk/var_49_3.jpg,assets/img/produk/var_49_4.jpg'),
+(50, 45, 'PVD-1L', 'Botol 1L', 'Botol', 'Botol', 1, 125000.00, 1200000.00, NULL, 5, 100, 1, 1, 'assets/img/produk/var_50_1.jpg,assets/img/produk/var_50_2.jpg,assets/img/produk/var_50_3.jpg,assets/img/produk/var_50_4.jpg'),
+(51, 46, 'ESY-UA', 'Tube Isi 25', 'Tube', 'Tube', 1, 95000.00, 900000.00, NULL, 5, 100, 1, 1, 'assets/img/produk/var_51_1.jpg,assets/img/produk/var_51_2.jpg,assets/img/produk/var_51_3.jpg,assets/img/produk/var_51_4.jpg'),
+(52, 47, 'NSC-CHL', 'Tube Isi 10', 'Tube', 'Tube', 1, 135000.00, 1300000.00, NULL, 5, 100, 1, 1, 'assets/img/produk/var_52_1.jpg,assets/img/produk/var_52_2.jpg,assets/img/produk/var_52_3.jpg,assets/img/produk/var_52_4.jpg'),
+(53, 48, 'SLL-KRD', 'Unit Standar', 'Unit', 'Unit', 1, 1450000.00, 1400000.00, 5, 5, 100, 1, 1, 'assets/img/produk/var_53_1.jpg,assets/img/produk/var_53_2.jpg,assets/img/produk/var_53_3.jpg,assets/img/produk/var_53_4.jpg'),
+(54, 49, 'O2-1M3', 'Tabung 1m3', 'Tabung', 'Tabung', 1, 750000.00, 720000.00, 5, 5, 100, 1, 1, 'assets/img/produk/var_54_1.jpg,assets/img/produk/var_54_2.jpg,assets/img/produk/var_54_3.jpg,assets/img/produk/var_54_4.jpg'),
+(55, 50, 'O2-REG', 'Unit Flowmeter', 'Unit', 'Unit', 1, 250000.00, 2400000.00, 5, 5, 100, 1, 1, 'assets/img/produk/var_55_1.jpg,assets/img/produk/var_55_2.jpg,assets/img/produk/var_55_3.jpg,assets/img/produk/var_55_4.jpg'),
+(56, 51, 'OMR-NEB', 'Unit NE-C104', 'Unit', 'Unit', 1, 850000.00, 4100000.00, 5, 5, 100, 1, 1, 'assets/img/produk/var_56_1.jpg,assets/img/produk/var_56_2.jpg,assets/img/produk/var_56_3.jpg,assets/img/produk/var_56_4.jpg'),
+(57, 52, 'IR-THER', 'Unit Pistol', 'Unit', 'Unit', 1, 125000.00, 2400000.00, 5, 5, 100, 1, 1, 'assets/img/produk/var_57_1.jpg,assets/img/produk/var_57_2.jpg,assets/img/produk/var_57_3.jpg,assets/img/produk/var_57_4.jpg'),
+(58, 53, 'LTM-STC', 'Unit Classic III', 'Unit', 'Unit', 1, 1850000.00, 18000000.00, 5, 5, 100, 1, 1, 'assets/img/produk/var_58_1.jpg,assets/img/produk/var_58_2.jpg,assets/img/produk/var_58_3.jpg,assets/img/produk/var_58_4.jpg'),
+(60, 6, 'HUF-BPA', 'Hufagrip BP Anak', 'Botol', 'Karton', 50, 18000.00, 850000.00, NULL, 2, 100, 1, 1, 'assets/img/produk/var_60_1.jpg,assets/img/produk/var_60_2.jpg,assets/img/produk/var_60_3.jpg,assets/img/produk/var_60_4.jpg'),
+(61, 58, 'SIM-5BOX', 'Karton Isi 10 Box', 'Box', 'Karton', 10, 28000.00, 250000.00, 0, 0, 500, 1, 1, 'assets/img/produk/var_61_1.jpg,assets/img/produk/var_61_2.jpg,assets/img/produk/var_61_3.jpg,assets/img/produk/var_61_4.jpg'),
+(62, 59, '8998838110412', 'Sachet Box isi 12', 'Sachet', 'Box', 12, 0.00, 0.00, 0, 0, 100, 1, 1, NULL),
+(63, 60, '8997021870564', 'Kemasan Box', 'Pcs', 'Box', 10, 0.00, 0.00, 0, 0, 100, 1, 1, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `riwayat_hitung_opname`
+--
+
+CREATE TABLE `riwayat_hitung_opname` (
+  `id` int(11) NOT NULL,
+  `id_detail_opname` int(11) NOT NULL,
+  `hitung_sebelumnya` int(11) DEFAULT NULL,
+  `hitung_baru` int(11) NOT NULL,
+  `dihitung_oleh` int(11) NOT NULL,
+  `alasan_koreksi` text DEFAULT NULL,
+  `waktu_koreksi` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data untuk tabel `riwayat_hitung_opname`
+--
+
+INSERT INTO `riwayat_hitung_opname` (`id`, `id_detail_opname`, `hitung_sebelumnya`, `hitung_baru`, `dihitung_oleh`, `alasan_koreksi`, `waktu_koreksi`) VALUES
+(4, 264, 3, 2, 1, 'salah hitung', '2026-11-02 22:50:01'),
+(5, 264, 2, 5, 1, 'salah', '2026-11-02 23:35:47'),
+(6, 264, 5, 6, 1, 'salah', '2026-11-02 23:36:05'),
+(7, 264, 6, 2, 1, 'salah', '2026-11-03 00:18:56'),
+(8, 265, 10, 8, 1, 'salah hitung', '2026-11-03 01:17:31');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `sesi_opname`
+--
+
+CREATE TABLE `sesi_opname` (
+  `id` int(11) NOT NULL,
+  `kode_sesi` varchar(50) NOT NULL,
+  `status` enum('Aktif','Selesai','Dibatalkan') NOT NULL DEFAULT 'Aktif',
+  `tahap` enum('Penghitungan','Verifikasi','Selesai') DEFAULT 'Penghitungan',
+  `dibekukan_oleh` int(11) NOT NULL,
+  `dibekukan_pada` timestamp NOT NULL DEFAULT current_timestamp(),
+  `ditutup_hitung_oleh` int(11) DEFAULT NULL,
+  `ditutup_hitung_pada` timestamp NULL DEFAULT NULL,
+  `dibuka_oleh` int(11) DEFAULT NULL,
+  `dibuka_pada` timestamp NULL DEFAULT NULL,
+  `catatan` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data untuk tabel `sesi_opname`
+--
+
+INSERT INTO `sesi_opname` (`id`, `kode_sesi`, `status`, `tahap`, `dibekukan_oleh`, `dibekukan_pada`, `ditutup_hitung_oleh`, `ditutup_hitung_pada`, `dibuka_oleh`, `dibuka_pada`, `catatan`) VALUES
+(3, 'OPN-20261028-002', 'Dibatalkan', 'Penghitungan', 1, '2026-10-29 06:56:01', NULL, NULL, 1, '2026-10-31 19:43:18', 'Dibatalkan karena gangguan pemadaman listrik dan antrean pelanggan di kasir.'),
+(6, 'OPN-20261101-938', 'Dibatalkan', 'Penghitungan', 1, '2026-10-31 20:49:05', NULL, NULL, 1, '2026-10-31 20:49:28', 'Dibatalkan karena penyesuaian jadwal operasional toko.'),
+(7, 'OPN-20261015-001', 'Selesai', 'Penghitungan', 1, '2026-10-14 18:00:00', NULL, NULL, 1, '2026-10-14 21:30:00', 'Stok Opname Triwulan III - Selesai dengan rekonsiliasi mutasi selisih barang rusak dan hilang.'),
+(11, 'OPN-20261101-003', 'Selesai', 'Penghitungan', 1, '2026-11-02 22:47:29', NULL, NULL, 1, '2026-11-03 02:58:42', 'Stok Opname Rutin Awal Bulan - Seluruh fisik obat dan unit alkes sesuai dengan data sistem.'),
+(41, 'OPN-20261123-379', 'Selesai', 'Verifikasi', 1, '2026-11-23 02:21:47', 2, '2026-11-23 02:21:58', 1, '2026-11-23 02:21:59', 'Stok Opname Periodik Gudang & Etalase Toko ZenCare Medical');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `stok_batch`
+--
+
+CREATE TABLE `stok_batch` (
+  `id` int(11) NOT NULL,
+  `id_variasi` int(11) NOT NULL,
+  `no_batch` varchar(100) NOT NULL,
+  `tgl_exp` date NOT NULL,
+  `stok_sisa` int(11) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `stok_batch`
+--
+
+INSERT INTO `stok_batch` (`id`, `id_variasi`, `no_batch`, `tgl_exp`, `stok_sisa`, `created_at`) VALUES
+(1, 1, 'AMX-24C081', '2025-08-15', 0, '2025-08-15 01:00:00'),
+(2, 10, 'PCT-24D012', '2025-10-01', 0, '2025-10-01 01:00:00'),
+(3, 2, 'SNM-24K061', '2026-10-15', 0, '2026-08-10 03:00:00'),
+(4, 31, 'BDR-25D110', '2027-02-07', 75, '2026-08-15 03:00:00'),
+(5, 42, 'CTM-25E080', '2027-02-12', 70, '2026-08-20 03:00:00'),
+(6, 6, 'HUF-24J089', '2027-02-20', 0, '2026-08-25 03:00:00'),
+(7, 1, 'AMX-2026-01', '2027-12-15', 10, '2026-10-15 01:30:00'),
+(8, 1, 'AMX-2026-01.A', '2027-12-15', 6, '2026-10-05 02:15:00'),
+(9, 2, 'SNM-2026-A', '2028-05-10', 120, '2026-10-15 01:30:00'),
+(10, 2, 'SNM-2026-A.A', '2028-05-10', 24, '2026-10-07 03:30:00'),
+(11, 3, 'BMHP-ESYGLU-28', '2028-11-20', 15, '2026-09-10 03:00:00'),
+(12, 6, 'HUF-TMP-26', '2027-08-15', 0, '2026-09-10 02:00:00'),
+(13, 6, 'HUF-TMP-26.A', '2027-08-15', 0, '2026-10-09 06:45:00'),
+(14, 6, 'HUF-TMP-27', '2028-06-20', 0, '2026-10-15 01:30:00'),
+(15, 6, 'HUF-TMP-27.A', '2028-06-20', 0, '2026-10-11 08:30:00'),
+(16, 7, 'HUFPIL-2027-01', '2028-08-15', 400, '2026-09-10 03:00:00'),
+(17, 8, 'HUFBP-2027-01', '2028-08-15', 32300, '2026-09-10 03:00:00'),
+(18, 9, 'HUFFLU-2027-01', '2028-08-15', 37400, '2026-09-10 03:00:00'),
+(19, 10, 'PCT-500-26', '2027-11-20', 180, '2026-10-15 01:30:00'),
+(20, 10, 'PCT-500-26.A', '2027-11-20', 7, '2026-10-08 04:00:00'),
+(21, 10, 'PCT-500-26.B', '2027-11-20', 8, '2026-10-10 07:20:00'),
+(22, 11, 'PCT250-2027-01', '2027-11-30', 1480, '2026-09-10 03:00:00'),
+(23, 12, 'PCT125-2027-01', '2027-11-30', 1480, '2026-09-10 03:00:00'),
+(24, 13, 'PRM-KLK-26', '2027-11-30', 288, '2026-10-20 03:00:00'),
+(25, 13, 'PRM-KLK-26.A', '2027-11-30', 8, '2026-10-21 04:00:00'),
+(26, 14, 'PND-KLK-26', '2027-11-30', 190, '2026-10-20 03:00:00'),
+(27, 15, 'TLKANG-2027-01', '2027-11-30', 2100, '2026-09-10 03:00:00'),
+(28, 16, 'MYL150-2027-01', '2028-08-15', 8592, '2026-09-10 03:00:00'),
+(29, 17, 'INSREG-2027-01', '2027-11-30', 2136, '2026-09-10 03:00:00'),
+(30, 18, 'BET-15-26', '2027-11-30', 156, '2026-10-24 08:30:00'),
+(31, 19, 'CTP30-2027-01', '2027-11-30', 1480, '2026-09-10 03:00:00'),
+(32, 20, 'NEUFRT-2027-01', '2027-11-30', 1480, '2026-09-10 03:00:00'),
+(33, 21, 'SNGCAP-2027-01', '2028-08-15', 9325, '2026-09-10 03:00:00'),
+(34, 22, 'DPT-CAP-26', '2027-09-10', 450, '2026-10-24 08:30:00'),
+(35, 23, 'ENTDSW-2027-01', '2028-08-15', 5940, '2026-09-10 03:00:00'),
+(36, 24, 'WOD-PEP-26', '2028-04-10', 168, '2026-10-22 04:20:00'),
+(37, 24, 'WOD-GNT-26', '2028-05-20', 72, '2026-10-25 04:15:00'),
+(38, 24, 'WOD-PEP-26.A', '2028-04-10', 24, '2026-10-23 09:30:00'),
+(39, 25, 'KMXHRB-2027-01', '2028-08-15', 13410, '2026-09-10 03:00:00'),
+(40, 26, 'ANTJRG-2027-01', '2027-11-30', 2112, '2026-09-10 03:00:00'),
+(41, 27, 'CDR-EFT-26', '2027-11-30', 20, '2026-10-22 04:20:00'),
+(42, 28, 'RDXDBL-2027-01', '2027-11-30', 1480, '2026-09-10 03:00:00'),
+(43, 29, 'ENV-C-26', '2028-03-15', 325, '2026-10-22 04:20:00'),
+(44, 30, 'IMB-FRC-26', '2027-09-15', 165, '2026-10-15 01:30:00'),
+(45, 31, 'BDR-2028', '2028-03-12', 6225, '2026-09-10 03:00:00'),
+(46, 32, 'NZPFRT-2027-01', '2028-08-15', 9325, '2026-09-10 03:00:00'),
+(47, 33, 'DCL-GEN-26', '2027-10-15', 50, '2026-10-24 08:30:00'),
+(48, 34, 'OBHCPL-2027-01', '2028-08-15', 8592, '2026-09-10 03:00:00'),
+(49, 35, 'SLNPAS-2027-01', '2028-08-15', 23880, '2026-09-10 03:00:00'),
+(50, 36, 'VKVP10-2027-01', '2028-08-15', 8592, '2026-09-10 03:00:00'),
+(51, 37, 'TLKLNU-2027-01', '2027-11-30', 2136, '2026-09-10 03:00:00'),
+(52, 38, 'DCD-27A01', '2028-08-15', 8592, '2026-09-10 03:00:00'),
+(53, 39, 'PLSCAP-2027-01', '2027-11-30', 1480, '2026-09-10 03:00:00'),
+(54, 40, 'CMBJRK-2027-01', '2027-11-30', 2136, '2026-09-10 03:00:00'),
+(55, 41, 'CFD-500-26', '2027-11-30', 60, '2026-10-22 04:20:00'),
+(56, 41, 'CFD-GNT-26', '2028-02-15', 20, '2026-10-25 03:30:00'),
+(57, 42, 'CTMALR-2027-01', '2027-11-30', 1490, '2026-09-10 03:00:00'),
+(58, 43, 'CTR10-2027-01', '2027-11-30', 1480, '2026-09-10 03:00:00'),
+(59, 44, 'BMHP-SNSMSK-28', '2028-11-20', 65, '2026-09-10 03:00:00'),
+(60, 45, 'BMHP-HNSPLS-28', '2028-11-20', 14, '2026-09-10 03:00:00'),
+(61, 46, 'BMHP-DRMFIX-28', '2028-11-20', 115, '2026-09-10 03:00:00'),
+(62, 47, 'BMHP-OMKSA-28', '2028-11-20', 65, '2026-09-10 03:00:00'),
+(63, 48, 'BMHP-OMALK-28', '2028-11-20', 55, '2026-09-10 03:00:00'),
+(64, 49, 'BMHP-RVN100-28', '2028-11-20', 15, '2026-09-10 03:00:00'),
+(65, 50, 'BMHP-PVD1L-28', '2028-11-20', 15, '2026-09-10 03:00:00'),
+(66, 51, 'BMHP-ESYUA-28', '2028-11-20', 14, '2026-09-10 03:00:00'),
+(67, 52, 'BMHP-NSCCHL-28', '2028-11-20', 15, '2026-09-10 03:00:00'),
+(68, 60, 'HUFBPA-2027-01', '2028-08-15', 37350, '2026-09-10 03:00:00'),
+(80, 7, 'HUFPIL-2027-01.A', '2028-08-15', 5, '2026-10-28 04:40:56'),
+(81, 26, 'ANTJRG-2027-01.A', '2027-11-30', 8, '2026-10-28 23:30:34'),
+(82, 7, 'HUFPIL-2027-01.B', '2028-08-15', 0, '2026-10-28 23:48:22'),
+(83, 8, 'HUFBP-2027-01.1', '2028-08-15', 50, '2026-11-03 03:25:05'),
+(84, 9, 'HUFFLU-2027-01.1', '2028-08-15', 50, '2026-11-03 03:25:05'),
+(85, 11, 'PCT250-2027-01.1', '2027-11-30', 10, '2026-11-03 03:25:05'),
+(86, 12, 'PCT125-2027-01.1', '2027-11-30', 10, '2026-11-03 03:25:05'),
+(87, 14, 'PND-KLK-26.1', '2027-11-30', 7, '2026-11-03 03:25:05'),
+(88, 15, 'TLKANG-2027-01.1', '2027-11-30', 7, '2026-11-03 03:25:05'),
+(89, 16, 'MYL150-2027-01.1', '2028-08-15', 24, '2026-11-03 03:25:05'),
+(90, 17, 'INSREG-2027-01.1', '2027-11-30', 12, '2026-11-03 03:25:05'),
+(91, 18, 'BET-15-26.1', '2027-11-30', 14, '2026-11-03 03:25:05'),
+(92, 19, 'CTP30-2027-01.1', '2027-11-30', 10, '2026-11-03 03:25:05'),
+(93, 20, 'NEUFRT-2027-01.1', '2027-11-30', 10, '2026-11-03 03:25:05'),
+(94, 21, 'SNGCAP-2027-01.1', '2028-08-15', 25, '2026-11-03 03:25:05'),
+(95, 22, 'DPT-CAP-26.1', '2027-09-10', 25, '2026-11-03 03:25:05'),
+(96, 23, 'ENTDSW-2027-01.1', '2028-08-15', 20, '2026-11-03 03:25:05'),
+(97, 25, 'KMXHRB-2027-01.1', '2028-08-15', 30, '2026-11-03 03:25:05'),
+(98, 27, 'CDR-EFT-26.1', '2027-11-30', 10, '2026-11-03 03:25:05'),
+(99, 28, 'RDXDBL-2027-01.1', '2027-11-30', 10, '2026-11-03 03:25:05'),
+(100, 29, 'ENV-C-26.1', '2028-03-15', 25, '2026-11-03 03:25:05'),
+(101, 30, 'IMB-FRC-26.1', '2027-09-15', 3, '2026-11-03 03:25:05'),
+(102, 31, 'BDR-2028.1', '2028-03-12', 25, '2026-11-03 03:25:05'),
+(103, 32, 'NZPFRT-2027-01.1', '2028-08-15', 25, '2026-11-03 03:25:05'),
+(104, 33, 'DCL-GEN-26.1', '2027-10-15', 25, '2026-11-03 03:25:05'),
+(105, 34, 'OBHCPL-2027-01.1', '2028-08-15', 24, '2026-11-03 03:25:05'),
+(106, 35, 'SLNPAS-2027-01.1', '2028-08-15', 40, '2026-11-03 03:25:05'),
+(107, 36, 'VKVP10-2027-01.1', '2028-08-15', 24, '2026-11-03 03:25:05'),
+(108, 37, 'TLKLNU-2027-01.1', '2027-11-30', 12, '2026-11-03 03:25:05'),
+(109, 38, 'DCD-27A01.1', '2028-08-15', 24, '2026-11-03 03:25:05'),
+(110, 39, 'PLSCAP-2027-01.1', '2027-11-30', 10, '2026-11-03 03:25:05'),
+(111, 40, 'CMBJRK-2027-01.1', '2027-11-30', 12, '2026-11-03 03:25:05'),
+(112, 41, 'CFD-500-26.1', '2027-11-30', 8, '2026-11-03 03:25:05'),
+(113, 42, 'CTMALR-2027-01.1', '2027-11-30', 10, '2026-11-03 03:25:05'),
+(114, 43, 'CTR10-2027-01.1', '2027-11-30', 10, '2026-11-03 03:25:05'),
+(115, 60, 'HUFBPA-2027-01.1', '2028-08-15', 50, '2026-11-03 03:25:05'),
+(116, 26, 'ANTJRG-2027-01.B', '2027-11-30', 10, '2026-11-03 05:48:38'),
+(120, 2, 'SNM-2026-A.B', '2028-05-10', 24, '2026-11-20 21:51:04'),
+(121, 2, 'SNM-2026-A.C', '2028-05-10', 24, '2026-11-20 21:51:04'),
+(122, 6, 'HUF-24J089.A', '2027-02-20', 50, '2026-11-20 21:51:04'),
+(123, 6, 'HUF-TMP-26.B', '2027-08-15', 0, '2026-11-20 21:51:04'),
+(124, 7, 'HUFPIL-2027-01.C', '2028-08-15', 0, '2026-11-20 21:51:04'),
+(125, 8, 'HUFBP-2027-01.A', '2028-08-15', 50, '2026-11-20 21:51:04'),
+(126, 8, 'HUFBP-2027-01.B', '2028-08-15', 50, '2026-11-20 21:51:04'),
+(127, 9, 'HUFFLU-2027-01.A', '2028-08-15', 50, '2026-11-20 21:51:04'),
+(128, 10, 'PCT-500-26.C', '2027-11-20', 10, '2026-11-20 21:51:04'),
+(129, 10, 'PCT-500-26.D', '2027-11-20', 20, '2026-11-20 21:51:04'),
+(130, 11, 'PCT250-2027-01.A', '2027-11-30', 10, '2026-11-20 21:51:04'),
+(131, 12, 'PCT125-2027-01.A', '2027-11-30', 10, '2026-11-20 21:51:04'),
+(132, 13, 'PRM-KLK-26.B', '2027-11-30', 12, '2026-11-20 21:51:04'),
+(133, 13, 'PRM-KLK-26.C', '2027-11-30', 24, '2026-11-20 21:51:04'),
+(134, 14, 'PND-KLK-26.A', '2027-11-30', 10, '2026-11-20 21:51:04'),
+(135, 14, 'PND-KLK-26.B', '2027-11-30', 10, '2026-11-20 21:51:04'),
+(136, 15, 'TLKANG-2027-01.A', '2027-11-30', 24, '2026-11-20 21:51:04'),
+(137, 15, 'TLKANG-2027-01.B', '2027-11-30', 12, '2026-11-20 21:51:04'),
+(138, 16, 'MYL150-2027-01.A', '2028-08-15', 24, '2026-11-20 21:51:04'),
+(139, 17, 'INSREG-2027-01.A', '2027-11-30', 12, '2026-11-20 21:51:04'),
+(140, 18, 'BET-15-26.A', '2027-11-30', 12, '2026-11-20 21:51:04'),
+(141, 19, 'CTP30-2027-01.A', '2027-11-30', 10, '2026-11-20 21:51:04'),
+(142, 20, 'NEUFRT-2027-01.A', '2027-11-30', 10, '2026-11-20 21:51:04'),
+(143, 21, 'SNGCAP-2027-01.A', '2028-08-15', 25, '2026-11-20 21:51:04'),
+(144, 22, 'DPT-CAP-26.A', '2027-09-10', 25, '2026-11-20 21:51:04'),
+(145, 23, 'ENTDSW-2027-01.A', '2028-08-15', 40, '2026-11-20 21:51:04'),
+(146, 24, 'WOD-PEP-26.B', '2028-04-10', 24, '2026-11-20 21:51:04'),
+(147, 25, 'KMXHRB-2027-01.A', '2028-08-15', 60, '2026-11-20 21:51:04'),
+(148, 26, 'ANTJRG-2027-01.C', '2027-11-30', 12, '2026-11-20 21:51:04'),
+(149, 27, 'CDR-EFT-26.A', '2027-11-30', 10, '2026-11-20 21:51:05'),
+(150, 28, 'RDXDBL-2027-01.A', '2027-11-30', 10, '2026-11-20 21:51:05'),
+(151, 29, 'ENV-C-26.A', '2028-03-15', 25, '2026-11-20 21:51:05'),
+(152, 30, 'IMB-FRC-26.A', '2027-09-15', 6, '2026-11-20 21:51:05'),
+(153, 31, 'BDR-25D110.A', '2027-02-07', 25, '2026-11-20 21:51:05'),
+(154, 32, 'NZPFRT-2027-01.A', '2028-08-15', 25, '2026-11-20 21:51:05'),
+(155, 33, 'DCL-GEN-26.A', '2027-10-15', 25, '2026-11-20 21:51:05'),
+(156, 34, 'OBHCPL-2027-01.A', '2028-08-15', 24, '2026-11-20 21:51:05'),
+(157, 35, 'SLNPAS-2027-01.A', '2028-08-15', 80, '2026-11-20 21:51:05'),
+(158, 36, 'VKVP10-2027-01.A', '2028-08-15', 24, '2026-11-20 21:51:05'),
+(159, 37, 'TLKLNU-2027-01.A', '2027-11-30', 12, '2026-11-20 21:51:05'),
+(160, 38, 'DCD-27A01.A', '2028-08-15', 24, '2026-11-20 21:51:05'),
+(161, 39, 'PLSCAP-2027-01.A', '2027-11-30', 10, '2026-11-20 21:51:05'),
+(162, 40, 'CMBJRK-2027-01.A', '2027-11-30', 12, '2026-11-20 21:51:05'),
+(163, 41, 'CFD-500-26.A', '2027-11-30', 10, '2026-11-20 21:51:05'),
+(164, 42, 'CTM-25E080.A', '2027-02-12', 10, '2026-11-20 21:51:05'),
+(165, 43, 'CTR10-2027-01.A', '2027-11-30', 10, '2026-11-20 21:51:05'),
+(166, 60, 'HUFBPA-2027-01.A', '2028-08-15', 100, '2026-11-20 21:51:05');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `stok_toko`
+--
+
+CREATE TABLE `stok_toko` (
+  `id` int(11) NOT NULL,
+  `id_variasi` int(11) NOT NULL,
+  `stok` int(11) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `stok_toko`
+--
+
+INSERT INTO `stok_toko` (`id`, `id_variasi`, `stok`) VALUES
+(1, 1, 16),
+(2, 2, 192),
+(3, 3, 15),
+(4, 4, 0),
+(5, 5, 4),
+(6, 6, 50),
+(7, 7, 405),
+(8, 8, 32450),
+(9, 9, 37500),
+(10, 10, 225),
+(11, 11, 1500),
+(12, 12, 1500),
+(13, 13, 332),
+(14, 14, 217),
+(15, 15, 2143),
+(16, 16, 8640),
+(17, 17, 2160),
+(18, 18, 182),
+(19, 19, 1500),
+(20, 20, 1500),
+(21, 21, 9375),
+(22, 22, 500),
+(23, 23, 6000),
+(24, 24, 288),
+(25, 25, 13500),
+(26, 26, 2142),
+(27, 27, 40),
+(28, 28, 1500),
+(29, 29, 375),
+(30, 30, 174),
+(31, 31, 6350),
+(32, 32, 9375),
+(33, 33, 100),
+(34, 34, 8640),
+(35, 35, 24000),
+(36, 36, 8640),
+(37, 37, 2160),
+(38, 38, 8640),
+(39, 39, 1500),
+(40, 40, 2160),
+(41, 41, 98),
+(42, 42, 1580),
+(43, 43, 1500),
+(44, 44, 65),
+(45, 45, 14),
+(46, 46, 115),
+(47, 47, 65),
+(48, 48, 55),
+(49, 49, 15),
+(50, 50, 15),
+(51, 51, 14),
+(52, 52, 15),
+(53, 53, 0),
+(54, 54, 4),
+(55, 55, 3),
+(56, 56, 5),
+(57, 57, 6),
+(58, 58, 3),
+(59, 60, 37500),
+(60, 61, 0),
+(61, 62, 0),
+(62, 63, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `supplier`
+--
+
+CREATE TABLE `supplier` (
+  `id` int(11) NOT NULL,
+  `nama` varchar(100) NOT NULL,
+  `kontak` varchar(50) DEFAULT NULL,
+  `email` varchar(150) DEFAULT NULL,
+  `alamat` text DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `supplier`
+--
+
+INSERT INTO `supplier` (`id`, `nama`, `kontak`, `email`, `alamat`, `is_active`) VALUES
+(1, 'PT Kimia Farma Trading & Distribution', '0341-999001', 'kf.malang@kimiafarma.co.id', 'Jl. Kesehatan Raya No.1, Malang', 1),
+(2, 'PT Omron Healthcare Indonesia', '021-555222', 'info@omron-healthcare.co.id', 'Gedung Omron, Jakarta Pusat', 1),
+(3, 'PT Jayamas Medica Industri (OneMed)', '031-444333', 'sales@onemed.co.id', 'Kawasan Industri Rungkut, Surabaya', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `unit_serial`
+--
+
+CREATE TABLE `unit_serial` (
+  `id` int(11) NOT NULL,
+  `id_variasi` int(11) NOT NULL,
+  `serial_number` varchar(150) NOT NULL,
+  `status` enum('Tersedia','Terjual','Retur/Rusak','Hilang') NOT NULL DEFAULT 'Tersedia',
+  `id_penjualan` int(11) DEFAULT NULL,
+  `catatan` varchar(255) DEFAULT NULL,
+  `tgl_habis_garansi` date DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `unit_serial`
+--
+
+INSERT INTO `unit_serial` (`id`, `id_variasi`, `serial_number`, `status`, `id_penjualan`, `catatan`, `tgl_habis_garansi`, `created_at`, `updated_at`) VALUES
+(1, 4, 'OMR-7120-101', 'Terjual', 5, NULL, '2028-10-19', '2026-09-25 02:15:00', '2026-11-03 03:25:05'),
+(2, 4, 'OMR-7120-102', 'Terjual', 101, NULL, '2028-10-19', '2026-09-25 02:15:00', '2026-11-23 02:33:25'),
+(3, 4, 'OMR-7120-103', 'Hilang', NULL, '[Opname OPN-20261123-379] Barang Hilang: 1 unit nomor seri OMR-7120-103 tidak ditemukan di etalase alat kesehatan', '2028-10-19', '2026-09-25 02:15:00', '2026-11-23 02:21:58'),
+(4, 4, 'OMR-7120-104', 'Terjual', 93, NULL, '2028-10-19', '2026-09-25 02:15:00', '2026-11-21 20:20:06'),
+(5, 4, 'OMR-7120-105', 'Terjual', 93, NULL, '2028-10-19', '2026-09-25 02:15:00', '2026-11-21 20:20:06'),
+(6, 4, 'OMR-7120-106', 'Terjual', 93, NULL, '2028-10-23', '2026-10-23 06:45:00', '2026-11-21 20:20:06'),
+(7, 4, 'OMR-7120-107', 'Terjual', 93, NULL, '2028-10-23', '2026-10-23 06:45:00', '2026-11-21 20:20:06'),
+(8, 4, 'OMR-7120-108', 'Terjual', 93, NULL, '2028-10-23', '2026-10-23 06:45:00', '2026-11-21 20:20:06'),
+(9, 4, 'OMR-7120-109', 'Terjual', 93, NULL, '2028-10-23', '2026-10-23 06:45:00', '2026-11-21 20:20:06'),
+(10, 4, 'OMR-7120-R01', 'Retur/Rusak', NULL, 'Cacat Pabrik: Layar LCD garis vertikal saat unboxing (Klaim PO: PO-20261023-ALKES-RETUR)', NULL, '2026-10-23 06:45:00', '2026-11-03 03:26:03'),
+(11, 4, 'OMR-7120-R02', 'Retur/Rusak', NULL, 'Cacat Pabrik: Motor pompa cuff bocor angin (Klaim PO: PO-20261023-ALKES-RETUR)', NULL, '2026-10-23 06:45:00', '2026-11-03 03:26:03'),
+(12, 5, 'OMR-MC246-01', 'Terjual', 1, NULL, '2027-10-14', '2026-09-15 01:30:00', '2026-11-03 03:25:05'),
+(13, 5, 'OMR-MC246-02', 'Tersedia', NULL, NULL, '2027-10-14', '2026-09-15 01:30:00', '2026-11-23 02:44:41'),
+(14, 5, 'OMR-MC246-03', 'Tersedia', NULL, NULL, '2027-10-14', '2026-09-15 01:30:00', '2026-11-23 02:44:41'),
+(15, 5, 'OMR-MC246-04', 'Tersedia', NULL, NULL, '2027-10-14', '2026-09-15 01:30:00', '2026-11-23 02:44:41'),
+(16, 5, 'OMR-MC246-05', 'Tersedia', NULL, NULL, '2027-10-14', '2026-09-15 01:30:00', '2026-11-03 03:25:05'),
+(17, 5, 'OMR-MC246-06', 'Retur/Rusak', NULL, '[Opname OPN-20261123-379] Barang Rusak: 1 unit nomor seri OMR-MC246-06 mengalami kerusakan layar LCD pecah', '2027-10-23', '2026-10-23 06:45:00', '2026-11-23 02:21:58'),
+(18, 5, 'OMR-MC246-07', 'Terjual', 94, NULL, '2027-10-23', '2026-10-23 06:45:00', '2026-11-21 20:20:06'),
+(19, 5, 'OMR-MC246-08', 'Terjual', 94, NULL, '2027-10-23', '2026-10-23 06:45:00', '2026-11-21 20:20:06'),
+(20, 5, 'OMR-MC246-09', 'Terjual', 94, NULL, '2027-10-23', '2026-10-23 06:45:00', '2026-11-21 20:20:06'),
+(21, 5, 'OMR-MC246-10', 'Terjual', 94, NULL, '2027-10-23', '2026-10-23 06:45:00', '2026-11-21 20:20:06'),
+(22, 5, 'OMR-MC246-11', 'Terjual', 94, NULL, '2027-10-23', '2026-10-23 06:45:00', '2026-11-21 20:20:06'),
+(23, 5, 'OMR-MC246-12', 'Terjual', 94, NULL, '2027-10-23', '2026-10-23 06:45:00', '2026-11-21 20:20:06'),
+(24, 5, 'OMR-MC246-R01', 'Retur/Rusak', NULL, 'Cacat Pabrik: Error E-01 sensor mati (Klaim PO: PO-20261023-ALKES-RETUR)', NULL, '2026-10-23 06:45:00', '2026-11-03 03:26:03'),
+(25, 53, 'SLL-CR809-01', 'Retur/Rusak', NULL, '[Opname OPN-20261103-440] Barang Rusak', '2028-09-01', '2026-09-01 02:00:00', '2026-11-03 03:25:05'),
+(26, 53, 'SLL-CR809-02', 'Terjual', 101, NULL, '2028-09-01', '2026-09-01 02:00:00', '2026-11-23 02:33:25'),
+(27, 54, 'O2-1M3-01', 'Tersedia', NULL, NULL, '2028-06-30', '2026-09-10 03:00:00', '2026-11-03 03:25:05'),
+(28, 54, 'O2-1M3-02', 'Tersedia', NULL, NULL, '2028-06-30', '2026-09-10 03:00:00', '2026-11-03 03:25:05'),
+(29, 54, 'O2-1M3-03', 'Tersedia', NULL, NULL, '2028-06-30', '2026-09-10 03:00:00', '2026-11-03 03:25:05'),
+(30, 54, 'O2-1M3-04', 'Tersedia', NULL, NULL, '2028-06-30', '2026-09-10 03:00:00', '2026-11-03 03:25:05'),
+(31, 54, 'O21M3-RET1', 'Retur/Rusak', NULL, 'Drat kran valve bocor gas (Klaim Kulakan: KUL-20261024-CAMPUR-RETUR)', NULL, '2026-10-24 08:30:00', NULL),
+(32, 55, 'O2-REG-01', 'Tersedia', NULL, NULL, '2027-09-01', '2026-09-01 02:00:00', NULL),
+(33, 55, 'O2-REG-02', 'Tersedia', NULL, NULL, '2027-09-01', '2026-09-01 02:00:00', NULL),
+(34, 55, 'O2-REG-03', 'Tersedia', NULL, NULL, '2027-09-01', '2026-09-01 02:00:00', NULL),
+(35, 56, 'OMR-NEB-99', 'Retur/Rusak', 6, 'Retur Pelanggan: Kompresor macet & uap tidak keluar (Klaim Garansi)', '2028-10-12', '2026-09-20 03:00:00', '2026-10-15 04:20:00'),
+(36, 56, 'OMR-C104-01', 'Tersedia', NULL, NULL, '2028-10-12', '2026-09-20 03:00:00', '2026-11-03 03:25:05'),
+(37, 56, 'OMR-C104-02', 'Tersedia', NULL, NULL, '2028-10-12', '2026-09-20 03:00:00', '2026-11-03 03:25:05'),
+(38, 56, 'OMR-C104-03', 'Hilang', NULL, '[Opname OPN-20261103-440] Barang Hilang', '2028-10-12', '2026-09-20 03:00:00', '2026-11-03 03:25:05'),
+(39, 56, 'OMR-C104-04', 'Tersedia', NULL, NULL, '2028-10-23', '2026-10-23 06:45:00', '2026-11-03 03:25:05'),
+(40, 56, 'OMR-C104-05', 'Tersedia', NULL, NULL, '2028-10-23', '2026-10-23 06:45:00', '2026-11-03 03:25:05'),
+(41, 56, 'OMR-C104-06', 'Tersedia', NULL, NULL, '2028-10-23', '2026-10-23 06:45:00', '2026-11-03 03:25:05'),
+(42, 57, 'IRT-FR1-01', 'Tersedia', NULL, NULL, '2028-06-30', '2026-09-10 03:00:00', '2026-11-03 03:25:05'),
+(43, 57, 'IRT-FR1-02', 'Tersedia', NULL, NULL, '2028-06-30', '2026-09-10 03:00:00', '2026-11-03 03:25:05'),
+(44, 57, 'IRT-FR1-03', 'Tersedia', NULL, NULL, '2028-06-30', '2026-09-10 03:00:00', '2026-11-03 03:25:05'),
+(45, 57, 'IRT-FR1-04', 'Tersedia', NULL, NULL, '2028-06-30', '2026-09-10 03:00:00', '2026-11-03 03:25:05'),
+(46, 57, 'IRT-FR1-05', 'Tersedia', NULL, NULL, '2028-06-30', '2026-09-10 03:00:00', '2026-11-03 03:25:05'),
+(47, 57, 'IRT-FR1-06', 'Tersedia', NULL, NULL, '2028-06-30', '2026-09-10 03:00:00', '2026-11-03 03:25:05'),
+(48, 58, 'LIT-CL3-01', 'Tersedia', NULL, NULL, '2028-06-30', '2026-09-10 03:00:00', '2026-11-03 03:25:05'),
+(49, 58, 'LIT-CL3-02', 'Tersedia', NULL, NULL, '2028-06-30', '2026-09-10 03:00:00', '2026-11-03 03:25:05'),
+(50, 58, 'LIT-CL3-03', 'Tersedia', NULL, NULL, '2028-06-30', '2026-09-10 03:00:00', '2026-11-03 03:25:05');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `users`
+--
+
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL COMMENT 'bcrypt hash',
+  `nama_lengkap` varchar(100) NOT NULL,
+  `role` enum('superadmin','admin','kasir','pelanggan') NOT NULL,
+  `email` varchar(150) DEFAULT NULL,
+  `telepon` varchar(20) DEFAULT NULL,
+  `alamat` text DEFAULT NULL COMMENT 'Alamat utama pelanggan untuk pengiriman',
+  `kota_id` int(11) DEFAULT NULL COMMENT 'ID kota RajaOngkir untuk kalkulasi ongkir',
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `users`
+--
+
+INSERT INTO `users` (`id`, `username`, `password`, `nama_lengkap`, `role`, `email`, `telepon`, `alamat`, `kota_id`, `is_active`, `created_at`) VALUES
+(1, 'superadmin', '$2y$10$khJXR9zVmz9x0YqbJKsMf.SVh2fsD75/tWhBfRIRuZ4dfWUrwwWTe', 'SuperAdmin (Pemilik)', 'superadmin', 'superadmin@zencare.id', '081234567890', NULL, NULL, 1, '2026-09-10 21:42:09'),
+(2, 'admin_toko', '$2y$10$khJXR9zVmz9x0YqbJKsMf.SVh2fsD75/tWhBfRIRuZ4dfWUrwwWTe', 'Admin Toko', 'admin', 'admin@zencare.id', '082111222333', NULL, NULL, 1, '2026-09-10 21:42:09'),
+(3, 'pelanggan1', '$2y$10$khJXR9zVmz9x0YqbJKsMf.SVh2fsD75/tWhBfRIRuZ4dfWUrwwWTe', 'Budi Santoso', 'pelanggan', 'budi.santoso@gmail.com', '083333444555', 'Jl. Soekarno Hatta No.12, Malang', 391, 1, '2026-09-10 21:42:09'),
+(4, 'kasir_toko', '$2y$10$khJXR9zVmz9x0YqbJKsMf.SVh2fsD75/tWhBfRIRuZ4dfWUrwwWTe', 'Kasir (Front Office)', 'kasir', 'kasir@zencare.id', '08222333444', NULL, NULL, 1, '2026-09-29 04:16:12'),
+(6, 'pelanggan2', '$2y$10$khJXR9zVmz9x0YqbJKsMf.SVh2fsD75/tWhBfRIRuZ4dfWUrwwWTe', 'Siti Rahmawati', 'pelanggan', 'siti.rahmawati@gmail.com', '081233445566', 'Jl. Ijen No. 28, Klojen, Kota Malang', 391, 1, '2026-11-20 22:19:42'),
+(7, 'pelanggan3', '$2y$10$khJXR9zVmz9x0YqbJKsMf.SVh2fsD75/tWhBfRIRuZ4dfWUrwwWTe', 'Andi Wijaya', 'pelanggan', 'andi.wijaya@gmail.com', '081355667788', 'Jl. Raya Darmo No. 74, Wonokromo, Kota Surabaya', 577, 1, '2026-11-20 22:19:42');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indeks untuk tabel `detail_opname_batch`
+--
+ALTER TABLE `detail_opname_batch`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_batch` (`id_batch`),
+  ADD KEY `id_variasi` (`id_variasi`),
+  ADD KEY `dihitung_oleh` (`dihitung_oleh`),
+  ADD KEY `dimutasi_oleh` (`dimutasi_oleh`),
+  ADD KEY `idx_dob_sesi_batch` (`id_sesi`,`id_batch`);
+
+--
+-- Indeks untuk tabel `detail_opname_sn`
+--
+ALTER TABLE `detail_opname_sn`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_unit_serial` (`id_unit_serial`),
+  ADD KEY `idx_dos_detail` (`id_detail_opname`),
+  ADD KEY `idx_dos_sn` (`serial_number`);
+
+--
+-- Indeks untuk tabel `detail_penjualan`
+--
+ALTER TABLE `detail_penjualan`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_penjualan` (`id_penjualan`),
+  ADD KEY `id_variasi` (`id_variasi`);
+
+--
+-- Indeks untuk tabel `histori_konversi`
+--
+ALTER TABLE `histori_konversi`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_variasi` (`id_variasi`),
+  ADD KEY `dibuat_oleh` (`dibuat_oleh`);
+
+--
+-- Indeks untuk tabel `kartu_stok`
+--
+ALTER TABLE `kartu_stok`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_variasi` (`id_variasi`),
+  ADD KEY `dibuat_oleh` (`dibuat_oleh`),
+  ADD KEY `idx_kartu_batch` (`id_batch`);
+
+--
+-- Indeks untuk tabel `log_anomali_fefo`
+--
+ALTER TABLE `log_anomali_fefo`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indeks untuk tabel `penerimaan_detail`
+--
+ALTER TABLE `penerimaan_detail`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_penerimaan` (`id_penerimaan`),
+  ADD KEY `id_variasi` (`id_variasi`);
+
+--
+-- Indeks untuk tabel `penerimaan_stok`
+--
+ALTER TABLE `penerimaan_stok`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_supplier` (`id_supplier`),
+  ADD KEY `dibuat_oleh` (`dibuat_oleh`);
+
+--
+-- Indeks untuk tabel `pengaturan_web`
+--
+ALTER TABLE `pengaturan_web`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indeks untuk tabel `penjualan`
+--
+ALTER TABLE `penjualan`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `no_invoice` (`no_invoice`),
+  ADD KEY `id_user` (`id_user`);
+
+--
+-- Indeks untuk tabel `pesanan_batch_alokasi`
+--
+ALTER TABLE `pesanan_batch_alokasi`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_detail_penjualan` (`id_detail_penjualan`),
+  ADD KEY `idx_pba_batch` (`id_batch`),
+  ADD KEY `idx_pba_penjualan` (`id_penjualan`);
+
+--
+-- Indeks untuk tabel `produk_induk`
+--
+ALTER TABLE `produk_induk`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `sku_induk` (`sku_induk`);
+
+--
+-- Indeks untuk tabel `produk_variasi`
+--
+ALTER TABLE `produk_variasi`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `sku_variasi` (`sku_variasi`),
+  ADD KEY `id_produk_induk` (`id_produk_induk`);
+
+--
+-- Indeks untuk tabel `riwayat_hitung_opname`
+--
+ALTER TABLE `riwayat_hitung_opname`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_detail_opname` (`id_detail_opname`),
+  ADD KEY `dihitung_oleh` (`dihitung_oleh`);
+
+--
+-- Indeks untuk tabel `sesi_opname`
+--
+ALTER TABLE `sesi_opname`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `kode_sesi` (`kode_sesi`),
+  ADD KEY `dibekukan_oleh` (`dibekukan_oleh`),
+  ADD KEY `dibuka_oleh` (`dibuka_oleh`);
+
+--
+-- Indeks untuk tabel `stok_batch`
+--
+ALTER TABLE `stok_batch`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_fefo` (`id_variasi`,`tgl_exp`);
+
+--
+-- Indeks untuk tabel `stok_toko`
+--
+ALTER TABLE `stok_toko`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `id_variasi` (`id_variasi`);
+
+--
+-- Indeks untuk tabel `supplier`
+--
+ALTER TABLE `supplier`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indeks untuk tabel `unit_serial`
+--
+ALTER TABLE `unit_serial`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `serial_number` (`serial_number`),
+  ADD KEY `id_variasi` (`id_variasi`);
+
+--
+-- Indeks untuk tabel `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `username` (`username`);
+
+--
+-- AUTO_INCREMENT untuk tabel yang dibuang
+--
+
+--
+-- AUTO_INCREMENT untuk tabel `detail_opname_batch`
+--
+ALTER TABLE `detail_opname_batch`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3501;
+
+--
+-- AUTO_INCREMENT untuk tabel `detail_opname_sn`
+--
+ALTER TABLE `detail_opname_sn`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+
+--
+-- AUTO_INCREMENT untuk tabel `detail_penjualan`
+--
+ALTER TABLE `detail_penjualan`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=210;
+
+--
+-- AUTO_INCREMENT untuk tabel `histori_konversi`
+--
+ALTER TABLE `histori_konversi`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=99;
+
+--
+-- AUTO_INCREMENT untuk tabel `kartu_stok`
+--
+ALTER TABLE `kartu_stok`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=492;
+
+--
+-- AUTO_INCREMENT untuk tabel `log_anomali_fefo`
+--
+ALTER TABLE `log_anomali_fefo`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT untuk tabel `penerimaan_detail`
+--
+ALTER TABLE `penerimaan_detail`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+
+--
+-- AUTO_INCREMENT untuk tabel `penerimaan_stok`
+--
+ALTER TABLE `penerimaan_stok`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT untuk tabel `pengaturan_web`
+--
+ALTER TABLE `pengaturan_web`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT untuk tabel `penjualan`
+--
+ALTER TABLE `penjualan`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
+
+--
+-- AUTO_INCREMENT untuk tabel `pesanan_batch_alokasi`
+--
+ALTER TABLE `pesanan_batch_alokasi`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=138;
+
+--
+-- AUTO_INCREMENT untuk tabel `produk_induk`
+--
+ALTER TABLE `produk_induk`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
+
+--
+-- AUTO_INCREMENT untuk tabel `produk_variasi`
+--
+ALTER TABLE `produk_variasi`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
+
+--
+-- AUTO_INCREMENT untuk tabel `riwayat_hitung_opname`
+--
+ALTER TABLE `riwayat_hitung_opname`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT untuk tabel `sesi_opname`
+--
+ALTER TABLE `sesi_opname`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+
+--
+-- AUTO_INCREMENT untuk tabel `stok_batch`
+--
+ALTER TABLE `stok_batch`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=170;
+
+--
+-- AUTO_INCREMENT untuk tabel `stok_toko`
+--
+ALTER TABLE `stok_toko`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
+
+--
+-- AUTO_INCREMENT untuk tabel `supplier`
+--
+ALTER TABLE `supplier`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT untuk tabel `unit_serial`
+--
+ALTER TABLE `unit_serial`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
+
+--
+-- AUTO_INCREMENT untuk tabel `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
+--
+
+--
+-- Ketidakleluasaan untuk tabel `detail_opname_batch`
+--
+ALTER TABLE `detail_opname_batch`
+  ADD CONSTRAINT `detail_opname_batch_ibfk_1` FOREIGN KEY (`id_sesi`) REFERENCES `sesi_opname` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `detail_opname_batch_ibfk_2` FOREIGN KEY (`id_batch`) REFERENCES `stok_batch` (`id`),
+  ADD CONSTRAINT `detail_opname_batch_ibfk_3` FOREIGN KEY (`id_variasi`) REFERENCES `produk_variasi` (`id`),
+  ADD CONSTRAINT `detail_opname_batch_ibfk_4` FOREIGN KEY (`dihitung_oleh`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `detail_opname_batch_ibfk_5` FOREIGN KEY (`dimutasi_oleh`) REFERENCES `users` (`id`);
+
+--
+-- Ketidakleluasaan untuk tabel `detail_opname_sn`
+--
+ALTER TABLE `detail_opname_sn`
+  ADD CONSTRAINT `detail_opname_sn_ibfk_1` FOREIGN KEY (`id_detail_opname`) REFERENCES `detail_opname_batch` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `detail_opname_sn_ibfk_2` FOREIGN KEY (`id_unit_serial`) REFERENCES `unit_serial` (`id`) ON DELETE SET NULL;
+
+--
+-- Ketidakleluasaan untuk tabel `detail_penjualan`
+--
+ALTER TABLE `detail_penjualan`
+  ADD CONSTRAINT `detail_penjualan_ibfk_1` FOREIGN KEY (`id_penjualan`) REFERENCES `penjualan` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `detail_penjualan_ibfk_2` FOREIGN KEY (`id_variasi`) REFERENCES `produk_variasi` (`id`);
+
+--
+-- Ketidakleluasaan untuk tabel `histori_konversi`
+--
+ALTER TABLE `histori_konversi`
+  ADD CONSTRAINT `histori_konversi_ibfk_1` FOREIGN KEY (`id_variasi`) REFERENCES `produk_variasi` (`id`),
+  ADD CONSTRAINT `histori_konversi_ibfk_2` FOREIGN KEY (`dibuat_oleh`) REFERENCES `users` (`id`);
+
+--
+-- Ketidakleluasaan untuk tabel `kartu_stok`
+--
+ALTER TABLE `kartu_stok`
+  ADD CONSTRAINT `kartu_stok_ibfk_1` FOREIGN KEY (`id_variasi`) REFERENCES `produk_variasi` (`id`),
+  ADD CONSTRAINT `kartu_stok_ibfk_2` FOREIGN KEY (`dibuat_oleh`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Ketidakleluasaan untuk tabel `penerimaan_detail`
+--
+ALTER TABLE `penerimaan_detail`
+  ADD CONSTRAINT `penerimaan_detail_ibfk_1` FOREIGN KEY (`id_penerimaan`) REFERENCES `penerimaan_stok` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `penerimaan_detail_ibfk_2` FOREIGN KEY (`id_variasi`) REFERENCES `produk_variasi` (`id`);
+
+--
+-- Ketidakleluasaan untuk tabel `penerimaan_stok`
+--
+ALTER TABLE `penerimaan_stok`
+  ADD CONSTRAINT `penerimaan_stok_ibfk_1` FOREIGN KEY (`id_supplier`) REFERENCES `supplier` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `penerimaan_stok_ibfk_2` FOREIGN KEY (`dibuat_oleh`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Ketidakleluasaan untuk tabel `penjualan`
+--
+ALTER TABLE `penjualan`
+  ADD CONSTRAINT `penjualan_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Ketidakleluasaan untuk tabel `pesanan_batch_alokasi`
+--
+ALTER TABLE `pesanan_batch_alokasi`
+  ADD CONSTRAINT `pesanan_batch_alokasi_ibfk_1` FOREIGN KEY (`id_penjualan`) REFERENCES `penjualan` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `pesanan_batch_alokasi_ibfk_2` FOREIGN KEY (`id_detail_penjualan`) REFERENCES `detail_penjualan` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `pesanan_batch_alokasi_ibfk_3` FOREIGN KEY (`id_batch`) REFERENCES `stok_batch` (`id`);
+
+--
+-- Ketidakleluasaan untuk tabel `produk_variasi`
+--
+ALTER TABLE `produk_variasi`
+  ADD CONSTRAINT `produk_variasi_ibfk_1` FOREIGN KEY (`id_produk_induk`) REFERENCES `produk_induk` (`id`) ON DELETE SET NULL;
+
+--
+-- Ketidakleluasaan untuk tabel `riwayat_hitung_opname`
+--
+ALTER TABLE `riwayat_hitung_opname`
+  ADD CONSTRAINT `riwayat_hitung_opname_ibfk_1` FOREIGN KEY (`id_detail_opname`) REFERENCES `detail_opname_batch` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `riwayat_hitung_opname_ibfk_2` FOREIGN KEY (`dihitung_oleh`) REFERENCES `users` (`id`);
+
+--
+-- Ketidakleluasaan untuk tabel `sesi_opname`
+--
+ALTER TABLE `sesi_opname`
+  ADD CONSTRAINT `sesi_opname_ibfk_1` FOREIGN KEY (`dibekukan_oleh`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `sesi_opname_ibfk_2` FOREIGN KEY (`dibuka_oleh`) REFERENCES `users` (`id`);
+
+--
+-- Ketidakleluasaan untuk tabel `stok_batch`
+--
+ALTER TABLE `stok_batch`
+  ADD CONSTRAINT `stok_batch_ibfk_1` FOREIGN KEY (`id_variasi`) REFERENCES `produk_variasi` (`id`) ON DELETE CASCADE;
+
+--
+-- Ketidakleluasaan untuk tabel `stok_toko`
+--
+ALTER TABLE `stok_toko`
+  ADD CONSTRAINT `stok_toko_ibfk_1` FOREIGN KEY (`id_variasi`) REFERENCES `produk_variasi` (`id`) ON DELETE CASCADE;
+
+--
+-- Ketidakleluasaan untuk tabel `unit_serial`
+--
+ALTER TABLE `unit_serial`
+  ADD CONSTRAINT `unit_serial_ibfk_1` FOREIGN KEY (`id_variasi`) REFERENCES `produk_variasi` (`id`) ON DELETE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
